@@ -85,7 +85,7 @@ export default function CreateApplicationModal({
   const stages: AppStage[] = ["INQUIRY", "SUBMITTED", "DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="glass-card w-full max-w-xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden text-slate-100 relative">
         {/* Modal Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">

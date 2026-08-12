@@ -58,7 +58,7 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
         return (
           <div
             key={idx}
-            className="bubble-card p-6 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
+            className="bubble-card p-4 sm:p-6 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
           >
             {/* Top Gloss Accent */}
             <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${card.color}`} />

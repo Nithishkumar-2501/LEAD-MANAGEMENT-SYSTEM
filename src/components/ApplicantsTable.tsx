@@ -52,7 +52,7 @@ export default function ApplicantsTable({
   const stagesList = ["ALL", "INQUIRY", "SUBMITTED", "DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"];
 
   return (
-    <div className="bubble-card p-6 border border-white/20 flex-1 flex flex-col justify-between">
+    <div className="bubble-card p-4 sm:p-6 border border-white/20 flex-1 flex flex-col justify-between">
       <div>
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-white/10">
@@ -74,12 +74,12 @@ export default function ApplicantsTable({
             </button>
 
             {/* Bubble Stage Control Pills */}
-            <div className="flex flex-wrap items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-md">
+            <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-md overflow-x-auto hide-scrollbar">
               {stagesList.map((st) => (
                 <button
                   key={st}
                   onClick={() => setSelectedStage(st)}
-                  className={`px-3 py-1 rounded-full transition-all ${
+                  className={`px-3 py-1 rounded-full transition-all whitespace-nowrap shrink-0 ${
                     selectedStage === st
                       ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md shadow-sky-500/40 scale-[1.02]"
                       : "text-slate-400 hover:text-slate-200"
@@ -99,9 +99,9 @@ export default function ApplicantsTable({
               <tr>
                 <th className="py-3 px-4">Applicant Name</th>
                 <th className="py-3 px-4">Applied Program</th>
-                <th className="py-3 px-4">Campus</th>
+                <th className="py-3 px-4 hidden sm:table-cell">Campus</th>
                 <th className="py-3 px-4">Stage Status</th>
-                <th className="py-3 px-4">12th Marks</th>
+                <th className="py-3 px-4 hidden sm:table-cell">12th Marks</th>
                 <th className="py-3 px-4 text-right">Quick Actions</th>
               </tr>
             </thead>
@@ -120,7 +120,7 @@ export default function ApplicantsTable({
                       </div>
                       <div>
                         <p className="group-hover:text-sky-300 transition-colors font-bold">{item.name}</p>
-                        <p className="text-[10px] text-slate-400 font-normal">{item.email}</p>
+                        <p className="text-[10px] text-slate-400 font-normal hidden sm:block">{item.email}</p>
                       </div>
                     </td>
 
@@ -128,7 +128,7 @@ export default function ApplicantsTable({
                     <td className="py-3.5 px-4 text-slate-300 font-medium">{item.courseInterest}</td>
 
                     {/* Campus Pill */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 hidden sm:table-cell">
                       <span className="text-[10px] font-extrabold px-3 py-0.5 rounded-full bg-slate-900 border border-white/20 text-sky-300 shadow-inner">
                         {item.campus || "KARUR"} CAMPUS
                       </span>
@@ -147,7 +147,7 @@ export default function ApplicantsTable({
                     </td>
 
                     {/* Marks */}
-                    <td className="py-3.5 px-4 font-black text-white">
+                    <td className="py-3.5 px-4 font-black text-white hidden sm:table-cell">
                       {item.application.marks12th}%
                     </td>
 

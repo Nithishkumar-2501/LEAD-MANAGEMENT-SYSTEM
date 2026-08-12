@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { ShieldCheck, Key, Lock, UserCheck, Bell, Server, CheckCircle2, Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ShieldCheck, Key, Lock, UserCheck, Bell, Server, CheckCircle2, Save, Sparkles } from "lucide-react";
 
 interface AdminSettingsModuleProps {
+  loggedInCampus: "KARUR" | "COIMBATORE";
   onTriggerToast: (msg: string) => void;
 }
 
-export default function AdminSettingsModule({ onTriggerToast }: AdminSettingsModuleProps) {
+export default function AdminSettingsModule({ loggedInCampus, onTriggerToast }: AdminSettingsModuleProps) {
   const [settings, setSettings] = useState({
-    adminEmail: "admin@vsb",
     collegeName: "V.S.B. ENGINEERING COLLEGE",
     karurCode: "VSB-612",
     coimbatoreCode: "VSB-714",
@@ -18,101 +18,239 @@ export default function AdminSettingsModule({ onTriggerToast }: AdminSettingsMod
     emailNotifications: true,
   });
 
+  const adminIdKey = loggedInCampus === "KARUR" ? "vsb_admin_karur_id" : "vsb_admin_coimbatore_id";
+  const adminPwKey = loggedInCampus === "KARUR" ? "vsb_admin_karur_pw" : "vsb_admin_coimbatore_pw";
+
+  const [adminUsername, setAdminUsername] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    setAdminUsername(
+      localStorage.getItem(adminIdKey) || 
+      (loggedInCampus === "KARUR" ? "adminkarur@123" : "admincovai@123")
+    );
+  }, [loggedInCampus, adminIdKey]);
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    const storedPw = localStorage.getItem(adminPwKey) || (loggedInCampus === "KARUR" ? "vsbec@123" : "vsbectc@1213");
+
+    if (currentPassword !== storedPw) {
+      onTriggerToast("❌ Error: Current password does not match.");
+      return;
+    }
+    if (newPassword.trim() === "") {
+      onTriggerToast("❌ Error: New password cannot be empty.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      onTriggerToast("❌ Error: New passwords do not match.");
+      return;
+    }
+
+    localStorage.setItem(adminPwKey, newPassword);
+    onTriggerToast(`🔑 Password updated successfully for V.S.B. ${loggedInCampus === "KARUR" ? "Karur" : "Coimbatore"} Admin!`);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     onTriggerToast("V.S.B. Admin Portal Configuration Saved Successfully!");
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-        <div>
-          <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-indigo-400" /> Admin System Controls & Security
-          </h3>
-          <p className="text-xs text-slate-400">Manage V.S.B. Karur & Coimbatore portal settings and access credentials</p>
+    <div className="space-y-6 max-w-5xl">
+      {/* Page Header */}
+      <div className="bubble-card p-4 sm:p-6 border border-white/20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
+                System Management
+              </span>
+              <span className="text-xs text-slate-400">Settings & Credentials</span>
+            </div>
+            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+              <ShieldCheck className="w-6 h-6 text-indigo-400" />
+              Admin Settings Console
+            </h2>
+            <p className="text-xs text-slate-300 font-medium">
+              Manage portal configuration and security credentials for V.S.B. campuses.
+            </p>
+          </div>
+
+          {/* Active Campus Status Badge */}
+          <div className="flex items-center gap-2.5 bg-slate-900/80 border border-white/20 px-4 py-2 rounded-2xl backdrop-blur-xl">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <div className="text-xs">
+              <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">Session Profile</span>
+              <span className="font-extrabold text-sky-300">{loggedInCampus} CAMPUS ADMIN</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-5 text-xs">
-        {/* Credentials Info Box */}
-        <div className="p-4 rounded-xl bg-indigo-950/40 border border-indigo-800/60 space-y-2">
-          <h4 className="font-bold text-slate-100 flex items-center gap-1.5">
-            <Key className="w-4 h-4 text-emerald-400" /> Admin Access Credentials
-          </h4>
-          <div className="grid grid-cols-2 gap-3 text-slate-300">
-            <div>
-              <span className="text-slate-400">Admin Email:</span>
-              <p className="font-bold text-white font-mono mt-0.5">{settings.adminEmail}</p>
-            </div>
-            <div>
-              <span className="text-slate-400">Current Password:</span>
-              <p className="font-bold text-white font-mono mt-0.5">admin@1234</p>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Side: General Portal configuration */}
+        <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-6">
+          <div className="border-b border-slate-800 pb-3">
+            <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <Server className="w-4 h-4 text-indigo-400" /> Institution & System Settings
+            </h3>
           </div>
+
+          <form onSubmit={handleSave} className="space-y-4 text-xs">
+            <div>
+              <label className="block text-slate-300 font-bold mb-1">Institution Name</label>
+              <input
+                type="text"
+                value={settings.collegeName}
+                onChange={(e) => setSettings({ ...settings, collegeName: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Karur TNEA Code</label>
+                <input
+                  type="text"
+                  value={settings.karurCode}
+                  onChange={(e) => setSettings({ ...settings, karurCode: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Coimbatore TNEA Code</label>
+                <input
+                  type="text"
+                  value={settings.coimbatoreCode}
+                  onChange={(e) => setSettings({ ...settings, coimbatoreCode: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                <div>
+                  <p className="font-bold text-slate-200">Automatic Lead Assignment</p>
+                  <p className="text-[10px] text-slate-400">Assign incoming inquiries to available counselors</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.autoCounselorAssignment}
+                  onChange={(e) => setSettings({ ...settings, autoCounselorAssignment: e.target.checked })}
+                  className="w-4 h-4 rounded text-indigo-600 bg-slate-800 border-slate-700 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                <div>
+                  <p className="font-bold text-slate-200">WhatsApp Notification Alerts</p>
+                  <p className="text-[10px] text-slate-400">Send automatic updates to candidates</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.whatsappAlerts}
+                  onChange={(e) => setSettings({ ...settings, whatsappAlerts: e.target.checked })}
+                  className="w-4 h-4 rounded text-indigo-600 bg-slate-800 border-slate-700 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-600/20 transition-all text-xs"
+              >
+                <Save className="w-3.5 h-3.5" /> Save Configuration
+              </button>
+            </div>
+          </form>
         </div>
 
-        {/* System Settings */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">Institution Name</label>
-            <input
-              type="text"
-              value={settings.collegeName}
-              onChange={(e) => setSettings({ ...settings, collegeName: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
-            />
+        {/* Right Side: Security & Credentials */}
+        <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-6">
+          <div className="border-b border-slate-800 pb-3">
+            <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <Lock className="w-4 h-4 text-emerald-400" /> Admin Security & Credentials
+            </h3>
           </div>
 
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">Karur TNEA Code</label>
-            <input
-              type="text"
-              value={settings.karurCode}
-              onChange={(e) => setSettings({ ...settings, karurCode: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
-            />
-          </div>
-        </div>
-
-        {/* Toggles */}
-        <div className="space-y-3 pt-3 border-t border-slate-800">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-            <div>
-              <p className="font-semibold text-slate-200">Automatic Lead Assignment</p>
-              <p className="text-[11px] text-slate-400">Automatically assign incoming TNEA inquiries to available counselors</p>
+          {/* Credentials Info Box */}
+          <div className="p-4 rounded-xl bg-indigo-950/40 border border-indigo-800/60 space-y-2 text-xs">
+            <h4 className="font-bold text-slate-100 flex items-center gap-1.5">
+              <Key className="w-4 h-4 text-emerald-400 animate-pulse" /> Active Account Details
+            </h4>
+            <div className="grid grid-cols-2 gap-3 text-slate-300 pt-1">
+              <div>
+                <span className="text-slate-400 text-[10px]">USERNAME</span>
+                <p className="font-bold text-white font-mono mt-0.5">{adminUsername}</p>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px]">CAMPUS ACCESS</span>
+                <p className="font-bold text-sky-300 font-mono mt-0.5">{loggedInCampus}</p>
+              </div>
             </div>
-            <input
-              type="checkbox"
-              checked={settings.autoCounselorAssignment}
-              onChange={(e) => setSettings({ ...settings, autoCounselorAssignment: e.target.checked })}
-              className="w-4 h-4 rounded text-indigo-600 bg-slate-800 border-slate-700"
-            />
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+          {/* Password update form */}
+          <form onSubmit={handlePasswordChange} className="space-y-4 text-xs">
             <div>
-              <p className="font-semibold text-slate-200">WhatsApp Notification Alerts</p>
-              <p className="text-[11px] text-slate-400">Send automatic WhatsApp admission updates to applicants</p>
+              <label className="block text-slate-300 font-bold mb-1">Current Password</label>
+              <input
+                type="password"
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
             </div>
-            <input
-              type="checkbox"
-              checked={settings.whatsappAlerts}
-              onChange={(e) => setSettings({ ...settings, whatsappAlerts: e.target.checked })}
-              className="w-4 h-4 rounded text-indigo-600 bg-slate-800 border-slate-700"
-            />
-          </div>
-        </div>
 
-        <div className="pt-2 flex justify-end">
-          <button
-            type="submit"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/30"
-          >
-            <Save className="w-4 h-4" /> Save Settings
-          </button>
+            <div>
+              <label className="block text-slate-300 font-bold mb-1">New Password</label>
+              <input
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-bold mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/20 transition-all text-xs"
+              >
+                <Key className="w-3.5 h-3.5" /> Update Password
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

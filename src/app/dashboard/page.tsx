@@ -41,29 +41,38 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("ADMISSIONS");
   const [selectedCampus, setSelectedCampus] = useState<CampusLocation>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Data states
-  const [metrics, setMetrics] = useState<SummaryMetrics>({
-    totalLeads: 1248,
-    leadsTrend: 14.2,
-    applicationsVerified: 856,
-    docsVerifiedTrend: 8.5,
-    seatsFilled: 642,
-    seatsFilledTrend: 18.0,
-    totalRevenue: 54500000,
-    revenueTrend: 12.4,
-  });
-
-  const [statusCounts, setStatusCounts] = useState<LeadStatusCounts>({
-    NEW: 340,
-    CONTACTED: 412,
-    IN_REVIEW: 214,
-    ADMITTED: 180,
-    REJECTED: 102,
-  });
+  const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
 
   const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
+
+  // Dynamic calculations based on selected campus
+  const dynamicMetrics: SummaryMetrics = {
+    totalLeads: selectedCampus === "KARUR" ? 580 : selectedCampus === "COIMBATORE" ? 668 : 1248,
+    leadsTrend: selectedCampus === "KARUR" ? 12.5 : selectedCampus === "COIMBATORE" ? 15.8 : 14.2,
+    applicationsVerified: selectedCampus === "KARUR" ? 398 : selectedCampus === "COIMBATORE" ? 458 : 856,
+    docsVerifiedTrend: selectedCampus === "KARUR" ? 7.2 : selectedCampus === "COIMBATORE" ? 9.8 : 8.5,
+    seatsFilled: selectedCampus === "KARUR" ? 298 : selectedCampus === "COIMBATORE" ? 344 : 642,
+    seatsFilledTrend: selectedCampus === "KARUR" ? 16.2 : selectedCampus === "COIMBATORE" ? 19.4 : 18.0,
+    totalRevenue: selectedCampus === "KARUR" ? 25300000 : selectedCampus === "COIMBATORE" ? 29200000 : 54500000,
+    revenueTrend: selectedCampus === "KARUR" ? 10.5 : selectedCampus === "COIMBATORE" ? 14.1 : 12.4,
+  };
+
+  const dynamicStatusCounts: LeadStatusCounts = {
+    NEW: selectedCampus === "KARUR" ? 160 : selectedCampus === "COIMBATORE" ? 180 : 340,
+    CONTACTED: selectedCampus === "KARUR" ? 192 : selectedCampus === "COIMBATORE" ? 220 : 412,
+    IN_REVIEW: selectedCampus === "KARUR" ? 98 : selectedCampus === "COIMBATORE" ? 116 : 214,
+    ADMITTED: selectedCampus === "KARUR" ? 85 : selectedCampus === "COIMBATORE" ? 95 : 180,
+    REJECTED: selectedCampus === "KARUR" ? 45 : selectedCampus === "COIMBATORE" ? 57 : 102,
+  };
+
+  // Filter tasks dynamically based on campus of the associated lead
+  const filteredTasks = tasks.filter((t) => {
+    const lead = applicants.find((l) => l.id === t.leadId);
+    if (!lead) return true;
+    if (selectedCampus === "ALL") return true;
+    return lead.campus === selectedCampus;
+  });
 
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -76,16 +85,25 @@ export default function DashboardPage() {
     const authSession = sessionStorage.getItem("vsb_admin_auth");
     if (authSession === "true") {
       setIsAuthenticated(true);
+      const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
+      if (campus) {
+        setLoggedInCampus(campus);
+        setSelectedCampus(campus);
+      }
     }
   }, []);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (campus: "KARUR" | "COIMBATORE") => {
     sessionStorage.setItem("vsb_admin_auth", "true");
+    sessionStorage.setItem("vsb_logged_in_campus", campus);
+    setLoggedInCampus(campus);
+    setSelectedCampus(campus);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem("vsb_admin_auth");
+    sessionStorage.removeItem("vsb_logged_in_campus");
     setIsAuthenticated(false);
   };
 
@@ -125,7 +143,7 @@ export default function DashboardPage() {
     <div className="min-h-screen flex flex-col font-sans">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold text-xs px-5 py-3 rounded-full shadow-2xl animate-bounce flex items-center gap-2 border border-white/30">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold text-xs px-5 py-3 rounded-full shadow-2xl animate-bounce flex items-center gap-2 border border-white/30 justify-center sm:justify-start">
           <span>✨ {toastMessage}</span>
         </div>
       )}
@@ -140,15 +158,16 @@ export default function DashboardPage() {
         selectedCampus={selectedCampus}
         onCampusChange={setSelectedCampus}
         onLogout={handleLogout}
+        loggedInCampus={loggedInCampus}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
         {/* ADMISSIONS CRM MODULE */}
         {activeTab === "ADMISSIONS" && (
           <>
-            <MetricCards metrics={metrics} />
-            <LeadFunnelChart statusCounts={statusCounts} />
+            <MetricCards metrics={dynamicMetrics} />
+            <LeadFunnelChart statusCounts={dynamicStatusCounts} />
             <div className="flex flex-col lg:flex-row gap-6">
               <ApplicantsTable
                 applicants={filteredApplicants}
@@ -158,7 +177,7 @@ export default function DashboardPage() {
                 onOpenCreateModal={() => setIsCreateModalOpen(true)}
               />
               <TaskSidebar
-                tasks={tasks}
+                tasks={filteredTasks}
                 onToggleTask={handleToggleTask}
                 onActionTrigger={handleActionTrigger}
               />
@@ -186,21 +205,26 @@ export default function DashboardPage() {
 
         {/* TEACHER DIRECTORY MODULE */}
         {activeTab === "TEACHERS" && (
-          <TeacherModule onTriggerToast={triggerToast} />
+          <TeacherModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
         )}
 
         {/* CAMPUS & COURSES MODULE */}
         {activeTab === "CAMPUSES" && (
-          <CampusCourseModule onTriggerToast={triggerToast} />
+          <CampusCourseModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
         )}
 
         {/* FEE PAYMENTS MODULE */}
         {activeTab === "PAYMENTS" && (
-          <PaymentBillingModule onTriggerToast={triggerToast} />
+          <PaymentBillingModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
         )}
 
         {/* ADMIN SETTINGS MODULE */}
-        {activeTab === "SETTINGS" && <AdminSettingsModule onTriggerToast={triggerToast} />}
+        {activeTab === "SETTINGS" && (
+          <AdminSettingsModule
+            loggedInCampus={loggedInCampus}
+            onTriggerToast={triggerToast}
+          />
+        )}
       </main>
 
       {/* MODALS */}

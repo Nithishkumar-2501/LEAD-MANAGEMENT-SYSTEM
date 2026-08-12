@@ -154,7 +154,7 @@ export default function ContactDirectoryModule({
   return (
     <div className="space-y-6">
       {/* Top Banner & Action Controls */}
-      <div className="bubble-card p-6 border border-white/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bubble-card p-4 sm:p-6 border border-white/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40">
@@ -181,7 +181,7 @@ export default function ContactDirectoryModule({
       </div>
 
       {/* District & Metric Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bubble-card p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 flex items-center justify-center font-bold">
             <UserCheck className="w-5 h-5" />
@@ -238,7 +238,7 @@ export default function ContactDirectoryModule({
         </div>
 
         {/* District Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 hide-scrollbar">
           <span className="text-xs text-slate-400 font-bold flex items-center gap-1 shrink-0 mr-1">
             <Filter className="w-3.5 h-3.5 text-sky-400" /> District:
           </span>

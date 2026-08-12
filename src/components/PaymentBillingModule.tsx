@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Payment, CampusLocation } from "@/types/crm";
 import { MOCK_PAYMENTS } from "@/lib/mockData";
 import { CreditCard, DollarSign, Download, Search, CheckCircle2, ShieldCheck, ArrowUpRight } from "lucide-react";
 
 interface PaymentBillingModuleProps {
+  loggedInCampus: "KARUR" | "COIMBATORE";
   onTriggerToast: (msg: string) => void;
 }
 
-export default function PaymentBillingModule({ onTriggerToast }: PaymentBillingModuleProps) {
+export default function PaymentBillingModule({ loggedInCampus, onTriggerToast }: PaymentBillingModuleProps) {
   const [payments, setPayments] = useState<Payment[]>(MOCK_PAYMENTS);
   const [search, setSearch] = useState("");
-  const [campusFilter, setCampusFilter] = useState<CampusLocation>("ALL");
+  const [campusFilter, setCampusFilter] = useState<CampusLocation>(loggedInCampus);
+
+  useEffect(() => {
+    setCampusFilter(loggedInCampus);
+  }, [loggedInCampus]);
 
   const filteredPayments = payments.filter((p) => {
     const matchesSearch =
@@ -20,12 +25,12 @@ export default function PaymentBillingModule({ onTriggerToast }: PaymentBillingM
       p.transactionId.toLowerCase().includes(search.toLowerCase()) ||
       p.course.toLowerCase().includes(search.toLowerCase());
 
-    const matchesCampus = campusFilter === "ALL" || p.campus === campusFilter;
+    const matchesCampus = p.campus === loggedInCampus;
 
     return matchesSearch && matchesCampus;
   });
 
-  const totalCollected = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalCollected = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <div className="space-y-6">
@@ -74,7 +79,7 @@ export default function PaymentBillingModule({ onTriggerToast }: PaymentBillingM
       </div>
 
       {/* Payment Transactions Table */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800">
+      <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
           <div>
             <h3 className="text-lg font-bold text-slate-100">Admission Fee Receipts & Transactions</h3>
@@ -93,15 +98,7 @@ export default function PaymentBillingModule({ onTriggerToast }: PaymentBillingM
               />
             </div>
 
-            <select
-              value={campusFilter}
-              onChange={(e) => setCampusFilter(e.target.value as CampusLocation)}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="ALL">All Campuses</option>
-              <option value="KARUR">Karur Campus</option>
-              <option value="COIMBATORE">Coimbatore Campus</option>
-            </select>
+            {/* Campus dropdown removed because the view is strictly restricted to the logged-in admin's campus */}
           </div>
         </div>
 

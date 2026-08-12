@@ -15,6 +15,9 @@ import {
   LogOut,
   MapPin,
   Contact,
+  Menu,
+  X,
+  Lock,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation } from "@/types/crm";
 
@@ -27,6 +30,7 @@ interface HeaderProps {
   selectedCampus: CampusLocation;
   onCampusChange: (campus: CampusLocation) => void;
   onLogout: () => void;
+  loggedInCampus: "KARUR" | "COIMBATORE";
 }
 
 export default function Header({
@@ -38,8 +42,11 @@ export default function Header({
   selectedCampus,
   onCampusChange,
   onLogout,
+  loggedInCampus,
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 1, text: "New TNEA Application registered for VSB Karur CSE", time: "5m ago", read: false },
     { id: 2, text: "Fee payment of ₹95,000 verified for VSB Coimbatore", time: "45m ago", read: false },
@@ -62,65 +69,89 @@ export default function Header({
     { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings },
   ];
 
+  const handleNavClick = (tab: ActiveTab) => {
+    onTabChange(tab);
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <header className="sticky top-0 z-30 w-full liquid-glass border-b border-white/20 px-6 py-3.5 flex flex-col gap-3.5 shadow-2xl">
+    <header className="sticky top-0 z-30 w-full liquid-glass border-b border-white/20 px-3 sm:px-6 py-3 sm:py-3.5 flex flex-col gap-2.5 sm:gap-3.5 shadow-2xl">
       {/* Top Bar: Brand, Campus Selector & Admin Profile */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Brand Title */}
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/40 ring-2 ring-white/30 animate-pulse">
-            <Sparkles className="w-6 h-6 text-white" />
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
+        {/* Left: Hamburger (mobile) + Brand */}
+        <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+          {/* Hamburger for mobile */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="sm:hidden p-2 rounded-full bg-slate-900/70 border border-white/20 text-sky-200 transition-all"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/40 ring-2 ring-white/30 animate-pulse shrink-0">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="font-extrabold text-base md:text-lg text-white tracking-tight flex items-center gap-2">
-              V.S.B. ENGINEERING COLLEGE
-              <span className="text-[10px] font-bold text-sky-200 bg-sky-500/20 border border-sky-400/40 px-3 py-0.5 rounded-full backdrop-blur-xl">
+          <div className="min-w-0">
+            <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-white tracking-tight flex items-center gap-2 truncate">
+              <span className="truncate">V.S.B. ENGINEERING COLLEGE</span>
+              <span className="hidden sm:inline text-[10px] font-bold text-sky-200 bg-sky-500/20 border border-sky-400/40 px-3 py-0.5 rounded-full backdrop-blur-xl shrink-0">
                 Bubble Glass OS 4.0
               </span>
             </h1>
-            <p className="text-xs text-sky-200/80 flex items-center gap-1.5 font-medium">
-              <MapPin className="w-3.5 h-3.5 text-pink-400" /> KARUR & COIMBATORE CAMPUSES
+            <p className="text-[10px] sm:text-xs text-sky-200/80 flex items-center gap-1.5 font-medium truncate">
+              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-400 shrink-0" />
+              <span className="truncate">KARUR & COIMBATORE CAMPUSES</span>
             </p>
           </div>
         </div>
 
-        {/* Campus Location Segmented Bubble Selector & Search */}
-        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-          {/* Floating Bubble Campus Pills */}
-          <div className="flex items-center gap-1 bg-slate-900/80 p-1.5 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-2xl">
-            <button
-              onClick={() => onCampusChange("ALL")}
-              className={`px-3.5 py-1 rounded-full transition-all duration-300 ${
-                selectedCampus === "ALL"
-                  ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 scale-[1.03]"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              All Campuses
-            </button>
-            <button
-              onClick={() => onCampusChange("KARUR")}
-              className={`px-3.5 py-1 rounded-full transition-all duration-300 ${
-                selectedCampus === "KARUR"
-                  ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 scale-[1.03]"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              Karur Campus
-            </button>
-            <button
-              onClick={() => onCampusChange("COIMBATORE")}
-              className={`px-3.5 py-1 rounded-full transition-all duration-300 ${
-                selectedCampus === "COIMBATORE"
-                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 scale-[1.03]"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              Coimbatore Campus
-            </button>
+        {/* Right: Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Two Campus Icon Selection Bar */}
+          <div className="hidden md:flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/20 text-xs font-semibold backdrop-blur-2xl">
+            {/* Karur Campus Icon Button */}
+            {loggedInCampus === "KARUR" ? (
+              <button
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 scale-[1.03]"
+                disabled
+              >
+                <Building2 className="w-4 h-4 text-white" />
+                <span>Karur Campus</span>
+              </button>
+            ) : (
+              <button
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40"
+                disabled
+                title="Access restricted to Coimbatore Campus"
+              >
+                <Lock className="w-4 h-4 text-slate-500" />
+                <span>Karur Campus</span>
+              </button>
+            )}
+
+            {/* Coimbatore Campus Icon Button */}
+            {loggedInCampus === "COIMBATORE" ? (
+              <button
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 scale-[1.03]"
+                disabled
+              >
+                <GraduationCap className="w-4 h-4 text-white" />
+                <span>Coimbatore Campus</span>
+              </button>
+            ) : (
+              <button
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40"
+                disabled
+                title="Access restricted to Karur Campus"
+              >
+                <Lock className="w-4 h-4 text-slate-500" />
+                <span>Coimbatore Campus</span>
+              </button>
+            )}
           </div>
 
-          {/* Search bar */}
+          {/* Search bar — desktop */}
           <div className="relative hidden lg:block w-48">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-400" />
             <input
@@ -132,11 +163,20 @@ export default function Header({
             />
           </div>
 
+          {/* Search icon — mobile/tablet */}
+          <button
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            className="lg:hidden p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-white/40 text-sky-200 transition-all shadow-md"
+            aria-label="Search"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+
           {/* Notifications button */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-white/40 text-sky-200 transition-all shadow-md"
+              className="relative p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-white/40 text-sky-200 transition-all shadow-md"
               aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
@@ -148,7 +188,7 @@ export default function Header({
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-3 w-80 bubble-card p-4 z-50 border border-white/30 shadow-2xl">
+              <div className="absolute right-0 mt-3 w-72 sm:w-80 bubble-card p-4 z-50 border border-white/30 shadow-2xl">
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
                   <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">Bubble Notifications</h4>
                   {unreadCount > 0 && (
@@ -180,16 +220,18 @@ export default function Header({
           </div>
 
           {/* Admin User Profile */}
-          <div className="flex items-center gap-2 pl-2 border-l border-white/15">
-            <div className="flex items-center gap-2.5 bg-slate-900/80 border border-white/20 px-3.5 py-1 rounded-full backdrop-blur-xl">
+          <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-white/15">
+            <div className="flex items-center gap-2 sm:gap-2.5 bg-slate-900/80 border border-white/20 px-2 sm:px-3.5 py-1 rounded-full backdrop-blur-xl">
               <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 text-white font-black text-[10px] flex items-center justify-center shadow-md">
                 VSB
               </div>
-              <span className="text-xs font-bold text-slate-200">admin@vsb</span>
+              <span className="hidden sm:inline text-xs font-bold text-slate-200">
+                {loggedInCampus === "KARUR" ? "adminkarur@123" : "admincovai@123"}
+              </span>
             </div>
             <button
               onClick={onLogout}
-              className="p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:bg-rose-950/80 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 transition-all shadow-md"
+              className="p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:bg-rose-950/80 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 transition-all shadow-md"
               title="Logout"
             >
               <LogOut className="w-4 h-4" />
@@ -198,8 +240,92 @@ export default function Header({
         </div>
       </div>
 
-      {/* Floating Bubble Navigation Dock */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none border-t border-white/15 pt-3">
+      {/* Mobile Search Bar — expands below header when toggled */}
+      {mobileSearchOpen && (
+        <div className="lg:hidden">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search portal..."
+              autoFocus
+              className="w-full bg-slate-900/70 border border-white/20 rounded-full pl-9 pr-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400/50 backdrop-blur-xl"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Campus Selector — shown below top bar on small screens */}
+      <div className="md:hidden overflow-x-auto hide-scrollbar -mx-1">
+        <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/20 text-[11px] font-semibold backdrop-blur-2xl w-max">
+          {/* Karur Campus */}
+          {loggedInCampus === "KARUR" ? (
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md whitespace-nowrap"
+              disabled
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Karur Campus</span>
+            </button>
+          ) : (
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
+              disabled
+            >
+              <Lock className="w-3 h-3" />
+              <span>Karur Campus</span>
+            </button>
+          )}
+
+          {/* Coimbatore Campus */}
+          {loggedInCampus === "COIMBATORE" ? (
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-md whitespace-nowrap"
+              disabled
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>Coimbatore Campus</span>
+            </button>
+          ) : (
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
+              disabled
+            >
+              <Lock className="w-3 h-3" />
+              <span>Coimbatore Campus</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Full Navigation Menu — slide-down panel */}
+      {mobileMenuOpen && (
+        <div className="sm:hidden flex flex-col gap-1.5 pb-1 border-t border-white/15 pt-2 animate-in slide-in-from-top duration-200">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 ${
+                  isActive
+                    ? "glossy-btn"
+                    : "bg-slate-900/60 border border-white/10 text-slate-300 active:bg-white/10"
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Desktop Floating Bubble Navigation Dock */}
+      <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar pb-0.5 border-t border-white/15 pt-3">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -207,14 +333,38 @@ export default function Header({
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-300 ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-300 ${
                 isActive
                   ? "glossy-btn scale-[1.03]"
                   : "bg-slate-900/60 border border-white/15 text-slate-300 hover:text-white hover:bg-white/10"
               }`}
             >
               <Icon className="w-4 h-4" />
-              <span>{item.label}</span>
+              <span className="hidden md:inline">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Mobile Bottom Navigation Dock — fixed icon-only nav for phones */}
+      <div className="sm:hidden flex items-center justify-around gap-0.5 overflow-x-auto hide-scrollbar pb-0.5 border-t border-white/15 pt-2">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNavClick(item.id)}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-[10px] font-bold transition-all duration-300 min-w-[40px] ${
+                isActive
+                  ? "text-sky-400 bg-sky-500/10 border border-sky-400/30"
+                  : "text-slate-400 border border-transparent"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span className="truncate max-w-[48px]">
+                {item.label.split(" ")[0]}
+              </span>
             </button>
           );
         })}

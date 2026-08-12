@@ -89,3 +89,33 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.35);
 }
+
+/* Hide scrollbar but keep scrollable (for horizontal pill strips) */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile Performance & Polish */
+@media (max-width: 640px) {
+  .liquid-glass {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+  .bubble-card {
+    border-radius: 1.25rem;
+  }
+  .bubble-card:hover {
+    transform: none;
+  }
+}
+
+/* Safe area for notched phones */
+@supports (padding: max(0px)) {
+  .mobile-safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}

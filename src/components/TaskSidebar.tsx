@@ -42,7 +42,7 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
   };
 
   return (
-    <aside className="bubble-card p-6 border border-white/20 w-full lg:w-96 flex flex-col justify-between">
+    <aside className="bubble-card p-4 sm:p-6 border border-white/20 w-full lg:w-96 flex flex-col justify-between">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">

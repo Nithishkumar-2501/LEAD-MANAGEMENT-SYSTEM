@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Teacher, CampusLocation } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
 import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award } from "lucide-react";
 
 interface TeacherModuleProps {
+  loggedInCampus: "KARUR" | "COIMBATORE";
   onTriggerToast: (msg: string) => void;
 }
 
-export default function TeacherModule({ onTriggerToast }: TeacherModuleProps) {
+export default function TeacherModule({ loggedInCampus, onTriggerToast }: TeacherModuleProps) {
   const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("ALL");
@@ -20,10 +21,14 @@ export default function TeacherModule({ onTriggerToast }: TeacherModuleProps) {
     email: "",
     phone: "",
     department: "Computer Science & Engineering",
-    campus: "KARUR" as CampusLocation,
+    campus: loggedInCampus as CampusLocation,
     courses: "B.E. Computer Science",
     experienceYears: 5,
   });
+
+  useEffect(() => {
+    setNewTeacher((prev) => ({ ...prev, campus: loggedInCampus }));
+  }, [loggedInCampus]);
 
   const departments = [
     "ALL",
@@ -41,7 +46,9 @@ export default function TeacherModule({ onTriggerToast }: TeacherModuleProps) {
 
     const matchesDept = selectedDept === "ALL" || t.department === selectedDept;
 
-    return matchesSearch && matchesDept;
+    const matchesCampus = t.campus === loggedInCampus;
+
+    return matchesSearch && matchesDept && matchesCampus;
   });
 
   const handleAddTeacher = (e: React.FormEvent) => {
@@ -54,7 +61,7 @@ export default function TeacherModule({ onTriggerToast }: TeacherModuleProps) {
       email: newTeacher.email,
       phone: newTeacher.phone || "+91 98765 00000",
       department: newTeacher.department,
-      campus: newTeacher.campus,
+      campus: loggedInCampus,
       coursesAssigned: [newTeacher.courses],
       experienceYears: Number(newTeacher.experienceYears) || 3,
       status: "ACTIVE",
@@ -69,7 +76,7 @@ export default function TeacherModule({ onTriggerToast }: TeacherModuleProps) {
       email: "",
       phone: "",
       department: "Computer Science & Engineering",
-      campus: "KARUR",
+      campus: loggedInCampus,
       courses: "B.E. Computer Science",
       experienceYears: 5,
     });
@@ -83,7 +90,7 @@ export default function TeacherModule({ onTriggerToast }: TeacherModuleProps) {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Faculty</p>
-              <h3 className="text-2xl font-bold text-slate-100 mt-1">{teachers.length} Professors</h3>
+              <h3 className="text-2xl font-bold text-slate-100 mt-1">{filteredTeachers.length} Professors</h3>
             </div>
             <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
               <UserCheck className="w-5 h-5" />
@@ -111,7 +118,9 @@ export default function TeacherModule({ onTriggerToast }: TeacherModuleProps) {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Campus Faculty</p>
-              <h3 className="text-2xl font-bold text-slate-100 mt-1">Karur & CBE</h3>
+              <h3 className="text-2xl font-bold text-slate-100 mt-1">
+                {loggedInCampus === "KARUR" ? "Karur Campus" : "Coimbatore Campus"}
+              </h3>
             </div>
             <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <GraduationCap className="w-5 h-5" />
@@ -135,7 +144,7 @@ export default function TeacherModule({ onTriggerToast }: TeacherModuleProps) {
       </div>
 
       {/* Main Faculty Directory Card */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800">
+      <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
           <div>
             <h3 className="text-lg font-bold text-slate-100">Teacher & Faculty Directory</h3>

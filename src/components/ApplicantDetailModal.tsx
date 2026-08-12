@@ -15,8 +15,8 @@ export default function ApplicantDetailModal({ applicant, onClose, onActionTrigg
   const app = applicant.application;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="glass-card w-full max-w-lg rounded-2xl border border-slate-700 shadow-2xl overflow-hidden text-slate-100 relative">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="glass-card w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl border border-slate-700 shadow-2xl overflow-hidden text-slate-100 relative max-h-[90vh]">
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
           <div className="flex items-center gap-3">

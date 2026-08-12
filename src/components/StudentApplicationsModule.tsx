@@ -112,7 +112,7 @@ export default function StudentApplicationsModule({
       </div>
 
       {/* Main Student Applications Panel */}
-      <div className="glass-card rounded-2xl p-6 border border-slate-800">
+      <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
           <div>
             <h3 className="text-lg font-bold text-slate-100">Student Application Registry</h3>
@@ -133,12 +133,12 @@ export default function StudentApplicationsModule({
             </div>
 
             {/* Stage Filter */}
-            <div className="flex flex-wrap items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 overflow-x-auto hide-scrollbar">
               {stages.map((st) => (
                 <button
                   key={st}
                   onClick={() => setSelectedStage(st)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                     selectedStage === st
                       ? "bg-indigo-600 text-white shadow"
                       : "text-slate-400 hover:text-slate-200"

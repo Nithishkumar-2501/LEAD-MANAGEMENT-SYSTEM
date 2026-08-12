@@ -24,8 +24,8 @@ export default function LeadFunnelChart({ statusCounts }: LeadFunnelChartProps) 
   ];
 
   return (
-    <div className="bubble-card p-6 mb-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bubble-card p-4 sm:p-6 mb-4 sm:mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 ring-2 ring-white/20">
             <PieChart className="w-5 h-5" />
