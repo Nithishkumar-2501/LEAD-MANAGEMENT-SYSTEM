@@ -1,0 +1,114 @@
+// Prisma Schema for College Admission CRM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  COUNSELOR
+  STUDENT
+  TEACHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  IN_REVIEW
+  ADMITTED
+  REJECTED
+}
+
+enum AppStage {
+  INQUIRY
+  SUBMITTED
+  DOCS_VERIFIED
+  OFFER_ISSUED
+  FEE_PAID
+}
+
+enum TaskType {
+  CALL
+  EMAIL
+  WHATSAPP
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      Role     @default(COUNSELOR)
+  createdAt DateTime @default(now())
+
+  // Relations
+  assignedLeads Lead[] @relation("CounselorLeads")
+  tasks         Task[] @relation("CounselorTasks")
+}
+
+model Lead {
+  id             String     @id @default(uuid())
+  name           String
+  email          String
+  phone          String
+  source         String     @default("TNEA Counselling")
+  courseInterest String
+  campus         String     @default("KARUR")
+  school         String?    @default("Govt Higher Secondary School")
+  district       String?    @default("Karur")
+  address        String?    @default("123 College Road, Tamil Nadu")
+  status         LeadStatus @default(NEW)
+  counselorId    String?
+  createdAt      DateTime   @default(now())
+
+  // Relations
+  counselor   User?        @relation("CounselorLeads", fields: [counselorId], references: [id])
+  application Application?
+  tasks       Task[]
+}
+
+model Application {
+  id            String   @id @default(uuid())
+  leadId        String   @unique
+  stage         AppStage @default(INQUIRY)
+  marks10th     Float
+  marks12th     Float
+  paymentStatus String   @default("PENDING")
+
+  // Relations
+  lead     Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  payments Payment[]
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  counselorId String
+  leadId      String
+  title       String
+  type        TaskType
+  dueDate     DateTime
+  isCompleted Boolean  @default(false)
+
+  // Relations
+  counselor User @relation("CounselorTasks", fields: [counselorId], references: [id])
+  lead      Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  applicationId String
+  studentName   String   @default("Student Candidate")
+  course        String   @default("B.E. Computer Science")
+  campus        String   @default("KARUR")
+  amount        Float
+  status        String   @default("COMPLETED")
+  transactionId String   @unique
+  createdAt     DateTime @default(now())
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
