@@ -3,18 +3,20 @@
 import { useState, useEffect } from "react";
 import { Teacher, CampusLocation } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
-import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award } from "lucide-react";
+import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X } from "lucide-react";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
+  currentUserRole: "ADMIN" | "TEACHER";
   onTriggerToast: (msg: string) => void;
 }
 
-export default function TeacherModule({ loggedInCampus, onTriggerToast }: TeacherModuleProps) {
+export default function TeacherModule({ loggedInCampus, currentUserRole, onTriggerToast }: TeacherModuleProps) {
   const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
 
   const [newTeacher, setNewTeacher] = useState({
     name: "",
@@ -80,6 +82,17 @@ export default function TeacherModule({ loggedInCampus, onTriggerToast }: Teache
       courses: "B.E. Computer Science",
       experienceYears: 5,
     });
+  };
+
+  const handleUpdateTeacherSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeacher) return;
+
+    setTeachers((prev) =>
+      prev.map((t) => (t.id === editingTeacher.id ? editingTeacher : t))
+    );
+    onTriggerToast(`🔑 Profile updated for faculty member ${editingTeacher.name}!`);
+    setEditingTeacher(null);
   };
 
   return (
@@ -175,12 +188,14 @@ export default function TeacherModule({ loggedInCampus, onTriggerToast }: Teache
               ))}
             </select>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all hover:opacity-90"
-            >
-              <Plus className="w-4 h-4" /> Add Faculty
-            </button>
+            {currentUserRole === "ADMIN" && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all hover:opacity-90"
+              >
+                <Plus className="w-4 h-4" /> Add Faculty
+              </button>
+            )}
           </div>
         </div>
 
@@ -244,19 +259,31 @@ export default function TeacherModule({ loggedInCampus, onTriggerToast }: Teache
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end gap-2">
-                <button
-                  onClick={() => onTriggerToast(`Sending email to ${tch.name}...`)}
-                  className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40"
-                >
-                  <Mail className="w-3.5 h-3.5" /> Email
-                </button>
-                <button
-                  onClick={() => onTriggerToast(`Calling ${tch.name}...`)}
-                  className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40"
-                >
-                  <Phone className="w-3.5 h-3.5" /> Call
-                </button>
+              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                <div>
+                  {currentUserRole === "ADMIN" && (
+                    <button
+                      onClick={() => setEditingTeacher(tch)}
+                      className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => onTriggerToast(`Sending email to ${tch.name}...`)}
+                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40"
+                  >
+                    <Mail className="w-3.5 h-3.5" /> Email
+                  </button>
+                  <button
+                    onClick={() => onTriggerToast(`Calling ${tch.name}...`)}
+                    className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40"
+                  >
+                    <Phone className="w-3.5 h-3.5" /> Call
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -348,6 +375,133 @@ export default function TeacherModule({ loggedInCampus, onTriggerToast }: Teache
                   className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold"
                 >
                   Register Faculty
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Teacher Modal (Admin Only) */}
+      {editingTeacher && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="glass-card w-full max-w-md rounded-2xl border border-slate-700 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <h3 className="text-lg font-bold text-slate-100 flex items-center gap-1.5">
+                <Edit3 className="w-5 h-5 text-sky-400" />
+                Edit Faculty details
+              </h3>
+              <button
+                onClick={() => setEditingTeacher(null)}
+                className="p-1 rounded-md text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateTeacherSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editingTeacher.name}
+                  onChange={(e) => setEditingTeacher({ ...editingTeacher, name: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={editingTeacher.email}
+                  onChange={(e) => setEditingTeacher({ ...editingTeacher, email: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Mobile Phone</label>
+                <input
+                  type="text"
+                  required
+                  value={editingTeacher.phone}
+                  onChange={(e) => setEditingTeacher({ ...editingTeacher, phone: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Campus</label>
+                  <select
+                    value={editingTeacher.campus}
+                    onChange={(e) => setEditingTeacher({ ...editingTeacher, campus: e.target.value as CampusLocation })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                  >
+                    <option value="KARUR">Karur Campus</option>
+                    <option value="COIMBATORE">Coimbatore Campus</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Department</label>
+                  <select
+                    value={editingTeacher.department}
+                    onChange={(e) => setEditingTeacher({ ...editingTeacher, department: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                  >
+                    {departments.filter((d) => d !== "ALL").map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Experience (Years)</label>
+                  <input
+                    type="number"
+                    required
+                    value={editingTeacher.experienceYears}
+                    onChange={(e) => setEditingTeacher({ ...editingTeacher, experienceYears: Number(e.target.value) })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Primary Course</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTeacher.coursesAssigned[0] || ""}
+                    onChange={(e) => {
+                      const courses = [...editingTeacher.coursesAssigned];
+                      courses[0] = e.target.value;
+                      setEditingTeacher({ ...editingTeacher, coursesAssigned: courses });
+                    }}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingTeacher(null)}
+                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold"
+                >
+                  <Save className="w-3.5 h-3.5" /> Save Updates
                 </button>
               </div>
             </form>

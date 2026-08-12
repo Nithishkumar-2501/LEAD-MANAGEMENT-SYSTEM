@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Lock, Mail, ShieldCheck, ArrowRight, AlertCircle, Sparkles } from "lucide-react";
 
 interface LoginModalProps {
-  onLoginSuccess: (campus: "KARUR" | "COIMBATORE") => void;
+  onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER") => void;
 }
 
 export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
@@ -18,6 +18,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     karurPass: "vsbec@123",
     covaiUser: "admincovai@123",
     covaiPass: "vsbectc@1213",
+    teacherKarurUser: "teacherkarur@123",
+    teacherKarurPass: "vsbteacher@123",
+    teacherCovaiUser: "teachercovai@123",
+    teacherCovaiPass: "vsbteacher@1213",
   });
 
   useEffect(() => {
@@ -34,12 +38,30 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     if (!localStorage.getItem("vsb_admin_coimbatore_pw")) {
       localStorage.setItem("vsb_admin_coimbatore_pw", "vsbectc@1213");
     }
+    
+    // Teacher credentials defaults
+    if (!localStorage.getItem("vsb_teacher_karur_id")) {
+      localStorage.setItem("vsb_teacher_karur_id", "teacherkarur@123");
+    }
+    if (!localStorage.getItem("vsb_teacher_karur_pw")) {
+      localStorage.setItem("vsb_teacher_karur_pw", "vsbteacher@123");
+    }
+    if (!localStorage.getItem("vsb_teacher_coimbatore_id")) {
+      localStorage.setItem("vsb_teacher_coimbatore_id", "teachercovai@123");
+    }
+    if (!localStorage.getItem("vsb_teacher_coimbatore_pw")) {
+      localStorage.setItem("vsb_teacher_coimbatore_pw", "vsbteacher@1213");
+    }
 
     setCredentialsInfo({
       karurUser: localStorage.getItem("vsb_admin_karur_id") || "adminkarur@123",
       karurPass: localStorage.getItem("vsb_admin_karur_pw") || "vsbec@123",
       covaiUser: localStorage.getItem("vsb_admin_coimbatore_id") || "admincovai@123",
       covaiPass: localStorage.getItem("vsb_admin_coimbatore_pw") || "vsbectc@1213",
+      teacherKarurUser: localStorage.getItem("vsb_teacher_karur_id") || "teacherkarur@123",
+      teacherKarurPass: localStorage.getItem("vsb_teacher_karur_pw") || "vsbteacher@123",
+      teacherCovaiUser: localStorage.getItem("vsb_teacher_coimbatore_id") || "teachercovai@123",
+      teacherCovaiPass: localStorage.getItem("vsb_teacher_coimbatore_pw") || "vsbteacher@1213",
     });
   }, []);
 
@@ -51,21 +73,34 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     const inputUser = username.trim();
     const inputPass = password.trim();
 
+    // Admins
     const karurUser = localStorage.getItem("vsb_admin_karur_id") || "adminkarur@123";
     const karurPass = localStorage.getItem("vsb_admin_karur_pw") || "vsbec@123";
     const covaiUser = localStorage.getItem("vsb_admin_coimbatore_id") || "admincovai@123";
     const covaiPass = localStorage.getItem("vsb_admin_coimbatore_pw") || "vsbectc@1213";
 
+    // Teachers
+    const tkUser = localStorage.getItem("vsb_teacher_karur_id") || "teacherkarur@123";
+    const tkPass = localStorage.getItem("vsb_teacher_karur_pw") || "vsbteacher@123";
+    const tcUser = localStorage.getItem("vsb_teacher_coimbatore_id") || "teachercovai@123";
+    const tcPass = localStorage.getItem("vsb_teacher_coimbatore_pw") || "vsbteacher@1213";
+
     setTimeout(() => {
       if (inputUser === karurUser && inputPass === karurPass) {
         setLoading(false);
-        onLoginSuccess("KARUR");
+        onLoginSuccess("KARUR", "ADMIN");
       } else if (inputUser === covaiUser && inputPass === covaiPass) {
         setLoading(false);
-        onLoginSuccess("COIMBATORE");
+        onLoginSuccess("COIMBATORE", "ADMIN");
+      } else if (inputUser === tkUser && inputPass === tkPass) {
+        setLoading(false);
+        onLoginSuccess("KARUR", "TEACHER");
+      } else if (inputUser === tcUser && inputPass === tcPass) {
+        setLoading(false);
+        onLoginSuccess("COIMBATORE", "TEACHER");
       } else {
         setLoading(false);
-        setError("Invalid Admin Credentials. Please check the Info panel below.");
+        setError("Invalid credentials. Please verify in the Authorized list below.");
       }
     }, 600);
   };
@@ -93,18 +128,29 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         </div>
 
         {/* Credentials Info Box */}
-        <div className="mb-5 p-4 rounded-3xl bg-slate-900/80 border border-white/20 text-xs text-slate-200 backdrop-blur-xl shadow-inner">
+        <div className="mb-5 p-4 rounded-3xl bg-slate-900/80 border border-white/20 text-xs text-slate-200 backdrop-blur-xl shadow-inner max-h-48 overflow-y-auto hide-scrollbar">
           <div className="flex items-center gap-1.5 font-bold text-sky-300 mb-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Authorized Admin Credentials
+            <ShieldCheck className="w-4 h-4 text-emerald-400 font-bold" /> Authorized Portal Credentials
           </div>
           <div className="space-y-1.5 text-[10px] font-mono pt-1 border-t border-white/10">
-            <div className="flex justify-between">
+            <div className="text-[9px] uppercase tracking-wider text-indigo-400 font-bold mb-1">Admin Portals:</div>
+            <div className="flex justify-between pl-1">
               <span className="text-slate-400">Karur User: <strong className="text-white">{credentialsInfo.karurUser}</strong></span>
               <span className="text-slate-400">Pass: <strong className="text-white">{credentialsInfo.karurPass}</strong></span>
             </div>
-            <div className="flex justify-between pt-1 border-t border-white/5">
+            <div className="flex justify-between pl-1 pt-0.5">
               <span className="text-slate-400">Cbe User: <strong className="text-white">{credentialsInfo.covaiUser}</strong></span>
               <span className="text-slate-400">Pass: <strong className="text-white">{credentialsInfo.covaiPass}</strong></span>
+            </div>
+
+            <div className="text-[9px] uppercase tracking-wider text-emerald-400 font-bold mt-2.5 mb-1 pt-1.5 border-t border-white/5">Teacher Portals:</div>
+            <div className="flex justify-between pl-1">
+              <span className="text-slate-400">Karur User: <strong className="text-white">{credentialsInfo.teacherKarurUser}</strong></span>
+              <span className="text-slate-400">Pass: <strong className="text-white">{credentialsInfo.teacherKarurPass}</strong></span>
+            </div>
+            <div className="flex justify-between pl-1 pt-0.5">
+              <span className="text-slate-400">Cbe User: <strong className="text-white">{credentialsInfo.teacherCovaiUser}</strong></span>
+              <span className="text-slate-400">Pass: <strong className="text-white">{credentialsInfo.teacherCovaiPass}</strong></span>
             </div>
           </div>
         </div>

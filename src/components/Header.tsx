@@ -31,6 +31,7 @@ interface HeaderProps {
   onCampusChange: (campus: CampusLocation) => void;
   onLogout: () => void;
   loggedInCampus: "KARUR" | "COIMBATORE";
+  currentUserRole: "ADMIN" | "TEACHER";
 }
 
 export default function Header({
@@ -43,6 +44,7 @@ export default function Header({
   onCampusChange,
   onLogout,
   loggedInCampus,
+  currentUserRole,
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -68,6 +70,10 @@ export default function Header({
     { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard },
     { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings },
   ];
+
+  const filteredNavItems = currentUserRole === "TEACHER"
+    ? navItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS")
+    : navItems;
 
   const handleNavClick = (tab: ActiveTab) => {
     onTabChange(tab);
@@ -226,7 +232,10 @@ export default function Header({
                 VSB
               </div>
               <span className="hidden sm:inline text-xs font-bold text-slate-200">
-                {loggedInCampus === "KARUR" ? "adminkarur@123" : "admincovai@123"}
+                {loggedInCampus === "KARUR"
+                  ? currentUserRole === "ADMIN" ? "adminkarur@123" : "teacherkarur@123"
+                  : currentUserRole === "ADMIN" ? "admincovai@123" : "teachercovai@123"}{" "}
+                <span className="text-[10px] text-sky-300 font-semibold">({currentUserRole === "ADMIN" ? "Admin" : "Teacher"})</span>
               </span>
             </div>
             <button
@@ -303,7 +312,7 @@ export default function Header({
       {/* Mobile Full Navigation Menu — slide-down panel */}
       {mobileMenuOpen && (
         <div className="sm:hidden flex flex-col gap-1.5 pb-1 border-t border-white/15 pt-2 animate-in slide-in-from-top duration-200">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
@@ -326,7 +335,7 @@ export default function Header({
 
       {/* Desktop Floating Bubble Navigation Dock */}
       <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar pb-0.5 border-t border-white/15 pt-3">
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
@@ -348,7 +357,7 @@ export default function Header({
 
       {/* Mobile Bottom Navigation Dock — fixed icon-only nav for phones */}
       <div className="sm:hidden flex items-center justify-around gap-0.5 overflow-x-auto hide-scrollbar pb-0.5 border-t border-white/15 pt-2">
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (

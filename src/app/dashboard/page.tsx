@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [selectedCampus, setSelectedCampus] = useState<CampusLocation>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
+  const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER">("ADMIN");
 
   const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
@@ -86,17 +87,23 @@ export default function DashboardPage() {
     if (authSession === "true") {
       setIsAuthenticated(true);
       const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
+      const role = sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER";
       if (campus) {
         setLoggedInCampus(campus);
         setSelectedCampus(campus);
       }
+      if (role) {
+        setCurrentUserRole(role);
+      }
     }
   }, []);
 
-  const handleLoginSuccess = (campus: "KARUR" | "COIMBATORE") => {
+  const handleLoginSuccess = (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER") => {
     sessionStorage.setItem("vsb_admin_auth", "true");
     sessionStorage.setItem("vsb_logged_in_campus", campus);
+    sessionStorage.setItem("vsb_logged_in_role", role);
     setLoggedInCampus(campus);
+    setCurrentUserRole(role);
     setSelectedCampus(campus);
     setIsAuthenticated(true);
   };
@@ -104,12 +111,21 @@ export default function DashboardPage() {
   const handleLogout = () => {
     sessionStorage.removeItem("vsb_admin_auth");
     sessionStorage.removeItem("vsb_logged_in_campus");
+    sessionStorage.removeItem("vsb_logged_in_role");
     setIsAuthenticated(false);
   };
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleUpdateApplicant = (updated: Lead & { application: Application }) => {
+    setApplicants((prev) =>
+      prev.map((a) => (a.id === updated.id ? updated : a))
+    );
+    triggerToast(`Updated profile for ${updated.name}`);
+    setSelectedApplicant(null);
   };
 
   const handleActionTrigger = (type: TaskType, leadName: string) => {
@@ -159,6 +175,7 @@ export default function DashboardPage() {
         onCampusChange={setSelectedCampus}
         onLogout={handleLogout}
         loggedInCampus={loggedInCampus}
+        currentUserRole={currentUserRole}
       />
 
       {/* Main Content Area */}
@@ -206,7 +223,11 @@ export default function DashboardPage() {
 
         {/* TEACHER DIRECTORY MODULE */}
         {activeTab === "TEACHERS" && (
-          <TeacherModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
+          <TeacherModule
+            loggedInCampus={loggedInCampus}
+            currentUserRole={currentUserRole}
+            onTriggerToast={triggerToast}
+          />
         )}
 
         {/* CAMPUS & COURSES MODULE */}
@@ -238,8 +259,10 @@ export default function DashboardPage() {
       {selectedApplicant && (
         <ApplicantDetailModal
           applicant={selectedApplicant}
+          currentUserRole={currentUserRole}
           onClose={() => setSelectedApplicant(null)}
           onActionTrigger={handleActionTrigger}
+          onSave={handleUpdateApplicant}
         />
       )}
     </div>
