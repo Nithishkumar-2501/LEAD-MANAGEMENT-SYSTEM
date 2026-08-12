@@ -191,6 +191,7 @@ export default function DashboardPage() {
             initialContacts={filteredApplicants}
             selectedCampus={selectedCampus}
             onActionTrigger={handleActionTrigger}
+            onTriggerToast={triggerToast}
           />
         )}
 

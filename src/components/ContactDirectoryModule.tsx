@@ -19,22 +19,30 @@ import {
   Save,
   MessageSquare,
   Sparkles,
+  Upload,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
   initialContacts: (Lead & { application?: Application | null })[];
   selectedCampus: CampusLocation;
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
+  onTriggerToast?: (msg: string) => void;
 }
 
 export default function ContactDirectoryModule({
   initialContacts,
   selectedCampus,
   onActionTrigger,
+  onTriggerToast,
 }: ContactDirectoryModuleProps) {
   const [contacts, setContacts] = useState(initialContacts);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
+
+  // Visibility Controls States
+  const [showPhone, setShowPhone] = useState(true);
+  const [showEmail, setShowEmail] = useState(true);
+  const [showAddress, setShowAddress] = useState(true);
 
   // Add Contact Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -119,6 +127,64 @@ export default function ContactDirectoryModule({
     }
   };
 
+  // CSV File Importer Handler
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split(/\r?\n/);
+      const imported: Lead[] = [];
+
+      // Detect header row if it contains columns names
+      const startIndex = lines[0].toLowerCase().includes("name") ? 1 : 0;
+
+      for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Simple CSV splitter
+        const parts = line.split(",").map(p => p.trim().replace(/^["']|["']$/g, ''));
+        if (parts.length < 2) continue; // Requires at least Name and Phone
+
+        const [name, phone, email, school, district, address, courseInterest] = parts;
+
+        imported.push({
+          id: `lead_csv_${Date.now()}_${i}`,
+          name: name || "Imported Candidate",
+          phone: phone || "+91 99999 99999",
+          email: email || `${(name || "candidate").toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
+          source: "CSV Import",
+          courseInterest: courseInterest || "B.E. Computer Science",
+          campus: selectedCampus === "ALL" ? "KARUR" : selectedCampus,
+          school: school || "Govt Higher Secondary School",
+          district: district || (selectedCampus === "KARUR" ? "Karur" : "Coimbatore"),
+          address: address || "Tamil Nadu",
+          status: "NEW",
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      if (imported.length > 0) {
+        setContacts((prev) => [...imported, ...prev]);
+        if (onTriggerToast) {
+          onTriggerToast(`📥 Successfully imported ${imported.length} candidate contacts from CSV!`);
+        }
+      } else {
+        if (onTriggerToast) {
+          onTriggerToast("⚠️ No valid candidate details found in the CSV file.");
+        }
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input value
+    e.target.value = "";
+  };
+
   // Edit Contact Submit Handler
   const handleUpdateContact = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,13 +237,30 @@ export default function ContactDirectoryModule({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="glossy-btn flex items-center gap-2 px-5 py-2.5 text-xs font-bold shadow-lg"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ Add New Contact</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+          <input
+            type="file"
+            id="csv-file-upload"
+            accept=".csv"
+            className="hidden"
+            onChange={handleCSVUpload}
+          />
+          <button
+            onClick={() => document.getElementById("csv-file-upload")?.click()}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/20 hover:bg-white/10 text-slate-300 text-xs font-bold transition-all shadow-md"
+          >
+            <Upload className="w-4 h-4 text-emerald-400" />
+            <span>Import CSV</span>
+          </button>
+
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="glossy-btn flex items-center gap-2 px-5 py-2.5 text-xs font-bold shadow-lg"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Add New Contact</span>
+          </button>
+        </div>
       </div>
 
       {/* District & Metric Summary Cards */}
@@ -224,37 +307,73 @@ export default function ContactDirectoryModule({
       </div>
 
       {/* Search & District Filter Bar */}
-      <div className="bubble-card p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Search */}
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search name, phone, school, district, address..."
-            className="w-full bg-slate-950/80 border border-white/20 rounded-full pl-10 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-xl"
-          />
+      <div className="bubble-card p-4 space-y-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Search */}
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search name, phone, school, district, address..."
+              className="w-full bg-slate-950/80 border border-white/20 rounded-full pl-10 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-xl"
+            />
+          </div>
+
+          {/* District Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 hide-scrollbar">
+            <span className="text-xs text-slate-400 font-bold flex items-center gap-1 shrink-0 mr-1">
+              <Filter className="w-3.5 h-3.5 text-sky-400" /> District:
+            </span>
+            {districts.map((d) => (
+              <button
+                key={d}
+                onClick={() => setSelectedDistrict(d)}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 ${
+                  selectedDistrict === d
+                    ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-md shadow-sky-500/40"
+                    : "bg-slate-900/70 text-slate-300 border border-white/15 hover:text-white"
+                }`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* District Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 hide-scrollbar">
-          <span className="text-xs text-slate-400 font-bold flex items-center gap-1 shrink-0 mr-1">
-            <Filter className="w-3.5 h-3.5 text-sky-400" /> District:
+        {/* Dashboard Privacy & Visibility Controls */}
+        <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-white/10 text-xs font-bold text-slate-300">
+          <span className="text-sky-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" /> Privacy Settings:
           </span>
-          {districts.map((d) => (
-            <button
-              key={d}
-              onClick={() => setSelectedDistrict(d)}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 ${
-                selectedDistrict === d
-                  ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-md shadow-sky-500/40"
-                  : "bg-slate-900/70 text-slate-300 border border-white/15 hover:text-white"
-              }`}
-            >
-              {d}
-            </button>
-          ))}
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showPhone}
+              onChange={(e) => setShowPhone(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 bg-slate-950 border-white/20 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+            />
+            <span>Show Phone Numbers</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showEmail}
+              onChange={(e) => setShowEmail(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 bg-slate-950 border-white/20 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+            />
+            <span>Show Email Addresses</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showAddress}
+              onChange={(e) => setShowAddress(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 bg-slate-950 border-white/20 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+            />
+            <span>Show Home Addresses</span>
+          </label>
         </div>
       </div>
 
@@ -290,13 +409,17 @@ export default function ContactDirectoryModule({
                   {/* Phone */}
                   <div className="flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span className="font-mono font-bold text-white">{contact.phone}</span>
+                    <span className="font-mono font-bold text-white">
+                      {showPhone ? contact.phone : "+91 ••••• •••••"}
+                    </span>
                   </div>
 
                   {/* Email */}
                   <div className="flex items-center gap-2">
                     <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                    <span className="truncate">{contact.email}</span>
+                    <span className="truncate">
+                      {showEmail ? contact.email : "•••••@•••••.•••"}
+                    </span>
                   </div>
 
                   {/* School */}
@@ -313,8 +436,8 @@ export default function ContactDirectoryModule({
 
                   {/* Full Address */}
                   {contact.address && (
-                    <div className="text-[11px] text-slate-400 pl-5.5 italic truncate" title={contact.address}>
-                      {contact.address}
+                    <div className="text-[11px] text-slate-400 pl-5.5 italic truncate" title={showAddress ? contact.address : "Address Hidden"}>
+                      {showAddress ? contact.address : "•••••••••••••"}
                     </div>
                   )}
                 </div>
