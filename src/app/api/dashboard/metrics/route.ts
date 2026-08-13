@@ -111,7 +111,7 @@ export async function GET() {
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
-    console.warn("⚠️ Prisma DB connection offline or uninitialized. Serving structured mock metrics fallback.", error);
+    // Fallback metrics from mock data when DB is uninitialized
 
     // Calculate fallback metrics from mock data
     const totalLeads = MOCK_LEADS.length;

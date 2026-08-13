@@ -27,10 +27,10 @@ export function Tooltip({ text, children, position = "top" }: TooltipProps) {
     <div className="group relative inline-flex items-center justify-center">
       {children}
       <div
-        className={`absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out scale-95 group-hover:scale-100 z-50 whitespace-nowrap ${positionClasses[position]}`}
+        className={`absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out scale-90 group-hover:scale-100 z-[999] whitespace-nowrap transform group-hover:-translate-y-1 ${positionClasses[position]}`}
       >
-        <div className="bg-slate-900/95 text-sky-200 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-sky-400/40 shadow-2xl backdrop-blur-xl flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse shrink-0" />
+        <div className="bg-slate-900/95 text-sky-200 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-sky-400/50 shadow-2xl backdrop-blur-2xl flex items-center gap-1.5 ring-1 ring-white/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse shrink-0 shadow-sm shadow-sky-400" />
           <span>{text}</span>
         </div>
         <div className={arrowClasses[position]} />

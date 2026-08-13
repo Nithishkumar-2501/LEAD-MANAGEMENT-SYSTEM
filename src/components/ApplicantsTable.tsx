@@ -80,10 +80,10 @@ export default function ApplicantsTable({
                 <button
                   key={st}
                   onClick={() => setSelectedStage(st)}
-                  className={`px-3 py-1 rounded-full transition-all whitespace-nowrap shrink-0 ${
+                  className={`px-3 py-1 rounded-full transition-all duration-300 whitespace-nowrap shrink-0 transform hover:-translate-y-1 hover:scale-110 active:scale-95 ${
                     selectedStage === st
-                      ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md shadow-sky-500/40 scale-[1.02]"
-                      : "text-slate-400 hover:text-slate-200"
+                      ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md shadow-sky-500/40 scale-[1.05]"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-white/10"
                   }`}
                 >
                   {st.replace("_", " ")}
@@ -111,34 +111,51 @@ export default function ApplicantsTable({
                 filteredApplicants.map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-white/5 transition-colors group cursor-pointer"
                     onClick={() => onSelectApplicant(item)}
+                    className="hover:bg-slate-800/80 transition-all cursor-pointer group"
                   >
-                    {/* Name */}
-                    <td className="py-3.5 px-4 font-bold text-white flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 border border-white/20 flex items-center justify-center text-xs font-black text-white shadow-md">
-                        {item.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="group-hover:text-sky-300 transition-colors font-bold">{item.name}</p>
-                        <p className="text-[10px] text-slate-400 font-normal hidden sm:block">{item.email}</p>
+                    {/* Applicant Info */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                          {item.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </div>
+                        <div>
+                          <div className="font-bold text-white group-hover:text-sky-300 transition-colors">
+                            {item.name}
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {item.email}
+                          </div>
+                        </div>
                       </div>
                     </td>
 
-                    {/* Program */}
-                    <td className="py-3.5 px-4 text-slate-300 font-medium">{item.courseInterest}</td>
+                    {/* Applied Program */}
+                    <td className="py-3.5 px-4 font-medium text-slate-300">
+                      {item.courseInterest}
+                    </td>
 
-                    {/* Campus Pill */}
+                    {/* Campus Badge */}
                     <td className="py-3.5 px-4 hidden sm:table-cell">
-                      <span className="text-[10px] font-extrabold px-3 py-0.5 rounded-full bg-slate-900 border border-white/20 text-sky-300 shadow-inner">
-                        {item.campus || "KARUR"} CAMPUS
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider transform group-hover:scale-105 transition-transform inline-block ${
+                          item.campus === "KARUR"
+                            ? "bg-sky-500/20 text-sky-300 border-sky-400/30"
+                            : "bg-pink-500/20 text-pink-300 border-pink-400/30"
+                        }`}
+                      >
+                        {item.campus || "KARUR"} Campus
                       </span>
                     </td>
 
-                    {/* Stage Status Badge */}
+                    {/* Stage Status */}
                     <td className="py-3.5 px-4">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border backdrop-blur-md ${getStageBadge(
+                        className={`px-3 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1.5 shadow-sm transform group-hover:scale-105 transition-transform ${getStageBadge(
                           item.application.stage
                         )}`}
                       >
@@ -158,7 +175,7 @@ export default function ApplicantsTable({
                         <Tooltip text={`View ${item.name} Details`}>
                           <button
                             onClick={() => onSelectApplicant(item)}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-sky-500 hover:text-white text-slate-300 transition-all shadow-md"
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-sky-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-sky-500/40"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
@@ -166,7 +183,7 @@ export default function ApplicantsTable({
                         <Tooltip text={`Call ${item.name}`}>
                           <button
                             onClick={() => onActionTrigger("CALL", item.name)}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-slate-300 transition-all shadow-md"
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
                           >
                             <Phone className="w-3.5 h-3.5" />
                           </button>
@@ -174,7 +191,7 @@ export default function ApplicantsTable({
                         <Tooltip text={`Email ${item.name}`}>
                           <button
                             onClick={() => onActionTrigger("EMAIL", item.name)}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-indigo-500 hover:text-white text-slate-300 transition-all shadow-md"
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-indigo-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
                           >
                             <Mail className="w-3.5 h-3.5" />
                           </button>
@@ -182,7 +199,7 @@ export default function ApplicantsTable({
                         <Tooltip text={`WhatsApp ${item.name}`}>
                           <button
                             onClick={() => onActionTrigger("WHATSAPP", item.name)}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-teal-500 hover:text-white text-slate-300 transition-all shadow-md"
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-teal-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </button>

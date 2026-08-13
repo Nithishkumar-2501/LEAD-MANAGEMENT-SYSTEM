@@ -199,21 +199,21 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
           {filteredTeachers.map((tch) => (
             <div
               key={tch.id}
-              className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-indigo-500/40 transition-all space-y-3"
+              className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/20 cursor-pointer group"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
                     {tch.avatar}
                   </div>
                   <div>
-                    <h4 className="text-base font-bold text-slate-100">{tch.name}</h4>
+                    <h4 className="text-base font-bold text-slate-100 group-hover:text-sky-300 transition-colors">{tch.name}</h4>
                     <p className="text-xs text-indigo-400 font-medium">{tch.department}</p>
                   </div>
                 </div>
 
                 <span
-                  className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                  className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border transform group-hover:scale-105 transition-transform ${
                     tch.status === "ACTIVE"
                       ? "bg-emerald-950 text-emerald-400 border-emerald-800"
                       : "bg-amber-950 text-amber-400 border-amber-800"
@@ -260,7 +260,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                     <Tooltip text={`Edit ${tch.name}`}>
                       <button
                         onClick={() => setEditingTeacher(tch)}
-                        className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80"
+                        className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
                       >
                         <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
                       </button>
@@ -271,7 +271,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                   <Tooltip text={`Email ${tch.name}`}>
                     <button
                       onClick={() => onTriggerToast(`Sending email to ${tch.name}...`)}
-                      className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40"
+                      className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
                     >
                       <Mail className="w-3.5 h-3.5" /> Email
                     </button>
@@ -279,7 +279,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                   <Tooltip text={`Call ${tch.name}`}>
                     <button
                       onClick={() => onTriggerToast(`Calling ${tch.name}...`)}
-                      className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40"
+                      className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
                     >
                       <Phone className="w-3.5 h-3.5" /> Call
                     </button>

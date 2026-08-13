@@ -383,13 +383,13 @@ export default function ContactDirectoryModule({
           filteredContacts.map((contact) => (
             <div
               key={contact.id}
-              className="bubble-card p-5 border border-white/20 hover:border-sky-400/50 transition-all flex flex-col justify-between group"
+              className="bubble-card p-5 border border-white/20 hover:border-sky-400/60 transition-all duration-300 flex flex-col justify-between group transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-sky-500/20 cursor-pointer"
             >
               <div>
                 {/* Header: Name & Campus Badge */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 text-white font-black flex items-center justify-center shadow-md text-sm border border-white/20">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 text-white font-black flex items-center justify-center shadow-md text-sm border border-white/20 transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
                       {contact.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -399,7 +399,7 @@ export default function ContactDirectoryModule({
                       <p className="text-[11px] text-sky-300 font-semibold">{contact.courseInterest}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300 shrink-0">
+                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300 shrink-0 transform group-hover:scale-105 transition-transform">
                     {contact.campus || "KARUR"}
                   </span>
                 </div>
@@ -449,7 +449,7 @@ export default function ContactDirectoryModule({
                   <Tooltip text={`Call ${contact.name}`}>
                     <button
                       onClick={() => onActionTrigger("CALL", contact.name)}
-                      className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all"
+                      className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
                     >
                       <Phone className="w-3.5 h-3.5" />
                     </button>
@@ -457,7 +457,7 @@ export default function ContactDirectoryModule({
                   <Tooltip text={`Email ${contact.name}`}>
                     <button
                       onClick={() => onActionTrigger("EMAIL", contact.name)}
-                      className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all"
+                      className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
                     >
                       <Mail className="w-3.5 h-3.5" />
                     </button>
@@ -465,7 +465,7 @@ export default function ContactDirectoryModule({
                   <Tooltip text={`WhatsApp ${contact.name}`}>
                     <button
                       onClick={() => onActionTrigger("WHATSAPP", contact.name)}
-                      className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all"
+                      className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                     </button>
@@ -477,7 +477,7 @@ export default function ContactDirectoryModule({
                   <Tooltip text={`Edit ${contact.name}`}>
                     <button
                       onClick={() => setEditingContact(contact)}
-                      className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1"
+                      className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95"
                     >
                       <Edit3 className="w-3.5 h-3.5" /> Edit
                     </button>
@@ -487,7 +487,7 @@ export default function ContactDirectoryModule({
                   <Tooltip text={`Delete ${contact.name}`}>
                     <button
                       onClick={() => handleDeleteContact(contact.id, contact.name)}
-                      className="p-1.5 rounded-full bg-rose-500/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all"
+                      className="p-1.5 rounded-full bg-rose-500/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 active:scale-95"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

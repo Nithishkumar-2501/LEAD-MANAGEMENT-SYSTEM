@@ -58,7 +58,7 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
         return (
           <div
             key={idx}
-            className="bubble-card p-4 sm:p-6 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
+            className="bubble-card p-4 sm:p-6 relative overflow-hidden group transform hover:-translate-y-2 hover:scale-[1.03] transition-all duration-300 hover:border-sky-400/50 hover:shadow-2xl hover:shadow-sky-500/20 cursor-pointer"
           >
             {/* Top Gloss Accent */}
             <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${card.color}`} />
@@ -68,9 +68,9 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                   {card.title}
                 </p>
-                <h3 className="text-2xl font-black text-white tracking-tight">{card.value}</h3>
+                <h3 className="text-2xl font-black text-white tracking-tight group-hover:text-sky-300 transition-colors">{card.value}</h3>
               </div>
-              <div className={`w-11 h-11 rounded-full bg-gradient-to-tr ${card.sphereGlow} flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 ring-2 ring-white/30 backdrop-blur-md`}>
+              <div className={`w-11 h-11 rounded-full bg-gradient-to-tr ${card.sphereGlow} flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 ring-2 ring-white/30 backdrop-blur-md transform group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300`}>
                 <IconComponent className="w-5 h-5" />
               </div>
             </div>

@@ -121,17 +121,17 @@ export default function Header({
             {loggedInCampus === "KARUR" ? (
               <Tooltip text="Active Session: V.S.B. Karur Campus">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 scale-[1.03]"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
                   disabled
                 >
-                  <Building2 className="w-4 h-4 text-white" />
+                  <Building2 className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
                   <span>Karur Campus</span>
                 </button>
               </Tooltip>
             ) : (
               <Tooltip text="Access restricted to Karur Admin">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40 hover:opacity-70 transition-opacity"
                   disabled
                 >
                   <Lock className="w-4 h-4 text-slate-500" />
@@ -144,17 +144,17 @@ export default function Header({
             {loggedInCampus === "COIMBATORE" ? (
               <Tooltip text="Active Session: V.S.B. Coimbatore Campus">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 scale-[1.03]"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
                   disabled
                 >
-                  <GraduationCap className="w-4 h-4 text-white" />
+                  <GraduationCap className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
                   <span>Coimbatore Campus</span>
                 </button>
               </Tooltip>
             ) : (
               <Tooltip text="Access restricted to Coimbatore Admin">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40 hover:opacity-70 transition-opacity"
                   disabled
                 >
                   <Lock className="w-4 h-4 text-slate-500" />
@@ -352,13 +352,13 @@ export default function Header({
             <Tooltip key={item.id} text={`Open ${item.label}`}>
               <button
                 onClick={() => onTabChange(item.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-300 ${
+                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-110 active:scale-95 shadow-md ${
                   isActive
-                    ? "glossy-btn scale-[1.03]"
-                    : "bg-slate-900/60 border border-white/15 text-slate-300 hover:text-white hover:bg-white/10"
+                    ? "glossy-btn scale-[1.05] shadow-lg shadow-indigo-500/40 ring-2 ring-white/30"
+                    : "bg-slate-900/80 border border-white/15 text-slate-300 hover:text-white hover:bg-gradient-to-r hover:from-sky-500/30 hover:to-indigo-500/30 hover:border-sky-400/60 hover:shadow-xl hover:shadow-sky-500/20"
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4 transition-transform group-hover:scale-125" />
                 <span className="hidden md:inline">{item.label}</span>
               </button>
             </Tooltip>

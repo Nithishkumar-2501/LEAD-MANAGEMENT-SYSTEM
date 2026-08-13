@@ -73,8 +73,6 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ success: true, lead: { ...newLead, campus: campus as CampusLocation } }, { status: 201 });
     } catch (dbError) {
-      console.warn("Prisma offline. Creating fallback mock application record.");
-      
       const mockLead = {
         id: `lead_${Date.now()}`,
         name,

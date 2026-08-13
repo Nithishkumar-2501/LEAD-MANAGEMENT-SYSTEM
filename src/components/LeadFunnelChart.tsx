@@ -63,14 +63,14 @@ export default function LeadFunnelChart({ statusCounts }: LeadFunnelChartProps) 
           return (
             <div
               key={stage.key}
-              className="bg-slate-900/60 border border-white/15 rounded-2xl p-3.5 flex flex-col justify-between hover:border-sky-400/40 transition-all backdrop-blur-md"
+              className="bg-slate-900/60 border border-white/15 rounded-2xl p-3.5 flex flex-col justify-between transform hover:-translate-y-1.5 hover:scale-105 transition-all duration-300 hover:border-sky-400/60 hover:shadow-xl hover:shadow-sky-500/20 cursor-pointer backdrop-blur-md group"
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className={`w-2.5 h-2.5 rounded-full ${stage.color} shadow-sm`} />
-                <span className="text-xs text-slate-300 font-bold">{stage.label}</span>
+                <span className={`w-2.5 h-2.5 rounded-full ${stage.color} shadow-sm group-hover:scale-125 transition-transform`} />
+                <span className="text-xs text-slate-300 font-bold group-hover:text-white transition-colors">{stage.label}</span>
               </div>
               <div className="flex items-baseline justify-between mt-1">
-                <span className="text-xl font-black text-white">{stage.count}</span>
+                <span className="text-xl font-black text-white group-hover:text-sky-300 transition-colors">{stage.count}</span>
                 <span className={`text-xs font-black ${stage.text}`}>{pct}%</span>
               </div>
             </div>
