@@ -24,6 +24,8 @@ export type TaskType = "CALL" | "EMAIL" | "WHATSAPP";
 
 export type CampusLocation = "ALL" | "KARUR" | "COIMBATORE";
 
+export type LeadTemperature = "HOT" | "WARM" | "COOL";
+
 export type ActiveTab =
   | "ADMISSIONS"
   | "CONTACTS"

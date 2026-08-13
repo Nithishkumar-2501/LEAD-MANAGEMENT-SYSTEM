@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { Lead, Application, CampusLocation, LeadTemperature, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import {
@@ -22,6 +22,9 @@ import {
   MessageSquare,
   Sparkles,
   Upload,
+  Flame,
+  Thermometer,
+  Snowflake,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
@@ -40,6 +43,14 @@ export default function ContactDirectoryModule({
   const [contacts, setContacts] = useState(initialContacts);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
+
+  // Lead Temperature State (per contact)
+  const [leadTemps, setLeadTemps] = useState<Record<string, LeadTemperature>>(() => {
+    const initial: Record<string, LeadTemperature> = {};
+    initialContacts.forEach((c) => { initial[c.id] = "WARM"; });
+    return initial;
+  });
+  const [tempFilter, setTempFilter] = useState<"ALL" | LeadTemperature>("ALL");
 
   // Visibility Controls States
   const [showPhone, setShowPhone] = useState(true);
@@ -62,6 +73,16 @@ export default function ContactDirectoryModule({
   // Edit Contact Modal State
   const [editingContact, setEditingContact] = useState<(Lead & { application?: Application | null }) | null>(null);
 
+  // Lead Temperature Helper
+  const getLeadTemp = (id: string): LeadTemperature => leadTemps[id] || "WARM";
+  const setLeadTemp = (id: string, temp: LeadTemperature) => {
+    setLeadTemps((prev) => ({ ...prev, [id]: temp }));
+    if (onTriggerToast) {
+      const labels = { HOT: "🔥 Hot — Ready for Admission", WARM: "🌡️ Warm — Visiting Soon", COOL: "❄️ Cool — Not Interested" };
+      onTriggerToast(`Lead marked as ${labels[temp]}`);
+    }
+  };
+
   // Filter Contacts
   const filteredContacts = contacts.filter((c) => {
     const matchesSearch =
@@ -77,7 +98,9 @@ export default function ContactDirectoryModule({
       selectedDistrict === "ALL" ||
       (c.district && c.district.toLowerCase() === selectedDistrict.toLowerCase());
 
-    return matchesSearch && matchesCampus && matchesDistrict;
+    const matchesTemp = tempFilter === "ALL" || getLeadTemp(c.id) === tempFilter;
+
+    return matchesSearch && matchesCampus && matchesDistrict && matchesTemp;
   });
 
   // Extract unique districts
@@ -384,6 +407,31 @@ export default function ContactDirectoryModule({
             <span>Show Home Addresses</span>
           </label>
         </div>
+
+        {/* 🔥 Lead Temperature Filter */}
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/10 text-xs font-bold">
+          <span className="text-amber-400 flex items-center gap-1.5 mr-1">
+            <Flame className="w-3.5 h-3.5" /> Lead Interest:
+          </span>
+          {(["ALL", "HOT", "WARM", "COOL"] as const).map((t) => {
+            const styles = {
+              ALL: { active: "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-md shadow-sky-500/40", idle: "bg-slate-900/70 text-slate-300 border border-white/15 hover:text-white", icon: null, label: "All Leads" },
+              HOT: { active: "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-md shadow-red-500/40", idle: "bg-red-950/40 text-red-300 border border-red-500/30 hover:bg-red-500/20", icon: <Flame className="w-3 h-3" />, label: "🔥 Hot" },
+              WARM: { active: "bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-md shadow-amber-500/40", idle: "bg-amber-950/40 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20", icon: <Thermometer className="w-3 h-3" />, label: "🌡️ Warm" },
+              COOL: { active: "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/40", idle: "bg-cyan-950/40 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20", icon: <Snowflake className="w-3 h-3" />, label: "❄️ Cool" },
+            };
+            const s = styles[t];
+            return (
+              <button
+                key={t}
+                onClick={() => setTempFilter(t)}
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all transform hover:scale-105 active:scale-95 ${tempFilter === t ? s.active : s.idle}`}
+              >
+                {s.icon} {s.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Contact Cards Directory Grid */}
@@ -408,9 +456,40 @@ export default function ContactDirectoryModule({
                       <p className="text-[11px] text-sky-300 font-semibold">{contact.courseInterest}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300 shrink-0 transform group-hover:scale-105 transition-transform">
-                    {contact.campus || "KARUR"}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Temperature Badge */}
+                    {(() => {
+                      const temp = getLeadTemp(contact.id);
+                      const cfg = {
+                        HOT: { bg: "bg-red-500/20 border-red-500/50 text-red-300", icon: <Flame className="w-3 h-3" />, label: "Hot" },
+                        WARM: { bg: "bg-amber-500/20 border-amber-500/50 text-amber-300", icon: <Thermometer className="w-3 h-3" />, label: "Warm" },
+                        COOL: { bg: "bg-cyan-500/20 border-cyan-500/50 text-cyan-300", icon: <Snowflake className="w-3 h-3" />, label: "Cool" },
+                      };
+                      const c = cfg[temp];
+                      return (
+                        <div className="flex items-center gap-0.5">
+                          <Tooltip text="Mark as Hot 🔥" position="bottom">
+                            <button onClick={() => setLeadTemp(contact.id, "HOT")} className={`p-1 rounded-full transition-all transform hover:scale-125 ${temp === "HOT" ? "bg-red-500 text-white shadow-md shadow-red-500/50" : "bg-slate-900 text-red-400/50 border border-white/10 hover:text-red-400"}`}>
+                              <Flame className="w-3 h-3" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip text="Mark as Warm 🌡️" position="bottom">
+                            <button onClick={() => setLeadTemp(contact.id, "WARM")} className={`p-1 rounded-full transition-all transform hover:scale-125 ${temp === "WARM" ? "bg-amber-500 text-white shadow-md shadow-amber-500/50" : "bg-slate-900 text-amber-400/50 border border-white/10 hover:text-amber-400"}`}>
+                              <Thermometer className="w-3 h-3" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip text="Mark as Cool ❄️" position="bottom">
+                            <button onClick={() => setLeadTemp(contact.id, "COOL")} className={`p-1 rounded-full transition-all transform hover:scale-125 ${temp === "COOL" ? "bg-cyan-500 text-white shadow-md shadow-cyan-500/50" : "bg-slate-900 text-cyan-400/50 border border-white/10 hover:text-cyan-400"}`}>
+                              <Snowflake className="w-3 h-3" />
+                            </button>
+                          </Tooltip>
+                        </div>
+                      );
+                    })()}
+                    <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300 transform group-hover:scale-105 transition-transform">
+                      {contact.campus || "KARUR"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Details List */}
