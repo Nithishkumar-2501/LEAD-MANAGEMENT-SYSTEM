@@ -453,9 +453,9 @@ export default function ContactDirectoryModule({
               </div>
 
               {/* Action Buttons: Edit, Call, Email, WhatsApp, Delete */}
-              <div className="flex items-center justify-between pt-3 border-t border-white/10">
+              <div className="flex items-center justify-between pt-3 border-t border-white/10 relative z-10">
                 <div className="flex items-center gap-1.5">
-                  <Tooltip text={`Call ${contact.name}`}>
+                  <Tooltip text={`Call ${contact.name}`} position="bottom">
                     <button
                       onClick={() => onActionTrigger("CALL", contact.name)}
                       className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
@@ -463,7 +463,7 @@ export default function ContactDirectoryModule({
                       <Phone className="w-3.5 h-3.5" />
                     </button>
                   </Tooltip>
-                  <Tooltip text={`Email ${contact.name}`}>
+                  <Tooltip text={`Email ${contact.name}`} position="bottom">
                     <button
                       onClick={() => onActionTrigger("EMAIL", contact.name)}
                       className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
@@ -471,7 +471,7 @@ export default function ContactDirectoryModule({
                       <Mail className="w-3.5 h-3.5" />
                     </button>
                   </Tooltip>
-                  <Tooltip text={`WhatsApp ${contact.name}`}>
+                  <Tooltip text={`WhatsApp ${contact.name}`} position="bottom">
                     <button
                       onClick={() => onActionTrigger("WHATSAPP", contact.name)}
                       className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
@@ -483,7 +483,7 @@ export default function ContactDirectoryModule({
 
                 <div className="flex items-center gap-1.5">
                   {/* Edit Button */}
-                  <Tooltip text={`Edit ${contact.name}`}>
+                  <Tooltip text={`Edit ${contact.name}`} position="bottom">
                     <button
                       onClick={() => setEditingContact(contact)}
                       className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95"
@@ -493,7 +493,7 @@ export default function ContactDirectoryModule({
                   </Tooltip>
 
                   {/* Delete Button */}
-                  <Tooltip text={`Delete ${contact.name}`}>
+                  <Tooltip text={`Delete ${contact.name}`} position="bottom">
                     <button
                       onClick={() => handleDeleteContact(contact.id, contact.name)}
                       className="p-1.5 rounded-full bg-rose-500/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 active:scale-95"

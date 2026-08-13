@@ -259,10 +259,10 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 relative z-10">
                 <div>
                   {currentUserRole === "ADMIN" && (
-                    <Tooltip text={`Edit ${tch.name}`}>
+                    <Tooltip text={`Edit ${tch.name}`} position="bottom">
                       <button
                         onClick={() => setEditingTeacher(tch)}
                         className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
@@ -273,7 +273,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                   )}
                 </div>
                 <div className="flex gap-1.5">
-                  <Tooltip text={`Email ${tch.name}`}>
+                  <Tooltip text={`Email ${tch.name}`} position="bottom">
                     <button
                       onClick={() => onTriggerToast(`Sending email to ${tch.name}...`)}
                       className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
@@ -281,7 +281,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                       <Mail className="w-3.5 h-3.5" /> Email
                     </button>
                   </Tooltip>
-                  <Tooltip text={`Call ${tch.name}`}>
+                  <Tooltip text={`Call ${tch.name}`} position="bottom">
                     <button
                       onClick={() => onTriggerToast(`Calling ${tch.name}...`)}
                       className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
