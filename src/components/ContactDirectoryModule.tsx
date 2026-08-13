@@ -27,6 +27,8 @@ import {
 interface ContactDirectoryModuleProps {
   initialContacts: (Lead & { application?: Application | null })[];
   selectedCampus: CampusLocation;
+  currentUserRole?: "ADMIN" | "TEACHER";
+  loggedInUsername?: string;
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
   onTriggerToast?: (msg: string) => void;
 }
@@ -34,6 +36,8 @@ interface ContactDirectoryModuleProps {
 export default function ContactDirectoryModule({
   initialContacts,
   selectedCampus,
+  currentUserRole = "ADMIN",
+  loggedInUsername = "adminkarur@123",
   onActionTrigger,
   onTriggerToast,
 }: ContactDirectoryModuleProps) {
@@ -62,6 +66,16 @@ export default function ContactDirectoryModule({
   // Edit Contact Modal State
   const [editingContact, setEditingContact] = useState<(Lead & { application?: Application | null }) | null>(null);
 
+  // Teacher Assignment Handler (Admin action)
+  const handleAssignTeacher = (contactId: string, teacherUsername: string) => {
+    setContacts((prev) =>
+      prev.map((c) => (c.id === contactId ? { ...c, assignedTo: teacherUsername } : c))
+    );
+    if (onTriggerToast) {
+      onTriggerToast(`Contact assigned to teacher (${teacherUsername})!`);
+    }
+  };
+
   // Filter Contacts
   const filteredContacts = contacts.filter((c) => {
     const matchesSearch =
@@ -77,7 +91,12 @@ export default function ContactDirectoryModule({
       selectedDistrict === "ALL" ||
       (c.district && c.district.toLowerCase() === selectedDistrict.toLowerCase());
 
-    return matchesSearch && matchesCampus && matchesDistrict;
+    const matchesTeacherAssignment =
+      currentUserRole === "ADMIN" ||
+      c.assignedTo === loggedInUsername ||
+      (!c.assignedTo && (c.campus === selectedCampus || selectedCampus === "ALL"));
+
+    return matchesSearch && matchesCampus && matchesDistrict && matchesTeacherAssignment;
   });
 
   // Extract unique districts
@@ -408,9 +427,20 @@ export default function ContactDirectoryModule({
                       <p className="text-[11px] text-sky-300 font-semibold">{contact.courseInterest}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300 shrink-0 transform group-hover:scale-105 transition-transform">
-                    {contact.campus || "KARUR"}
-                  </span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300 transform group-hover:scale-105 transition-transform">
+                      {contact.campus || "KARUR"}
+                    </span>
+                    {currentUserRole === "TEACHER" ? (
+                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 shadow-sm">
+                        ✓ Assigned to You (1,000 Quota)
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 px-2 py-0.5 rounded-full">
+                        🧑‍🏫 {contact.assignedTo === "teachercovai@123" ? "Dr. S. Meenakshi" : "Dr. K. Arulmurugan"}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Details List */}
@@ -447,6 +477,25 @@ export default function ContactDirectoryModule({
                   {contact.address && (
                     <div className="text-[11px] text-slate-400 pl-5.5 italic truncate" title={showAddress ? contact.address : "Address Hidden"}>
                       {showAddress ? contact.address : "•••••••••••••"}
+                    </div>
+                  )}
+
+                  {/* Admin Teacher Assignment Dropdown */}
+                  {currentUserRole === "ADMIN" && (
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px]">
+                      <span className="text-slate-400 font-bold flex items-center gap-1 shrink-0">
+                        🧑‍🏫 Assign Faculty:
+                      </span>
+                      <select
+                        value={contact.assignedTo || (contact.campus === "COIMBATORE" ? "teachercovai@123" : "teacherkarur@123")}
+                        onChange={(e) => handleAssignTeacher(contact.id, e.target.value)}
+                        className="bg-slate-900 border border-white/20 text-sky-300 font-bold px-2 py-0.5 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
+                      >
+                        <option value="teacherkarur@123">Dr. K. Arulmurugan (Karur)</option>
+                        <option value="teachercovai@123">Dr. S. Meenakshi (Coimbatore)</option>
+                        <option value="teacher_general">Prof. P. Rajesh (Mechanical)</option>
+                        <option value="teacher_it">Dr. N. Gayathri (IT)</option>
+                      </select>
                     </div>
                   )}
                 </div>

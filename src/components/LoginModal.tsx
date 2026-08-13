@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Lock, Mail, ShieldCheck, ArrowRight, AlertCircle, Sparkles } from "lucide-react";
 
 interface LoginModalProps {
-  onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER") => void;
+  onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER", username: string) => void;
 }
 
 export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
@@ -88,16 +88,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     setTimeout(() => {
       if (inputUser === karurUser && inputPass === karurPass) {
         setLoading(false);
-        onLoginSuccess("KARUR", "ADMIN");
+        onLoginSuccess("KARUR", "ADMIN", inputUser);
       } else if (inputUser === covaiUser && inputPass === covaiPass) {
         setLoading(false);
-        onLoginSuccess("COIMBATORE", "ADMIN");
+        onLoginSuccess("COIMBATORE", "ADMIN", inputUser);
       } else if (inputUser === tkUser && inputPass === tkPass) {
         setLoading(false);
-        onLoginSuccess("KARUR", "TEACHER");
+        onLoginSuccess("KARUR", "TEACHER", inputUser);
       } else if (inputUser === tcUser && inputPass === tcPass) {
         setLoading(false);
-        onLoginSuccess("COIMBATORE", "TEACHER");
+        onLoginSuccess("COIMBATORE", "TEACHER", inputUser);
       } else {
         setLoading(false);
         setError("Invalid credentials. Please verify in the Authorized list below.");

@@ -54,6 +54,7 @@ export interface Lead {
   address?: string;
   status: LeadStatus;
   counselorId?: string | null;
+  assignedTo?: string;
   createdAt: string;
   application?: Application | null;
 }

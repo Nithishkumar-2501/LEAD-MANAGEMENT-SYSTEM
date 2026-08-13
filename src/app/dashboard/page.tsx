@@ -43,6 +43,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
   const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER">("ADMIN");
+  const [loggedInUsername, setLoggedInUsername] = useState<string>("adminkarur@123");
 
   const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
@@ -88,6 +89,7 @@ export default function DashboardPage() {
       setIsAuthenticated(true);
       const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
       const role = sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER";
+      const user = sessionStorage.getItem("vsb_logged_in_user");
       if (campus) {
         setLoggedInCampus(campus);
         setSelectedCampus(campus);
@@ -95,15 +97,20 @@ export default function DashboardPage() {
       if (role) {
         setCurrentUserRole(role);
       }
+      if (user) {
+        setLoggedInUsername(user);
+      }
     }
   }, []);
 
-  const handleLoginSuccess = (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER") => {
+  const handleLoginSuccess = (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER", username: string) => {
     sessionStorage.setItem("vsb_admin_auth", "true");
     sessionStorage.setItem("vsb_logged_in_campus", campus);
     sessionStorage.setItem("vsb_logged_in_role", role);
+    sessionStorage.setItem("vsb_logged_in_user", username);
     setLoggedInCampus(campus);
     setCurrentUserRole(role);
+    setLoggedInUsername(username);
     setSelectedCampus(campus);
     setIsAuthenticated(true);
   };
@@ -112,6 +119,7 @@ export default function DashboardPage() {
     sessionStorage.removeItem("vsb_admin_auth");
     sessionStorage.removeItem("vsb_logged_in_campus");
     sessionStorage.removeItem("vsb_logged_in_role");
+    sessionStorage.removeItem("vsb_logged_in_user");
     setIsAuthenticated(false);
   };
 
@@ -207,6 +215,8 @@ export default function DashboardPage() {
           <ContactDirectoryModule
             initialContacts={filteredApplicants}
             selectedCampus={selectedCampus}
+            currentUserRole={currentUserRole}
+            loggedInUsername={loggedInUsername}
             onActionTrigger={handleActionTrigger}
             onTriggerToast={triggerToast}
           />

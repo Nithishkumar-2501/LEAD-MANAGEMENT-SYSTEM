@@ -73,6 +73,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     address: "42 West Car Street, Karur Town, Tamil Nadu 639001",
     status: "ADMITTED",
     counselorId: "usr_admin_vsb",
+    assignedTo: "teacherkarur@123",
     createdAt: "2026-08-01T10:15:00Z",
     application: {
       id: "app_201",
@@ -96,6 +97,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     address: "108 Trichy Road, Singanallur, Coimbatore 641005",
     status: "IN_REVIEW",
     counselorId: "usr_admin_vsb",
+    assignedTo: "teachercovai@123",
     createdAt: "2026-08-02T14:30:00Z",
     application: {
       id: "app_202",
@@ -119,6 +121,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     address: "15 Fairlands Main Road, Salem 636016",
     status: "CONTACTED",
     counselorId: "usr_admin_vsb",
+    assignedTo: "teacherkarur@123",
     createdAt: "2026-08-03T09:00:00Z",
     application: {
       id: "app_203",
@@ -142,6 +145,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     address: "88 Cantonment Main Street, Trichy 620001",
     status: "ADMITTED",
     counselorId: "usr_admin_vsb",
+    assignedTo: "teachercovai@123",
     createdAt: "2026-08-03T11:45:00Z",
     application: {
       id: "app_204",
@@ -165,6 +169,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     address: "24 Mohanur Road, Namakkal 637001",
     status: "NEW",
     counselorId: "usr_admin_vsb",
+    assignedTo: "teacherkarur@123",
     createdAt: "2026-08-04T16:20:00Z",
     application: {
       id: "app_205",
