@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Phone, Mail, MessageSquare, Award, CheckCircle2, DollarSign, Calendar, BookOpen, Edit3, Save, Landmark } from "lucide-react";
-import { Lead, Application, AppStage } from "@/types/crm";
+import { Lead, Application, AppStage, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -93,13 +93,17 @@ export default function ApplicantDetailModal({
                   </div>
                   <div>
                     <label className="block text-slate-400 font-semibold mb-1">Course Interest</label>
-                    <input
-                      type="text"
-                      required
+                    <select
                       value={formData.courseInterest}
                       onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                    />
+                    >
+                      {VSB_DEPARTMENTS_COURSES.map((course) => (
+                        <option key={course} value={course} className="bg-slate-900">
+                          {course}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

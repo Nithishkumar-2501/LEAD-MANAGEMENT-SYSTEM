@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, UserPlus, Send } from "lucide-react";
-import { Lead, Application, AppStage, CampusLocation } from "@/types/crm";
+import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 
 interface CreateApplicationModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export default function CreateApplicationModal({
     name: "",
     email: "",
     phone: "",
-    courseInterest: "B.E. Computer Science",
+    courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
     campus: "KARUR" as CampusLocation,
     source: "TNEA Counselling",
     marks10th: 85,
@@ -63,15 +63,7 @@ export default function CreateApplicationModal({
     }
   };
 
-  const courses = [
-    "B.E. Computer Science",
-    "B.Tech AI & Data Science",
-    "B.E. Electronics & Communication",
-    "B.Tech Cyber Security",
-    "B.Tech Information Technology",
-    "B.E. Mechanical Engineering",
-    "B.E. Electrical & Electronics",
-  ];
+  const courses = VSB_DEPARTMENTS_COURSES;
 
   const sources = [
     "TNEA Counselling",

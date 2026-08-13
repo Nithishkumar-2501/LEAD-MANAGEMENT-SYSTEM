@@ -1,5 +1,21 @@
 export type Role = "ADMIN" | "COUNSELOR" | "STUDENT" | "TEACHER";
 
+export const VSB_DEPARTMENTS_COURSES = [
+  "B.Tech Artificial Intelligence and Data Science",
+  "B.E Bio Technology",
+  "B.E BioMedical",
+  "B.E Civil Engineering",
+  "B.E Chemical Engineering",
+  "B.E Computer Science and Engineering",
+  "B.Tech Computer Science and Business System",
+  "B.Tech Artificial Intelligence and Machine Learning",
+  "B.Tech Computer Communication Engineering",
+  "B.E Electrical and Electronics Engineering",
+  "B.E Electronics and Communication Engineering",
+  "B.Tech Information Technology",
+  "B.E Mechanical Engineering",
+] as const;
+
 export type LeadStatus = "NEW" | "CONTACTED" | "IN_REVIEW" | "ADMITTED" | "REJECTED";
 
 export type AppStage = "INQUIRY" | "SUBMITTED" | "DOCS_VERIFIED" | "OFFER_ISSUED" | "FEE_PAID";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Teacher, CampusLocation } from "@/types/crm";
+import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
 import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X } from "lucide-react";
 
@@ -22,9 +22,9 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
     name: "",
     email: "",
     phone: "",
-    department: "Computer Science & Engineering",
+    department: VSB_DEPARTMENTS_COURSES[0] as string,
     campus: loggedInCampus as CampusLocation,
-    courses: "B.E. Computer Science",
+    courses: VSB_DEPARTMENTS_COURSES[0] as string,
     experienceYears: 5,
   });
 
@@ -32,13 +32,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
     setNewTeacher((prev) => ({ ...prev, campus: loggedInCampus }));
   }, [loggedInCampus]);
 
-  const departments = [
-    "ALL",
-    "Computer Science & Engineering",
-    "Electronics & Communication Engg",
-    "Information Technology",
-    "Mechanical Engineering",
-  ];
+  const departments = ["ALL", ...VSB_DEPARTMENTS_COURSES];
 
   const filteredTeachers = teachers.filter((t) => {
     const matchesSearch =
@@ -352,14 +346,17 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Primary Course</label>
-                <input
-                  type="text"
-                  required
+                <select
                   value={newTeacher.courses}
                   onChange={(e) => setNewTeacher({ ...newTeacher, courses: e.target.value })}
-                  placeholder="e.g. B.E. Computer Science"
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
-                />
+                >
+                  {VSB_DEPARTMENTS_COURSES.map((course) => (
+                    <option key={course} value={course}>
+                      {course}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex justify-end gap-2 pt-3">
@@ -475,17 +472,21 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                 </div>
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">Primary Course</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingTeacher.coursesAssigned[0] || ""}
+                  <select
+                    value={editingTeacher.coursesAssigned[0] || VSB_DEPARTMENTS_COURSES[0]}
                     onChange={(e) => {
                       const courses = [...editingTeacher.coursesAssigned];
                       courses[0] = e.target.value;
                       setEditingTeacher({ ...editingTeacher, coursesAssigned: courses });
                     }}
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
-                  />
+                  >
+                    {VSB_DEPARTMENTS_COURSES.map((course) => (
+                      <option key={course} value={course}>
+                        {course}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

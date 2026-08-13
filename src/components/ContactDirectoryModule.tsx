@@ -54,7 +54,7 @@ export default function ContactDirectoryModule({
     district: "Karur",
     address: "",
     campus: "KARUR" as CampusLocation,
-    courseInterest: "B.E. Computer Science",
+    courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
   });
 
   // Edit Contact Modal State
@@ -212,7 +212,7 @@ export default function ContactDirectoryModule({
 
     try {
       await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
-    } catch (err) {}
+    } catch (err) { }
 
     setContacts(contacts.filter((c) => c.id !== id));
   };
@@ -330,11 +330,10 @@ export default function ContactDirectoryModule({
               <button
                 key={d}
                 onClick={() => setSelectedDistrict(d)}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 ${
-                  selectedDistrict === d
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 ${selectedDistrict === d
                     ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-md shadow-sky-500/40"
                     : "bg-slate-900/70 text-slate-300 border border-white/15 hover:text-white"
-                }`}
+                  }`}
               >
                 {d}
               </button>
@@ -608,12 +607,11 @@ export default function ContactDirectoryModule({
                     onChange={(e) => setNewContact({ ...newContact, courseInterest: e.target.value })}
                     className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                   >
-                    <option value="B.E. Computer Science" className="bg-slate-900">B.E. Computer Science</option>
-                    <option value="B.Tech AI & Data Science" className="bg-slate-900">B.Tech AI & Data Science</option>
-                    <option value="B.E. Electronics & Comm" className="bg-slate-900">B.E. Electronics & Comm</option>
-                    <option value="B.Tech Cyber Security" className="bg-slate-900">B.Tech Cyber Security</option>
-                    <option value="B.Tech Information Technology" className="bg-slate-900">B.Tech Information Tech</option>
-                    <option value="B.E. Mechanical Engineering" className="bg-slate-900">B.E. Mechanical Engg</option>
+                    {VSB_DEPARTMENTS_COURSES.map((course) => (
+                      <option key={course} value={course} className="bg-slate-900">
+                        {course}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -739,12 +737,17 @@ export default function ContactDirectoryModule({
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-300 mb-1">Course Interest</label>
-                  <input
-                    type="text"
+                  <select
                     value={editingContact.courseInterest}
                     onChange={(e) => setEditingContact({ ...editingContact, courseInterest: e.target.value })}
                     className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  />
+                  >
+                    {VSB_DEPARTMENTS_COURSES.map((course) => (
+                      <option key={course} value={course} className="bg-slate-900">
+                        {course}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
