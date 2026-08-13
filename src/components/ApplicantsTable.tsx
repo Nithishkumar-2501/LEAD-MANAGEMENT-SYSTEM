@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
 import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus } from "lucide-react";
+import Tooltip from "@/components/Tooltip";
 
 interface ApplicantsTableProps {
   applicants: (Lead & { application: Application })[];
@@ -154,34 +155,38 @@ export default function ApplicantsTable({
                     {/* Actions */}
                     <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => onSelectApplicant(item)}
-                          className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-sky-500 hover:text-white text-slate-300 transition-all shadow-md"
-                          title="View Details"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onActionTrigger("CALL", item.name)}
-                          className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-slate-300 transition-all shadow-md"
-                          title="Call Candidate"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onActionTrigger("EMAIL", item.name)}
-                          className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-indigo-500 hover:text-white text-slate-300 transition-all shadow-md"
-                          title="Email Candidate"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onActionTrigger("WHATSAPP", item.name)}
-                          className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-teal-500 hover:text-white text-slate-300 transition-all shadow-md"
-                          title="WhatsApp Candidate"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                        </button>
+                        <Tooltip text={`View ${item.name} Details`}>
+                          <button
+                            onClick={() => onSelectApplicant(item)}
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-sky-500 hover:text-white text-slate-300 transition-all shadow-md"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
+                        <Tooltip text={`Call ${item.name}`}>
+                          <button
+                            onClick={() => onActionTrigger("CALL", item.name)}
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-slate-300 transition-all shadow-md"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
+                        <Tooltip text={`Email ${item.name}`}>
+                          <button
+                            onClick={() => onActionTrigger("EMAIL", item.name)}
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-indigo-500 hover:text-white text-slate-300 transition-all shadow-md"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
+                        <Tooltip text={`WhatsApp ${item.name}`}>
+                          <button
+                            onClick={() => onActionTrigger("WHATSAPP", item.name)}
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-teal-500 hover:text-white text-slate-300 transition-all shadow-md"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>

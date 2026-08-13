@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
 import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X } from "lucide-react";
+import Tooltip from "@/components/Tooltip";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -256,27 +257,33 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
               <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
                 <div>
                   {currentUserRole === "ADMIN" && (
-                    <button
-                      onClick={() => setEditingTeacher(tch)}
-                      className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
-                    </button>
+                    <Tooltip text={`Edit ${tch.name}`}>
+                      <button
+                        onClick={() => setEditingTeacher(tch)}
+                        className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
+                      </button>
+                    </Tooltip>
                   )}
                 </div>
                 <div className="flex gap-1.5">
-                  <button
-                    onClick={() => onTriggerToast(`Sending email to ${tch.name}...`)}
-                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40"
-                  >
-                    <Mail className="w-3.5 h-3.5" /> Email
-                  </button>
-                  <button
-                    onClick={() => onTriggerToast(`Calling ${tch.name}...`)}
-                    className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40"
-                  >
-                    <Phone className="w-3.5 h-3.5" /> Call
-                  </button>
+                  <Tooltip text={`Email ${tch.name}`}>
+                    <button
+                      onClick={() => onTriggerToast(`Sending email to ${tch.name}...`)}
+                      className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40"
+                    >
+                      <Mail className="w-3.5 h-3.5" /> Email
+                    </button>
+                  </Tooltip>
+                  <Tooltip text={`Call ${tch.name}`}>
+                    <button
+                      onClick={() => onTriggerToast(`Calling ${tch.name}...`)}
+                      className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40"
+                    >
+                      <Phone className="w-3.5 h-3.5" /> Call
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
             </div>

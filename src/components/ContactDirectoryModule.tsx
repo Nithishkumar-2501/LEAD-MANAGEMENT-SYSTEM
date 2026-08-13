@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Lead, Application, CampusLocation } from "@/types/crm";
+import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import Tooltip from "@/components/Tooltip";
 import {
   Phone,
   Mail,
@@ -445,46 +446,52 @@ export default function ContactDirectoryModule({
               {/* Action Buttons: Edit, Call, Email, WhatsApp, Delete */}
               <div className="flex items-center justify-between pt-3 border-t border-white/10">
                 <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => onActionTrigger("CALL", contact.name)}
-                    className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all"
-                    title="Call"
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => onActionTrigger("EMAIL", contact.name)}
-                    className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all"
-                    title="Email"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => onActionTrigger("WHATSAPP", contact.name)}
-                    className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all"
-                    title="WhatsApp"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                  </button>
+                  <Tooltip text={`Call ${contact.name}`}>
+                    <button
+                      onClick={() => onActionTrigger("CALL", contact.name)}
+                      className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip text={`Email ${contact.name}`}>
+                    <button
+                      onClick={() => onActionTrigger("EMAIL", contact.name)}
+                      className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip text={`WhatsApp ${contact.name}`}>
+                    <button
+                      onClick={() => onActionTrigger("WHATSAPP", contact.name)}
+                      className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
                 </div>
 
                 <div className="flex items-center gap-1.5">
                   {/* Edit Button */}
-                  <button
-                    onClick={() => setEditingContact(contact)}
-                    className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" /> Edit
-                  </button>
+                  <Tooltip text={`Edit ${contact.name}`}>
+                    <button
+                      onClick={() => setEditingContact(contact)}
+                      className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> Edit
+                    </button>
+                  </Tooltip>
 
                   {/* Delete Button */}
-                  <button
-                    onClick={() => handleDeleteContact(contact.id, contact.name)}
-                    className="p-1.5 rounded-full bg-rose-500/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all"
-                    title="Delete Contact"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <Tooltip text={`Delete ${contact.name}`}>
+                    <button
+                      onClick={() => handleDeleteContact(contact.id, contact.name)}
+                      className="p-1.5 rounded-full bg-rose-500/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
             </div>

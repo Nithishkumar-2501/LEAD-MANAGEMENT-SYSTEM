@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Phone, Mail, MessageSquare, Award, CheckCircle2, DollarSign, Calendar, BookOpen, Edit3, Save, Landmark } from "lucide-react";
 import { Lead, Application, AppStage, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import Tooltip from "@/components/Tooltip";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -326,24 +327,30 @@ export default function ApplicantDetailModal({
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Contact Lead</p>
                 <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => onActionTrigger("CALL", formData.name)}
-                    className="flex items-center justify-center gap-1.5 bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
-                  >
-                    <Phone className="w-3.5 h-3.5" /> Call
-                  </button>
-                  <button
-                    onClick={() => onActionTrigger("EMAIL", formData.name)}
-                    className="flex items-center justify-center gap-1.5 bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
-                  >
-                    <Mail className="w-3.5 h-3.5" /> Email
-                  </button>
-                  <button
-                    onClick={() => onActionTrigger("WHATSAPP", formData.name)}
-                    className="flex items-center justify-center gap-1.5 bg-teal-600/20 border border-teal-500/30 text-teal-300 hover:bg-teal-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
-                  </button>
+                  <Tooltip text={`Call ${formData.name}`}>
+                    <button
+                      onClick={() => onActionTrigger("CALL", formData.name)}
+                      className="w-full flex items-center justify-center gap-1.5 bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
+                    >
+                      <Phone className="w-3.5 h-3.5" /> Call
+                    </button>
+                  </Tooltip>
+                  <Tooltip text={`Email ${formData.name}`}>
+                    <button
+                      onClick={() => onActionTrigger("EMAIL", formData.name)}
+                      className="w-full flex items-center justify-center gap-1.5 bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
+                    >
+                      <Mail className="w-3.5 h-3.5" /> Email
+                    </button>
+                  </Tooltip>
+                  <Tooltip text={`WhatsApp ${formData.name}`}>
+                    <button
+                      onClick={() => onActionTrigger("WHATSAPP", formData.name)}
+                      className="w-full flex items-center justify-center gap-1.5 bg-teal-600/20 border border-teal-500/30 text-teal-300 hover:bg-teal-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
             </>

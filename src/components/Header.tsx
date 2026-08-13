@@ -20,6 +20,7 @@ import {
   Lock,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation } from "@/types/crm";
+import Tooltip from "@/components/Tooltip";
 
 interface HeaderProps {
   user: User;
@@ -118,42 +119,48 @@ export default function Header({
           <div className="hidden md:flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/20 text-xs font-semibold backdrop-blur-2xl">
             {/* Karur Campus Icon Button */}
             {loggedInCampus === "KARUR" ? (
-              <button
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 scale-[1.03]"
-                disabled
-              >
-                <Building2 className="w-4 h-4 text-white" />
-                <span>Karur Campus</span>
-              </button>
+              <Tooltip text="Active Session: V.S.B. Karur Campus">
+                <button
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 scale-[1.03]"
+                  disabled
+                >
+                  <Building2 className="w-4 h-4 text-white" />
+                  <span>Karur Campus</span>
+                </button>
+              </Tooltip>
             ) : (
-              <button
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40"
-                disabled
-                title="Access restricted to Coimbatore Campus"
-              >
-                <Lock className="w-4 h-4 text-slate-500" />
-                <span>Karur Campus</span>
-              </button>
+              <Tooltip text="Access restricted to Karur Admin">
+                <button
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40"
+                  disabled
+                >
+                  <Lock className="w-4 h-4 text-slate-500" />
+                  <span>Karur Campus</span>
+                </button>
+              </Tooltip>
             )}
 
             {/* Coimbatore Campus Icon Button */}
             {loggedInCampus === "COIMBATORE" ? (
-              <button
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 scale-[1.03]"
-                disabled
-              >
-                <GraduationCap className="w-4 h-4 text-white" />
-                <span>Coimbatore Campus</span>
-              </button>
+              <Tooltip text="Active Session: V.S.B. Coimbatore Campus">
+                <button
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 scale-[1.03]"
+                  disabled
+                >
+                  <GraduationCap className="w-4 h-4 text-white" />
+                  <span>Coimbatore Campus</span>
+                </button>
+              </Tooltip>
             ) : (
-              <button
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40"
-                disabled
-                title="Access restricted to Karur Campus"
-              >
-                <Lock className="w-4 h-4 text-slate-500" />
-                <span>Coimbatore Campus</span>
-              </button>
+              <Tooltip text="Access restricted to Coimbatore Admin">
+                <button
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40"
+                  disabled
+                >
+                  <Lock className="w-4 h-4 text-slate-500" />
+                  <span>Coimbatore Campus</span>
+                </button>
+              </Tooltip>
             )}
           </div>
 
@@ -180,18 +187,20 @@ export default function Header({
 
           {/* Notifications button */}
           <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-white/40 text-sky-200 transition-all shadow-md"
-              aria-label="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center animate-bounce shadow-md">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+            <Tooltip text="System Notifications">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-white/40 text-sky-200 transition-all shadow-md"
+                aria-label="Notifications"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center animate-bounce shadow-md">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </Tooltip>
 
             {showNotifications && (
               <div className="absolute right-0 mt-3 w-72 sm:w-80 bubble-card p-4 z-50 border border-white/30 shadow-2xl">
@@ -238,13 +247,14 @@ export default function Header({
                 <span className="text-[10px] text-sky-300 font-semibold">({currentUserRole === "ADMIN" ? "Admin" : "Teacher"})</span>
               </span>
             </div>
-            <button
-              onClick={onLogout}
-              className="p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:bg-rose-950/80 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 transition-all shadow-md"
-              title="Logout"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <Tooltip text="Logout of V.S.B. Portal">
+              <button
+                onClick={onLogout}
+                className="p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:bg-rose-950/80 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 transition-all shadow-md"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>
@@ -339,18 +349,19 @@ export default function Header({
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-300 ${
-                isActive
-                  ? "glossy-btn scale-[1.03]"
-                  : "bg-slate-900/60 border border-white/15 text-slate-300 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span className="hidden md:inline">{item.label}</span>
-            </button>
+            <Tooltip key={item.id} text={`Open ${item.label}`}>
+              <button
+                onClick={() => onTabChange(item.id)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-300 ${
+                  isActive
+                    ? "glossy-btn scale-[1.03]"
+                    : "bg-slate-900/60 border border-white/15 text-slate-300 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="hidden md:inline">{item.label}</span>
+              </button>
+            </Tooltip>
           );
         })}
       </div>
