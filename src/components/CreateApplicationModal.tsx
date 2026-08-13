@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, UserPlus, Send } from "lucide-react";
 import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import SpecularButton from "@/components/SpecularButton";
 
 interface CreateApplicationModalProps {
   isOpen: boolean;
@@ -244,14 +245,18 @@ export default function CreateApplicationModal({
             >
               Cancel
             </button>
-            <button
+            <SpecularButton
               type="submit"
+              size="sm"
+              tint="#38bdf8"
+              tintOpacity={0.25}
+              lineColor="#38bdf8"
+              baseColor="#0284c7"
               disabled={loading}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50"
             >
               <Send className="w-3.5 h-3.5" />
               <span>{loading ? "Creating..." : "Submit VSB Application"}</span>
-            </button>
+            </SpecularButton>
           </div>
         </form>
       </div>

@@ -5,6 +5,7 @@ import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
 import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
+import SpecularButton from "@/components/SpecularButton";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -184,12 +185,16 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
             </select>
 
             {currentUserRole === "ADMIN" && (
-              <button
+              <SpecularButton
+                size="sm"
+                tint="#6366f1"
+                tintOpacity={0.25}
+                lineColor="#818cf8"
+                baseColor="#4f46e5"
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all hover:opacity-90"
               >
-                <Plus className="w-4 h-4" /> Add Faculty
-              </button>
+                <Plus className="w-4 h-4" /> <span>Add Faculty</span>
+              </SpecularButton>
             )}
           </div>
         </div>

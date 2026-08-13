@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
+import SpecularButton from "@/components/SpecularButton";
 import {
   Phone,
   Mail,
@@ -246,21 +247,29 @@ export default function ContactDirectoryModule({
             className="hidden"
             onChange={handleCSVUpload}
           />
-          <button
+          <SpecularButton
+            size="sm"
+            tint="#10b981"
+            tintOpacity={0.2}
+            lineColor="#34d399"
+            baseColor="#059669"
             onClick={() => document.getElementById("csv-file-upload")?.click()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/20 hover:bg-white/10 text-slate-300 text-xs font-bold transition-all shadow-md"
           >
             <Upload className="w-4 h-4 text-emerald-400" />
             <span>Import CSV</span>
-          </button>
+          </SpecularButton>
 
-          <button
+          <SpecularButton
+            size="sm"
+            tint="#6366f1"
+            tintOpacity={0.25}
+            lineColor="#818cf8"
+            baseColor="#4f46e5"
             onClick={() => setIsAddModalOpen(true)}
-            className="glossy-btn flex items-center gap-2 px-5 py-2.5 text-xs font-bold shadow-lg"
           >
             <Plus className="w-4 h-4" />
             <span>+ Add New Contact</span>
-          </button>
+          </SpecularButton>
         </div>
       </div>
 

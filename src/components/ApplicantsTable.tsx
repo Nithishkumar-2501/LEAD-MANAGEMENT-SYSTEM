@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
 import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
+import SpecularButton from "@/components/SpecularButton";
 
 interface ApplicantsTableProps {
   applicants: (Lead & { application: Application })[];
@@ -66,13 +67,19 @@ export default function ApplicantsTable({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            <SpecularButton
+              size="sm"
+              tint="#38bdf8"
+              tintOpacity={0.25}
+              lineColor="#38bdf8"
+              baseColor="#0284c7"
+              intensity={1.5}
+              followMouse
               onClick={onOpenCreateModal}
-              className="glossy-btn flex items-center gap-1.5 px-4.5 py-2 text-xs font-bold transition-all"
             >
               <Plus className="w-4 h-4" />
               <span>New Application</span>
-            </button>
+            </SpecularButton>
 
             {/* Bubble Stage Control Pills */}
             <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-md overflow-x-auto hide-scrollbar">
