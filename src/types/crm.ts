@@ -46,11 +46,13 @@ export interface Lead {
   name: string;
   email: string;
   phone: string;
+  alternatePhone?: string;
   source: string;
   courseInterest: string;
   campus: CampusLocation;
   school?: string;
   district?: string;
+  state?: string;
   address?: string;
   status: LeadStatus;
   counselorId?: string | null;

@@ -18,8 +18,12 @@ import {
   TrendingUp,
   ChevronDown,
   Info,
+  User,
+  GraduationCap,
+  Award,
+  DollarSign,
 } from "lucide-react";
-import { Lead, Application, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { Lead, Application, LeadStatus, AppStage, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -122,6 +126,17 @@ export default function ApplicantDetailModal({
 
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setIsEditing(!isEditing)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                isEditing
+                  ? "bg-amber-950/80 text-amber-300 border-amber-500/50"
+                  : "bg-slate-800 hover:bg-slate-700 border-slate-700 text-sky-400 hover:text-white"
+              }`}
+            >
+              <Edit3 className="w-3.5 h-3.5" /> {isEditing ? "Viewing Profile" : "Edit All Details"}
+            </button>
+
+            <button
               onClick={() => onActionTrigger("CALL", formData.name)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-all"
             >
@@ -217,10 +232,12 @@ export default function ApplicantDetailModal({
                       <span>Lead Stage:</span>
                       <span className="font-bold text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded-md border border-sky-500/30 flex items-center gap-1">
                         {formData.status}
-                        <Edit3
-                          className="w-3 h-3 cursor-pointer text-slate-400 hover:text-white"
-                          onClick={() => setIsEditing(true)}
-                        />
+                        <span title="Edit Stage">
+                          <Edit3
+                            className="w-3 h-3 cursor-pointer text-slate-400 hover:text-white"
+                            onClick={() => setIsEditing(true)}
+                          />
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -247,9 +264,9 @@ export default function ApplicantDetailModal({
                 {/* Quick 5 Action Buttons Bar */}
                 <div className="grid grid-cols-5 gap-1.5 border-t border-slate-800/80 pt-3">
                   <button
-                    onClick={() => onActionTrigger("CALL", formData.name)}
+                    onClick={() => setIsEditing(true)}
                     className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all"
-                    title="Merge / Compare"
+                    title="Edit All Details"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                   </button>
@@ -311,13 +328,16 @@ export default function ApplicantDetailModal({
               <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-2 shadow-md">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-200 border-b border-slate-800 pb-2">
                   <span>Assignment Details</span>
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                  <Edit3
+                    className="w-3.5 h-3.5 text-sky-400 cursor-pointer hover:text-white"
+                    onClick={() => setIsEditing(true)}
+                  />
                 </div>
                 <div className="space-y-1.5 text-xs pt-1">
                   <div>
                     <span className="text-slate-400 text-[11px] block font-medium">Assigned Owner</span>
                     <span className="font-bold text-white block">
-                      Dr Dhanabal M Assistant Professor MECH
+                      {formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
                     </span>
                   </div>
                   <div className="pt-1">
@@ -393,157 +413,408 @@ export default function ApplicantDetailModal({
 
                     <button
                       onClick={() => setIsEditing(!isEditing)}
-                      className="ml-auto text-xs font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1"
+                      className="ml-auto text-xs font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1 bg-slate-800 px-3 py-1 rounded-xl border border-slate-700"
                     >
-                      <Edit3 className="w-3.5 h-3.5" /> {isEditing ? "View Details" : "Edit Profile"}
+                      <Edit3 className="w-3.5 h-3.5" /> {isEditing ? "Cancel Edit" : "Edit All Details"}
                     </button>
                   </div>
 
-                  {/* FORM EDIT MODE */}
+                  {/* FORM EDIT MODE - EDIT ALL DETAILS */}
                   {isEditing ? (
                     <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-slate-400 font-semibold mb-1">Student Name</label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                          />
+                      <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 font-bold flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Edit3 className="w-4 h-4" /> Editing All Student Details
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-normal">
+                          Modify fields below and click Save All Changes
+                        </span>
+                      </div>
+
+                      {/* SECTION 1: Personal & Contact Information */}
+                      <div className="space-y-3 pt-1">
+                        <h4 className="text-sky-400 font-extrabold border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5" /> Personal & Contact Details
+                        </h4>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Student Full Name</label>
+                            <input
+                              type="text"
+                              required
+                              value={formData.name}
+                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Mobile Phone Number</label>
+                            <input
+                              type="text"
+                              required
+                              value={formData.phone}
+                              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-slate-400 font-semibold mb-1">Mobile Number</label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                          />
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Email Address</label>
+                            <input
+                              type="email"
+                              required
+                              value={formData.email}
+                              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Alternate Mobile Number</label>
+                            <input
+                              type="text"
+                              value={formData.alternatePhone || ""}
+                              onChange={(e) => setFormData({ ...formData, alternatePhone: e.target.value })}
+                              placeholder="NA or +91 98765 00000"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">City / District</label>
+                            <input
+                              type="text"
+                              value={formData.district || ""}
+                              onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                              placeholder="e.g. Karur, Salem, Coimbatore"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">State</label>
+                            <input
+                              type="text"
+                              value={formData.state || "Tamil Nadu"}
+                              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-slate-400 font-semibold mb-1">Email Address</label>
-                          <input
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                          />
+                      {/* SECTION 2: Academic & Campus Preferences */}
+                      <div className="space-y-3 pt-3">
+                        <h4 className="text-indigo-400 font-extrabold border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                          <GraduationCap className="w-3.5 h-3.5" /> Admission & Campus Details
+                        </h4>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Campus Location</label>
+                            <select
+                              value={formData.campus}
+                              onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                            >
+                              <option value="KARUR">V.S.B. Karur</option>
+                              <option value="COIMBATORE">V.S.B. Coimbatore</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Course Interest</label>
+                            <select
+                              value={formData.courseInterest}
+                              onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              {VSB_DEPARTMENTS_COURSES.map((course) => (
+                                <option key={course} value={course} className="bg-slate-900">
+                                  {course}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-slate-400 font-semibold mb-1">Course Interest</label>
-                          <select
-                            value={formData.courseInterest}
-                            onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                          >
-                            {VSB_DEPARTMENTS_COURSES.map((course) => (
-                              <option key={course} value={course} className="bg-slate-900">
-                                {course}
-                              </option>
-                            ))}
-                          </select>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Lead Stage Status</label>
+                            <select
+                              value={formData.status}
+                              onChange={(e) => setFormData({ ...formData, status: e.target.value as LeadStatus })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="NEW">NEW INQUIRY</option>
+                              <option value="CONTACTED">CONTACTED</option>
+                              <option value="IN_REVIEW">CUTOFF REVIEW</option>
+                              <option value="ADMITTED">ADMITTED</option>
+                              <option value="REJECTED">REJECTED</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Lead Acquisition Source</label>
+                            <input
+                              type="text"
+                              value={formData.source}
+                              onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                              placeholder="e.g. Direct Contact, TNEA Counselling, Organic"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Assigned Counselor / Owner</label>
+                            <input
+                              type="text"
+                              value={formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
+                              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Affiliated School</label>
+                            <input
+                              type="text"
+                              value={formData.school || ""}
+                              onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                              placeholder="e.g. Govt Higher Secondary School"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-slate-400 font-semibold mb-1">District / City</label>
-                          <input
-                            type="text"
-                            value={formData.district || ""}
-                            onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-slate-400 font-semibold mb-1">Campus</label>
-                          <select
-                            value={formData.campus}
-                            onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                          >
-                            <option value="KARUR">V.S.B. Karur</option>
-                            <option value="COIMBATORE">V.S.B. Coimbatore</option>
-                          </select>
+                      {/* SECTION 3: Marks & Cutoff Score Details */}
+                      <div className="space-y-3 pt-3">
+                        <h4 className="text-purple-400 font-extrabold border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5" /> Marks & Cutoff Performance
+                        </h4>
+
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">10th Marks (%)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={app.marks10th}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  application: { ...app, marks10th: Number(e.target.value) },
+                                })
+                              }
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">12th Marks (%)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={app.marks12th}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  application: { ...app, marks12th: Number(e.target.value) },
+                                })
+                              }
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">TNEA Cutoff Score</label>
+                            <input
+                              type="number"
+                              step="0.25"
+                              value={formData.tneaCutoff || 188.5}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  tneaCutoff: Number(e.target.value),
+                                })
+                              }
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                      {/* SECTION 4: Application Stage & Payment Status */}
+                      <div className="space-y-3 pt-3">
+                        <h4 className="text-emerald-400 font-extrabold border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                          <DollarSign className="w-3.5 h-3.5" /> Application Stage & Payment
+                        </h4>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Application Stage</label>
+                            <select
+                              value={app.stage}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  application: { ...app, stage: e.target.value as AppStage },
+                                })
+                              }
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                            >
+                              <option value="INQUIRY">INQUIRY</option>
+                              <option value="SUBMITTED">SUBMITTED</option>
+                              <option value="DOCS_VERIFIED">DOCS VERIFIED</option>
+                              <option value="OFFER_ISSUED">OFFER ISSUED</option>
+                              <option value="FEE_PAID">FEE PAID</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Payment Status</label>
+                            <select
+                              value={app.paymentStatus}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  application: { ...app, paymentStatus: e.target.value },
+                                })
+                              }
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                            >
+                              <option value="PENDING">PENDING</option>
+                              <option value="COMPLETED">COMPLETED</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex justify-end gap-2 pt-4 border-t border-slate-800">
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
+                          className="px-5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white font-bold"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
+                          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black shadow-lg shadow-sky-500/30"
                         >
-                          <Save className="w-3.5 h-3.5" /> Save Changes
+                          <Save className="w-4 h-4" /> Save All Changes
                         </button>
                       </div>
                     </form>
                   ) : (
-                    /* SUB TAB 1: LEAD DETAILS (EXACT ORDER MATCHING REFERENCE IMAGE) */
+                    /* SUB TAB 1: LEAD DETAILS (VIEW MODE WITH EDIT TRIPPERS) */
                     activeSubTab === "LEAD_DETAILS" ? (
                       <div className="space-y-3.5 text-xs font-sans">
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">Email Address</span>
-                          <span className="sm:col-span-7 font-bold text-white flex items-center gap-1">
-                            : <strong className="text-slate-100 font-mono">{formData.email}</strong>
+                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
+                            <span>: <strong className="text-slate-100 font-mono">{formData.email}</strong></span>
+                            <span title="Edit Email">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400 flex items-center gap-1">
                             Mobile Number <Info className="w-3 h-3 text-slate-500" />
                           </span>
-                          <span className="sm:col-span-7 font-bold text-white">
-                            : <strong className="text-slate-100 font-mono">{formData.phone}</strong>
+                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
+                            <span>: <strong className="text-slate-100 font-mono">{formData.phone}</strong></span>
+                            <span title="Edit Phone">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">Alternate Mobile Number</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-400">: NA</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-400 flex items-center justify-between">
+                            <span>: {formData.alternatePhone || "NA"}</span>
+                            <span title="Edit Alternate Phone">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">Name</span>
-                          <span className="sm:col-span-7 font-bold text-white">: {formData.name}</span>
+                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
+                            <span>: {formData.name}</span>
+                            <span title="Edit Name">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">State</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200">: Tamil Nadu</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-200 flex items-center justify-between">
+                            <span>: {formData.state || "Tamil Nadu"}</span>
+                            <span title="Edit State">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">City</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200">
-                            : {formData.district || "Salem"}
+                          <span className="sm:col-span-7 font-semibold text-slate-200 flex items-center justify-between">
+                            <span>: {formData.district || "Salem"}</span>
+                            <span title="Edit City">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">Campus</span>
-                          <span className="sm:col-span-7 font-bold text-sky-300">
-                            : V.S.B. {formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"}
+                          <span className="sm:col-span-7 font-bold text-sky-300 flex items-center justify-between">
+                            <span>: V.S.B. {formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"}</span>
+                            <span title="Edit Campus">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">Course</span>
-                          <span className="sm:col-span-7 font-bold text-indigo-300">
-                            : UG
+                          <span className="sm:col-span-7 font-bold text-indigo-300 flex items-center justify-between">
+                            <span>: UG</span>
+                            <span title="Edit Course">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
                           </span>
                         </div>
                       </div>
