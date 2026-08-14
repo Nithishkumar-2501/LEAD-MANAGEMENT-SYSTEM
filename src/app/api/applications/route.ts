@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { MOCK_LEADS } from "@/lib/mockData";
 import { AppStage, LeadStatus, CampusLocation } from "@/types/crm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const applications = await prisma.application.findMany({

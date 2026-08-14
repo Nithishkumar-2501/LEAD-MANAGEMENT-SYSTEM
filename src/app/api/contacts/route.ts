@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { MOCK_LEADS } from "@/lib/mockData";
 import { Lead, Application } from "@/types/crm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
