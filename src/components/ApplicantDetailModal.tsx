@@ -265,25 +265,32 @@ export default function ApplicantDetailModal({
           ) : (
             <>
               {/* Key Metrics grid */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
-                  <Award className="w-5 h-5 text-indigo-400" />
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-800 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-indigo-400 shrink-0" />
                   <div>
-                    <p className="text-[11px] text-slate-400 uppercase font-medium">10th Grade</p>
-                    <p className="text-sm font-bold text-slate-100">{app.marks10th}%</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-medium">10th Grade</p>
+                    <p className="text-xs font-bold text-slate-100">{app.marks10th}%</p>
                   </div>
                 </div>
-                <div className="bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
-                  <Award className="w-5 h-5 text-purple-400" />
+                <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-800 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-purple-400 shrink-0" />
                   <div>
-                    <p className="text-[11px] text-slate-400 uppercase font-medium">12th Grade</p>
-                    <p className="text-sm font-bold text-slate-100">{app.marks12th}%</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-medium">12th Grade</p>
+                    <p className="text-xs font-bold text-slate-100">{app.marks12th}%</p>
+                  </div>
+                </div>
+                <div className="bg-sky-950/60 p-3 rounded-xl border border-sky-500/40 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-sky-400 shrink-0" />
+                  <div>
+                    <p className="text-[10px] text-sky-300 uppercase font-bold">TNEA Cutoff</p>
+                    <p className="text-xs font-extrabold text-white font-mono">{formData.tneaCutoff || 188.5} / 200</p>
                   </div>
                 </div>
               </div>
 
               {/* Details list */}
-              <div className="space-y-3 bg-slate-900/50 p-4 rounded-xl border border-slate-800/80 text-xs">
+              <div className="space-y-2.5 bg-slate-900/50 p-4 rounded-xl border border-slate-800/80 text-xs">
                 <div className="flex justify-between items-center py-1 border-b border-slate-800">
                   <span className="text-slate-400 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-400" /> Email</span>
                   <span className="font-semibold text-slate-200">{formData.email}</span>
@@ -291,6 +298,25 @@ export default function ApplicantDetailModal({
                 <div className="flex justify-between items-center py-1 border-b border-slate-800">
                   <span className="text-slate-400 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-slate-400" /> Phone</span>
                   <span className="font-semibold text-slate-200">{formData.phone}</span>
+                </div>
+
+                {/* TNEA Counselling Status */}
+                <div className="flex justify-between items-center py-1 border-b border-slate-800">
+                  <span className="text-sky-400 font-bold flex items-center gap-1.5">🎓 TNEA Counselling</span>
+                  {formData.appliedCounselling !== false ? (
+                    <span className="font-extrabold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800 text-[11px]">
+                      ✅ Applied ({formData.counsellingAppNo || "TNEA2026-61201"})
+                    </span>
+                  ) : (
+                    <span className="font-bold text-amber-400 bg-amber-950 px-2 py-0.5 rounded-md border border-amber-800 text-[11px]">
+                      ⏳ Direct Management Intake
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-center py-1 border-b border-slate-800">
+                  <span className="text-slate-400 flex items-center gap-1.5">🏛️ Counselling Category</span>
+                  <span className="font-semibold text-sky-300">{formData.counsellingCategory || "TNEA General Counselling"}</span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-slate-800">
                   <span className="text-slate-400 flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5 text-slate-400" /> Acquisition Source</span>

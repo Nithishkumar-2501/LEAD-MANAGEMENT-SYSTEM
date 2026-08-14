@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
-import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X } from "lucide-react";
+import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
+import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 
@@ -19,6 +20,19 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
   const [selectedDept, setSelectedDept] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+
+  // In-Portal Communication Modal State
+  const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
+  const [activeCommContact, setActiveCommContact] = useState<ContactTarget | null>(null);
+
+  const handleOpenCommModal = (type: "CALL" | "MESSAGE" | "EMAIL", target: ContactTarget) => {
+    setActiveCommContact(target);
+    setActiveCommModal(type);
+  };
+
+  const handleCommLogSuccess = (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => {
+    onTriggerToast(`✨ In-Portal ${type} to faculty completed: ${details}`);
+  };
 
   const [newTeacher, setNewTeacher] = useState({
     name: "",
@@ -241,6 +255,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                   <span className="text-slate-400">Phone</span>
                   <span className="font-semibold text-slate-200">{tch.phone}</span>
                 </div>
+                <div className="flex justify-between pt-1.5 border-t border-slate-800/80">
+                  <span className="text-sky-400 font-bold flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-sky-400" /> Assigned Lead Quota
+                  </span>
+                  <span className="font-extrabold text-emerald-400">
+                    {(tch.assignedQuota || 1000).toLocaleString()} Contacts
+                  </span>
+                </div>
               </div>
 
               <div>
@@ -273,17 +295,29 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                   )}
                 </div>
                 <div className="flex gap-1.5">
-                  <Tooltip text={`Email ${tch.name}`} position="bottom">
+                  <Tooltip text={`In-Portal Email ${tch.name}`} position="bottom">
                     <button
-                      onClick={() => onTriggerToast(`Sending email to ${tch.name}...`)}
+                      onClick={() => handleOpenCommModal("EMAIL", {
+                        name: tch.name,
+                        email: tch.email,
+                        phone: tch.phone,
+                        campus: tch.campus,
+                        courseInterest: tch.department,
+                      })}
                       className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
                     >
                       <Mail className="w-3.5 h-3.5" /> Email
                     </button>
                   </Tooltip>
-                  <Tooltip text={`Call ${tch.name}`} position="bottom">
+                  <Tooltip text={`In-Portal Call ${tch.name}`} position="bottom">
                     <button
-                      onClick={() => onTriggerToast(`Calling ${tch.name}...`)}
+                      onClick={() => handleOpenCommModal("CALL", {
+                        name: tch.name,
+                        email: tch.email,
+                        phone: tch.phone,
+                        campus: tch.campus,
+                        courseInterest: tch.department,
+                      })}
                       className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
                     >
                       <Phone className="w-3.5 h-3.5" /> Call
@@ -473,6 +507,31 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Assigned Lead Quota</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={editingTeacher.assignedQuota || 1000}
+                    onChange={(e) => setEditingTeacher({ ...editingTeacher, assignedQuota: Number(e.target.value) })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-bold text-sky-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Faculty Status</label>
+                  <select
+                    value={editingTeacher.status}
+                    onChange={(e) => setEditingTeacher({ ...editingTeacher, status: e.target.value as "ACTIVE" | "ON_LEAVE" })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="ON_LEAVE">ON LEAVE</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="block text-slate-300 font-semibold mb-1">Experience (Years)</label>
                   <input
                     type="number"
@@ -521,6 +580,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
           </div>
         </div>
       )}
+
+      {/* IN-PORTAL DIRECT COMMUNICATION MODALS (Call, Message, Email) */}
+      <InPortalCommunicationModals
+        activeModal={activeCommModal}
+        contact={activeCommContact}
+        onClose={() => setActiveCommModal(null)}
+        onLogSuccess={handleCommLogSuccess}
+      />
     </div>
   );
 }

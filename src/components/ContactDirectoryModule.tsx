@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
+import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import {
   Phone,
   Mail,
@@ -22,6 +23,8 @@ import {
   MessageSquare,
   Sparkles,
   Upload,
+  ShieldCheck,
+  GraduationCap,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
@@ -44,6 +47,8 @@ export default function ContactDirectoryModule({
   const [contacts, setContacts] = useState(initialContacts);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
+  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [counsellingFilter, setCounsellingFilter] = useState<"ALL" | "COUNSELLING_ONLY" | "GOVT_QUOTA" | "MANAGEMENT_ONLY">("ALL");
 
   // Visibility Controls States
   const [showPhone, setShowPhone] = useState(true);
@@ -61,10 +66,30 @@ export default function ContactDirectoryModule({
     address: "",
     campus: "KARUR" as CampusLocation,
     courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
+    appliedCounselling: true,
+    counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
+    tneaCutoff: 185.0,
+    counsellingCategory: "TNEA General Counselling",
   });
 
   // Edit Contact Modal State
   const [editingContact, setEditingContact] = useState<(Lead & { application?: Application | null }) | null>(null);
+
+  // In-Portal Communication Modal State
+  const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
+  const [activeCommContact, setActiveCommContact] = useState<ContactTarget | null>(null);
+
+  const handleOpenCommModal = (type: "CALL" | "MESSAGE" | "EMAIL", target: ContactTarget) => {
+    setActiveCommContact(target);
+    setActiveCommModal(type);
+  };
+
+  const handleCommLogSuccess = (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => {
+    if (onTriggerToast) {
+      onTriggerToast(`✨ In-Portal ${type} completed: ${details}`);
+    }
+    onActionTrigger(type === "MESSAGE" ? "WHATSAPP" : type, activeCommContact?.name || "Candidate");
+  };
 
   // Teacher Assignment Handler (Admin action)
   const handleAssignTeacher = (contactId: string, teacherUsername: string) => {
@@ -91,12 +116,23 @@ export default function ContactDirectoryModule({
       selectedDistrict === "ALL" ||
       (c.district && c.district.toLowerCase() === selectedDistrict.toLowerCase());
 
+    const matchesStatus = selectedStatus === "ALL" || c.status === selectedStatus;
+
+    const matchesCounselling =
+      counsellingFilter === "ALL"
+        ? true
+        : counsellingFilter === "COUNSELLING_ONLY"
+        ? c.appliedCounselling === true || c.source?.includes("TNEA")
+        : counsellingFilter === "GOVT_QUOTA"
+        ? c.counsellingCategory?.includes("7.5%")
+        : c.appliedCounselling === false || c.counsellingCategory?.includes("Management");
+
     const matchesTeacherAssignment =
       currentUserRole === "ADMIN" ||
       c.assignedTo === loggedInUsername ||
       (!c.assignedTo && (c.campus === selectedCampus || selectedCampus === "ALL"));
 
-    return matchesSearch && matchesCampus && matchesDistrict && matchesTeacherAssignment;
+    return matchesSearch && matchesCampus && matchesDistrict && matchesStatus && matchesCounselling && matchesTeacherAssignment;
   });
 
   // Extract unique districts
@@ -126,6 +162,10 @@ export default function ContactDirectoryModule({
         address: "",
         campus: "KARUR",
         courseInterest: "B.E. Computer Science",
+        appliedCounselling: true,
+        counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
+        tneaCutoff: 185.0,
+        counsellingCategory: "TNEA General Counselling",
       });
     } catch (err) {
       // Local fallback insert
@@ -240,6 +280,39 @@ export default function ContactDirectoryModule({
 
   return (
     <div className="space-y-6">
+      {/* Teacher Quota & In-Portal Call/Message Banner */}
+      {currentUserRole === "TEACHER" && (
+        <div className="bubble-card p-4 sm:p-5 border border-emerald-500/40 bg-gradient-to-r from-emerald-950/70 via-slate-900 to-indigo-950/70 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl animate-in fade-in">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                Faculty Lead Allocation
+              </span>
+              <span className="text-xs text-slate-300 font-bold">Assigned by Admin</span>
+            </div>
+            <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-emerald-400" />
+              Assigned Contacts Quota: <span className="text-emerald-400">1,000 Candidates</span>
+            </h3>
+            <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>In-Portal Direct Calling, Messaging & Mail Active — No personal phone numbers required.</span>
+            </p>
+          </div>
+
+          <div className="w-full md:w-64 bg-slate-950/90 p-3.5 rounded-2xl border border-white/10 space-y-1.5 text-xs">
+            <div className="flex justify-between font-bold">
+              <span className="text-slate-400">Outreach Progress</span>
+              <span className="text-emerald-400">142 / 1,000 (14.2%)</span>
+            </div>
+            <div className="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden border border-white/10">
+              <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-[14.2%]" />
+            </div>
+            <p className="text-[10px] text-slate-400 text-right">858 Assigned Contacts Remaining</p>
+          </div>
+        </div>
+      )}
+
       {/* Top Banner & Action Controls */}
       <div className="bubble-card p-4 sm:p-6 border border-white/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -335,6 +408,179 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
+      {/* V.S.B. TNEA & Lead Status Icon Filters (One-by-One Icon Buttons) */}
+      <div className="bubble-card p-4 space-y-3.5 border border-sky-400/30">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div>
+            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-sky-400" /> V.S.B. TNEA & Lead Stage Filters
+            </h3>
+            <p className="text-xs text-slate-400">Filter candidate inquiries by stage or TNEA counselling category</p>
+          </div>
+          
+          {/* Counselling Status Quick Filters */}
+          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar text-xs font-bold">
+            <span className="text-slate-400 text-[11px] uppercase tracking-wider shrink-0 mr-1">Counselling Intake:</span>
+            <button
+              onClick={() => setCounsellingFilter("ALL")}
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 ${
+                counsellingFilter === "ALL"
+                  ? "bg-slate-800 text-white border-white/30 font-black"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+              }`}
+            >
+              All Intake
+            </button>
+            <button
+              onClick={() => setCounsellingFilter("COUNSELLING_ONLY")}
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${
+                counsellingFilter === "COUNSELLING_ONLY"
+                  ? "bg-emerald-500/30 text-emerald-300 border-emerald-400/60 shadow-md font-black"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+              }`}
+            >
+              <span>✅ Applied TNEA</span>
+            </button>
+            <button
+              onClick={() => setCounsellingFilter("GOVT_QUOTA")}
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${
+                counsellingFilter === "GOVT_QUOTA"
+                  ? "bg-indigo-500/30 text-indigo-300 border-indigo-400/60 shadow-md font-black"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+              }`}
+            >
+              <span>🏛️ 7.5% Govt Quota</span>
+            </button>
+            <button
+              onClick={() => setCounsellingFilter("MANAGEMENT_ONLY")}
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${
+                counsellingFilter === "MANAGEMENT_ONLY"
+                  ? "bg-purple-500/30 text-purple-300 border-purple-400/60 shadow-md font-black"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+              }`}
+            >
+              <span>💼 Management Quota</span>
+            </button>
+          </div>
+        </div>
+
+        {/* One by One Icon Status Filter Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
+          {/* ALL LEADS */}
+          <button
+            onClick={() => setSelectedStatus("ALL")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
+              selectedStatus === "ALL"
+                ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white border-white/40 shadow-lg shadow-sky-500/30 font-black scale-[1.03]"
+                : "bg-slate-950/80 text-slate-300 border-white/15 hover:border-white/30"
+            }`}
+          >
+            <span className="text-lg">🌟</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">All Leads</span>
+              <span className="text-[10px] opacity-80">{contacts.length} Total</span>
+            </div>
+          </button>
+
+          {/* NEW INQUIRY (HIGHLIGHTED SEPARATE ICON) */}
+          <button
+            onClick={() => setSelectedStatus("NEW")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 relative overflow-hidden ${
+              selectedStatus === "NEW"
+                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-300 shadow-xl shadow-sky-500/40 ring-2 ring-sky-400/50 font-black scale-[1.03]"
+                : "bg-sky-950/50 text-sky-300 border-sky-500/40 hover:bg-sky-900/60"
+            }`}
+          >
+            <span className="text-lg animate-pulse">🆕</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs text-sky-200 font-extrabold">New Inquiry</span>
+              <span className="text-[10px] opacity-90">{contacts.filter(c => c.status === "NEW").length} Leads</span>
+            </div>
+          </button>
+
+          {/* CONTACTED */}
+          <button
+            onClick={() => setSelectedStatus("CONTACTED")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
+              selectedStatus === "CONTACTED"
+                ? "bg-gradient-to-r from-teal-500 to-emerald-600 text-white border-teal-300 shadow-lg shadow-teal-500/30 font-black scale-[1.03]"
+                : "bg-teal-950/40 text-teal-300 border-teal-500/30 hover:bg-teal-900/50"
+            }`}
+          >
+            <span className="text-lg">📞</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">Contacted</span>
+              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "CONTACTED").length} Leads</span>
+            </div>
+          </button>
+
+          {/* CUTOFF REVIEW */}
+          <button
+            onClick={() => setSelectedStatus("IN_REVIEW")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
+              selectedStatus === "IN_REVIEW"
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-300 shadow-lg shadow-amber-500/30 font-black scale-[1.03]"
+                : "bg-amber-950/40 text-amber-300 border-amber-500/30 hover:bg-amber-900/50"
+            }`}
+          >
+            <span className="text-lg">📊</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">Cutoff Review</span>
+              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "IN_REVIEW").length} Leads</span>
+            </div>
+          </button>
+
+          {/* ADMITTED */}
+          <button
+            onClick={() => setSelectedStatus("ADMITTED")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
+              selectedStatus === "ADMITTED"
+                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white border-emerald-300 shadow-lg shadow-emerald-500/30 font-black scale-[1.03]"
+                : "bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50"
+            }`}
+          >
+            <span className="text-lg">🎓</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">Admitted</span>
+              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "ADMITTED").length} Leads</span>
+            </div>
+          </button>
+
+          {/* REJECTED */}
+          <button
+            onClick={() => setSelectedStatus("REJECTED")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
+              selectedStatus === "REJECTED"
+                ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-rose-300 shadow-lg shadow-rose-500/30 font-black scale-[1.03]"
+                : "bg-rose-950/40 text-rose-300 border-rose-500/30 hover:bg-rose-900/50"
+            }`}
+          >
+            <span className="text-lg">❌</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">Rejected</span>
+              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "REJECTED").length} Leads</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Dedicated Alert Banner when NEW INQUIRY Filter is Active */}
+      {selectedStatus === "NEW" && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-950 via-slate-900 to-blue-950 border border-sky-400/50 shadow-xl flex items-center gap-3 animate-in fade-in">
+          <div className="p-2.5 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-400/40 shrink-0">
+            <span className="text-xl">🆕</span>
+          </div>
+          <div>
+            <h4 className="text-xs font-black text-sky-200 uppercase tracking-wider">
+              New Inquiries Desk — Direct Candidate Contact List
+            </h4>
+            <p className="text-xs text-slate-300 font-medium mt-0.5">
+              Viewing newly submitted candidate inquiries. Contact candidates directly by name and phone number using in-portal call or messaging.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Search & District Filter Bar */}
       <div className="bubble-card p-4 space-y-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -428,18 +674,28 @@ export default function ContactDirectoryModule({
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300 transform group-hover:scale-105 transition-transform">
+                    {/* Stage Status Badge */}
+                    <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-sm ${
+                      contact.status === "NEW"
+                        ? "bg-sky-500/20 text-sky-300 border-sky-400/50 animate-pulse"
+                        : contact.status === "CONTACTED"
+                        ? "bg-teal-500/20 text-teal-300 border-teal-400/50"
+                        : contact.status === "IN_REVIEW"
+                        ? "bg-amber-500/20 text-amber-300 border-amber-400/50"
+                        : contact.status === "ADMITTED"
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/50"
+                        : "bg-rose-500/20 text-rose-300 border-rose-400/50"
+                    }`}>
+                      {contact.status === "NEW" && "🆕 New Inquiry"}
+                      {contact.status === "CONTACTED" && "📞 Contacted"}
+                      {contact.status === "IN_REVIEW" && "📊 Cutoff Review"}
+                      {contact.status === "ADMITTED" && "🎓 Admitted"}
+                      {contact.status === "REJECTED" && "❌ Rejected"}
+                    </span>
+
+                    <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300">
                       {contact.campus || "KARUR"}
                     </span>
-                    {currentUserRole === "TEACHER" ? (
-                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 shadow-sm">
-                        ✓ Assigned to You (1,000 Quota)
-                      </span>
-                    ) : (
-                      <span className="text-[9px] font-bold text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 px-2 py-0.5 rounded-full">
-                        🧑‍🏫 {contact.assignedTo === "teachercovai@123" ? "Dr. S. Meenakshi" : "Dr. K. Arulmurugan"}
-                      </span>
-                    )}
                   </div>
                 </div>
 
@@ -473,12 +729,32 @@ export default function ContactDirectoryModule({
                     <span className="font-bold text-pink-300">{contact.district || "Karur"} District</span>
                   </div>
 
-                  {/* Full Address */}
-                  {contact.address && (
-                    <div className="text-[11px] text-slate-400 pl-5.5 italic truncate" title={showAddress ? contact.address : "Address Hidden"}>
-                      {showAddress ? contact.address : "•••••••••••••"}
+                  {/* TNEA Counselling Details Box */}
+                  <div className="pt-2 border-t border-white/10 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                        <GraduationCap className="w-3 h-3 text-sky-400" /> TNEA Counselling:
+                      </span>
+                      {contact.appliedCounselling !== false ? (
+                        <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                          ✅ Applied ({contact.counsellingAppNo || "TNEA2026-61201"})
+                        </span>
+                      ) : (
+                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                          ⏳ Direct Management Intake
+                        </span>
+                      )}
                     </div>
-                  )}
+
+                    <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
+                      <span className="text-slate-300">
+                        Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff || 188.5} / 200</strong>
+                      </span>
+                      <span className="text-indigo-300 text-[10px]">
+                        {contact.counsellingCategory || "TNEA General"}
+                      </span>
+                    </div>
+                  </div>
 
                   {/* Admin Teacher Assignment Dropdown */}
                   {currentUserRole === "ADMIN" && (
@@ -504,25 +780,49 @@ export default function ContactDirectoryModule({
               {/* Action Buttons: Edit, Call, Email, WhatsApp, Delete */}
               <div className="flex items-center justify-between pt-3 border-t border-white/10 relative z-10">
                 <div className="flex items-center gap-1.5">
-                  <Tooltip text={`Call ${contact.name}`} position="bottom">
+                  <Tooltip text={`In-Portal Call ${contact.name}`} position="bottom">
                     <button
-                      onClick={() => onActionTrigger("CALL", contact.name)}
+                      onClick={() => handleOpenCommModal("CALL", {
+                        name: contact.name,
+                        phone: contact.phone,
+                        email: contact.email,
+                        courseInterest: contact.courseInterest,
+                        campus: contact.campus,
+                        school: contact.school || undefined,
+                        district: contact.district || undefined,
+                      })}
                       className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
                     >
                       <Phone className="w-3.5 h-3.5" />
                     </button>
                   </Tooltip>
-                  <Tooltip text={`Email ${contact.name}`} position="bottom">
+                  <Tooltip text={`In-Portal Email ${contact.name}`} position="bottom">
                     <button
-                      onClick={() => onActionTrigger("EMAIL", contact.name)}
+                      onClick={() => handleOpenCommModal("EMAIL", {
+                        name: contact.name,
+                        phone: contact.phone,
+                        email: contact.email,
+                        courseInterest: contact.courseInterest,
+                        campus: contact.campus,
+                        school: contact.school || undefined,
+                        district: contact.district || undefined,
+                      })}
                       className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
                     >
                       <Mail className="w-3.5 h-3.5" />
                     </button>
                   </Tooltip>
-                  <Tooltip text={`WhatsApp ${contact.name}`} position="bottom">
+                  <Tooltip text={`In-Portal Message ${contact.name}`} position="bottom">
                     <button
-                      onClick={() => onActionTrigger("WHATSAPP", contact.name)}
+                      onClick={() => handleOpenCommModal("MESSAGE", {
+                        name: contact.name,
+                        phone: contact.phone,
+                        email: contact.email,
+                        courseInterest: contact.courseInterest,
+                        campus: contact.campus,
+                        school: contact.school || undefined,
+                        district: contact.district || undefined,
+                      })}
                       className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
@@ -836,6 +1136,14 @@ export default function ContactDirectoryModule({
           </div>
         </div>
       )}
+
+      {/* IN-PORTAL DIRECT COMMUNICATION MODALS (Call, Message, Email) */}
+      <InPortalCommunicationModals
+        activeModal={activeCommModal}
+        contact={activeCommContact}
+        onClose={() => setActiveCommModal(null)}
+        onLogSuccess={handleCommLogSuccess}
+      />
     </div>
   );
 }

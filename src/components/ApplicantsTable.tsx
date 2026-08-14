@@ -6,6 +6,8 @@ import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus } from "
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 
+import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
+
 interface ApplicantsTableProps {
   applicants: (Lead & { application: Application })[];
   searchQuery: string;
@@ -22,6 +24,19 @@ export default function ApplicantsTable({
   onOpenCreateModal,
 }: ApplicantsTableProps) {
   const [selectedStage, setSelectedStage] = useState<string>("ALL");
+
+  // In-Portal Communication Modal State
+  const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
+  const [activeCommContact, setActiveCommContact] = useState<ContactTarget | null>(null);
+
+  const handleOpenCommModal = (type: "CALL" | "MESSAGE" | "EMAIL", target: ContactTarget) => {
+    setActiveCommContact(target);
+    setActiveCommModal(type);
+  };
+
+  const handleCommLogSuccess = (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => {
+    onActionTrigger(type === "MESSAGE" ? "WHATSAPP" : type, activeCommContact?.name || "Candidate");
+  };
 
   const filteredApplicants = applicants.filter((item) => {
     const matchesSearch =
@@ -109,6 +124,7 @@ export default function ApplicantsTable({
                 <th className="py-3 px-4">Applied Program</th>
                 <th className="py-3 px-4 hidden sm:table-cell">Campus</th>
                 <th className="py-3 px-4">Stage Status</th>
+                <th className="py-3 px-4 hidden md:table-cell">TNEA Cutoff & Counselling</th>
                 <th className="py-3 px-4 hidden sm:table-cell">12th Marks</th>
                 <th className="py-3 px-4 text-right">Quick Actions</th>
               </tr>
@@ -171,6 +187,24 @@ export default function ApplicantsTable({
                       </span>
                     </td>
 
+                    {/* TNEA Cutoff & Counselling Cell */}
+                    <td className="py-3.5 px-4 hidden md:table-cell">
+                      <div className="space-y-0.5">
+                        <div className="font-extrabold text-sky-300 font-mono text-[11px]">
+                          Cutoff: {item.tneaCutoff || 188.5} / 200
+                        </div>
+                        {item.appliedCounselling !== false ? (
+                          <span className="inline-block text-[9.5px] font-extrabold text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">
+                            ✅ TNEA ({item.counsellingAppNo || "TNEA2026-61201"})
+                          </span>
+                        ) : (
+                          <span className="inline-block text-[9.5px] font-bold text-amber-300 bg-amber-950 px-2 py-0.5 rounded-md border border-amber-800">
+                            ⏳ Management Quota
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
                     {/* Marks */}
                     <td className="py-3.5 px-4 font-black text-white hidden sm:table-cell">
                       {item.application.marks12th}%
@@ -187,25 +221,49 @@ export default function ApplicantsTable({
                             <Eye className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
-                        <Tooltip text={`Call ${item.name}`}>
+                        <Tooltip text={`In-Portal Call ${item.name}`}>
                           <button
-                            onClick={() => onActionTrigger("CALL", item.name)}
+                            onClick={() => handleOpenCommModal("CALL", {
+                              name: item.name,
+                              phone: item.phone,
+                              email: item.email,
+                              courseInterest: item.courseInterest,
+                              campus: item.campus,
+                              school: item.school || undefined,
+                              district: item.district || undefined,
+                            })}
                             className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
                           >
                             <Phone className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
-                        <Tooltip text={`Email ${item.name}`}>
+                        <Tooltip text={`In-Portal Email ${item.name}`}>
                           <button
-                            onClick={() => onActionTrigger("EMAIL", item.name)}
+                            onClick={() => handleOpenCommModal("EMAIL", {
+                              name: item.name,
+                              phone: item.phone,
+                              email: item.email,
+                              courseInterest: item.courseInterest,
+                              campus: item.campus,
+                              school: item.school || undefined,
+                              district: item.district || undefined,
+                            })}
                             className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-indigo-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
                           >
                             <Mail className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
-                        <Tooltip text={`WhatsApp ${item.name}`}>
+                        <Tooltip text={`In-Portal Message ${item.name}`}>
                           <button
-                            onClick={() => onActionTrigger("WHATSAPP", item.name)}
+                            onClick={() => handleOpenCommModal("MESSAGE", {
+                              name: item.name,
+                              phone: item.phone,
+                              email: item.email,
+                              courseInterest: item.courseInterest,
+                              campus: item.campus,
+                              school: item.school || undefined,
+                              district: item.district || undefined,
+                            })}
                             className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-teal-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
@@ -234,6 +292,14 @@ export default function ApplicantsTable({
           Export Candidate List <ChevronRight className="w-3.5 h-3.5" />
         </span>
       </div>
+
+      {/* IN-PORTAL DIRECT COMMUNICATION MODALS */}
+      <InPortalCommunicationModals
+        activeModal={activeCommModal}
+        contact={activeCommContact}
+        onClose={() => setActiveCommModal(null)}
+        onLogSuccess={handleCommLogSuccess}
+      />
     </div>
   );
 }

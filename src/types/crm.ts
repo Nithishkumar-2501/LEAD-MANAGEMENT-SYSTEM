@@ -55,6 +55,11 @@ export interface Lead {
   status: LeadStatus;
   counselorId?: string | null;
   assignedTo?: string;
+  appliedCounselling?: boolean;
+  counsellingAppNo?: string;
+  tneaCutoff?: number;
+  counsellingCategory?: string;
+  generalRank?: number;
   createdAt: string;
   application?: Application | null;
 }
@@ -109,6 +114,8 @@ export interface Teacher {
   experienceYears: number;
   status: "ACTIVE" | "ON_LEAVE";
   avatar: string;
+  assignedQuota?: number;
+  contactedCount?: number;
 }
 
 export interface SummaryMetrics {
