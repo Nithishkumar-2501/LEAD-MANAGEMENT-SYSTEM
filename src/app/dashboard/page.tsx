@@ -37,9 +37,9 @@ import {
 } from "@/lib/mockData";
 
 export default function DashboardPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ADMISSIONS");
-  const [selectedCampus, setSelectedCampus] = useState<CampusLocation>("ALL");
+  const [selectedCampus, setSelectedCampus] = useState<CampusLocation>("KARUR");
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
