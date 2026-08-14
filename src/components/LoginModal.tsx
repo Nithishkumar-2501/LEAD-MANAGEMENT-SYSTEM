@@ -164,55 +164,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
           </button>
         </form>
 
-        {/* Authorized Credentials Quick-Select Helper Box */}
-        <div className="mt-4 p-3 rounded-2xl bg-slate-900/90 border border-slate-700/80 space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-extrabold text-sky-300">
-            <span className="flex items-center gap-1 text-slate-200">
-              <UserCheck className="w-3.5 h-3.5 text-sky-400" /> Quick Authorized Accounts
-            </span>
-            <span className="text-[10px] text-slate-400 font-normal">Click to auto-fill</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-[10px]">
-            <button
-              type="button"
-              onClick={() => autoFill("adminkarur@123", "vsbec@123")}
-              className="p-2 rounded-xl bg-sky-950/70 border border-sky-500/30 hover:bg-sky-900/80 text-left transition-all group"
-            >
-              <div className="font-extrabold text-sky-200 group-hover:text-white">Karur Admin</div>
-              <div className="text-slate-400 font-mono text-[9px]">adminkarur@123</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => autoFill("admincovai@123", "vsbectc@1213")}
-              className="p-2 rounded-xl bg-indigo-950/70 border border-indigo-500/30 hover:bg-indigo-900/80 text-left transition-all group"
-            >
-              <div className="font-extrabold text-indigo-200 group-hover:text-white">Coimbatore Admin</div>
-              <div className="text-slate-400 font-mono text-[9px]">admincovai@123</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => autoFill("teacherkarur@123", "vsbteacher@123")}
-              className="p-2 rounded-xl bg-purple-950/70 border border-purple-500/30 hover:bg-purple-900/80 text-left transition-all group"
-            >
-              <div className="font-extrabold text-purple-200 group-hover:text-white">Karur Teacher</div>
-              <div className="text-slate-400 font-mono text-[9px]">teacherkarur@123</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => autoFill("teachercovai@123", "vsbteacher@1213")}
-              className="p-2 rounded-xl bg-teal-950/70 border border-teal-500/30 hover:bg-teal-900/80 text-left transition-all group"
-            >
-              <div className="font-extrabold text-teal-200 group-hover:text-white">Coimbatore Teacher</div>
-              <div className="text-slate-400 font-mono text-[9px]">teachercovai@123</div>
-            </button>
-          </div>
-        </div>
-
-        <p className="text-[10px] text-center text-slate-400 font-medium mt-4">
+        <p className="text-[10px] text-center text-slate-400 font-medium mt-6">
           © 2026 V.S.B. Engineering College. Autonomous Institution - AICTE Approved & NAAC Accredited.
         </p>
       </div>
