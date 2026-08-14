@@ -1,9 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Phone, Mail, MessageSquare, Award, CheckCircle2, DollarSign, Calendar, BookOpen, Edit3, Save, Landmark } from "lucide-react";
-import { Lead, Application, AppStage, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
-import Tooltip from "@/components/Tooltip";
+import {
+  X,
+  Phone,
+  Mail,
+  MessageSquare,
+  CheckCircle2,
+  Edit3,
+  Save,
+  Sparkles,
+  QrCode,
+  Bot,
+  Plus,
+  SlidersHorizontal,
+  XCircle,
+  TrendingUp,
+  ChevronDown,
+  Info,
+} from "lucide-react";
+import { Lead, Application, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -23,8 +39,20 @@ export default function ApplicantDetailModal({
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(applicant);
 
+  const [activeMainTab, setActiveMainTab] = useState<
+    "LEAD_DETAILS" | "TIMELINE" | "CALENDAR" | "NOTES" | "COMMUNICATION" | "TICKETS"
+  >("LEAD_DETAILS");
+
+  const [activeSubTab, setActiveSubTab] = useState<"LEAD_DETAILS" | "ADDITIONAL" | "FACEBOOK">(
+    "LEAD_DETAILS"
+  );
+
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+
   useEffect(() => {
     setFormData(applicant);
+    setAiSummary(null);
   }, [applicant]);
 
   if (!applicant || !formData) return null;
@@ -37,350 +65,552 @@ export default function ApplicantDetailModal({
     setIsEditing(false);
   };
 
+  const generateAiSummary = () => {
+    setIsGeneratingAi(true);
+    setTimeout(() => {
+      setAiSummary(
+        `Candidate ${formData.name} demonstrates high intent with 12th score ${formData.application.marks12th}% and TNEA Cutoff ${formData.tneaCutoff || 188.5}. Recommended for immediate Merit Scholarship counseling.`
+      );
+      setIsGeneratingAi(false);
+    }, 800);
+  };
+
   const app = formData.application;
 
+  // Stages matching NoPaperForms / Meritto reference
+  const stageSteps = [
+    { label: "Unverified", key: "INQUIRY" },
+    { label: "Verified", key: "SUBMITTED" },
+    { label: "Application Started", key: "DOCS_VERIFIED" },
+    { label: "Payment Approved", key: "OFFER_ISSUED" },
+    { label: "Application Submitted", key: "FEE_PAID" },
+    { label: "Enrolments", key: "ENROLLED" },
+  ];
+
+  const getStageIndex = (stage: string) => {
+    switch (stage) {
+      case "INQUIRY":
+        return 0;
+      case "SUBMITTED":
+        return 1;
+      case "DOCS_VERIFIED":
+        return 2;
+      case "OFFER_ISSUED":
+        return 3;
+      case "FEE_PAID":
+      case "ENROLLED":
+        return 4;
+      default:
+        return 0;
+    }
+  };
+
+  const currentStageIdx = getStageIndex(app.stage);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="glass-card w-full sm:max-w-xl rounded-t-2xl sm:rounded-2xl border border-slate-700 shadow-2xl overflow-hidden text-slate-100 relative max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/80 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0">
-              {formData.name.slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-100">{formData.name}</h3>
-              <p className="text-xs text-indigo-400 font-medium">{formData.courseInterest}</p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-[#0f172a] w-full max-w-6xl rounded-2xl border border-slate-700/80 shadow-2xl overflow-hidden text-slate-100 flex flex-col max-h-[95vh] my-auto">
+        {/* Top Header / Breadcrumb Bar */}
+        <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+            <span className="text-slate-400">Lead Details</span>
+            <span className="text-slate-600">&gt;</span>
+            <button className="p-1 rounded-lg bg-slate-800 border border-slate-700 text-sky-400 hover:text-white">
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="flex items-center gap-2">
-            {!isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-sky-400 hover:text-white hover:bg-slate-700 transition-all"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit Profile
-              </button>
-            )}
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => onActionTrigger("CALL", formData.name)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-all"
+            >
+              <Plus className="w-3.5 h-3.5 text-sky-400" /> Add Event
+            </button>
+            <button
+              onClick={generateAiSummary}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-all"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Ask Mio AI
+            </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
-          {isEditing ? (
-            <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
-              {/* Profile Details (Editable by BOTH Admin and Teacher) */}
-              <div className="space-y-3">
-                <h4 className="text-sky-300 font-bold border-b border-slate-800 pb-1 uppercase tracking-wider text-[10px]">
-                  Student Details (Editable)
-                </h4>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Student Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Course Interest</label>
-                    <select
-                      value={formData.courseInterest}
-                      onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                    >
-                      {VSB_DEPARTMENTS_COURSES.map((course) => (
-                        <option key={course} value={course} className="bg-slate-900">
-                          {course}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Mobile Phone</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Affiliated School</label>
-                    <input
-                      type="text"
-                      value={formData.school || ""}
-                      onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">District</label>
-                    <input
-                      type="text"
-                      value={formData.district || ""}
-                      onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Address</label>
-                  <input
-                    type="text"
-                    value={formData.address || ""}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white"
-                  />
-                </div>
+        {/* Modal Scrollable Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
+          {/* Mio AI Coach Banner */}
+          <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-inner">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-400 shrink-0">
+                <Bot className="w-4 h-4" />
               </div>
+              <div className="text-xs">
+                <span className="font-extrabold text-indigo-300 mr-2">✨ Mio AI Coach</span>
+                <span className="text-slate-300 font-medium">
+                  {aiSummary ? aiSummary : "Summary will appear here once generated."}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={generateAiSummary}
+              disabled={isGeneratingAi}
+              className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shrink-0 disabled:opacity-50 transition-all"
+            >
+              {isGeneratingAi ? "Generating..." : "+ Generate Summary"}
+            </button>
+          </div>
 
-              {/* Application Details (Editable ONLY by ADMIN, Disabled/Masked for TEACHER) */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-1">
-                  <h4 className="text-purple-300 font-bold uppercase tracking-wider text-[10px]">
-                    Application Details {currentUserRole === "TEACHER" && "(Locked)"}
-                  </h4>
-                  {currentUserRole === "TEACHER" && (
-                    <span className="text-[9px] bg-rose-950 text-rose-400 border border-rose-800 px-2 py-0.5 rounded-full font-bold">
-                      Admin Access Only
+          {/* Chevron Stage Tracker Progress Bar */}
+          <div className="overflow-x-auto pb-1 hide-scrollbar">
+            <div className="flex items-center gap-1 min-w-[650px] bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
+              {stageSteps.map((step, idx) => {
+                const isActive = idx === currentStageIdx;
+                const isPassed = idx < currentStageIdx;
+                return (
+                  <div
+                    key={step.key}
+                    className={`flex-1 text-center py-2 px-2 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                      isActive
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md shadow-emerald-500/10"
+                        : isPassed
+                        ? "bg-slate-800/90 text-slate-300 border border-slate-700"
+                        : "bg-slate-950/50 text-slate-500 border border-slate-850"
+                    }`}
+                  >
+                    {isPassed && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
+                    {isActive && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />}
+                    <span className="truncate">{step.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* MAIN 2-COLUMN GRID (Left Profile Sidebar + Right Details Tab Area) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* LEFT PROFILE SIDEBAR (4 cols) */}
+            <div className="lg:col-span-4 space-y-4">
+              {/* Profile Card */}
+              <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 space-y-4 shadow-lg relative overflow-hidden">
+                {/* Avatar & Name */}
+                <div className="flex items-start gap-3">
+                  <div className="relative">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xl shadow-xl ring-2 ring-white/20">
+                      {formData.name.slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-slate-950 border border-slate-700 flex items-center justify-center text-sky-400">
+                      <QrCode className="w-3 h-3" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h3 className="text-base font-black text-white tracking-tight flex items-center gap-1.5">
+                      {formData.name.toUpperCase()}
+                    </h3>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+                      <span>Lead Stage:</span>
+                      <span className="font-bold text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded-md border border-sky-500/30 flex items-center gap-1">
+                        {formData.status}
+                        <Edit3
+                          className="w-3 h-3 cursor-pointer text-slate-400 hover:text-white"
+                          onClick={() => setIsEditing(true)}
+                        />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email & Phone Contact Rows */}
+                <div className="space-y-1.5 text-xs border-t border-slate-800/80 pt-3">
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span className="flex items-center gap-1.5 truncate">
+                      <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <strong className="text-slate-200 truncate">{formData.email}</strong>
                     </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">10th Marks (%)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      disabled={currentUserRole === "TEACHER"}
-                      value={app.marks10th}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        application: { ...app, marks10th: Number(e.target.value) }
-                      })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white disabled:opacity-40"
-                    />
+                    <span title="Unverified"><XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" /></span>
                   </div>
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">12th Marks (%)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      disabled={currentUserRole === "TEACHER"}
-                      value={app.marks12th}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        application: { ...app, marks12th: Number(e.target.value) }
-                      })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white disabled:opacity-40"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Application Stage</label>
-                    <select
-                      disabled={currentUserRole === "TEACHER"}
-                      value={app.stage}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        application: { ...app, stage: e.target.value as AppStage }
-                      })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white disabled:opacity-40"
-                    >
-                      <option value="INQUIRY">INQUIRY</option>
-                      <option value="SUBMITTED">SUBMITTED</option>
-                      <option value="DOCS_VERIFIED">DOCS VERIFIED</option>
-                      <option value="OFFER_ISSUED">OFFER ISSUED</option>
-                      <option value="FEE_PAID">FEE PAID</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-400 font-semibold mb-1">Payment Status</label>
-                    <select
-                      disabled={currentUserRole === "TEACHER"}
-                      value={app.paymentStatus}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        application: { ...app, paymentStatus: e.target.value }
-                      })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white disabled:opacity-40"
-                    >
-                      <option value="PENDING">PENDING</option>
-                      <option value="COMPLETED">COMPLETED</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
-                >
-                  <Save className="w-3.5 h-3.5" /> Save Changes
-                </button>
-              </div>
-            </form>
-          ) : (
-            <>
-              {/* Key Metrics grid */}
-              <div className="grid grid-cols-3 gap-2.5">
-                <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-800 flex items-center gap-2">
-                  <Award className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase font-medium">10th Grade</p>
-                    <p className="text-xs font-bold text-slate-100">{app.marks10th}%</p>
-                  </div>
-                </div>
-                <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-800 flex items-center gap-2">
-                  <Award className="w-4 h-4 text-purple-400 shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase font-medium">12th Grade</p>
-                    <p className="text-xs font-bold text-slate-100">{app.marks12th}%</p>
-                  </div>
-                </div>
-                <div className="bg-sky-950/60 p-3 rounded-xl border border-sky-500/40 flex items-center gap-2">
-                  <Award className="w-4 h-4 text-sky-400 shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-sky-300 uppercase font-bold">TNEA Cutoff</p>
-                    <p className="text-xs font-extrabold text-white font-mono">{formData.tneaCutoff || 188.5} / 200</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Details list */}
-              <div className="space-y-2.5 bg-slate-900/50 p-4 rounded-xl border border-slate-800/80 text-xs">
-                <div className="flex justify-between items-center py-1 border-b border-slate-800">
-                  <span className="text-slate-400 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-400" /> Email</span>
-                  <span className="font-semibold text-slate-200">{formData.email}</span>
-                </div>
-                <div className="flex justify-between items-center py-1 border-b border-slate-800">
-                  <span className="text-slate-400 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-slate-400" /> Phone</span>
-                  <span className="font-semibold text-slate-200">{formData.phone}</span>
-                </div>
-
-                {/* TNEA Counselling Status */}
-                <div className="flex justify-between items-center py-1 border-b border-slate-800">
-                  <span className="text-sky-400 font-bold flex items-center gap-1.5">🎓 TNEA Counselling</span>
-                  {formData.appliedCounselling !== false ? (
-                    <span className="font-extrabold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800 text-[11px]">
-                      ✅ Applied ({formData.counsellingAppNo || "TNEA2026-61201"})
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <strong className="text-slate-200">{formData.phone}</strong>
                     </span>
+                    <span title="Unverified"><XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" /></span>
+                  </div>
+                </div>
+
+                {/* Quick 5 Action Buttons Bar */}
+                <div className="grid grid-cols-5 gap-1.5 border-t border-slate-800/80 pt-3">
+                  <button
+                    onClick={() => onActionTrigger("CALL", formData.name)}
+                    className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all"
+                    title="Merge / Compare"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onActionTrigger("CALL", formData.name)}
+                    className="p-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/30 text-emerald-400 flex items-center justify-center transition-all"
+                    title="Call Candidate"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all"
+                    title="Edit Profile Note"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onActionTrigger("EMAIL", formData.name)}
+                    className="p-2 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-500/30 text-indigo-400 flex items-center justify-center transition-all"
+                    title="Send Email"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onActionTrigger("WHATSAPP", formData.name)}
+                    className="p-2 rounded-xl bg-teal-950/60 hover:bg-teal-900/80 border border-teal-500/30 text-teal-400 flex items-center justify-center transition-all"
+                    title="WhatsApp Outreach"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Lead Strength & Lead Score Stats Widgets */}
+                <div className="grid grid-cols-2 gap-2.5 border-t border-slate-800/80 pt-3">
+                  <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800 text-center">
+                    <div className="w-6 h-6 rounded-full border-2 border-sky-400 flex items-center justify-center mx-auto mb-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                      Lead Strength
+                    </span>
+                    <span className="text-xs font-extrabold text-sky-300">High</span>
+                  </div>
+
+                  <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800 text-center relative overflow-hidden">
+                    <div className="text-xl font-black text-white flex items-center justify-center gap-1">
+                      <span>5</span>
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                      Lead Score
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Assignment Details Accordion Card */}
+              <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-2 shadow-md">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-200 border-b border-slate-800 pb-2">
+                  <span>Assignment Details</span>
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                </div>
+                <div className="space-y-1.5 text-xs pt-1">
+                  <div>
+                    <span className="text-slate-400 text-[11px] block font-medium">Assigned Owner</span>
+                    <span className="font-bold text-white block">
+                      Dr Dhanabal M Assistant Professor MECH
+                    </span>
+                  </div>
+                  <div className="pt-1">
+                    <span className="text-slate-400 text-[11px] block font-medium">Lead Source</span>
+                    <span className="font-bold text-sky-300">{formData.source || "Organic"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Important Dates Accordion Card */}
+              <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-2 shadow-md">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-200 border-b border-slate-800 pb-2">
+                  <span>Important Dates</span>
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                </div>
+                <div className="space-y-1.5 text-xs pt-1">
+                  <div>
+                    <span className="text-slate-400 text-[11px] block font-medium">Upcoming Followup</span>
+                    <span className="font-bold text-slate-400">NA</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT MAIN DETAILS TAB AREA (8 cols) */}
+            <div className="lg:col-span-8 space-y-4">
+              {/* Main Navigation Tabs */}
+              <div className="flex items-center gap-1 border-b border-slate-800 overflow-x-auto pb-0.5 hide-scrollbar">
+                {[
+                  { id: "LEAD_DETAILS", label: "👤 Lead Details" },
+                  { id: "TIMELINE", label: "⏱ Timeline" },
+                  { id: "CALENDAR", label: "📅 Calendar Pro" },
+                  { id: "NOTES", label: "📝 Notes" },
+                  { id: "COMMUNICATION", label: "✉ Communication Logs" },
+                  { id: "TICKETS", label: "🎫 Tickets" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveMainTab(tab.id as any)}
+                    className={`px-3.5 py-2 text-xs font-bold whitespace-nowrap transition-all border-b-2 ${
+                      activeMainTab === tab.id
+                        ? "border-sky-400 text-sky-300 bg-sky-950/30 rounded-t-xl"
+                        : "border-transparent text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab Content: Lead Details */}
+              {activeMainTab === "LEAD_DETAILS" && (
+                <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 space-y-4 shadow-lg">
+                  {/* Sub Tabs */}
+                  <div className="flex items-center gap-2 border-b border-slate-800/80 pb-3">
+                    {[
+                      { id: "LEAD_DETAILS", label: "Lead Details ✎" },
+                      { id: "ADDITIONAL", label: "Additional Details" },
+                      { id: "FACEBOOK", label: "Facebook Details" },
+                    ].map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => setActiveSubTab(sub.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                          activeSubTab === sub.id
+                            ? "bg-slate-800 text-sky-300 border border-slate-700"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {sub.label}
+                      </button>
+                    ))}
+
+                    <button
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="ml-auto text-xs font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> {isEditing ? "View Details" : "Edit Profile"}
+                    </button>
+                  </div>
+
+                  {/* FORM EDIT MODE */}
+                  {isEditing ? (
+                    <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">Student Name</label>
+                          <input
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">Mobile Number</label>
+                          <input
+                            type="text"
+                            required
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">Email Address</label>
+                          <input
+                            type="email"
+                            required
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">Course Interest</label>
+                          <select
+                            value={formData.courseInterest}
+                            onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                          >
+                            {VSB_DEPARTMENTS_COURSES.map((course) => (
+                              <option key={course} value={course} className="bg-slate-900">
+                                {course}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">District / City</label>
+                          <input
+                            type="text"
+                            value={formData.district || ""}
+                            onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">Campus</label>
+                          <select
+                            value={formData.campus}
+                            onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                          >
+                            <option value="KARUR">V.S.B. Karur</option>
+                            <option value="COIMBATORE">V.S.B. Coimbatore</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditing(false)}
+                          className="px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
+                        >
+                          <Save className="w-3.5 h-3.5" /> Save Changes
+                        </button>
+                      </div>
+                    </form>
                   ) : (
-                    <span className="font-bold text-amber-400 bg-amber-950 px-2 py-0.5 rounded-md border border-amber-800 text-[11px]">
-                      ⏳ Direct Management Intake
-                    </span>
+                    /* KEY-VALUE DETAILS LIST MATCHING REFERENCE IMAGE */
+                    <div className="space-y-3 text-xs font-sans">
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
+                        <span className="sm:col-span-5 font-bold text-slate-400">Email Address</span>
+                        <span className="sm:col-span-7 font-bold text-white flex items-center gap-1">
+                          : <strong className="text-slate-100 font-mono">{formData.email}</strong>
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
+                        <span className="sm:col-span-5 font-bold text-slate-400 flex items-center gap-1">
+                          Mobile Number <Info className="w-3 h-3 text-slate-500" />
+                        </span>
+                        <span className="sm:col-span-7 font-bold text-white">
+                          : <strong className="text-slate-100 font-mono">{formData.phone}</strong>
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
+                        <span className="sm:col-span-5 font-bold text-slate-400">Alternate Mobile Number</span>
+                        <span className="sm:col-span-7 font-semibold text-slate-400">: NA</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
+                        <span className="sm:col-span-5 font-bold text-slate-400">Name</span>
+                        <span className="sm:col-span-7 font-bold text-white">: {formData.name}</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
+                        <span className="sm:col-span-5 font-bold text-slate-400">State</span>
+                        <span className="sm:col-span-7 font-semibold text-slate-200">: Tamil Nadu</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
+                        <span className="sm:col-span-5 font-bold text-slate-400">City</span>
+                        <span className="sm:col-span-7 font-semibold text-slate-200">
+                          : {formData.district || "Salem"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
+                        <span className="sm:col-span-5 font-bold text-slate-400">Campus</span>
+                        <span className="sm:col-span-7 font-bold text-sky-300">
+                          : V.S.B. {formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
+                        <span className="sm:col-span-5 font-bold text-slate-400">Course</span>
+                        <span className="sm:col-span-7 font-bold text-indigo-300">
+                          : {formData.courseInterest || "UG - B.E. Computer Science"}
+                        </span>
+                      </div>
+
+                      {/* Additional Academic Metrics Cards */}
+                      <div className="grid grid-cols-3 gap-3 pt-3">
+                        <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold block">10th Marks</span>
+                          <span className="text-sm font-black text-white">{app.marks10th}%</span>
+                        </div>
+                        <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold block">12th Marks</span>
+                          <span className="text-sm font-black text-white">{app.marks12th}%</span>
+                        </div>
+                        <div className="bg-sky-950/60 p-3 rounded-xl border border-sky-500/30">
+                          <span className="text-[10px] text-sky-400 uppercase font-bold block">TNEA Cutoff</span>
+                          <span className="text-sm font-black text-white font-mono">{formData.tneaCutoff || 188.5}</span>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
+              )}
 
-                <div className="flex justify-between items-center py-1 border-b border-slate-800">
-                  <span className="text-slate-400 flex items-center gap-1.5">🏛️ Counselling Category</span>
-                  <span className="font-semibold text-sky-300">{formData.counsellingCategory || "TNEA General Counselling"}</span>
+              {/* Other Tabs */}
+              {activeMainTab === "TIMELINE" && (
+                <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 space-y-3 text-xs">
+                  <h4 className="font-bold text-white border-b border-slate-800 pb-2">Activity Timeline</h4>
+                  <div className="space-y-3 font-mono text-[11px]">
+                    <div className="flex gap-3 items-start">
+                      <span className="w-2 h-2 rounded-full bg-sky-400 mt-1 shrink-0" />
+                      <div>
+                        <p className="text-white font-bold">Inquiry Registered</p>
+                        <p className="text-slate-400">Lead created via {formData.source} on {new Date(formData.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 items-start">
+                      <span className="w-2 h-2 rounded-full bg-indigo-400 mt-1 shrink-0" />
+                      <div>
+                        <p className="text-white font-bold">Counselor Telecall Outreach</p>
+                        <p className="text-slate-400">Assigned counselor initiated teleconference check.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-slate-800">
-                  <span className="text-slate-400 flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5 text-slate-400" /> Acquisition Source</span>
-                  <span className="font-semibold text-indigo-300">{formData.source}</span>
-                </div>
-                <div className="flex justify-between items-center py-1 border-b border-slate-800">
-                  <span className="text-slate-400 flex items-center gap-1.5"><Landmark className="w-3.5 h-3.5 text-slate-400" /> Home Affiliation</span>
-                  <span className="font-semibold text-amber-200 truncate max-w-[200px]" title={formData.school}>
-                    {formData.school || "Govt HSS"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-1 border-b border-slate-800">
-                  <span className="text-slate-400 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> Lead Created</span>
-                  <span className="font-semibold text-slate-200">{new Date(formData.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-slate-400 flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5 text-slate-400" /> Payment Status</span>
-                  <span className={`font-semibold px-2 py-0.5 rounded-full ${app.paymentStatus === 'COMPLETED' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}`}>
-                    {app.paymentStatus}
-                  </span>
-                </div>
-              </div>
+              )}
 
-              {/* Application Stage Banner */}
-              <div className="bg-indigo-950/40 border border-indigo-800/60 p-4 rounded-xl flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-indigo-300 font-medium">Application Stage</p>
-                  <p className="text-sm font-bold text-white mt-0.5">{app.stage.replace('_', ' ')}</p>
+              {activeMainTab === "NOTES" && (
+                <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 space-y-3 text-xs">
+                  <h4 className="font-bold text-white border-b border-slate-800 pb-2">Counselor Notes</h4>
+                  <textarea
+                    placeholder="Add counselor observation notes here..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-xs"
+                    rows={4}
+                  />
+                  <button className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold">
+                    Save Note
+                  </button>
                 </div>
-                <CheckCircle2 className="w-6 h-6 text-indigo-400" />
-              </div>
+              )}
 
-              {/* Quick Action Buttons */}
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Contact Lead</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <Tooltip text={`Call ${formData.name}`}>
-                    <button
-                      onClick={() => onActionTrigger("CALL", formData.name)}
-                      className="w-full flex items-center justify-center gap-1.5 bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
-                    >
-                      <Phone className="w-3.5 h-3.5" /> Call
-                    </button>
-                  </Tooltip>
-                  <Tooltip text={`Email ${formData.name}`}>
-                    <button
-                      onClick={() => onActionTrigger("EMAIL", formData.name)}
-                      className="w-full flex items-center justify-center gap-1.5 bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
-                    >
-                      <Mail className="w-3.5 h-3.5" /> Email
-                    </button>
-                  </Tooltip>
-                  <Tooltip text={`WhatsApp ${formData.name}`}>
-                    <button
-                      onClick={() => onActionTrigger("WHATSAPP", formData.name)}
-                      className="w-full flex items-center justify-center gap-1.5 bg-teal-600/20 border border-teal-500/30 text-teal-300 hover:bg-teal-600/30 py-2 rounded-xl text-xs font-semibold transition-all"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
-                    </button>
-                  </Tooltip>
+              {activeMainTab === "COMMUNICATION" && (
+                <div className="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 space-y-3 text-xs">
+                  <h4 className="font-bold text-white border-b border-slate-800 pb-2">Communication Logs</h4>
+                  <p className="text-slate-400">Log of SMS, WhatsApp outreach, and Portal Emails sent to {formData.email}.</p>
                 </div>
-              </div>
-            </>
-          )}
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
