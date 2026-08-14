@@ -492,76 +492,102 @@ export default function ApplicantDetailModal({
                       </div>
                     </form>
                   ) : (
-                    /* KEY-VALUE DETAILS LIST MATCHING REFERENCE IMAGE */
-                    <div className="space-y-3 text-xs font-sans">
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
-                        <span className="sm:col-span-5 font-bold text-slate-400">Email Address</span>
-                        <span className="sm:col-span-7 font-bold text-white flex items-center gap-1">
-                          : <strong className="text-slate-100 font-mono">{formData.email}</strong>
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
-                        <span className="sm:col-span-5 font-bold text-slate-400 flex items-center gap-1">
-                          Mobile Number <Info className="w-3 h-3 text-slate-500" />
-                        </span>
-                        <span className="sm:col-span-7 font-bold text-white">
-                          : <strong className="text-slate-100 font-mono">{formData.phone}</strong>
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
-                        <span className="sm:col-span-5 font-bold text-slate-400">Alternate Mobile Number</span>
-                        <span className="sm:col-span-7 font-semibold text-slate-400">: NA</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
-                        <span className="sm:col-span-5 font-bold text-slate-400">Name</span>
-                        <span className="sm:col-span-7 font-bold text-white">: {formData.name}</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
-                        <span className="sm:col-span-5 font-bold text-slate-400">State</span>
-                        <span className="sm:col-span-7 font-semibold text-slate-200">: Tamil Nadu</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
-                        <span className="sm:col-span-5 font-bold text-slate-400">City</span>
-                        <span className="sm:col-span-7 font-semibold text-slate-200">
-                          : {formData.district || "Salem"}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
-                        <span className="sm:col-span-5 font-bold text-slate-400">Campus</span>
-                        <span className="sm:col-span-7 font-bold text-sky-300">
-                          : V.S.B. {formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-1.5 border-b border-slate-800/60 items-center">
-                        <span className="sm:col-span-5 font-bold text-slate-400">Course</span>
-                        <span className="sm:col-span-7 font-bold text-indigo-300">
-                          : {formData.courseInterest || "UG - B.E. Computer Science"}
-                        </span>
-                      </div>
-
-                      {/* Additional Academic Metrics Cards */}
-                      <div className="grid grid-cols-3 gap-3 pt-3">
-                        <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                          <span className="text-[10px] text-slate-400 uppercase font-bold block">10th Marks</span>
-                          <span className="text-sm font-black text-white">{app.marks10th}%</span>
+                    /* SUB TAB 1: LEAD DETAILS (EXACT ORDER MATCHING REFERENCE IMAGE) */
+                    activeSubTab === "LEAD_DETAILS" ? (
+                      <div className="space-y-3.5 text-xs font-sans">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Email Address</span>
+                          <span className="sm:col-span-7 font-bold text-white flex items-center gap-1">
+                            : <strong className="text-slate-100 font-mono">{formData.email}</strong>
+                          </span>
                         </div>
-                        <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                          <span className="text-[10px] text-slate-400 uppercase font-bold block">12th Marks</span>
-                          <span className="text-sm font-black text-white">{app.marks12th}%</span>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400 flex items-center gap-1">
+                            Mobile Number <Info className="w-3 h-3 text-slate-500" />
+                          </span>
+                          <span className="sm:col-span-7 font-bold text-white">
+                            : <strong className="text-slate-100 font-mono">{formData.phone}</strong>
+                          </span>
                         </div>
-                        <div className="bg-sky-950/60 p-3 rounded-xl border border-sky-500/30">
-                          <span className="text-[10px] text-sky-400 uppercase font-bold block">TNEA Cutoff</span>
-                          <span className="text-sm font-black text-white font-mono">{formData.tneaCutoff || 188.5}</span>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Alternate Mobile Number</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-400">: NA</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Name</span>
+                          <span className="sm:col-span-7 font-bold text-white">: {formData.name}</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">State</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-200">: Tamil Nadu</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">City</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-200">
+                            : {formData.district || "Salem"}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Campus</span>
+                          <span className="sm:col-span-7 font-bold text-sky-300">
+                            : V.S.B. {formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Course</span>
+                          <span className="sm:col-span-7 font-bold text-indigo-300">
+                            : UG
+                          </span>
                         </div>
                       </div>
-                    </div>
+                    ) : activeSubTab === "ADDITIONAL" ? (
+                      /* SUB TAB 2: ADDITIONAL DETAILS */
+                      <div className="space-y-3.5 text-xs font-sans">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">10th Marks (%)</span>
+                          <span className="sm:col-span-7 font-bold text-white">: {app.marks10th}%</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">12th Marks (%)</span>
+                          <span className="sm:col-span-7 font-bold text-white">: {app.marks12th}%</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">TNEA Cutoff Score</span>
+                          <span className="sm:col-span-7 font-bold text-sky-300 font-mono">: {formData.tneaCutoff || 188.5} / 200</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Affiliated School</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-200">: {formData.school || "Govt HSS"}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Lead Acquisition Source</span>
+                          <span className="sm:col-span-7 font-semibold text-indigo-300">: {formData.source || "Organic"}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      /* SUB TAB 3: FACEBOOK DETAILS */
+                      <div className="space-y-3.5 text-xs font-sans">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Facebook Campaign Name</span>
+                          <span className="sm:col-span-7 font-bold text-white">: VSB_TNEA_Admissions_2026</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Ad Set ID</span>
+                          <span className="sm:col-span-7 font-mono text-slate-300">: fb_adset_918237</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Form ID</span>
+                          <span className="sm:col-span-7 font-mono text-slate-300">: fb_form_382109</span>
+                        </div>
+                      </div>
+                    )
                   )}
                 </div>
               )}
