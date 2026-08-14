@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ADMISSIONS");
   const [selectedCampus, setSelectedCampus] = useState<CampusLocation>("ALL");
+  const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
   const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER">("ADMIN");
@@ -157,10 +158,15 @@ export default function DashboardPage() {
     return <LoginModal onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Filter applicants by selected campus
+  // Filter applicants by selected campus and stage filter
   const filteredApplicants = applicants.filter((item) => {
-    if (selectedCampus === "ALL") return true;
-    return item.campus === selectedCampus;
+    if (selectedCampus !== "ALL" && item.campus !== selectedCampus) {
+      return false;
+    }
+    if (selectedStageFilter && item.status !== selectedStageFilter) {
+      return false;
+    }
+    return true;
   });
 
   return (
@@ -192,7 +198,11 @@ export default function DashboardPage() {
         {activeTab === "ADMISSIONS" && (
           <>
             <MetricCards metrics={dynamicMetrics} />
-            <LeadFunnelChart statusCounts={dynamicStatusCounts} />
+            <LeadFunnelChart
+              statusCounts={dynamicStatusCounts}
+              selectedStage={selectedStageFilter}
+              onSelectStage={setSelectedStageFilter}
+            />
             <div className="flex flex-col lg:flex-row gap-6">
               <ApplicantsTable
                 applicants={filteredApplicants}
