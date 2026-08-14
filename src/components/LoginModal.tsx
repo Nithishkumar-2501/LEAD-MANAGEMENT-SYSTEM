@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Lock, Mail, ArrowRight, AlertCircle, Sparkles } from "lucide-react";
+import { Lock, Mail, ArrowRight, AlertCircle, Sparkles, ShieldCheck, UserCheck } from "lucide-react";
 
 interface LoginModalProps {
   onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER", username: string) => void;
@@ -78,45 +78,51 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         onLoginSuccess("COIMBATORE", "TEACHER", inputUser);
       } else {
         setLoading(false);
-        setError("Invalid credentials. Please enter a valid username and password.");
+        setError("Invalid credentials. Please select or enter authorized portal credentials.");
       }
-    }, 600);
+    }, 500);
+  };
+
+  const autoFill = (u: string, p: string) => {
+    setUsername(u);
+    setPassword(p);
+    setError(null);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050813]/90 backdrop-blur-xl animate-in fade-in duration-300">
-      <div className="bubble-card w-full max-w-md border border-white/25 shadow-2xl overflow-hidden p-5 sm:p-8 relative">
+      <div className="bubble-card w-full max-w-md border border-white/25 shadow-2xl overflow-hidden p-5 sm:p-7 relative">
         {/* Top Iridescent Glow Accent */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-400 via-indigo-500 to-pink-500" />
 
         {/* Branding & Logo */}
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white mx-auto shadow-xl shadow-indigo-500/40 ring-4 ring-white/30 mb-3 animate-pulse">
-            <Sparkles className="w-7 h-7 sm:w-9 sm:h-9 text-white font-black" />
+        <div className="text-center mb-5">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white mx-auto shadow-xl shadow-indigo-500/40 ring-4 ring-white/30 mb-2 animate-pulse">
+            <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-white font-black" />
           </div>
           <h2 className="text-xl font-black text-white tracking-tight">
             V.S.B. ENGINEERING COLLEGE
           </h2>
-          <p className="text-xs font-bold text-sky-300 mt-1">
+          <p className="text-xs font-bold text-sky-300 mt-0.5">
             KARUR & COIMBATORE CAMPUSES
           </p>
-          <p className="text-[11px] text-slate-300 font-medium mt-1">
-            Liquid Bubble Glass Admin Portal Login
+          <p className="text-[11px] text-slate-300 font-medium mt-1 flex items-center justify-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Authorized Portal Access
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+          <div className="mb-3 p-3 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-3.5">
           <div>
             <label className="block text-xs font-bold text-slate-300 mb-1">
-              Admin Username / Email
+              Authorized Username / Email
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-400" />
@@ -133,7 +139,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
           <div>
             <label className="block text-xs font-bold text-slate-300 mb-1">
-              Admin Password
+              Portal Password
             </label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-400" />
@@ -151,18 +157,65 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
           <button
             type="submit"
             disabled={loading}
-            className="glossy-btn w-full py-3 text-xs font-black shadow-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 mt-2"
+            className="glossy-btn w-full py-3 text-xs font-black shadow-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 mt-1"
           >
-            <span>{loading ? "Authenticating Admin..." : "Login to V.S.B. Portal"}</span>
+            <span>{loading ? "Authenticating..." : "Login to V.S.B. Portal"}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
-        <p className="text-[10px] text-center text-slate-400 font-medium mt-6">
+        {/* Authorized Credentials Quick-Select Helper Box */}
+        <div className="mt-4 p-3 rounded-2xl bg-slate-900/90 border border-slate-700/80 space-y-2">
+          <div className="flex items-center justify-between text-[11px] font-extrabold text-sky-300">
+            <span className="flex items-center gap-1 text-slate-200">
+              <UserCheck className="w-3.5 h-3.5 text-sky-400" /> Quick Authorized Accounts
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">Click to auto-fill</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-[10px]">
+            <button
+              type="button"
+              onClick={() => autoFill("adminkarur@123", "vsbec@123")}
+              className="p-2 rounded-xl bg-sky-950/70 border border-sky-500/30 hover:bg-sky-900/80 text-left transition-all group"
+            >
+              <div className="font-extrabold text-sky-200 group-hover:text-white">Karur Admin</div>
+              <div className="text-slate-400 font-mono text-[9px]">adminkarur@123</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => autoFill("admincovai@123", "vsbectc@1213")}
+              className="p-2 rounded-xl bg-indigo-950/70 border border-indigo-500/30 hover:bg-indigo-900/80 text-left transition-all group"
+            >
+              <div className="font-extrabold text-indigo-200 group-hover:text-white">Coimbatore Admin</div>
+              <div className="text-slate-400 font-mono text-[9px]">admincovai@123</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => autoFill("teacherkarur@123", "vsbteacher@123")}
+              className="p-2 rounded-xl bg-purple-950/70 border border-purple-500/30 hover:bg-purple-900/80 text-left transition-all group"
+            >
+              <div className="font-extrabold text-purple-200 group-hover:text-white">Karur Teacher</div>
+              <div className="text-slate-400 font-mono text-[9px]">teacherkarur@123</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => autoFill("teachercovai@123", "vsbteacher@1213")}
+              className="p-2 rounded-xl bg-teal-950/70 border border-teal-500/30 hover:bg-teal-900/80 text-left transition-all group"
+            >
+              <div className="font-extrabold text-teal-200 group-hover:text-white">Coimbatore Teacher</div>
+              <div className="text-slate-400 font-mono text-[9px]">teachercovai@123</div>
+            </button>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-center text-slate-400 font-medium mt-4">
           © 2026 V.S.B. Engineering College. Autonomous Institution - AICTE Approved & NAAC Accredited.
         </p>
       </div>
     </div>
   );
 }
-
