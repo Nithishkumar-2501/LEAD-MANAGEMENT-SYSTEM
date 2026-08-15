@@ -276,7 +276,7 @@ export default function ApplicantsTable({
               ) : (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500">
-                    No matching applicants found for "{searchQuery}".
+                    No matching applicants found for &quot;{searchQuery}&quot;.
                   </td>
                 </tr>
               )}

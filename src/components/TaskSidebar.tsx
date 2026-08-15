@@ -51,7 +51,7 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
               <CalendarCheck className="w-5 h-5 text-white font-bold" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-white">Today's Reminders</h3>
+              <h3 className="text-sm font-black text-white">Today&apos;s Reminders</h3>
               <p className="text-xs text-slate-400 font-medium">Counselor Follow-up Panel</p>
             </div>
           </div>
