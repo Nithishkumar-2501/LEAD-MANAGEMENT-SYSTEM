@@ -66,7 +66,6 @@ export default function ContactDirectoryModule({
         marks10th: 85,
         marks12th: 88,
         paymentStatus: contact.status === "ADMITTED" ? "COMPLETED" : "PENDING",
-        createdAt: contact.createdAt || new Date().toISOString(),
       },
     };
   };
