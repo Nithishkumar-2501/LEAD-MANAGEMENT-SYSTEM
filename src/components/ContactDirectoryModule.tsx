@@ -188,6 +188,127 @@ export default function ContactDirectoryModule({
     }
   };
 
+  // Render Helper for Dynamic Table Columns (Image 2 Customize Column)
+  const renderCellContent = (
+    contact: Lead & { application?: Application | null },
+    col: string
+  ) => {
+    if (col === "Registered Name") {
+      return (
+        <div className="flex items-center justify-between gap-2">
+          <span onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
+            {contact.name}
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCandidateClick(contact);
+            }}
+            className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-80 group-hover:opacity-100"
+            title="View Lead Details"
+          >
+            ⋮
+          </button>
+        </div>
+      );
+    }
+    if (col === "Registered Email") {
+      return <span className="font-mono text-[11px] text-slate-600">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
+    }
+    if (col === "Registered Mobile") {
+      return (
+        <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-700">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenCommModal("MESSAGE", {
+                name: contact.name,
+                phone: contact.phone,
+                email: contact.email,
+                courseInterest: contact.courseInterest,
+                campus: contact.campus,
+              });
+            }}
+            className="p-1 rounded bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
+            title={`WhatsApp Chat with ${contact.name}`}
+          >
+            💬
+          </button>
+          <span>{showPhone ? contact.phone : "+91 ••••• •••••"}</span>
+        </div>
+      );
+    }
+    if (col === "Registered Country") return <span className="font-semibold text-slate-700">India</span>;
+    if (col === "State") return <span className="font-semibold text-slate-700">Tamil Nadu</span>;
+    if (col === "City") return <span className="font-semibold text-slate-700">{contact.district || "Karur"}</span>;
+    if (col === "Campus") return <span className="font-bold text-sky-700">{contact.campus} CAMPUS</span>;
+    if (col === "Course") return <span className="font-bold text-indigo-700">{contact.courseInterest || "B.E. Computer Science"}</span>;
+    if (col === "Specialization") return <span className="text-slate-600">TNEA Engineering</span>;
+    if (col === "Utm Keyword") return <span className="font-mono text-[11px] text-slate-500">tnea_admissions_2026</span>;
+    if (col === "Gender") return <span className="text-slate-700 font-semibold">{(contact as any).gender || "Male"}</span>;
+    if (col === "Father's Name") return <span className="text-slate-700">{(contact as any).fatherName || "K. Ramachandran"}</span>;
+    if (col === "Mother's Name") return <span className="text-slate-700">{(contact as any).motherName || "R. Priya"}</span>;
+    if (col === "Blood Group") return <span className="font-bold text-rose-600">{(contact as any).bloodGroup || "O+"}</span>;
+    if (col === "Physically Disabled") return <span className="text-slate-700">{(contact as any).physicallyDisabled ? "Yes" : "No"}</span>;
+    if (col === "SSLC Mark") return <span className="font-bold text-emerald-600">{(contact as any).marks10th || 85}%</span>;
+    if (col === "School Name with Place") return <span className="text-slate-700 font-medium">{contact.school || "Govt Higher Sec School"}</span>;
+    if (col === "Address For communication") return <span className="text-slate-600 font-medium">{showAddress ? contact.address || "Karur, Tamil Nadu" : "•••••••••••••"}</span>;
+    if (col === "Community") return <span className="font-extrabold text-blue-600">{(contact as any).community || "BC"}</span>;
+    if (col === "User Registration Date") return <span className="text-slate-600 font-medium">Aug 12, 2026</span>;
+    if (col === "Lead Stage") {
+      return (
+        <span
+          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
+            contact.status === "ADMITTED"
+              ? "bg-emerald-100 text-emerald-700 border-emerald-300"
+              : contact.status === "CONTACTED"
+              ? "bg-indigo-100 text-indigo-700 border-indigo-300"
+              : contact.status === "IN_REVIEW"
+              ? "bg-amber-100 text-amber-700 border-amber-300"
+              : contact.status === "REJECTED"
+              ? "bg-rose-100 text-rose-700 border-rose-300"
+              : "bg-sky-100 text-sky-700 border-sky-300"
+          }`}
+        >
+          {contact.status}
+        </span>
+      );
+    }
+    return <span className="text-slate-600">N/A</span>;
+  };
+
+  // Dynamic Side Drawer Rule Evaluator (Image 1 Filter leads by)
+  const evaluateRule = (
+    c: Lead & { application?: Application | null },
+    rule: { field: string; operator: string; value: string }
+  ) => {
+    if (!rule.value || rule.value === "Select Here") return true;
+
+    let fieldValue = "";
+    if (rule.field === "State") fieldValue = "Tamil Nadu";
+    else if (rule.field === "City") fieldValue = c.district || "Karur";
+    else if (rule.field === "Registered Name") fieldValue = c.name;
+    else if (rule.field === "Registered Email") fieldValue = c.email;
+    else if (rule.field === "Registered Mobile") fieldValue = c.phone;
+    else if (rule.field === "Lead Stage") fieldValue = c.status;
+    else if (rule.field === "Campus") fieldValue = c.campus;
+    else if (rule.field === "Course") fieldValue = c.courseInterest || "";
+    else if (rule.field === "Gender") fieldValue = (c as any).gender || "Male";
+    else if (rule.field === "TNEA Cutoff") fieldValue = String((c as any).tneaCutoff || 180);
+    else if (rule.field === "Community") fieldValue = (c as any).community || "BC";
+    else fieldValue = "";
+
+    const targetVal = rule.value.toLowerCase().trim();
+    const actualVal = fieldValue.toLowerCase().trim();
+
+    if (rule.operator === "Equals") return actualVal === targetVal;
+    if (rule.operator === "Contains") return actualVal.includes(targetVal);
+    if (rule.operator === "Not Equals") return actualVal !== targetVal;
+    if (rule.operator === "Greater Than") return parseFloat(actualVal) > parseFloat(targetVal);
+    if (rule.operator === "Less Than") return parseFloat(actualVal) < parseFloat(targetVal);
+    return true;
+  };
+
   // Filter Contacts
   const filteredContacts = contacts.filter((c) => {
     const matchesSearch =
@@ -219,7 +340,22 @@ export default function ContactDirectoryModule({
       c.assignedTo === loggedInUsername ||
       (!c.assignedTo && (c.campus === selectedCampus || selectedCampus === "ALL"));
 
-    return matchesSearch && matchesCampus && matchesDistrict && matchesStatus && matchesCounselling && matchesTeacherAssignment;
+    const matchesDrawerRules =
+      filterRules.length === 0
+        ? true
+        : filterLogicMode === "ALL"
+        ? filterRules.every((r) => evaluateRule(c, r))
+        : filterRules.some((r) => evaluateRule(c, r));
+
+    return (
+      matchesSearch &&
+      matchesCampus &&
+      matchesDistrict &&
+      matchesStatus &&
+      matchesCounselling &&
+      matchesTeacherAssignment &&
+      matchesDrawerRules
+    );
   });
 
   // Extract unique districts
@@ -879,35 +1015,13 @@ export default function ContactDirectoryModule({
                       className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
                     />
                   </th>
-                  <th className="p-3 font-semibold text-slate-600">
-                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
-                      Registered Name <span className="text-[10px] text-slate-400">↑↓</span>
-                    </span>
-                  </th>
-                  <th className="p-3 font-semibold text-slate-600">
-                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
-                      Registered Email <span className="text-[10px] text-slate-400">↑↓</span>
-                    </span>
-                  </th>
-                  <th className="p-3 font-semibold text-slate-600">
-                    <span className="flex items-center gap-1">Registered Mobile</span>
-                  </th>
-                  <th className="p-3 font-semibold text-slate-600">
-                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
-                      State <span className="text-[10px] text-slate-400">↑↓</span>
-                    </span>
-                  </th>
-                  <th className="p-3 font-semibold text-slate-600">
-                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
-                      City <span className="text-[10px] text-slate-400">↑↓</span>
-                    </span>
-                  </th>
-                  <th className="p-3 font-semibold text-slate-600">
-                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
-                      User Registration Date <span className="text-[10px] text-slate-400">↑↓</span>
-                    </span>
-                  </th>
-                  <th className="p-3 font-semibold text-slate-600">Lead Stage</th>
+                  {selectedColumns.map((col) => (
+                    <th key={col} className="p-3 font-semibold text-slate-600">
+                      <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
+                        {col} <span className="text-[10px] text-slate-400">↑↓</span>
+                      </span>
+                    </th>
+                  ))}
                 </tr>
               </thead>
 
@@ -934,96 +1048,17 @@ export default function ContactDirectoryModule({
                       />
                     </td>
 
-                    {/* Registered Name with 3-Dots Menu */}
-                    <td className="p-3 font-bold text-blue-600 hover:underline">
-                      <div className="flex items-center justify-between gap-2">
-                        <span onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
-                          {contact.name}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCandidateClick(contact);
-                          }}
-                          className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-80 group-hover:opacity-100"
-                          title="View Lead Details"
-                        >
-                          ⋮
-                        </button>
-                      </div>
-                    </td>
-
-                    {/* Registered Email */}
-                    <td className="p-3 text-slate-600 font-mono text-[11px]">
-                      {showEmail ? contact.email : "•••••@•••••.•••"}
-                    </td>
-
-                    {/* Registered Mobile with WhatsApp Quick Button */}
-                    <td className="p-3 font-mono font-semibold text-slate-700">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenCommModal("MESSAGE", {
-                              name: contact.name,
-                              phone: contact.phone,
-                              email: contact.email,
-                              courseInterest: contact.courseInterest,
-                              campus: contact.campus,
-                            });
-                          }}
-                          className="p-1 rounded bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
-                          title={`WhatsApp Chat with ${contact.name}`}
-                        >
-                          💬
-                        </button>
-                        <span>{showPhone ? contact.phone : "+91 ••••• •••••"}</span>
-                      </div>
-                    </td>
-
-                    {/* State */}
-                    <td className="p-3 text-slate-700 font-medium">
-                      {contact.state || (contact.district ? "Tamil Nadu" : "State Not Available")}
-                    </td>
-
-                    {/* City */}
-                    <td className="p-3 text-slate-700 font-medium">
-                      {contact.district || "City Not Available"}
-                    </td>
-
-                    {/* User Registration Date */}
-                    <td className="p-3 text-slate-500 font-mono text-[11px]">
-                      {contact.createdAt
-                        ? new Date(contact.createdAt).toLocaleString("en-GB", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                            hour12: true,
-                          })
-                        : "12/08/2026, 09:51:43 AM"}
-                    </td>
-
-                    {/* Lead Stage Badge (Styled Pill) */}
-                    <td className="p-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold inline-block ${
-                          contact.status === "NEW"
-                            ? "bg-rose-100 text-rose-600 border border-rose-200"
-                            : contact.status === "CONTACTED"
-                            ? "bg-sky-100 text-sky-700 border border-sky-200"
-                            : contact.status === "IN_REVIEW"
-                            ? "bg-amber-100 text-amber-700 border border-amber-200"
-                            : contact.status === "ADMITTED"
-                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                            : "bg-slate-100 text-slate-600 border border-slate-200"
+                    {/* Dynamically Render Data Cells for Each Selected Column */}
+                    {selectedColumns.map((col) => (
+                      <td
+                        key={col}
+                        className={`p-3 ${
+                          col === "Registered Name" ? "font-bold text-blue-600 hover:underline" : ""
                         }`}
                       >
-                        {contact.status === "NEW" ? "Untouched" : contact.status}
-                      </span>
-                    </td>
+                        {renderCellContent(contact, col)}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
