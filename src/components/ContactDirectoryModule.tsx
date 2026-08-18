@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -358,8 +359,8 @@ export default function ContactDirectoryModule({
     );
   });
 
-  // Extract unique districts
-  const districts = ["ALL", "Karur", "Coimbatore", "Salem", "Tiruchirappalli", "Namakkal", "Erode", "Madurai"];
+  // Tamil Nadu Districts list (All 38 Districts)
+  const districts = ["ALL", ...TAMIL_NADU_DISTRICTS];
 
   // Add New Contact Submit Handler
   const handleCreateContact = async (e: React.FormEvent) => {
@@ -1728,13 +1729,11 @@ export default function ContactDirectoryModule({
                             }}
                             className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
-                            <option value="Karur">Karur</option>
-                            <option value="Coimbatore">Coimbatore</option>
-                            <option value="Salem">Salem</option>
-                            <option value="Tiruchirappalli">Tiruchirappalli</option>
-                            <option value="Namakkal">Namakkal</option>
-                            <option value="Erode">Erode</option>
-                            <option value="Madurai">Madurai</option>
+                            {TAMIL_NADU_DISTRICTS.map((d) => (
+                              <option key={d} value={d}>
+                                {d}
+                              </option>
+                            ))}
                           </select>
                         ) : (
                           <input
