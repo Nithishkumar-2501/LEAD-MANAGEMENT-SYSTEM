@@ -89,6 +89,54 @@ export default function ContactDirectoryModule({
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
+  // Filter leads by Side Drawer State (Image 1 Reference)
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [includeActivityFilters, setIncludeActivityFilters] = useState(false);
+  const [filterLogicMode, setFilterLogicMode] = useState<"ALL" | "ANY">("ALL");
+  const [filterRules, setFilterRules] = useState<
+    Array<{ id: string; field: string; operator: string; value: string }>
+  >([
+    { id: "1", field: "State", operator: "Equals", value: "Tamil Nadu" },
+    { id: "2", field: "City", operator: "Equals", value: "Karur" },
+  ]);
+
+  // Customize Column Side Drawer State (Image 2 Reference)
+  const [isCustomizeColumnDrawerOpen, setIsCustomizeColumnDrawerOpen] = useState(false);
+  const [columnSearchQuery, setColumnSearchQuery] = useState("");
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([
+    "Registered Name",
+    "Registered Email",
+    "Registered Mobile",
+    "State",
+    "City",
+    "User Registration Date",
+    "Lead Stage",
+  ]);
+
+  const allAvailableColumns = [
+    "Registered Name",
+    "Registered Email",
+    "Registered Mobile",
+    "Registered Country",
+    "State",
+    "City",
+    "Campus",
+    "Course",
+    "Specialization",
+    "Utm Keyword",
+    "Gender",
+    "Father's Name",
+    "Mother's Name",
+    "Blood Group",
+    "Physically Disabled",
+    "SSLC Mark",
+    "School Name with Place",
+    "Address For communication",
+    "Community",
+    "User Registration Date",
+    "Lead Stage",
+  ];
+
   // Visibility Controls States
   const [showPhone, setShowPhone] = useState(true);
   const [showEmail, setShowEmail] = useState(true);
@@ -531,9 +579,21 @@ export default function ContactDirectoryModule({
           </button>
         </div>
 
-        <button className="px-3.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 font-black hover:bg-blue-100 flex items-center gap-1 shadow-sm">
-          ⚡ Advanced Filter
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="px-3.5 py-1.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 font-extrabold hover:bg-blue-100 flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <Filter className="w-3.5 h-3.5" /> Filter leads by ({filterRules.length})
+          </button>
+
+          <button
+            onClick={() => setIsCustomizeColumnDrawerOpen(true)}
+            className="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <span>⚙️ Customize Column</span>
+          </button>
+        </div>
       </div>
 
       {/* District & Metric Summary Cards */}
@@ -1519,6 +1579,388 @@ export default function ContactDirectoryModule({
             onTriggerToast?.(`Updated profile for candidate ${updated.name}`);
           }}
         />
+      )}
+      {/* SIDE DRAWER 1: FILTER LEADS BY (Image 1 Reference) */}
+      {isFilterDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-xl bg-white text-slate-900 h-full shadow-2xl flex flex-col justify-between border-l border-slate-200 animate-in slide-in-from-right duration-300">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-white">
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">Filter leads by</h3>
+              <button
+                onClick={() => setIsFilterDrawerOpen(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Drawer Content Body */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-6 bg-slate-50/50">
+              {/* Include Activity Filters Toggle */}
+              <div className="flex items-center justify-end gap-2 text-xs font-semibold text-slate-700">
+                <span className="flex items-center gap-1 text-slate-500">
+                  <span className="text-slate-400">ⓘ</span> Include Activity filters
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIncludeActivityFilters(!includeActivityFilters)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                    includeActivityFilters ? "bg-blue-600 justify-end" : "bg-slate-300 justify-start"
+                  }`}
+                >
+                  <span className="w-4 h-4 rounded-full bg-white shadow-md transform transition-transform" />
+                </button>
+              </div>
+
+              {/* Lead Filters Container */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                {/* Mode Selector & Filter Count Badge */}
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2 text-xs font-bold">
+                    <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setFilterLogicMode("ALL")}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          filterLogicMode === "ALL" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFilterLogicMode("ANY")}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          filterLogicMode === "ANY" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        Any
+                      </button>
+                    </div>
+                    <span className="text-slate-700 font-bold">
+                      {filterLogicMode === "ALL" ? "Meet All Criteria" : "Meet Any Criteria"}
+                    </span>
+                  </div>
+
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Lead Filter(s)
+                  </span>
+                </div>
+
+                {/* Filter Rule Rows */}
+                <div className="space-y-3">
+                  {filterRules.map((rule) => (
+                    <div key={rule.id} className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400 text-xs shrink-0">▶</span>
+
+                        {/* Field Select */}
+                        <select
+                          value={rule.field}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFilterRules(
+                              filterRules.map((r) => (r.id === rule.id ? { ...r, field: val } : r))
+                            );
+                          }}
+                          className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="State">State</option>
+                          <option value="City">City</option>
+                          <option value="Registered Name">Registered Name</option>
+                          <option value="Registered Email">Registered Email</option>
+                          <option value="Registered Mobile">Registered Mobile</option>
+                          <option value="Lead Stage">Lead Stage</option>
+                          <option value="Campus">Campus</option>
+                          <option value="Course">Course</option>
+                          <option value="Gender">Gender</option>
+                          <option value="TNEA Cutoff">TNEA Cutoff</option>
+                          <option value="Community">Community</option>
+                        </select>
+
+                        {/* Operator Select */}
+                        <select
+                          value={rule.operator}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFilterRules(
+                              filterRules.map((r) => (r.id === rule.id ? { ...r, operator: val } : r))
+                            );
+                          }}
+                          className="w-28 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="Equals">Equals</option>
+                          <option value="Contains">Contains</option>
+                          <option value="Not Equals">Not Equals</option>
+                          <option value="Greater Than">Greater Than</option>
+                          <option value="Less Than">Less Than</option>
+                        </select>
+
+                        {/* Value Select / Input */}
+                        {rule.field === "State" ? (
+                          <select
+                            value={rule.value}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFilterRules(
+                                filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
+                              );
+                            }}
+                            className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                          </select>
+                        ) : rule.field === "City" ? (
+                          <select
+                            value={rule.value}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFilterRules(
+                                filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
+                              );
+                            }}
+                            className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="Karur">Karur</option>
+                            <option value="Coimbatore">Coimbatore</option>
+                            <option value="Salem">Salem</option>
+                            <option value="Tiruchirappalli">Tiruchirappalli</option>
+                            <option value="Namakkal">Namakkal</option>
+                            <option value="Erode">Erode</option>
+                            <option value="Madurai">Madurai</option>
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={rule.value}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFilterRules(
+                                filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
+                              );
+                            }}
+                            placeholder="Enter value..."
+                            className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        )}
+
+                        {/* Action Buttons (+ / -) */}
+                        {filterRules.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setFilterRules(filterRules.filter((r) => r.id !== rule.id))}
+                            className="p-1.5 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 transition-colors"
+                            title="Remove Filter"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFilterRules([
+                              ...filterRules,
+                              { id: String(Date.now()), field: "City", operator: "Equals", value: "Karur" },
+                            ])
+                          }
+                          className="p-1.5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                          title="Add Sub-Rule"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {rule.field === "City" && (
+                        <p className="text-[10px] text-blue-600 font-medium pl-6">
+                          This field is dependent on State
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add More Button */}
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFilterRules([
+                        ...filterRules,
+                        { id: String(Date.now()), field: "Lead Stage", operator: "Equals", value: "New Inquiry" },
+                      ])
+                    }
+                    className="px-4 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 font-bold hover:bg-blue-100 text-xs flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add More
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-4 border-t border-slate-200 flex items-center justify-between bg-white">
+              <button
+                type="button"
+                onClick={() =>
+                  setFilterRules([
+                    { id: "1", field: "State", operator: "Equals", value: "Tamil Nadu" },
+                    { id: "2", field: "City", operator: "Equals", value: "Karur" },
+                  ])
+                }
+                className="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5"
+              >
+                ↺ Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFilterDrawerOpen(false);
+                  onTriggerToast?.(`Applied ${filterRules.length} custom lead criteria filters!`);
+                }}
+                className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SIDE DRAWER 2: CUSTOMIZE COLUMN (Image 2 Reference) */}
+      {isCustomizeColumnDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-white text-slate-900 h-full shadow-2xl flex flex-col justify-between border-l border-slate-200 animate-in slide-in-from-right duration-300">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-white">
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">Customize Column</h3>
+              <button
+                onClick={() => setIsCustomizeColumnDrawerOpen(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content Body: 2 Columns */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50/50">
+              {/* Search Column Input */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={columnSearchQuery}
+                  onChange={(e) => setColumnSearchQuery(e.target.value)}
+                  placeholder="Search Column Here"
+                  className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* 2-Column Select & Reorder Layout */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                {/* Left Side: Available Lead Details Checklist */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-extrabold text-slate-800 border-b border-slate-100 pb-2">
+                    Lead Details
+                  </h4>
+                  <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                    {allAvailableColumns
+                      .filter((col) => col.toLowerCase().includes(columnSearchQuery.toLowerCase()))
+                      .map((col) => {
+                        const isChecked = selectedColumns.includes(col);
+                        return (
+                          <label
+                            key={col}
+                            className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer transition-colors"
+                          >
+                            <span>{col}</span>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedColumns([...selectedColumns, col]);
+                                } else {
+                                  setSelectedColumns(selectedColumns.filter((c) => c !== col));
+                                }
+                              }}
+                              className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                            />
+                          </label>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Right Side: Selected Columns Chips (Drag / Remove) */}
+                <div className="space-y-3 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-5">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h4 className="text-xs font-extrabold text-slate-800">
+                      Selected Columns
+                    </h4>
+                    <span className="text-[10px] text-slate-400 font-medium">(Drag to reorder)</span>
+                  </div>
+
+                  <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                    {selectedColumns.map((col) => (
+                      <div
+                        key={col}
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 shadow-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-400 cursor-grab">⋮⋮</span>
+                          <span>{col}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedColumns(selectedColumns.filter((c) => c !== col))}
+                          className="text-slate-400 hover:text-slate-700 p-0.5"
+                          title="Remove Column"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-4 border-t border-slate-200 flex items-center justify-between bg-white">
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedColumns([
+                    "Registered Name",
+                    "Registered Email",
+                    "Registered Mobile",
+                    "State",
+                    "City",
+                    "User Registration Date",
+                    "Lead Stage",
+                  ])
+                }
+                className="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5"
+              >
+                ↺ Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCustomizeColumnDrawerOpen(false);
+                  onTriggerToast?.(`Updated table column layout with ${selectedColumns.length} fields!`);
+                }}
+                className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
