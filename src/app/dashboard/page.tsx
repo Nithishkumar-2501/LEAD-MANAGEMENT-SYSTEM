@@ -135,6 +135,11 @@ export default function DashboardPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const handleSelectApplicant = (applicant: Lead & { application: Application }) => {
+    setActiveTab("CONTACTS");
+    setSelectedApplicant(applicant);
+  };
+
   const handleUpdateApplicant = (updated: Lead & { application: Application }) => {
     setApplicants((prev) =>
       prev.map((a) => (a.id === updated.id ? updated : a))
@@ -213,7 +218,7 @@ export default function DashboardPage() {
               <ApplicantsTable
                 applicants={filteredApplicants}
                 searchQuery={searchQuery}
-                onSelectApplicant={setSelectedApplicant}
+                onSelectApplicant={handleSelectApplicant}
                 onActionTrigger={handleActionTrigger}
                 onOpenCreateModal={() => setIsCreateModalOpen(true)}
                 onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
@@ -227,8 +232,8 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* CONTACT DIRECTORY MODULE */}
-        {activeTab === "CONTACTS" && (
+        {/* LEAD MANAGER MODULE (MERGED CONTACT DIRECTORY & STUDENT APPLICATIONS) */}
+        {(activeTab === "CONTACTS" || activeTab === "STUDENTS") && (
           <ContactDirectoryModule
             initialContacts={filteredApplicants}
             selectedCampus={selectedCampus}
@@ -236,15 +241,6 @@ export default function DashboardPage() {
             loggedInUsername={loggedInUsername}
             onActionTrigger={handleActionTrigger}
             onTriggerToast={triggerToast}
-          />
-        )}
-
-        {/* STUDENT APPLICATIONS MODULE */}
-        {activeTab === "STUDENTS" && (
-          <StudentApplicationsModule
-            applicants={filteredApplicants}
-            onSelectApplicant={setSelectedApplicant}
-            onOpenCreateModal={() => setIsCreateModalOpen(true)}
           />
         )}
 

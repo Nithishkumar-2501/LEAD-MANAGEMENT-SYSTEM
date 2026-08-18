@@ -64,8 +64,7 @@ export default function Header({
 
   const navItems = [
     { id: "ADMISSIONS" as ActiveTab, label: "Admissions CRM", icon: GraduationCap },
-    { id: "CONTACTS" as ActiveTab, label: "Contact Directory", icon: Contact },
-    { id: "STUDENTS" as ActiveTab, label: "Student Applications", icon: UserCheck },
+    { id: "CONTACTS" as ActiveTab, label: "Lead Manager", icon: UserCheck },
     { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen },
     { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2 },
     { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard },
