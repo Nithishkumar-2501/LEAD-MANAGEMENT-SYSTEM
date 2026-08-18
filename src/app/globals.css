@@ -271,6 +271,53 @@ html.light .border-slate-700\/80,
 html.light .border-white\/10,
 html.light .border-white\/15,
 html.light .border-white\/20,
-html.light .border-white\/30 {
+html.light .border-white\/30,
+html.light .border-slate-850 {
   border-color: #e2e8f0 !important;
+}
+
+/* Modal Backdrops & Overlays in Light Mode */
+html.light .fixed.inset-0,
+html.light .bg-slate-950\/85,
+html.light .bg-slate-950\/90,
+html.light .bg-\[\#050813\]\/90 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+/* Modal Card Surfaces in Light Mode */
+html.light .fixed .bg-\[\#0f172a\],
+html.light .fixed .bg-slate-900,
+html.light .fixed .bg-slate-950 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Chevron Stage Tracker Pipeline in Light Mode */
+html.light .bg-slate-950\/50,
+html.light .bg-slate-850,
+html.light .bg-slate-800\/90 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+/* Lead Strength & Score Widgets in Light Mode */
+html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/80 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Quick Action Circle Buttons in Light Mode */
+html.light .bg-indigo-950\/60,
+html.light .bg-teal-950\/60,
+html.light .bg-emerald-950\/60,
+html.light .bg-amber-950\/60,
+html.light .bg-rose-950\/40 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
 }

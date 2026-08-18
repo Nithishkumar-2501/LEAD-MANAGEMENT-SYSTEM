@@ -192,10 +192,10 @@ export default function ApplicantDetailModal({
                     key={step.key}
                     className={`flex-1 text-center py-2 px-2 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
                       isActive
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-md shadow-emerald-500/10"
+                        ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/50 shadow-md shadow-emerald-500/10 font-extrabold"
                         : isPassed
-                        ? "bg-slate-800/90 text-slate-300 border border-slate-700"
-                        : "bg-slate-950/50 text-slate-500 border border-slate-850"
+                        ? "bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800/90 dark:text-slate-300 dark:border-slate-700"
+                        : "bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-950/50 dark:text-slate-500 dark:border-slate-850"
                     }`}
                   >
                     {isPassed && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
@@ -301,23 +301,23 @@ export default function ApplicantDetailModal({
                 </div>
 
                 {/* Lead Strength & Lead Score Stats Widgets */}
-                <div className="grid grid-cols-2 gap-2.5 border-t border-slate-800/80 pt-3">
-                  <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800 text-center">
-                    <div className="w-6 h-6 rounded-full border-2 border-sky-400 flex items-center justify-center mx-auto mb-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                <div className="grid grid-cols-2 gap-2.5 border-t border-slate-200 dark:border-slate-800/80 pt-3">
+                  <div className="bg-slate-100 dark:bg-slate-950/60 rounded-xl p-2.5 border border-slate-200 dark:border-slate-800 text-center">
+                    <div className="w-6 h-6 rounded-full border-2 border-sky-500 dark:border-sky-400 flex items-center justify-center mx-auto mb-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
                     </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase block">
                       Lead Strength
                     </span>
-                    <span className="text-xs font-extrabold text-sky-300">High</span>
+                    <span className="text-xs font-extrabold text-sky-600 dark:text-sky-300">High</span>
                   </div>
 
-                  <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800 text-center relative overflow-hidden">
-                    <div className="text-xl font-black text-white flex items-center justify-center gap-1">
+                  <div className="bg-slate-100 dark:bg-slate-950/60 rounded-xl p-2.5 border border-slate-200 dark:border-slate-800 text-center relative overflow-hidden">
+                    <div className="text-xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
                       <span>5</span>
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                     </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase block">
                       Lead Score
                     </span>
                   </div>
