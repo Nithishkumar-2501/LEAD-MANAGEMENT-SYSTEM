@@ -50,6 +50,17 @@ export default function ContactDirectoryModule({
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [counsellingFilter, setCounsellingFilter] = useState<"ALL" | "COUNSELLING_ONLY" | "GOVT_QUOTA" | "MANAGEMENT_ONLY">("ALL");
 
+  // Meritto Lead Manager View & Filter States (Image 2)
+  const [directoryViewMode, setDirectoryViewMode] = useState<"TABLE" | "GRID">("TABLE");
+  const [regDateFilter, setRegDateFilter] = useState("Select Here");
+  const [leadStageFilter, setLeadStageFilter] = useState("Select Here");
+  const [leadOwnerFilter, setLeadOwnerFilter] = useState("Select Here");
+  const [campaignSourceFilter, setCampaignSourceFilter] = useState("Select Here");
+  const [trafficChannelFilter, setTrafficChannelFilter] = useState("Select Here");
+  const [selectedViewName, setSelectedViewName] = useState("Default View");
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
   // Visibility Controls States
   const [showPhone, setShowPhone] = useState(true);
   const [showEmail, setShowEmail] = useState(true);
@@ -313,25 +324,75 @@ export default function ContactDirectoryModule({
         </div>
       )}
 
-      {/* Top Banner & Action Controls */}
-      <div className="bubble-card p-4 sm:p-6 border border-white/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40">
-              V.S.B. Contact Manager
-            </span>
-            <span className="text-xs text-slate-400">Directory & School Records</span>
-          </div>
-          <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-            <UserCheck className="w-6 h-6 text-sky-400" />
-            Candidate Contact Directory
+      {/* MERITTO LEAD MANAGER TOP HEADER BAR (Matching Image 2 Reference) */}
+      <div className="bg-[#ffffff] text-slate-800 p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs font-sans">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <UserCheck className="w-5 h-5 text-blue-600" />
+            Lead Manager
           </h2>
-          <p className="text-xs text-slate-300 font-medium">
-            Manage phone numbers, school affiliations, district origins, and residential addresses for V.S.B. candidates.
-          </p>
+
+          {/* Default View Selector */}
+          <div className="relative">
+            <select
+              value={selectedViewName}
+              onChange={(e) => setSelectedViewName(e.target.value)}
+              className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Default View">Default View ∨</option>
+              <option value="Karur Intake View">Karur Intake View</option>
+              <option value="TNEA Candidates">TNEA Candidates</option>
+              <option value="High Cutoff Leads">High Cutoff Leads</option>
+            </select>
+          </div>
+
+          {/* Save View Button */}
+          <button
+            onClick={() => onTriggerToast?.("Saved custom view configuration!")}
+            className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-blue-600 font-bold flex items-center gap-1.5 shadow-sm transition-all"
+          >
+            <Save className="w-3.5 h-3.5" /> Save View
+          </button>
+
+          {/* Sync Status Badge */}
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Last sync on Aug 12, 2026 11:36 AM</span>
+            <button onClick={() => onTriggerToast?.("Synced latest candidate leads from server!")} title="Sync Now" className="hover:rotate-180 transition-transform ml-1">
+              🔄
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+          {/* Ask Mio AI Button */}
+          <button
+            onClick={() => alert("✨ Mio AI Assistant: All candidate registered leads are active and synced.")}
+            className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold flex items-center gap-1.5 shadow-md shadow-purple-500/20"
+          >
+            <span>✨ Ask Mio AI</span>
+          </button>
+
+          {/* View Mode Toggle: Table View (Image 2) vs Cards View (Image 1) */}
+          <div className="flex items-center bg-slate-200 p-0.5 rounded-xl border border-slate-300">
+            <button
+              onClick={() => setDirectoryViewMode("TABLE")}
+              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+                directoryViewMode === "TABLE" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
+              }`}
+            >
+              📋 Lead Manager Table
+            </button>
+            <button
+              onClick={() => setDirectoryViewMode("GRID")}
+              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+                directoryViewMode === "GRID" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
+              }`}
+            >
+              🎴 Cards View
+            </button>
+          </div>
+
           <input
             type="file"
             id="csv-file-upload"
@@ -339,30 +400,112 @@ export default function ContactDirectoryModule({
             className="hidden"
             onChange={handleCSVUpload}
           />
-          <SpecularButton
-            size="sm"
-            tint="#10b981"
-            tintOpacity={0.2}
-            lineColor="#34d399"
-            baseColor="#059669"
+          <button
             onClick={() => document.getElementById("csv-file-upload")?.click()}
+            className="px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100 flex items-center gap-1"
           >
-            <Upload className="w-4 h-4 text-emerald-400" />
-            <span>Import CSV</span>
-          </SpecularButton>
+            <Upload className="w-3.5 h-3.5" /> Import CSV
+          </button>
 
-          <SpecularButton
-            size="sm"
-            tint="#6366f1"
-            tintOpacity={0.25}
-            lineColor="#818cf8"
-            baseColor="#4f46e5"
+          <button
             onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black flex items-center gap-1.5 shadow-md shadow-blue-600/30"
           >
-            <Plus className="w-4 h-4" />
-            <span>+ Add New Contact</span>
-          </SpecularButton>
+            <Plus className="w-4 h-4" /> Add Lead
+          </button>
         </div>
+      </div>
+
+      {/* FILTER CONTROLS BAR (Matching Image 2 Reference) */}
+      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* User Registration Date */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">User Registration Date</label>
+            <select
+              value={regDateFilter}
+              onChange={(e) => setRegDateFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here 📅</option>
+              <option value="Today">Today (12/08/2026)</option>
+              <option value="Yesterday">Yesterday</option>
+              <option value="Last 7 Days">Last 7 Days</option>
+              <option value="All Time">All Time</option>
+            </select>
+          </div>
+
+          {/* Lead Stage */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Stage</label>
+            <select
+              value={leadStageFilter}
+              onChange={(e) => setLeadStageFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Untouched">Untouched</option>
+              <option value="New Inquiry">New Inquiry</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Cutoff Review">Cutoff Review</option>
+              <option value="Admitted">Admitted</option>
+            </select>
+          </div>
+
+          {/* Lead Owner / Teams */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Owner / Teams</label>
+            <select
+              value={leadOwnerFilter}
+              onChange={(e) => setLeadOwnerFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Admin Karur">Admin Karur</option>
+              <option value="Admin Covai">Admin Covai</option>
+              <option value="Counselor Team A">Counselor Team A</option>
+            </select>
+          </div>
+
+          {/* Campaign Source */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Campaign Source</label>
+            <select
+              value={campaignSourceFilter}
+              onChange={(e) => setCampaignSourceFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Organic">Organic Search</option>
+              <option value="TNEA Counselling">TNEA Counselling</option>
+              <option value="Facebook Ads">Facebook Ads</option>
+              <option value="College Expo">College Expo</option>
+            </select>
+          </div>
+
+          {/* Traffic Channel */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Traffic Channel</label>
+            <select
+              value={trafficChannelFilter}
+              onChange={(e) => setTrafficChannelFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Direct Intake">Direct Intake</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Referral">Referral</option>
+            </select>
+          </div>
+
+          <button className="self-end mb-0.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200">
+            +2 more
+          </button>
+        </div>
+
+        <button className="px-3.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 font-black hover:bg-blue-100 flex items-center gap-1 shadow-sm">
+          ⚡ Advanced Filter
+        </button>
       </div>
 
       {/* District & Metric Summary Cards */}
@@ -408,7 +551,7 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* V.S.B. TNEA & Lead Status Icon Filters (One-by-One Icon Buttons) */}
+      {/* V.S.B. TNEA & Lead Stage Icon Filters */}
       <div className="bubble-card p-4 space-y-3.5 border border-sky-400/30">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
           <div>
@@ -466,7 +609,6 @@ export default function ContactDirectoryModule({
 
         {/* One by One Icon Status Filter Buttons */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
-          {/* ALL LEADS */}
           <button
             onClick={() => setSelectedStatus("ALL")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
@@ -482,7 +624,6 @@ export default function ContactDirectoryModule({
             </div>
           </button>
 
-          {/* NEW INQUIRY (HIGHLIGHTED SEPARATE ICON) */}
           <button
             onClick={() => setSelectedStatus("NEW")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 relative overflow-hidden ${
@@ -498,7 +639,6 @@ export default function ContactDirectoryModule({
             </div>
           </button>
 
-          {/* CONTACTED */}
           <button
             onClick={() => setSelectedStatus("CONTACTED")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
@@ -514,7 +654,6 @@ export default function ContactDirectoryModule({
             </div>
           </button>
 
-          {/* CUTOFF REVIEW */}
           <button
             onClick={() => setSelectedStatus("IN_REVIEW")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
@@ -530,7 +669,6 @@ export default function ContactDirectoryModule({
             </div>
           </button>
 
-          {/* ADMITTED */}
           <button
             onClick={() => setSelectedStatus("ADMITTED")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
@@ -546,7 +684,6 @@ export default function ContactDirectoryModule({
             </div>
           </button>
 
-          {/* REJECTED */}
           <button
             onClick={() => setSelectedStatus("REJECTED")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
@@ -564,27 +701,9 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* Dedicated Alert Banner when NEW INQUIRY Filter is Active */}
-      {selectedStatus === "NEW" && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-950 via-slate-900 to-blue-950 border border-sky-400/50 shadow-xl flex items-center gap-3 animate-in fade-in">
-          <div className="p-2.5 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-400/40 shrink-0">
-            <span className="text-xl">🆕</span>
-          </div>
-          <div>
-            <h4 className="text-xs font-black text-sky-200 uppercase tracking-wider">
-              New Inquiries Desk — Direct Candidate Contact List
-            </h4>
-            <p className="text-xs text-slate-300 font-medium mt-0.5">
-              Viewing newly submitted candidate inquiries. Contact candidates directly by name and phone number using in-portal call or messaging.
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Search & District Filter Bar */}
       <div className="bubble-card p-4 space-y-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Search */}
           <div className="relative w-full md:w-80">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-400" />
             <input
@@ -596,7 +715,6 @@ export default function ContactDirectoryModule({
             />
           </div>
 
-          {/* District Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 hide-scrollbar">
             <span className="text-xs text-slate-400 font-bold flex items-center gap-1 shrink-0 mr-1">
               <Filter className="w-3.5 h-3.5 text-sky-400" /> District:
@@ -651,8 +769,221 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* Contact Cards Directory Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* MAIN CONTENT VIEW: LEAD MANAGER TABLE (Image 2) OR CARDS GRID (Image 1) */}
+      {directoryViewMode === "TABLE" ? (
+        /* MERITTO LEAD MANAGER DATA TABLE (Exact Image 2 Implementation) */
+        <div className="bg-[#ffffff] text-slate-800 rounded-2xl border border-slate-200 shadow-xl overflow-hidden font-sans">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[11px] tracking-wider">
+                <tr>
+                  <th className="p-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.length === filteredContacts.length && filteredContacts.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedRows(filteredContacts.map((c) => c.id));
+                        } else {
+                          setSelectedRows([]);
+                        }
+                      }}
+                      className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                    />
+                  </th>
+                  <th className="p-3 font-semibold text-slate-600">
+                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
+                      Registered Name <span className="text-[10px] text-slate-400">↑↓</span>
+                    </span>
+                  </th>
+                  <th className="p-3 font-semibold text-slate-600">
+                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
+                      Registered Email <span className="text-[10px] text-slate-400">↑↓</span>
+                    </span>
+                  </th>
+                  <th className="p-3 font-semibold text-slate-600">
+                    <span className="flex items-center gap-1">Registered Mobile</span>
+                  </th>
+                  <th className="p-3 font-semibold text-slate-600">
+                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
+                      State <span className="text-[10px] text-slate-400">↑↓</span>
+                    </span>
+                  </th>
+                  <th className="p-3 font-semibold text-slate-600">
+                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
+                      City <span className="text-[10px] text-slate-400">↑↓</span>
+                    </span>
+                  </th>
+                  <th className="p-3 font-semibold text-slate-600">
+                    <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
+                      User Registration Date <span className="text-[10px] text-slate-400">↑↓</span>
+                    </span>
+                  </th>
+                  <th className="p-3 font-semibold text-slate-600">Lead Stage</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {filteredContacts.slice(0, rowsPerPage).map((contact) => (
+                  <tr
+                    key={contact.id}
+                    className="hover:bg-blue-50/60 transition-colors group cursor-pointer"
+                  >
+                    {/* Select Checkbox */}
+                    <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedRows.includes(contact.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedRows([...selectedRows, contact.id]);
+                          } else {
+                            setSelectedRows(selectedRows.filter((id) => id !== contact.id));
+                          }
+                        }}
+                        className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </td>
+
+                    {/* Registered Name with 3-Dots Menu */}
+                    <td className="p-3 font-bold text-blue-600 hover:underline">
+                      <div className="flex items-center justify-between gap-2">
+                        <span onClick={() => setEditingContact(contact)}>
+                          {contact.name}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingContact(contact);
+                          }}
+                          className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-80 group-hover:opacity-100"
+                          title="Lead Options"
+                        >
+                          ⋮
+                        </button>
+                      </div>
+                    </td>
+
+                    {/* Registered Email */}
+                    <td className="p-3 text-slate-600 font-mono text-[11px]">
+                      {showEmail ? contact.email : "•••••@•••••.•••"}
+                    </td>
+
+                    {/* Registered Mobile with WhatsApp Quick Button */}
+                    <td className="p-3 font-mono font-semibold text-slate-700">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenCommModal("MESSAGE", {
+                              name: contact.name,
+                              phone: contact.phone,
+                              email: contact.email,
+                              courseInterest: contact.courseInterest,
+                              campus: contact.campus,
+                            });
+                          }}
+                          className="p-1 rounded bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
+                          title={`WhatsApp Chat with ${contact.name}`}
+                        >
+                          💬
+                        </button>
+                        <span>{showPhone ? contact.phone : "+91 ••••• •••••"}</span>
+                      </div>
+                    </td>
+
+                    {/* State */}
+                    <td className="p-3 text-slate-700 font-medium">
+                      {contact.state || (contact.district ? "Tamil Nadu" : "State Not Available")}
+                    </td>
+
+                    {/* City */}
+                    <td className="p-3 text-slate-700 font-medium">
+                      {contact.district || "City Not Available"}
+                    </td>
+
+                    {/* User Registration Date */}
+                    <td className="p-3 text-slate-500 font-mono text-[11px]">
+                      {contact.createdAt
+                        ? new Date(contact.createdAt).toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                            hour12: true,
+                          })
+                        : "12/08/2026, 09:51:43 AM"}
+                    </td>
+
+                    {/* Lead Stage Badge (Styled Pill) */}
+                    <td className="p-3">
+                      <span
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold inline-block ${
+                          contact.status === "NEW"
+                            ? "bg-rose-100 text-rose-600 border border-rose-200"
+                            : contact.status === "CONTACTED"
+                            ? "bg-sky-100 text-sky-700 border border-sky-200"
+                            : contact.status === "IN_REVIEW"
+                            ? "bg-amber-100 text-amber-700 border border-amber-200"
+                            : contact.status === "ADMITTED"
+                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
+                        }`}
+                      >
+                        {contact.status === "NEW" ? "Untouched" : contact.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* TABLE FOOTER CONTROLS BAR (Image 2 Reference) */}
+          <div className="bg-slate-50 border-t border-slate-200 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 font-sans">
+            {/* Classic View Toggle */}
+            <button
+              onClick={() => setDirectoryViewMode("GRID")}
+              className="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold shadow-sm"
+            >
+              Classic View
+            </button>
+
+            {/* Load More Leads Center Button */}
+            <button
+              onClick={() => onTriggerToast?.("Loaded more records from database!")}
+              className="px-4 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold flex items-center gap-1.5 shadow-sm"
+            >
+              🔄 Load More Leads
+            </button>
+
+            {/* Total Records & Rows Selector */}
+            <div className="flex items-center gap-3">
+              <button className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold shadow-sm">
+                Show Total Records ({filteredContacts.length})
+              </button>
+
+              <div className="flex items-center gap-1.5 font-bold">
+                <span>Show Rows</span>
+                <select
+                  value={rowsPerPage}
+                  onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                  className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-800 font-bold focus:outline-none cursor-pointer"
+                >
+                  <option value={10}>10 ∨</option>
+                  <option value={20}>20 ∨</option>
+                  <option value={50}>50 ∨</option>
+                  <option value={100}>100 ∨</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* CARDS VIEW (Image 1 Layout) */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredContacts.length > 0 ? (
           filteredContacts.map((contact) => (
             <div
@@ -860,6 +1191,7 @@ export default function ContactDirectoryModule({
           </div>
         )}
       </div>
+      )}
 
       {/* ADD NEW CONTACT MODAL */}
       {isAddModalOpen && (
