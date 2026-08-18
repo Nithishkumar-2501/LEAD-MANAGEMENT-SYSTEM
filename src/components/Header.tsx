@@ -111,14 +111,14 @@ export default function Header({
           </div>
           <div className="min-w-0">
             <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-              <span className="truncate">V.S.B. ENGINEERING COLLEGE</span>
-              <span className="hidden sm:inline text-[10px] font-bold text-sky-700 dark:text-sky-200 bg-sky-100 dark:bg-sky-500/20 border border-sky-300 dark:border-sky-400/40 px-3 py-0.5 rounded-full backdrop-blur-xl shrink-0">
+              <span className="truncate text-slate-900 dark:text-white font-black">V.S.B. ENGINEERING COLLEGE</span>
+              <span className="hidden sm:inline text-[10px] font-bold text-sky-800 dark:text-sky-200 bg-sky-100 dark:bg-sky-500/20 border border-sky-300 dark:border-sky-400/40 px-3 py-0.5 rounded-full backdrop-blur-xl shrink-0">
                 Bubble Glass OS 4.0
               </span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-sky-700 dark:text-sky-200/80 flex items-center gap-1.5 font-bold truncate">
-              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-500 dark:text-pink-400 shrink-0" />
-              <span className="truncate">KARUR & COIMBATORE CAMPUSES</span>
+            <p className="text-[10px] sm:text-xs text-sky-800 dark:text-sky-200/80 flex items-center gap-1.5 font-extrabold truncate">
+              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-600 dark:text-pink-400 shrink-0" />
+              <span className="truncate text-sky-800 dark:text-sky-200">KARUR & COIMBATORE CAMPUSES</span>
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function Header({
         {/* Right: Controls */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Two Campus Icon Selection Bar */}
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-300 dark:border-white/20 text-xs font-semibold backdrop-blur-2xl">
+          <div className="hidden md:flex items-center gap-1.5 bg-slate-200/80 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-300 dark:border-white/20 text-xs font-semibold backdrop-blur-2xl">
             {/* Karur Campus Icon Button */}
             {loggedInCampus === "KARUR" ? (
               <Tooltip text="Active Session: V.S.B. Karur Campus">
@@ -141,10 +141,10 @@ export default function Header({
             ) : (
               <Tooltip text="Access restricted to Karur Admin">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40 hover:opacity-70 transition-opacity"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-500 font-bold cursor-not-allowed opacity-60 hover:opacity-80 transition-opacity"
                   disabled
                 >
-                  <Lock className="w-4 h-4 text-slate-500" />
+                  <Lock className="w-4 h-4 text-slate-700 dark:text-slate-500" />
                   <span>Karur Campus</span>
                 </button>
               </Tooltip>
@@ -164,10 +164,10 @@ export default function Header({
             ) : (
               <Tooltip text="Access restricted to Coimbatore Admin">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-500 cursor-not-allowed opacity-40 hover:opacity-70 transition-opacity"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-500 font-bold cursor-not-allowed opacity-60 hover:opacity-80 transition-opacity"
                   disabled
                 >
-                  <Lock className="w-4 h-4 text-slate-500" />
+                  <Lock className="w-4 h-4 text-slate-700 dark:text-slate-500" />
                   <span>Coimbatore Campus</span>
                 </button>
               </Tooltip>
@@ -176,13 +176,13 @@ export default function Header({
 
           {/* Search bar — desktop */}
           <div className="relative hidden lg:block w-48">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search portal..."
-              className="w-full bg-slate-900/70 border border-white/20 rounded-full pl-9 pr-3.5 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400/50 backdrop-blur-xl"
+              className="w-full bg-slate-100 dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 rounded-full pl-9 pr-3.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50 backdrop-blur-xl font-bold"
             />
           </div>
 
