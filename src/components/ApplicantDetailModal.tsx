@@ -869,210 +869,210 @@ export default function ApplicantDetailModal({
                     /* SUB TAB 1: LEAD DETAILS (VIEW MODE WITH EDIT TRIPPERS) */
                     activeSubTab === "LEAD_DETAILS" ? (
                       <div className="space-y-3.5 text-xs font-sans">
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Email Address</span>
-                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
-                            <span>: <strong className="text-slate-100 font-mono">{formData.email}</strong></span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Email Address</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
+                            <span>: <strong className="text-slate-950 dark:text-slate-100 font-mono">{formData.email}</strong></span>
                             <span title="Edit Email">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400 flex items-center gap-1">
-                            Mobile Number <Info className="w-3 h-3 text-slate-500" />
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400 flex items-center gap-1">
+                            Mobile Number <Info className="w-3 h-3 text-slate-400" />
                           </span>
-                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
-                            <span>: <strong className="text-slate-100 font-mono">{formData.phone}</strong></span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
+                            <span>: <strong className="text-slate-950 dark:text-slate-100 font-mono">{formData.phone}</strong></span>
                             <span title="Edit Phone">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Alternate Mobile Number</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-400 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Alternate Mobile Number</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.alternatePhone || "NA"}</span>
                             <span title="Edit Alternate Phone">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Name</span>
-                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Name</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.name}</span>
                             <span title="Edit Name">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">{"Father's Name"}</span>
-                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">{"Father's Name"}</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.fatherName || "K. Ramachandran"}</span>
                             <span title="Edit Father's Name">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">{"Mother's Name"}</span>
-                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">{"Mother's Name"}</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.motherName || "R. Priya"}</span>
                             <span title="Edit Mother's Name">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Student Gender</span>
-                          <span className="sm:col-span-7 font-bold text-slate-200 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Student Gender</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.gender || "Male"}</span>
                             <span title="Edit Gender">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Blood Group</span>
-                          <span className="sm:col-span-7 font-bold text-rose-300 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Blood Group</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.bloodGroup || "O+"}</span>
                             <span title="Edit Blood Group">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Physically Disabled</span>
-                          <span className="sm:col-span-7 font-bold text-slate-200 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Physically Disabled</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.physicallyDisabled || "No"}</span>
                             <span title="Edit Physically Disabled">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Community Category</span>
-                          <span className="sm:col-span-7 font-extrabold text-sky-300 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Community Category</span>
+                          <span className="sm:col-span-7 font-extrabold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.community || "BC"}</span>
                             <span title="Edit Community">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Home Address</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Home Address</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
                             <span title="Edit Home Address">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">School Name</span>
-                          <span className="sm:col-span-7 font-semibold text-amber-200 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">School Name</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.school || "Govt Higher Secondary School, Salem"}</span>
                             <span title="Edit School Name">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">State</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">State</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.state || "Tamil Nadu"}</span>
                             <span title="Edit State">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">City</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">City</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: {formData.district || "Salem"}</span>
                             <span title="Edit City">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Campus</span>
-                          <span className="sm:col-span-7 font-bold text-sky-300 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Campus</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: V.S.B. {formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"}</span>
                             <span title="Edit Campus">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Course</span>
-                          <span className="sm:col-span-7 font-bold text-indigo-300 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Course</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white flex items-center justify-between">
                             <span>: UG ({formData.courseInterest})</span>
                             <span title="Edit Course">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-sky-600 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
@@ -1082,69 +1082,69 @@ export default function ApplicantDetailModal({
                     ) : activeSubTab === "ADDITIONAL" ? (
                       /* SUB TAB 2: ADDITIONAL DETAILS */
                       <div className="space-y-3.5 text-xs font-sans">
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">{"Father's Name"}</span>
-                          <span className="sm:col-span-7 font-bold text-white">: {formData.fatherName || "K. Ramachandran"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">{"Father's Name"}</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.fatherName || "K. Ramachandran"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">{"Mother's Name"}</span>
-                          <span className="sm:col-span-7 font-bold text-white">: {formData.motherName || "R. Priya"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">{"Mother's Name"}</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.motherName || "R. Priya"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Gender</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200">: {formData.gender || "Male"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Gender</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.gender || "Male"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Blood Group</span>
-                          <span className="sm:col-span-7 font-bold text-rose-300">: {formData.bloodGroup || "O+"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Blood Group</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.bloodGroup || "O+"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Physically Disabled</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200">: {formData.physicallyDisabled || "No"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Physically Disabled</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.physicallyDisabled || "No"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Community Category</span>
-                          <span className="sm:col-span-7 font-extrabold text-sky-300">: {formData.community || "BC"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Community Category</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.community || "BC"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Home Address</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200">: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Home Address</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">10th Marks (%)</span>
-                          <span className="sm:col-span-7 font-bold text-white">: {app.marks10th}%</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">10th Marks (%)</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {app.marks10th}%</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">12th Marks (%)</span>
-                          <span className="sm:col-span-7 font-bold text-white">: {app.marks12th}%</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">12th Marks (%)</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {app.marks12th}%</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">TNEA Cutoff Score</span>
-                          <span className="sm:col-span-7 font-bold text-sky-300 font-mono">: {formData.tneaCutoff || 188.5} / 200</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">TNEA Cutoff Score</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white font-mono">: {formData.tneaCutoff || 188.5} / 200</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Affiliated School</span>
-                          <span className="sm:col-span-7 font-semibold text-slate-200">: {formData.school || "Govt HSS"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Affiliated School</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.school || "Govt HSS"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Lead Acquisition Source</span>
-                          <span className="sm:col-span-7 font-semibold text-indigo-300">: {formData.source || "Organic"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Lead Acquisition Source</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: {formData.source || "Organic"}</span>
                         </div>
                       </div>
                     ) : (
                       /* SUB TAB 3: FACEBOOK DETAILS */
                       <div className="space-y-3.5 text-xs font-sans">
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Facebook Campaign Name</span>
-                          <span className="sm:col-span-7 font-bold text-white">: VSB_TNEA_Admissions_2026</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Facebook Campaign Name</span>
+                          <span className="sm:col-span-7 font-bold text-slate-950 dark:text-white">: VSB_TNEA_Admissions_2026</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Ad Set ID</span>
-                          <span className="sm:col-span-7 font-mono text-slate-300">: fb_adset_918237</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Ad Set ID</span>
+                          <span className="sm:col-span-7 font-mono text-slate-950 dark:text-slate-300 font-bold">: fb_adset_918237</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Form ID</span>
-                          <span className="sm:col-span-7 font-mono text-slate-300">: fb_form_382109</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 dark:border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-800 dark:text-slate-400">Form ID</span>
+                          <span className="sm:col-span-7 font-mono text-slate-950 dark:text-slate-300 font-bold">: fb_form_382109</span>
                         </div>
                       </div>
                     )
