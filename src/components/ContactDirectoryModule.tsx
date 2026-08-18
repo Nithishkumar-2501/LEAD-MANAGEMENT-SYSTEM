@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
@@ -518,123 +519,7 @@ export default function ContactDirectoryModule({
       const text = event.target?.result as string;
       if (!text) return;
 
-      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-      if (lines.length === 0) return;
-
-      const imported: (Lead & { application: Application })[] = [];
-
-      // Check header row for dynamic column mapping
-      const firstLineLower = lines[0].toLowerCase();
-      const hasHeader =
-        firstLineLower.includes("name") ||
-        firstLineLower.includes("phone") ||
-        firstLineLower.includes("mobile") ||
-        firstLineLower.includes("email") ||
-        firstLineLower.includes("course");
-
-      const headerCols = hasHeader
-        ? lines[0].split(",").map((c) => c.trim().toLowerCase().replace(/^["']|["']$/g, ""))
-        : [];
-      const startIndex = hasHeader ? 1 : 0;
-
-      const findColIndex = (keywords: string[]) => {
-        return headerCols.findIndex((col) => keywords.some((k) => col.includes(k)));
-      };
-
-      const nameIdx = findColIndex(["name", "student", "candidate"]);
-      const phoneIdx = findColIndex(["phone", "mobile", "contact"]);
-      const emailIdx = findColIndex(["email", "mail"]);
-      const schoolIdx = findColIndex(["school", "institution", "college"]);
-      const districtIdx = findColIndex(["district", "city", "location"]);
-      const addressIdx = findColIndex(["address", "place"]);
-      const courseIdx = findColIndex(["course", "dept", "department", "branch", "interest"]);
-      const marks10Idx = findColIndex(["10th", "sslc", "10_mark"]);
-      const marks12Idx = findColIndex(["12th", "hsc", "12_mark"]);
-      const cutoffIdx = findColIndex(["cutoff", "tnea"]);
-      const fatherIdx = findColIndex(["father", "parent"]);
-      const motherIdx = findColIndex(["mother"]);
-      const genderIdx = findColIndex(["gender", "sex"]);
-      const communityIdx = findColIndex(["community", "caste", "category"]);
-      const campusIdx = findColIndex(["campus"]);
-      const statusIdx = findColIndex(["status", "stage"]);
-
-      for (let i = startIndex; i < lines.length; i++) {
-        const line = lines[i];
-        const parts = line.split(",").map((p) => p.trim().replace(/^["']|["']$/g, ""));
-        if (parts.length < 1) continue;
-
-        const getVal = (idx: number, positionalIdx: number, fallback: string = "") => {
-          if (hasHeader && idx >= 0 && idx < parts.length && parts[idx]) return parts[idx];
-          if (!hasHeader && positionalIdx >= 0 && positionalIdx < parts.length && parts[positionalIdx])
-            return parts[positionalIdx];
-          return fallback;
-        };
-
-        const name = getVal(nameIdx, 0, `Candidate ${i}`);
-        const phone = getVal(phoneIdx, 1, "+91 98765 43210");
-        const email = getVal(emailIdx, 2, `${name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@gmail.com`);
-        const school = getVal(schoolIdx, 3, "Govt Higher Secondary School");
-        const district = getVal(districtIdx, 4, selectedCampus === "KARUR" ? "Karur" : "Coimbatore");
-        const address = getVal(addressIdx, 5, "Tamil Nadu");
-        const courseInterest = getVal(courseIdx, 6, "B.E. Computer Science and Engineering");
-        const marks10Str = getVal(marks10Idx, 7, "85");
-        const marks12Str = getVal(marks12Idx, 8, "88");
-        const cutoffStr = getVal(cutoffIdx, 9, "185.5");
-        const fatherName = getVal(fatherIdx, 10, "Parent / Guardian");
-        const motherName = getVal(motherIdx, 11, "");
-        const gender = getVal(genderIdx, 12, "Male");
-        const community = getVal(communityIdx, 13, "BC");
-        const campusVal = getVal(campusIdx, 14, selectedCampus);
-        const statusVal = getVal(statusIdx, 15, "NEW");
-
-        const leadId = `lead_csv_${Date.now()}_${i}`;
-        const appId = `app_csv_${Date.now()}_${i}`;
-
-        const parsed10 = parseFloat(marks10Str) || 85;
-        const parsed12 = parseFloat(marks12Str) || 88;
-        const parsedCutoff = parseFloat(cutoffStr) || 185.5;
-
-        const importedLead: Lead & { application: Application } = {
-          id: leadId,
-          name,
-          phone,
-          email,
-          source: "CSV Import",
-          courseInterest,
-          campus: (campusVal.toUpperCase() === "COIMBATORE"
-            ? "COIMBATORE"
-            : selectedCampus === "ALL"
-            ? "KARUR"
-            : selectedCampus) as CampusLocation,
-          school,
-          district,
-          state: "Tamil Nadu",
-          address,
-          status: (statusVal.toUpperCase() as LeadStatus) || "NEW",
-          fatherName,
-          motherName,
-          gender,
-          community,
-          tneaCutoff: parsedCutoff,
-          leadScore: Math.min(100, Math.round(parsedCutoff / 2)),
-          assignedTo: loggedInUsername || "adminkarur@123",
-          appliedCounselling: true,
-          counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
-          counsellingCategory: "TNEA General Counselling",
-          createdAt: new Date().toISOString(),
-          application: {
-            id: appId,
-            leadId,
-            stage: "INQUIRY",
-            marks10th: parsed10,
-            marks12th: parsed12,
-            paymentStatus: "PENDING",
-            payments: [],
-          },
-        };
-
-        imported.push(importedLead);
-      }
+      const imported = parseCSVToLeads(text, selectedCampus, loggedInUsername);
 
       if (imported.length > 0) {
         setContacts((prev) => [...imported, ...prev]);
@@ -645,7 +530,7 @@ export default function ContactDirectoryModule({
 
         if (onTriggerToast) {
           onTriggerToast(
-            `📥 Successfully imported ${imported.length} candidate(s) into Student Database!`
+            `📥 Successfully imported ${imported.length} student contact(s) from File Manager!`
           );
         }
       } else {

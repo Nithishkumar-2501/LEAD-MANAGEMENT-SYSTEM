@@ -239,6 +239,13 @@ export default function DashboardPage() {
                 onActionTrigger={handleActionTrigger}
                 onOpenCreateModal={() => setIsCreateModalOpen(true)}
                 onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
+                onImportLeads={(newLeads) => {
+                  setApplicants((prev) => [...newLeads, ...prev]);
+                  triggerToast(`📥 Imported ${newLeads.length} student record(s) from File Manager!`);
+                  if (newLeads.length > 0) {
+                    handleSelectApplicant(newLeads[0]);
+                  }
+                }}
               />
               <TaskSidebar
                 tasks={filteredTasks}

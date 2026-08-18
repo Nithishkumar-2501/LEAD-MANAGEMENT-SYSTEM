@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
-import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, QrCode } from "lucide-react";
+import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, QrCode, Upload } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import LeadQRCodeModal from "@/components/LeadQRCodeModal";
+import { parseCSVToLeads } from "@/lib/csvParser";
 
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 
@@ -16,6 +17,7 @@ interface ApplicantsTableProps {
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
   onOpenCreateModal: () => void;
   onOpenQuickLeadModal?: () => void;
+  onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
 }
 
 export default function ApplicantsTable({
@@ -25,6 +27,7 @@ export default function ApplicantsTable({
   onActionTrigger,
   onOpenCreateModal,
   onOpenQuickLeadModal,
+  onImportLeads,
 }: ApplicantsTableProps) {
   const [selectedStage, setSelectedStage] = useState<string>("ALL");
 
@@ -118,6 +121,35 @@ export default function ApplicantsTable({
               <Plus className="w-4 h-4" />
               <span>New Application</span>
             </SpecularButton>
+
+            <input
+              type="file"
+              id="csv-dashboard-upload"
+              accept=".csv"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                  const text = evt.target?.result as string;
+                  if (!text) return;
+                  const imported = parseCSVToLeads(text);
+                  if (imported.length > 0 && onImportLeads) {
+                    onImportLeads(imported);
+                  }
+                };
+                reader.readAsText(file);
+                e.target.value = "";
+              }}
+            />
+            <button
+              onClick={() => document.getElementById("csv-dashboard-upload")?.click()}
+              className="px-3.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600 text-purple-200 border border-purple-400/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Import CSV</span>
+            </button>
 
             {/* Bubble Stage Control Pills */}
             <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-md overflow-x-auto hide-scrollbar">
