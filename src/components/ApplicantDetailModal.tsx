@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import LeadQRCodeModal from "@/components/LeadQRCodeModal";
 import {
   X,
   Phone,
@@ -42,6 +43,9 @@ export default function ApplicantDetailModal({
 }: ApplicantDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(applicant);
+
+  // QR Modal State
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const [activeMainTab, setActiveMainTab] = useState<
     "LEAD_DETAILS" | "TIMELINE" | "CALENDAR" | "NOTES" | "COMMUNICATION" | "TICKETS"
@@ -219,8 +223,12 @@ export default function ApplicantDetailModal({
                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xl shadow-xl ring-2 ring-white/20">
                       {formData.name.slice(0, 1).toUpperCase()}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-slate-950 border border-slate-700 flex items-center justify-center text-sky-400">
-                      <QrCode className="w-3 h-3" />
+                    <div
+                      className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-950 border border-sky-400 flex items-center justify-center text-sky-400 cursor-pointer hover:bg-sky-500 hover:text-white transition-all shadow-lg hover:scale-110"
+                      title="Click to scan & view Lead QR Pass"
+                      onClick={() => setIsQrModalOpen(true)}
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
                     </div>
                   </div>
 
@@ -240,6 +248,13 @@ export default function ApplicantDetailModal({
                         </span>
                       </span>
                     </div>
+                    <button
+                      onClick={() => setIsQrModalOpen(true)}
+                      className="mt-1 text-[10px] font-bold text-purple-300 bg-purple-950/60 hover:bg-purple-600 hover:text-white px-2 py-0.5 rounded-md border border-purple-500/40 flex items-center gap-1 transition-all shadow-sm cursor-pointer"
+                    >
+                      <QrCode className="w-3 h-3 text-purple-400" />
+                      <span>Scan QR Pass</span>
+                    </button>
                   </div>
                 </div>
 
@@ -1010,6 +1025,14 @@ export default function ApplicantDetailModal({
           </div>
         </div>
       </div>
+
+      {/* QR Code Scan & Details Modal */}
+      <LeadQRCodeModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        lead={formData}
+        onActionTrigger={onActionTrigger}
+      />
     </div>
   );
 }
