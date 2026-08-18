@@ -510,7 +510,7 @@ export default function ApplicantDetailModal({
                         {/* Parent & Personal Information */}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Father's Name</label>
+                            <label className="block text-slate-300 font-bold mb-1">{"Father's Name"}</label>
                             <input
                               type="text"
                               value={formData.fatherName || "K. Ramachandran"}
@@ -520,7 +520,7 @@ export default function ApplicantDetailModal({
                             />
                           </div>
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Mother's Name</label>
+                            <label className="block text-slate-300 font-bold mb-1">{"Mother's Name"}</label>
                             <input
                               type="text"
                               value={formData.motherName || "R. Priya"}
@@ -924,7 +924,7 @@ export default function ApplicantDetailModal({
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Father's Name</span>
+                          <span className="sm:col-span-5 font-bold text-slate-400">{"Father's Name"}</span>
                           <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
                             <span>: {formData.fatherName || "K. Ramachandran"}</span>
                             <span title="Edit Father's Name">
@@ -937,7 +937,7 @@ export default function ApplicantDetailModal({
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Mother's Name</span>
+                          <span className="sm:col-span-5 font-bold text-slate-400">{"Mother's Name"}</span>
                           <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
                             <span>: {formData.motherName || "R. Priya"}</span>
                             <span title="Edit Mother's Name">
@@ -1083,11 +1083,11 @@ export default function ApplicantDetailModal({
                       /* SUB TAB 2: ADDITIONAL DETAILS */
                       <div className="space-y-3.5 text-xs font-sans">
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Father's Name</span>
+                          <span className="sm:col-span-5 font-bold text-slate-400">{"Father's Name"}</span>
                           <span className="sm:col-span-7 font-bold text-white">: {formData.fatherName || "K. Ramachandran"}</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
-                          <span className="sm:col-span-5 font-bold text-slate-400">Mother's Name</span>
+                          <span className="sm:col-span-5 font-bold text-slate-400">{"Mother's Name"}</span>
                           <span className="sm:col-span-7 font-bold text-white">: {formData.motherName || "R. Priya"}</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">

@@ -145,7 +145,7 @@ export default function CreateApplicationModal({
           {/* Parents & Personal Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Father's Name</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">{"Father's Name"}</label>
               <input
                 type="text"
                 value={formData.fatherName}
@@ -156,7 +156,7 @@ export default function CreateApplicationModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Mother's Name</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">{"Mother's Name"}</label>
               <input
                 type="text"
                 value={formData.motherName}

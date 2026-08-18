@@ -82,6 +82,13 @@ export default function AddQuickLeadModal({
         email: "",
         gender: "Male",
         phone: "",
+        fatherName: "",
+        motherName: "",
+        bloodGroup: "O+",
+        physicallyDisabled: "No",
+        community: "BC",
+        address: "",
+        school: "",
         state: "Tamil Nadu",
         city: "Salem",
       });
@@ -223,7 +230,7 @@ export default function AddQuickLeadModal({
             {/* Father's Name */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Father's Name
+                {"Father's Name"}
               </label>
               <input
                 type="text"
@@ -237,7 +244,7 @@ export default function AddQuickLeadModal({
             {/* Mother's Name */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Mother's Name
+                {"Mother's Name"}
               </label>
               <input
                 type="text"
