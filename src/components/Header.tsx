@@ -110,15 +110,15 @@ export default function Header({
             />
           </div>
           <div className="min-w-0">
-            <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-              <span className="truncate text-slate-900 dark:text-white font-black">V.S.B. ENGINEERING COLLEGE</span>
-              <span className="hidden sm:inline text-[10px] font-bold text-sky-800 dark:text-sky-200 bg-sky-100 dark:bg-sky-500/20 border border-sky-300 dark:border-sky-400/40 px-3 py-0.5 rounded-full backdrop-blur-xl shrink-0">
+            <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-black dark:text-white tracking-tight flex items-center gap-2 truncate">
+              <span className="truncate text-black dark:text-white font-black">V.S.B. ENGINEERING COLLEGE</span>
+              <span className="hidden sm:inline text-[10px] font-black text-black dark:text-sky-200 bg-sky-200 dark:bg-sky-500/20 border border-sky-400 dark:border-sky-400/40 px-3 py-0.5 rounded-full shrink-0">
                 Bubble Glass OS 4.0
               </span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-sky-800 dark:text-sky-200/80 flex items-center gap-1.5 font-extrabold truncate">
+            <p className="text-[10px] sm:text-xs text-black dark:text-sky-200 flex items-center gap-1.5 font-extrabold truncate">
               <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-600 dark:text-pink-400 shrink-0" />
-              <span className="truncate text-sky-800 dark:text-sky-200">KARUR & COIMBATORE CAMPUSES</span>
+              <span className="truncate text-black dark:text-sky-200">KARUR & COIMBATORE CAMPUSES</span>
             </p>
           </div>
         </div>

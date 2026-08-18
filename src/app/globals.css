@@ -183,6 +183,17 @@ html.light textarea::placeholder {
   font-weight: 500 !important;
 }
 
+/* FORCE PURE BLACK HIGH-CONTRAST TEXT FOR HEADER BRANDING IN LIGHT MODE */
+html.light header h1,
+html.light header h1 span,
+html.light header p,
+html.light header p span,
+html.light .text-black,
+html.light .text-slate-900,
+html.light .text-slate-800 {
+  color: #000000 !important;
+}
+
 /* Pure White Text Preservation for Dark Cards & Fills in Light Mode */
 html.light .text-white {
   color: #ffffff !important;
@@ -191,7 +202,7 @@ html.light .text-white {
 /* Slate Text Contrast on Light Surfaces */
 html.light .text-slate-100,
 html.light .text-slate-200 {
-  color: #0f172a !important;
+  color: #000000 !important;
 }
 
 html.light .text-slate-300 {
