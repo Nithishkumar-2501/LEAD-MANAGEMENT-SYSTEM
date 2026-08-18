@@ -321,29 +321,29 @@ export default function LeadFunnelChart({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className={`w-3.5 h-3.5 rounded-full ${currentStage.color} shadow-lg ring-4 ring-white/10`} />
-                  <h4 className="text-lg font-black text-slate-900 dark:text-white">{currentStage.label}</h4>
+                  <h4 className="text-lg font-black text-white">{currentStage.label}</h4>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                <p className="text-xs text-white/90 font-medium leading-relaxed">
                   {currentStage.desc}
                 </p>
                 <div className="pt-2">
-                  <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-white/10">
+                  <span className="text-[11px] font-mono text-white/80 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-white/20">
                     Filter Key: {currentStage.key}
                   </span>
                 </div>
               </div>
 
               {/* Center Column: Big Metrics Display */}
-              <div className="bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-white/15 rounded-2xl p-4 text-center space-y-1 backdrop-blur-xl shadow-inner">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+              <div className="bg-slate-950/80 border border-white/20 rounded-2xl p-4 text-center space-y-1 backdrop-blur-xl shadow-inner">
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider block">
                   Total Stage Candidates
                 </span>
-                <div className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-1">
+                <div className="text-4xl font-black text-white tracking-tight flex items-center justify-center gap-1">
                   <span>{currentStage.count}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">leads</span>
+                  <span className="text-xs text-white/70 font-normal">leads</span>
                 </div>
                 <div className="pt-1">
-                  <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 ${currentStage.text}`}>
+                  <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-900 ${currentStage.text}`}>
                     {Math.round((currentStage.count / total) * 100)}% of pipeline
                   </span>
                 </div>
@@ -352,7 +352,7 @@ export default function LeadFunnelChart({
               {/* Right Column: Progress & Action Button */}
               <div className="space-y-4">
                 <div>
-                  <div className="flex items-center justify-between text-xs text-slate-300 font-bold mb-1.5">
+                  <div className="flex items-center justify-between text-xs text-white font-bold mb-1.5">
                     <span>Funnel Share</span>
                     <span className={currentStage.text}>
                       {((currentStage.count / total) * 100).toFixed(1)}%

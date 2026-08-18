@@ -183,17 +183,27 @@ html.light textarea::placeholder {
   font-weight: 500 !important;
 }
 
-/* Pure Black Text Overrides in Light Mode */
-html.light .text-white,
+/* Pure White Text Preservation for Dark Cards & Fills in Light Mode */
+html.light .text-white {
+  color: #ffffff !important;
+}
+
+/* Slate Text Contrast on Light Surfaces */
 html.light .text-slate-100,
-html.light .text-slate-200,
-html.light .text-slate-300,
-html.light .text-slate-400,
-html.light .text-slate-500,
-html.light .text-sky-200,
-html.light .text-sky-200\/80,
-html.light .text-indigo-200 {
-  color: #000000 !important;
+html.light .text-slate-200 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-300 {
+  color: #1e293b !important;
+}
+
+html.light .text-slate-400 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-500 {
+  color: #475569 !important;
 }
 
 /* Vibrant High-Contrast Accents in Light Mode */
