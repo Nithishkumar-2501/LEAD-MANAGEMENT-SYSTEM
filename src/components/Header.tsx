@@ -18,6 +18,8 @@ import {
   Menu,
   X,
   Lock,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -33,6 +35,8 @@ interface HeaderProps {
   onLogout: () => void;
   loggedInCampus: "KARUR" | "COIMBATORE";
   currentUserRole: "ADMIN" | "TEACHER";
+  theme?: "LIGHT" | "DARK";
+  onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
 }
 
 export default function Header({
@@ -46,6 +50,8 @@ export default function Header({
   onLogout,
   loggedInCampus,
   currentUserRole,
+  theme = "DARK",
+  onThemeChange,
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -183,6 +189,21 @@ export default function Header({
           >
             <Search className="w-4 h-4" />
           </button>
+
+          {/* Quick Theme Toggle Button (Light Mode & Dark Mode) */}
+          <Tooltip text={`Switch to ${theme === "DARK" ? "Light Mode ☀️" : "Dark Mode 🌙"}`}>
+            <button
+              onClick={() => onThemeChange?.(theme === "DARK" ? "LIGHT" : "DARK")}
+              className="p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-sky-400 text-amber-300 transition-all shadow-md flex items-center justify-center cursor-pointer"
+              aria-label="Toggle Theme"
+            >
+              {theme === "DARK" ? (
+                <Sun className="w-4 h-4 text-amber-400 animate-pulse" />
+              ) : (
+                <Moon className="w-4 h-4 text-indigo-600" />
+              )}
+            </button>
+          </Tooltip>
 
           {/* Notifications button */}
           <div className="relative">

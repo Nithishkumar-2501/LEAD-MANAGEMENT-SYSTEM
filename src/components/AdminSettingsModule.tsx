@@ -1,14 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShieldCheck, Key, Lock, UserCheck, Bell, Server, CheckCircle2, Save, Sparkles } from "lucide-react";
+import { ShieldCheck, Key, Lock, UserCheck, Bell, Server, CheckCircle2, Save, Sparkles, Sun, Moon, Palette } from "lucide-react";
 
 interface AdminSettingsModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
   onTriggerToast: (msg: string) => void;
+  theme?: "LIGHT" | "DARK";
+  onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
 }
 
-export default function AdminSettingsModule({ loggedInCampus, onTriggerToast }: AdminSettingsModuleProps) {
+export default function AdminSettingsModule({
+  loggedInCampus,
+  onTriggerToast,
+  theme = "DARK",
+  onThemeChange,
+}: AdminSettingsModuleProps) {
   const [settings, setSettings] = useState({
     collegeName: "V.S.B. ENGINEERING COLLEGE",
     karurCode: "VSB-612",
@@ -93,6 +100,77 @@ export default function AdminSettingsModule({ loggedInCampus, onTriggerToast }: 
               <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">Session Profile</span>
               <span className="font-extrabold text-sky-300">{loggedInCampus} CAMPUS ADMIN</span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SYSTEM APPEARANCE & THEME SWITCHER (LIGHT MODE & DARK MODE) */}
+      <div className="bubble-card p-5 sm:p-6 border border-sky-500/30 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
+          <div className="flex items-center gap-2">
+            <Palette className="w-5 h-5 text-sky-400" />
+            <h3 className="text-sm font-black text-white uppercase tracking-wider">
+              System Appearance & Theme Mode
+            </h3>
+          </div>
+          <span className="text-xs text-sky-300 font-bold bg-sky-950/60 px-3 py-1 rounded-full border border-sky-500/30">
+            Current Active: {theme === "LIGHT" ? "☀️ Light Mode" : "🌙 Dark Mode"}
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-300">
+          Switch the application visual mode between Light Theme and Dark Theme. Selecting a theme instantly updates all headers, dashboards, lead tables, navigation tabs, cards, and modal dialogs across the CRM.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          {/* LIGHT MODE SELECTION BUTTON */}
+          <div
+            onClick={() => onThemeChange?.("LIGHT")}
+            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+              theme === "LIGHT"
+                ? "bg-slate-100 border-sky-500 text-slate-900 shadow-xl shadow-sky-500/20 ring-2 ring-sky-400/50 scale-[1.02]"
+                : "bg-slate-900/70 border-slate-800 text-slate-300 hover:border-sky-500/50 hover:bg-slate-900"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center font-bold text-lg border border-amber-400/30">
+                <Sun className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                  ☀️ Light Mode
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  Crisp white background, high contrast dark slate text & clear cards
+                </p>
+              </div>
+            </div>
+            {theme === "LIGHT" && <CheckCircle2 className="w-5 h-5 text-sky-500 shrink-0" />}
+          </div>
+
+          {/* DARK MODE SELECTION BUTTON */}
+          <div
+            onClick={() => onThemeChange?.("DARK")}
+            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+              theme === "DARK"
+                ? "bg-slate-900 border-indigo-500 text-white shadow-xl shadow-indigo-500/20 ring-2 ring-indigo-400/50 scale-[1.02]"
+                : "bg-slate-900/70 border-slate-800 text-slate-300 hover:border-indigo-500/50 hover:bg-slate-900"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-lg border border-indigo-400/30">
+                <Moon className="w-5 h-5 text-indigo-300" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                  🌙 Dark Mode
+                </h4>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Sleek dark gradient canvas with liquid glass, neon highlights & dark cards
+                </p>
+              </div>
+            </div>
+            {theme === "DARK" && <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />}
           </div>
         </div>
       </div>

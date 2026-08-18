@@ -88,6 +88,21 @@ export default function DashboardPage() {
   // Action Notification State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const [theme, setTheme] = useState<"LIGHT" | "DARK">("DARK");
+
+  useEffect(() => {
+    const savedTheme = (localStorage.getItem("vsb_theme") as "LIGHT" | "DARK") || "DARK";
+    setTheme(savedTheme);
+    document.documentElement.className = savedTheme === "LIGHT" ? "light" : "dark";
+  }, []);
+
+  const handleThemeChange = (newTheme: "LIGHT" | "DARK") => {
+    setTheme(newTheme);
+    localStorage.setItem("vsb_theme", newTheme);
+    document.documentElement.className = newTheme === "LIGHT" ? "light" : "dark";
+    triggerToast(`Switched theme mode to ${newTheme === "LIGHT" ? "☀️ Light Mode" : "🌙 Dark Mode"}`);
+  };
+
   useEffect(() => {
     const authSession = sessionStorage.getItem("vsb_admin_auth");
     if (authSession === "true") {
@@ -201,6 +216,8 @@ export default function DashboardPage() {
         onLogout={handleLogout}
         loggedInCampus={loggedInCampus}
         currentUserRole={currentUserRole}
+        theme={theme}
+        onThemeChange={handleThemeChange}
       />
 
       {/* Main Content Area */}
@@ -269,6 +286,8 @@ export default function DashboardPage() {
           <AdminSettingsModule
             loggedInCampus={loggedInCampus}
             onTriggerToast={triggerToast}
+            theme={theme}
+            onThemeChange={handleThemeChange}
           />
         )}
       </main>
