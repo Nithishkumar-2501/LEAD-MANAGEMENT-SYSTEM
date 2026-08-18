@@ -958,39 +958,7 @@ export default function ContactDirectoryModule({
           </div>
         </div>
 
-        {/* Dashboard Privacy & Visibility Controls */}
-        <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-white/10 text-xs font-bold text-slate-300">
-          <span className="text-sky-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" /> Privacy Settings:
-          </span>
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={showPhone}
-              onChange={(e) => setShowPhone(e.target.checked)}
-              className="w-4 h-4 rounded text-indigo-600 bg-slate-950 border-white/20 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-            />
-            <span>Show Phone Numbers</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={showEmail}
-              onChange={(e) => setShowEmail(e.target.checked)}
-              className="w-4 h-4 rounded text-indigo-600 bg-slate-950 border-white/20 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-            />
-            <span>Show Email Addresses</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={showAddress}
-              onChange={(e) => setShowAddress(e.target.checked)}
-              className="w-4 h-4 rounded text-indigo-600 bg-slate-950 border-white/20 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-            />
-            <span>Show Home Addresses</span>
-          </label>
-        </div>
+
       </div>
 
       {/* MAIN CONTENT VIEW: LEAD MANAGER TABLE (Image 2) OR CARDS GRID (Image 1) */}
