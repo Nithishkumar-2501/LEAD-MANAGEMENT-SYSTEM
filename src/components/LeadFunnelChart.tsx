@@ -69,9 +69,9 @@ export default function LeadFunnelChart({
       key: "NEW",
       count: statusCounts.NEW,
       color: "bg-sky-400",
-      text: "text-sky-300",
+      text: "text-sky-600 dark:text-sky-300",
       border: "border-sky-400/40",
-      activeBg: "bg-gradient-to-br from-sky-950/80 via-slate-900 to-sky-900/40 border-sky-400",
+      activeBg: "bg-gradient-to-br from-sky-50 via-white to-sky-100 dark:from-sky-950/80 dark:via-slate-900 dark:to-sky-900/40 border-sky-400",
       bar: "from-sky-400 to-blue-600",
       glow: "shadow-sky-500/25",
       desc: "Initial candidates who registered or submitted inquiry forms for VSB admissions.",
@@ -81,9 +81,9 @@ export default function LeadFunnelChart({
       key: "CONTACTED",
       count: statusCounts.CONTACTED,
       color: "bg-indigo-400",
-      text: "text-indigo-300",
+      text: "text-indigo-600 dark:text-indigo-300",
       border: "border-indigo-400/40",
-      activeBg: "bg-gradient-to-br from-indigo-950/80 via-slate-900 to-purple-900/40 border-indigo-400",
+      activeBg: "bg-gradient-to-br from-indigo-50 via-white to-purple-100 dark:from-indigo-950/80 dark:via-slate-900 dark:to-purple-900/40 border-indigo-400",
       bar: "from-indigo-500 to-purple-600",
       glow: "shadow-indigo-500/25",
       desc: "Candidates actively engaged by admission counselors via telecall or email outreach.",
@@ -93,9 +93,9 @@ export default function LeadFunnelChart({
       key: "IN_REVIEW",
       count: statusCounts.IN_REVIEW,
       color: "bg-amber-400",
-      text: "text-amber-300",
+      text: "text-amber-600 dark:text-amber-300",
       border: "border-amber-400/40",
-      activeBg: "bg-gradient-to-br from-amber-950/80 via-slate-900 to-orange-900/40 border-amber-400",
+      activeBg: "bg-gradient-to-br from-amber-50 via-white to-orange-100 dark:from-amber-950/80 dark:via-slate-900 dark:to-orange-900/40 border-amber-400",
       bar: "from-amber-400 to-orange-500",
       glow: "shadow-amber-500/25",
       desc: "Academic TNEA cutoff analysis & document verification in progress by verification officer.",
@@ -105,9 +105,9 @@ export default function LeadFunnelChart({
       key: "ADMITTED",
       count: statusCounts.ADMITTED,
       color: "bg-emerald-400",
-      text: "text-emerald-300",
+      text: "text-emerald-600 dark:text-emerald-300",
       border: "border-emerald-400/40",
-      activeBg: "bg-gradient-to-br from-emerald-950/80 via-slate-900 to-teal-900/40 border-emerald-400",
+      activeBg: "bg-gradient-to-br from-emerald-50 via-white to-teal-100 dark:from-emerald-950/80 dark:via-slate-900 dark:to-teal-900/40 border-emerald-400",
       bar: "from-emerald-400 to-teal-500",
       glow: "shadow-emerald-500/25",
       desc: "Official offer letter issued and seat reservation fee completed successfully.",
@@ -117,9 +117,9 @@ export default function LeadFunnelChart({
       key: "REJECTED",
       count: statusCounts.REJECTED,
       color: "bg-rose-400",
-      text: "text-rose-300",
+      text: "text-rose-600 dark:text-rose-300",
       border: "border-rose-400/40",
-      activeBg: "bg-gradient-to-br from-rose-950/80 via-slate-900 to-pink-900/40 border-rose-400",
+      activeBg: "bg-gradient-to-br from-rose-50 via-white to-pink-100 dark:from-rose-950/80 dark:via-slate-900 dark:to-pink-900/40 border-rose-400",
       bar: "from-rose-500 to-pink-600",
       glow: "shadow-rose-500/25",
       desc: "Candidates ineligible or who opted out during counseling rounds.",
@@ -321,29 +321,29 @@ export default function LeadFunnelChart({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className={`w-3.5 h-3.5 rounded-full ${currentStage.color} shadow-lg ring-4 ring-white/10`} />
-                  <h4 className="text-lg font-black text-white">{currentStage.label}</h4>
+                  <h4 className="text-lg font-black text-slate-900 dark:text-white">{currentStage.label}</h4>
                 </div>
-                <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
                   {currentStage.desc}
                 </p>
                 <div className="pt-2">
-                  <span className="text-[11px] font-mono text-slate-400 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-white/10">
+                  <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-white/10">
                     Filter Key: {currentStage.key}
                   </span>
                 </div>
               </div>
 
               {/* Center Column: Big Metrics Display */}
-              <div className="bg-slate-950/70 border border-white/15 rounded-2xl p-4 text-center space-y-1 backdrop-blur-xl shadow-inner">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              <div className="bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-white/15 rounded-2xl p-4 text-center space-y-1 backdrop-blur-xl shadow-inner">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                   Total Stage Candidates
                 </span>
-                <div className="text-4xl font-black text-white tracking-tight flex items-center justify-center gap-1">
+                <div className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-1">
                   <span>{currentStage.count}</span>
-                  <span className="text-xs text-slate-400 font-normal">leads</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">leads</span>
                 </div>
                 <div className="pt-1">
-                  <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-900 ${currentStage.text}`}>
+                  <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 ${currentStage.text}`}>
                     {Math.round((currentStage.count / total) * 100)}% of pipeline
                   </span>
                 </div>

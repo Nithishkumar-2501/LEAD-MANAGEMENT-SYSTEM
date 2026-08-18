@@ -242,26 +242,24 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                 </span>
               </div>
 
-              <div className="space-y-1.5 text-xs text-slate-300 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+              <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-300 bg-slate-100 dark:bg-slate-950/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Experience</span>
-                  <span className="font-semibold text-slate-200">{tch.experienceYears} Years</span>
+                  <span className="text-slate-500 dark:text-slate-400">Experience</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-200">{tch.experienceYears} Years</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Email</span>
-                  <span className="font-semibold text-slate-200">{tch.email}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Email</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-200">{tch.email}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Phone</span>
-                  <span className="font-semibold text-slate-200">{tch.phone}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Phone</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-200">{tch.phone}</span>
                 </div>
-                <div className="flex justify-between pt-1.5 border-t border-slate-800/80">
-                  <span className="text-sky-400 font-bold flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-sky-400" /> Assigned Lead Quota
+                <div className="flex justify-between pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
+                  <span className="text-sky-600 dark:text-sky-400 flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5" /> Assigned Lead Quota
                   </span>
-                  <span className="font-extrabold text-emerald-400">
-                    {(tch.assignedQuota || 1000).toLocaleString()} Contacts
-                  </span>
+                  <span className="text-sky-700 dark:text-sky-300">{tch.assignedQuota?.toLocaleString() || "1,000"} Contacts</span>
                 </div>
               </div>
 
