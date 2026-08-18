@@ -1053,161 +1053,30 @@ export default function ContactDirectoryModule({
                     />
                   </th>
                   {selectedColumns.map((col) => {
-                    const hasActiveFilter = !!columnFilters[col] && columnFilters[col] !== "ALL";
                     const isSortedThisCol = sortColumn === col;
                     return (
-                      <th key={col} className="p-2.5 font-bold text-slate-700 relative whitespace-nowrap">
-                        <div className="flex items-center justify-between gap-1 group">
-                          <span
-                            onClick={() => {
-                              if (sortColumn === col) {
-                                if (sortDirection === "asc") setSortDirection("desc");
-                                else {
-                                  setSortColumn(null);
-                                  setSortDirection("asc");
-                                }
-                              } else {
-                                setSortColumn(col);
+                      <th key={col} className="p-3 font-semibold text-slate-600 whitespace-nowrap">
+                        <span
+                          onClick={() => {
+                            if (sortColumn === col) {
+                              if (sortDirection === "asc") setSortDirection("desc");
+                              else {
+                                setSortColumn(null);
                                 setSortDirection("asc");
                               }
-                            }}
-                            className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors select-none"
-                            title={`Click to sort by ${col}`}
-                          >
-                            <span>{col}</span>
-                            <span className={`text-[10px] ${isSortedThisCol ? "text-blue-600 font-extrabold" : "text-slate-400"}`}>
-                              {isSortedThisCol ? (sortDirection === "asc" ? "▲" : "▼") : "↑↓"}
-                            </span>
+                            } else {
+                              setSortColumn(col);
+                              setSortDirection("asc");
+                            }
+                          }}
+                          className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors select-none"
+                          title={`Click to sort by ${col}`}
+                        >
+                          <span>{col}</span>
+                          <span className={`text-[10px] ${isSortedThisCol ? "text-blue-600 font-extrabold" : "text-slate-400"}`}>
+                            {isSortedThisCol ? (sortDirection === "asc" ? "▲" : "▼") : "↑↓"}
                           </span>
-
-                          {/* Filter Popover Icon Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveHeaderFilterPopover(activeHeaderFilterPopover === col ? null : col);
-                            }}
-                            className={`p-1 rounded-md transition-all ${
-                              hasActiveFilter
-                                ? "bg-blue-600 text-white font-bold shadow-sm"
-                                : "text-slate-400 hover:text-blue-600 hover:bg-slate-200/80"
-                            }`}
-                            title={`Filter by ${col}`}
-                          >
-                            <Filter className="w-3 h-3" />
-                          </button>
-                        </div>
-
-                        {/* Interactive Column Header Filter Popover Dropdown */}
-                        {activeHeaderFilterPopover === col && (
-                          <div className="absolute top-full left-0 mt-1 z-30 w-52 bg-white rounded-xl shadow-2xl border border-slate-200 p-2.5 text-xs text-slate-800 normal-case font-normal animate-in fade-in">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-2 font-bold text-[11px] text-slate-700">
-                              <span>Filter by {col}</span>
-                              <button
-                                onClick={() => setActiveHeaderFilterPopover(null)}
-                                className="text-slate-400 hover:text-slate-700"
-                              >
-                                ✕
-                              </button>
-                            </div>
-
-                            {/* Column specific control inside popover */}
-                            {col === "City" ? (
-                              <select
-                                value={columnFilters[col] || "ALL"}
-                                onChange={(e) => {
-                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
-                                }}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="ALL">All Cities/Districts</option>
-                                {TAMIL_NADU_DISTRICTS.map((d) => (
-                                  <option key={d} value={d}>
-                                    {d}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : col === "Lead Stage" ? (
-                              <select
-                                value={columnFilters[col] || "ALL"}
-                                onChange={(e) => {
-                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
-                                }}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="ALL">All Lead Stages</option>
-                                <option value="NEW">NEW</option>
-                                <option value="CONTACTED">CONTACTED</option>
-                                <option value="IN_REVIEW">IN_REVIEW</option>
-                                <option value="ADMITTED">ADMITTED</option>
-                                <option value="REJECTED">REJECTED</option>
-                              </select>
-                            ) : col === "Campus" ? (
-                              <select
-                                value={columnFilters[col] || "ALL"}
-                                onChange={(e) => {
-                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
-                                }}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="ALL">All Campuses</option>
-                                <option value="KARUR">KARUR</option>
-                                <option value="COIMBATORE">COIMBATORE</option>
-                              </select>
-                            ) : col === "Community" ? (
-                              <select
-                                value={columnFilters[col] || "ALL"}
-                                onChange={(e) => {
-                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
-                                }}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="ALL">All Communities</option>
-                                <option value="OC">OC</option>
-                                <option value="BC">BC</option>
-                                <option value="MBC">MBC</option>
-                                <option value="SC">SC</option>
-                                <option value="ST">ST</option>
-                              </select>
-                            ) : col === "Gender" ? (
-                              <select
-                                value={columnFilters[col] || "ALL"}
-                                onChange={(e) => {
-                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
-                                }}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="ALL">All Genders</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                              </select>
-                            ) : (
-                              <input
-                                type="text"
-                                value={columnFilters[col] || ""}
-                                onChange={(e) => {
-                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
-                                }}
-                                placeholder={`Filter ${col}...`}
-                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500"
-                                autoFocus
-                              />
-                            )}
-
-                            {hasActiveFilter && (
-                              <button
-                                onClick={() => {
-                                  const updated = { ...columnFilters };
-                                  delete updated[col];
-                                  setColumnFilters(updated);
-                                }}
-                                className="mt-2 w-full py-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors"
-                              >
-                                Clear Filter
-                              </button>
-                            )}
-                          </div>
-                        )}
+                        </span>
                       </th>
                     );
                   })}
