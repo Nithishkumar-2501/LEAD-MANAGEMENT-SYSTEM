@@ -105,14 +105,14 @@ export default function Header({
             <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-white tracking-tight flex items-center gap-2 truncate">
+            <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
               <span className="truncate">V.S.B. ENGINEERING COLLEGE</span>
-              <span className="hidden sm:inline text-[10px] font-bold text-sky-200 bg-sky-500/20 border border-sky-400/40 px-3 py-0.5 rounded-full backdrop-blur-xl shrink-0">
+              <span className="hidden sm:inline text-[10px] font-bold text-sky-700 dark:text-sky-200 bg-sky-100 dark:bg-sky-500/20 border border-sky-300 dark:border-sky-400/40 px-3 py-0.5 rounded-full backdrop-blur-xl shrink-0">
                 Bubble Glass OS 4.0
               </span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-sky-200/80 flex items-center gap-1.5 font-medium truncate">
-              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-400 shrink-0" />
+            <p className="text-[10px] sm:text-xs text-sky-700 dark:text-sky-200/80 flex items-center gap-1.5 font-bold truncate">
+              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-500 dark:text-pink-400 shrink-0" />
               <span className="truncate">KARUR & COIMBATORE CAMPUSES</span>
             </p>
           </div>
@@ -121,7 +121,7 @@ export default function Header({
         {/* Right: Controls */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Two Campus Icon Selection Bar */}
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/20 text-xs font-semibold backdrop-blur-2xl">
+          <div className="hidden md:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-300 dark:border-white/20 text-xs font-semibold backdrop-blur-2xl">
             {/* Karur Campus Icon Button */}
             {loggedInCampus === "KARUR" ? (
               <Tooltip text="Active Session: V.S.B. Karur Campus">
@@ -255,16 +255,16 @@ export default function Header({
           </div>
 
           {/* Admin User Profile */}
-          <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-white/15">
-            <div className="flex items-center gap-2 sm:gap-2.5 bg-slate-900/80 border border-white/20 px-2 sm:px-3.5 py-1 rounded-full backdrop-blur-xl">
+          <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-slate-300 dark:border-white/15">
+            <div className="flex items-center gap-2 sm:gap-2.5 bg-slate-100 dark:bg-slate-900/80 border border-slate-300 dark:border-white/20 px-2 sm:px-3.5 py-1 rounded-full backdrop-blur-xl">
               <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 text-white font-black text-[10px] flex items-center justify-center shadow-md">
                 VSB
               </div>
-              <span className="hidden sm:inline text-xs font-bold text-slate-200">
+              <span className="hidden sm:inline text-xs font-bold text-slate-900 dark:text-slate-200">
                 {loggedInCampus === "KARUR"
                   ? currentUserRole === "ADMIN" ? "adminkarur@123" : "teacherkarur@123"
                   : currentUserRole === "ADMIN" ? "admincovai@123" : "teachercovai@123"}{" "}
-                <span className="text-[10px] text-sky-300 font-semibold">({currentUserRole === "ADMIN" ? "Admin" : "Teacher"})</span>
+                <span className="text-[10px] text-sky-600 dark:text-sky-300 font-bold">({currentUserRole === "ADMIN" ? "Admin" : "Teacher"})</span>
               </span>
             </div>
             <Tooltip text="Logout of V.S.B. Portal">
