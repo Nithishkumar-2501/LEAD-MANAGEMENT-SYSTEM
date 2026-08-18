@@ -241,6 +241,7 @@ export default function DashboardPage() {
             loggedInUsername={loggedInUsername}
             onActionTrigger={handleActionTrigger}
             onTriggerToast={triggerToast}
+            onSelectApplicant={handleSelectApplicant}
           />
         )}
 

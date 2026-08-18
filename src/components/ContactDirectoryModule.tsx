@@ -5,6 +5,7 @@ import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/ty
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
+import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import {
   Phone,
   Mail,
@@ -34,6 +35,7 @@ interface ContactDirectoryModuleProps {
   loggedInUsername?: string;
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
   onTriggerToast?: (msg: string) => void;
+  onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
 }
 
 export default function ContactDirectoryModule({
@@ -43,12 +45,39 @@ export default function ContactDirectoryModule({
   loggedInUsername = "adminkarur@123",
   onActionTrigger,
   onTriggerToast,
+  onSelectApplicant,
 }: ContactDirectoryModuleProps) {
   const [contacts, setContacts] = useState(initialContacts);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [counsellingFilter, setCounsellingFilter] = useState<"ALL" | "COUNSELLING_ONLY" | "GOVT_QUOTA" | "MANAGEMENT_ONLY">("ALL");
+
+  // Candidate Profile Modal State (Image 2)
+  const [selectedCandidateForModal, setSelectedCandidateForModal] = useState<(Lead & { application: Application }) | null>(null);
+
+  const getFullCandidateWithApp = (contact: Lead & { application?: Application | null }): (Lead & { application: Application }) => {
+    return {
+      ...contact,
+      application: contact.application || {
+        id: `app_${contact.id}`,
+        leadId: contact.id,
+        stage: (contact.status === "ADMITTED" ? "FEE_PAID" : contact.status === "CONTACTED" ? "SUBMITTED" : "INQUIRY"),
+        marks10th: 85,
+        marks12th: 88,
+        paymentStatus: contact.status === "ADMITTED" ? "COMPLETED" : "PENDING",
+        createdAt: contact.createdAt || new Date().toISOString(),
+      },
+    };
+  };
+
+  const handleCandidateClick = (contact: Lead & { application?: Application | null }) => {
+    const fullCand = getFullCandidateWithApp(contact);
+    if (onSelectApplicant) {
+      onSelectApplicant(fullCand);
+    }
+    setSelectedCandidateForModal(fullCand);
+  };
 
   // Meritto Lead Manager View & Filter States (Image 2)
   const [directoryViewMode, setDirectoryViewMode] = useState<"TABLE" | "GRID">("TABLE");
@@ -827,6 +856,7 @@ export default function ContactDirectoryModule({
                 {filteredContacts.slice(0, rowsPerPage).map((contact) => (
                   <tr
                     key={contact.id}
+                    onClick={() => handleCandidateClick(contact)}
                     className="hover:bg-blue-50/60 transition-colors group cursor-pointer"
                   >
                     {/* Select Checkbox */}
@@ -848,16 +878,16 @@ export default function ContactDirectoryModule({
                     {/* Registered Name with 3-Dots Menu */}
                     <td className="p-3 font-bold text-blue-600 hover:underline">
                       <div className="flex items-center justify-between gap-2">
-                        <span onClick={() => setEditingContact(contact)}>
+                        <span onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
                           {contact.name}
                         </span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setEditingContact(contact);
+                            handleCandidateClick(contact);
                           }}
                           className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-80 group-hover:opacity-100"
-                          title="Lead Options"
+                          title="View Lead Details"
                         >
                           ⋮
                         </button>
@@ -1476,6 +1506,21 @@ export default function ContactDirectoryModule({
         onClose={() => setActiveCommModal(null)}
         onLogSuccess={handleCommLogSuccess}
       />
+
+      {/* APPLICANT PROFILE / LEAD DETAILS MODAL (Image 2) */}
+      {selectedCandidateForModal && (
+        <ApplicantDetailModal
+          applicant={selectedCandidateForModal}
+          currentUserRole={currentUserRole}
+          onClose={() => setSelectedCandidateForModal(null)}
+          onActionTrigger={onActionTrigger}
+          onSave={(updated) => {
+            setContacts((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+            setSelectedCandidateForModal(null);
+            onTriggerToast?.(`Updated profile for candidate ${updated.name}`);
+          }}
+        />
+      )}
     </div>
   );
 }
