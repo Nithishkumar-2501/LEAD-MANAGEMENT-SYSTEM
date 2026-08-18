@@ -20,6 +20,14 @@ export default function CreateApplicationModal({
     name: "",
     email: "",
     phone: "",
+    fatherName: "",
+    motherName: "",
+    gender: "Male",
+    bloodGroup: "O+",
+    physicallyDisabled: "No",
+    community: "BC",
+    address: "",
+    school: "",
     courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
     campus: "KARUR" as CampusLocation,
     source: "TNEA Counselling",
@@ -129,6 +137,117 @@ export default function CreateApplicationModal({
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="e.g. vignesh.s@gmail.com"
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          {/* Parents & Personal Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Father's Name</label>
+              <input
+                type="text"
+                value={formData.fatherName}
+                onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
+                placeholder="Father's Full Name"
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Mother's Name</label>
+              <input
+                type="text"
+                value={formData.motherName}
+                onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
+                placeholder="Mother's Full Name"
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Gender</label>
+              <select
+                value={formData.gender}
+                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Blood Group</label>
+              <select
+                value={formData.bloodGroup}
+                onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Physically Disabled</label>
+              <select
+                value={formData.physicallyDisabled}
+                onChange={(e) => setFormData({ ...formData, physicallyDisabled: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Community Category</label>
+              <select
+                value={formData.community}
+                onChange={(e) => setFormData({ ...formData, community: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="BC">BC (Backward Class)</option>
+                <option value="BCM">BCM (BC Muslim)</option>
+                <option value="MBC">MBC / DNC</option>
+                <option value="SC">SC (Scheduled Caste)</option>
+                <option value="SCA">SC (Arunthathiyar)</option>
+                <option value="ST">ST (Scheduled Tribe)</option>
+                <option value="OC">OC (Open Competition)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Home Address</label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Residential Address"
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">School Name</label>
+              <input
+                type="text"
+                value={formData.school}
+                onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                placeholder="Higher Sec School Name"
                 className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>

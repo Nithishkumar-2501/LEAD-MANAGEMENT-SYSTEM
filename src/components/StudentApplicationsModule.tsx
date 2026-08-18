@@ -189,23 +189,43 @@ export default function StudentApplicationsModule({
                 </span>
               </div>
 
-              {/* Marks Banner */}
+              {/* Marks & Student Application Details Banner */}
               <div className="grid grid-cols-2 gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 text-xs">
                 <div>
-                  <p className="text-[10px] text-slate-400">10th Grade</p>
-                  <p className="font-bold text-slate-100">{item.application.marks10th}%</p>
+                  <p className="text-[10px] text-slate-400">Father / Mother</p>
+                  <p className="font-bold text-slate-100 truncate">{item.fatherName || "K. Ramachandran"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400">12th Grade</p>
-                  <p className="font-bold text-slate-100">{item.application.marks12th}%</p>
+                  <p className="text-[10px] text-slate-400">Community / Gender</p>
+                  <p className="font-bold text-sky-300">{item.community || "BC"} • {item.gender || "Male"}</p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs pt-1 text-slate-400">
-                <span>Course: <strong className="text-slate-200">{item.courseInterest}</strong></span>
-                <span className="text-indigo-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1 font-semibold">
-                  Details <ChevronRight className="w-3.5 h-3.5" />
-                </span>
+              <div className="grid grid-cols-3 gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/80 text-[11px]">
+                <div>
+                  <p className="text-[10px] text-slate-400">Blood Group</p>
+                  <p className="font-bold text-rose-300">{item.bloodGroup || "O+"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400">Disabled</p>
+                  <p className="font-bold text-slate-200">{item.physicallyDisabled || "No"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400">12th Marks</p>
+                  <p className="font-bold text-emerald-400">{item.application.marks12th}%</p>
+                </div>
+              </div>
+
+              <div className="space-y-1 text-xs pt-1 text-slate-400">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="truncate">School: <strong className="text-amber-200">{item.school || "Govt HSS"}</strong></span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span>Course: <strong className="text-slate-200">{item.courseInterest}</strong></span>
+                  <span className="text-indigo-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1 font-semibold">
+                    Details <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
               </div>
             </div>
           ))}

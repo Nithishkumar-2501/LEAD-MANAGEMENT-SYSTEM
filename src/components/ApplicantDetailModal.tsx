@@ -507,6 +507,115 @@ export default function ApplicantDetailModal({
                           </div>
                         </div>
 
+                        {/* Parent & Personal Information */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Father's Name</label>
+                            <input
+                              type="text"
+                              value={formData.fatherName || "K. Ramachandran"}
+                              onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
+                              placeholder="Father's Full Name"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Mother's Name</label>
+                            <input
+                              type="text"
+                              value={formData.motherName || "R. Priya"}
+                              onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
+                              placeholder="Mother's Full Name"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Student Gender</label>
+                            <select
+                              value={formData.gender || "Male"}
+                              onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Blood Group</label>
+                            <select
+                              value={formData.bloodGroup || "O+"}
+                              onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="A+">A+</option>
+                              <option value="A-">A-</option>
+                              <option value="B+">B+</option>
+                              <option value="B-">B-</option>
+                              <option value="O+">O+</option>
+                              <option value="O-">O-</option>
+                              <option value="AB+">AB+</option>
+                              <option value="AB-">AB-</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Physically Disabled</label>
+                            <select
+                              value={formData.physicallyDisabled || "No"}
+                              onChange={(e) => setFormData({ ...formData, physicallyDisabled: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Community Category</label>
+                            <select
+                              value={formData.community || "BC"}
+                              onChange={(e) => setFormData({ ...formData, community: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="BC">BC (Backward Class)</option>
+                              <option value="BCM">BCM (BC Muslim)</option>
+                              <option value="MBC">MBC / DNC</option>
+                              <option value="SC">SC (Scheduled Caste)</option>
+                              <option value="SCA">SC (Arunthathiyar)</option>
+                              <option value="ST">ST (Scheduled Tribe)</option>
+                              <option value="OC">OC (Open Competition)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Home Address</label>
+                            <input
+                              type="text"
+                              value={formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}
+                              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                              placeholder="Full Residential Address"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">School Name</label>
+                            <input
+                              type="text"
+                              value={formData.school || "Govt Higher Secondary School, Salem"}
+                              onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                              placeholder="Higher Sec School Name"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-slate-300 font-bold mb-1">State</label>
@@ -815,6 +924,110 @@ export default function ApplicantDetailModal({
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Father's Name</span>
+                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
+                            <span>: {formData.fatherName || "K. Ramachandran"}</span>
+                            <span title="Edit Father's Name">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Mother's Name</span>
+                          <span className="sm:col-span-7 font-bold text-white flex items-center justify-between">
+                            <span>: {formData.motherName || "R. Priya"}</span>
+                            <span title="Edit Mother's Name">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Student Gender</span>
+                          <span className="sm:col-span-7 font-bold text-slate-200 flex items-center justify-between">
+                            <span>: {formData.gender || "Male"}</span>
+                            <span title="Edit Gender">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Blood Group</span>
+                          <span className="sm:col-span-7 font-bold text-rose-300 flex items-center justify-between">
+                            <span>: {formData.bloodGroup || "O+"}</span>
+                            <span title="Edit Blood Group">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Physically Disabled</span>
+                          <span className="sm:col-span-7 font-bold text-slate-200 flex items-center justify-between">
+                            <span>: {formData.physicallyDisabled || "No"}</span>
+                            <span title="Edit Physically Disabled">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Community Category</span>
+                          <span className="sm:col-span-7 font-extrabold text-sky-300 flex items-center justify-between">
+                            <span>: {formData.community || "BC"}</span>
+                            <span title="Edit Community">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Home Address</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-200 flex items-center justify-between">
+                            <span>: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
+                            <span title="Edit Home Address">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
+                          <span className="sm:col-span-5 font-bold text-slate-400">School Name</span>
+                          <span className="sm:col-span-7 font-semibold text-amber-200 flex items-center justify-between">
+                            <span>: {formData.school || "Govt Higher Secondary School, Salem"}</span>
+                            <span title="Edit School Name">
+                              <Edit3
+                                className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
+                                onClick={() => setIsEditing(true)}
+                              />
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">State</span>
                           <span className="sm:col-span-7 font-semibold text-slate-200 flex items-center justify-between">
                             <span>: {formData.state || "Tamil Nadu"}</span>
@@ -856,7 +1069,7 @@ export default function ApplicantDetailModal({
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center group">
                           <span className="sm:col-span-5 font-bold text-slate-400">Course</span>
                           <span className="sm:col-span-7 font-bold text-indigo-300 flex items-center justify-between">
-                            <span>: UG</span>
+                            <span>: UG ({formData.courseInterest})</span>
                             <span title="Edit Course">
                               <Edit3
                                 className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-sky-400 cursor-pointer transition-all"
@@ -869,6 +1082,34 @@ export default function ApplicantDetailModal({
                     ) : activeSubTab === "ADDITIONAL" ? (
                       /* SUB TAB 2: ADDITIONAL DETAILS */
                       <div className="space-y-3.5 text-xs font-sans">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Father's Name</span>
+                          <span className="sm:col-span-7 font-bold text-white">: {formData.fatherName || "K. Ramachandran"}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Mother's Name</span>
+                          <span className="sm:col-span-7 font-bold text-white">: {formData.motherName || "R. Priya"}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Gender</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-200">: {formData.gender || "Male"}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Blood Group</span>
+                          <span className="sm:col-span-7 font-bold text-rose-300">: {formData.bloodGroup || "O+"}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Physically Disabled</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-200">: {formData.physicallyDisabled || "No"}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Community Category</span>
+                          <span className="sm:col-span-7 font-extrabold text-sky-300">: {formData.community || "BC"}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
+                          <span className="sm:col-span-5 font-bold text-slate-400">Home Address</span>
+                          <span className="sm:col-span-7 font-semibold text-slate-200">: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-800/60 items-center">
                           <span className="sm:col-span-5 font-bold text-slate-400">10th Marks (%)</span>
                           <span className="sm:col-span-7 font-bold text-white">: {app.marks10th}%</span>

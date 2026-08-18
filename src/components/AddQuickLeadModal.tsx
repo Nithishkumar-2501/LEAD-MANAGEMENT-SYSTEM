@@ -24,6 +24,13 @@ export default function AddQuickLeadModal({
     email: "",
     gender: "Male",
     phone: "",
+    fatherName: "",
+    motherName: "",
+    bloodGroup: "O+",
+    physicallyDisabled: "No",
+    community: "BC",
+    address: "",
+    school: "",
     state: "Tamil Nadu",
     city: "Salem",
   });
@@ -41,6 +48,13 @@ export default function AddQuickLeadModal({
       name: formData.name,
       email: formData.email,
       phone: formData.phone ? `+91-${formData.phone}` : "+91-9629693794",
+      fatherName: formData.fatherName,
+      motherName: formData.motherName,
+      bloodGroup: formData.bloodGroup,
+      physicallyDisabled: formData.physicallyDisabled,
+      community: formData.community,
+      address: formData.address,
+      school: formData.school,
       source: "Quick Lead Entry",
       courseInterest: formData.formInterested,
       campus: "KARUR" as CampusLocation,
@@ -165,7 +179,7 @@ export default function AddQuickLeadModal({
               </label>
               <select
                 value={formData.formInterested}
-                onChange={(e) => setFormData({ ...formData, formInterested: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, formInterested: e.target.value as any })}
                 className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
               >
                 {VSB_DEPARTMENTS_COURSES.map((course) => (
@@ -206,6 +220,34 @@ export default function AddQuickLeadModal({
               />
             </div>
 
+            {/* Father's Name */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Father's Name
+              </label>
+              <input
+                type="text"
+                value={formData.fatherName}
+                onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
+                placeholder="Father's Full Name"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+
+            {/* Mother's Name */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Mother's Name
+              </label>
+              <input
+                type="text"
+                value={formData.motherName}
+                onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
+                placeholder="Mother's Full Name"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+
             {/* Select Gender */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -220,6 +262,90 @@ export default function AddQuickLeadModal({
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
               </select>
+            </div>
+
+            {/* Blood Group */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Blood Group
+              </label>
+              <select
+                value={formData.bloodGroup}
+                onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+
+            {/* Physically Disabled */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Physically Disabled
+              </label>
+              <select
+                value={formData.physicallyDisabled}
+                onChange={(e) => setFormData({ ...formData, physicallyDisabled: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+
+            {/* Community Category */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Community Category (BC, MBC, SC, ST) *
+              </label>
+              <select
+                value={formData.community}
+                onChange={(e) => setFormData({ ...formData, community: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-sky-700 font-bold bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="BC">BC (Backward Class)</option>
+                <option value="BCM">BCM (BC Muslim)</option>
+                <option value="MBC">MBC / DNC</option>
+                <option value="SC">SC (Scheduled Caste)</option>
+                <option value="SCA">SC (Arunthathiyar)</option>
+                <option value="ST">ST (Scheduled Tribe)</option>
+                <option value="OC">OC (Open Competition)</option>
+              </select>
+            </div>
+
+            {/* Home Address */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Home Address
+              </label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Full Residential Address"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+
+            {/* School Name */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                School Name
+              </label>
+              <input
+                type="text"
+                value={formData.school}
+                onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                placeholder="Higher Sec School Name"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
             </div>
 
             {/* Enter WhatsApp Number */}

@@ -47,6 +47,12 @@ export interface Lead {
   email: string;
   phone: string;
   alternatePhone?: string;
+  fatherName?: string;
+  motherName?: string;
+  gender?: string;
+  bloodGroup?: string;
+  physicallyDisabled?: string;
+  community?: string;
   source: string;
   courseInterest: string;
   campus: CampusLocation;
@@ -57,7 +63,6 @@ export interface Lead {
   status: LeadStatus;
   subStage?: string;
   leadScore?: number;
-  gender?: string;
   counselorId?: string | null;
   assignedTo?: string;
   appliedCounselling?: boolean;
