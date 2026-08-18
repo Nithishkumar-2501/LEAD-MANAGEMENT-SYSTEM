@@ -449,133 +449,181 @@ export default function ApplicantDetailModal({
                             />
                           </div>
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Mobile Phone Number</label>
-                            <input
-                              type="text"
-                              required
-                              value={formData.phone}
-                              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
+                            <label className="block text-slate-300 font-bold mb-1">Mobile Number</label>
+                            <div className="flex items-center gap-2">
+                              <div className="flex flex-1 items-center bg-slate-950 border border-slate-700 rounded-xl overflow-hidden px-2">
+                                <span className="text-slate-400 text-xs font-mono pr-1">+91</span>
+                                <input
+                                  type="text"
+                                  required
+                                  value={formData.phone.replace("+91-", "").replace("+91 ", "")}
+                                  onChange={(e) => setFormData({ ...formData, phone: `+91-${e.target.value}` })}
+                                  className="w-full bg-transparent py-2 text-white text-xs focus:outline-none font-mono"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => alert("Verification code sent to " + formData.phone)}
+                                className="px-3 py-2 bg-sky-950 border border-sky-500/40 text-sky-300 hover:text-white rounded-xl text-[11px] font-bold shrink-0 transition-all"
+                              >
+                                Verify Number
+                              </button>
+                            </div>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-slate-300 font-bold mb-1">Email Address</label>
-                            <input
-                              type="email"
-                              required
-                              value={formData.email}
-                              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400 text-xs font-mono"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => alert("Verification email sent to " + formData.email)}
+                                className="px-3 py-2 bg-indigo-950 border border-indigo-500/40 text-indigo-300 hover:text-white rounded-xl text-[11px] font-bold shrink-0 transition-all"
+                              >
+                                Send Verification Email
+                              </button>
+                            </div>
                           </div>
                           <div>
                             <label className="block text-slate-300 font-bold mb-1">Alternate Mobile Number</label>
-                            <input
-                              type="text"
-                              value={formData.alternatePhone || ""}
-                              onChange={(e) => setFormData({ ...formData, alternatePhone: e.target.value })}
-                              placeholder="NA or +91 98765 00000"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
+                            <div className="flex items-center bg-slate-950 border border-slate-700 rounded-xl px-2">
+                              <span className="text-slate-400 text-xs font-mono pr-1">+91</span>
+                              <input
+                                type="text"
+                                value={(formData.alternatePhone || "").replace("+91-", "").replace("+91 ", "")}
+                                onChange={(e) => setFormData({ ...formData, alternatePhone: `+91-${e.target.value}` })}
+                                placeholder=""
+                                className="w-full bg-transparent py-2 text-white text-xs focus:outline-none font-mono"
+                              />
+                            </div>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
+                            <label className="block text-slate-300 font-bold mb-1">State</label>
+                            <select
+                              value={formData.state || "Tamil Nadu"}
+                              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="Tamil Nadu">Tamil Nadu</option>
+                              <option value="Kerala">Kerala</option>
+                              <option value="Karnataka">Karnataka</option>
+                              <option value="Andhra Pradesh">Andhra Pradesh</option>
+                              <option value="Telangana">Telangana</option>
+                            </select>
+                          </div>
+                          <div>
                             <label className="block text-slate-300 font-bold mb-1">City / District</label>
                             <input
                               type="text"
-                              value={formData.district || ""}
+                              value={formData.district || "Salem"}
                               onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                              placeholder="e.g. Karur, Salem, Coimbatore"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">State</label>
-                            <input
-                              type="text"
-                              value={formData.state || "Tamil Nadu"}
-                              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                              placeholder="e.g. Salem, Karur, Coimbatore"
                               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                             />
                           </div>
                         </div>
                       </div>
 
-                      {/* SECTION 2: Academic & Campus Preferences */}
+                      {/* SECTION 2: Lead Stage & Sub-Stage & Follow-up Details (Picture 3) */}
                       <div className="space-y-3 pt-3">
                         <h4 className="text-indigo-400 font-extrabold border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                          <GraduationCap className="w-3.5 h-3.5" /> Admission & Campus Details
+                          <GraduationCap className="w-3.5 h-3.5" /> Stage Segregation & Follow-up Settings
                         </h4>
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Campus Location</label>
+                            <label className="block text-slate-300 font-bold mb-1">Select Lead Stage</label>
+                            <select
+                              value={formData.status === "NEW" ? "Untouched" : "Interested to Join VSB"}
+                              onChange={(e) => setFormData({ ...formData, status: e.target.value === "Untouched" ? "NEW" : "CONTACTED" })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="Untouched">Untouched</option>
+                              <option value="Interested to Join VSB">Interested to Join VSB</option>
+                              <option value="Interested to Study Engineering">Interested to Study Engineering</option>
+                              <option value="Admitted in VSB">Admitted in VSB</option>
+                              <option value="Not Reachable">Not Reachable</option>
+                              <option value="Not Interested in Engineering">Not Interested in Engineering</option>
+                              <option value="Walkin">Walkin</option>
+                              <option value="After NEET">After NEET</option>
+                              <option value="Not Decided">Not Decided</option>
+                              <option value="Counseling applied">Counseling applied</option>
+                              <option value="Partially Interested in Engineering">Partially Interested in Engineering</option>
+                              <option value="Closed">Closed</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Select Lead Sub Stage</label>
+                            <select
+                              value={formData.subStage || "Asked to Call Back"}
+                              onChange={(e) => setFormData({ ...formData, subStage: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="Lead Sub Stage">Lead Sub Stage</option>
+                              <option value="Asked to Call Back">Asked to Call Back</option>
+                              <option value="Within a Week">Within a Week</option>
+                              <option value="After a Week">After a Week</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Select Timezone</label>
+                            <select className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400">
+                              <option value="IST">(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Set Follow-up Date</label>
+                            <input
+                              type="date"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Set Follow-up End Date</label>
+                            <input
+                              type="date"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Follow-up Assigned To</label>
+                            <select
+                              value={formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
+                              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              <option value="Dr Dhanabal M Assistant Professor MECH">Dr Dhanabal M Assistant Professor MECH</option>
+                              <option value="Dr. K. Arulmurugan (Karur)">Dr. K. Arulmurugan (Karur)</option>
+                              <option value="Dr. S. Meenakshi (Coimbatore)">Dr. S. Meenakshi (Coimbatore)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-300 font-bold mb-1">Campus / Department</label>
                             <select
                               value={formData.campus}
                               onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
                             >
                               <option value="KARUR">V.S.B. Karur</option>
                               <option value="COIMBATORE">V.S.B. Coimbatore</option>
                             </select>
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Course Interest</label>
-                            <select
-                              value={formData.courseInterest}
-                              onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            >
-                              {VSB_DEPARTMENTS_COURSES.map((course) => (
-                                <option key={course} value={course} className="bg-slate-900">
-                                  {course}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Lead Stage Status</label>
-                            <select
-                              value={formData.status}
-                              onChange={(e) => setFormData({ ...formData, status: e.target.value as LeadStatus })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            >
-                              <option value="NEW">NEW INQUIRY</option>
-                              <option value="CONTACTED">CONTACTED</option>
-                              <option value="IN_REVIEW">CUTOFF REVIEW</option>
-                              <option value="ADMITTED">ADMITTED</option>
-                              <option value="REJECTED">REJECTED</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Lead Acquisition Source</label>
-                            <input
-                              type="text"
-                              value={formData.source}
-                              onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                              placeholder="e.g. Direct Contact, TNEA Counselling, Organic"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Assigned Counselor / Owner</label>
-                            <input
-                              type="text"
-                              value={formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
-                              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
                           </div>
                           <div>
                             <label className="block text-slate-300 font-bold mb-1">Affiliated School</label>

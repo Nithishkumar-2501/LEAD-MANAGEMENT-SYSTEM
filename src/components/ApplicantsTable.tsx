@@ -14,6 +14,7 @@ interface ApplicantsTableProps {
   onSelectApplicant: (applicant: Lead & { application: Application }) => void;
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
   onOpenCreateModal: () => void;
+  onOpenQuickLeadModal?: () => void;
 }
 
 export default function ApplicantsTable({
@@ -22,6 +23,7 @@ export default function ApplicantsTable({
   onSelectApplicant,
   onActionTrigger,
   onOpenCreateModal,
+  onOpenQuickLeadModal,
 }: ApplicantsTableProps) {
   const [selectedStage, setSelectedStage] = useState<string>("ALL");
 
@@ -82,6 +84,22 @@ export default function ApplicantsTable({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenQuickLeadModal && (
+              <SpecularButton
+                size="sm"
+                tint="#ec4899"
+                tintOpacity={0.25}
+                lineColor="#f472b6"
+                baseColor="#db2777"
+                intensity={1.5}
+                followMouse
+                onClick={onOpenQuickLeadModal}
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Add Quick Lead</span>
+              </SpecularButton>
+            )}
+
             <SpecularButton
               size="sm"
               tint="#38bdf8"

@@ -15,6 +15,7 @@ import CampusCourseModule from "@/components/CampusCourseModule";
 import PaymentBillingModule from "@/components/PaymentBillingModule";
 import AdminSettingsModule from "@/components/AdminSettingsModule";
 import ContactDirectoryModule from "@/components/ContactDirectoryModule";
+import AddQuickLeadModal from "@/components/AddQuickLeadModal";
 
 import {
   User,
@@ -49,6 +50,10 @@ export default function DashboardPage() {
   const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
 
+  // Modals
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
+
   // Dynamic calculations based on selected campus
   const dynamicMetrics: SummaryMetrics = {
     totalLeads: selectedCampus === "KARUR" ? 580 : selectedCampus === "COIMBATORE" ? 668 : 1248,
@@ -78,7 +83,6 @@ export default function DashboardPage() {
   });
 
   // Modals
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<(Lead & { application: Application }) | null>(null);
 
   // Action Notification State
@@ -212,6 +216,7 @@ export default function DashboardPage() {
                 onSelectApplicant={setSelectedApplicant}
                 onActionTrigger={handleActionTrigger}
                 onOpenCreateModal={() => setIsCreateModalOpen(true)}
+                onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
               />
               <TaskSidebar
                 tasks={filteredTasks}
@@ -276,6 +281,12 @@ export default function DashboardPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onApplicationCreated={handleCreateApplication}
+      />
+
+      <AddQuickLeadModal
+        isOpen={isQuickLeadModalOpen}
+        onClose={() => setIsQuickLeadModalOpen(false)}
+        onLeadAdded={handleCreateApplication}
       />
 
       {selectedApplicant && (

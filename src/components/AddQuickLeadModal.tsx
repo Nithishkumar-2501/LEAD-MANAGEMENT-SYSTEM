@@ -1,0 +1,308 @@
+"use client";
+
+import { useState } from "react";
+import { X, Mail, Phone } from "lucide-react";
+import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+
+interface AddQuickLeadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onLeadAdded: (newLead: Lead & { application: Application }) => void;
+}
+
+export default function AddQuickLeadModal({
+  isOpen,
+  onClose,
+  onLeadAdded,
+}: AddQuickLeadModalProps) {
+  const [activeTab, setActiveTab] = useState<"LEAD" | "ADDITIONAL" | "FACEBOOK">("LEAD");
+  const [uploadVia, setUploadVia] = useState<"EMAIL" | "MOBILE">("EMAIL");
+
+  const [formData, setFormData] = useState({
+    formInterested: VSB_DEPARTMENTS_COURSES[0],
+    name: "",
+    email: "",
+    gender: "Male",
+    phone: "",
+    state: "Tamil Nadu",
+    city: "Salem",
+  });
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (saveAndNew: boolean = false) => {
+    if (!formData.name || !formData.email) {
+      alert("Please enter Name and Email Address.");
+      return;
+    }
+
+    const newLead: Lead & { application: Application } = {
+      id: `lead_quick_${Date.now()}`,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone ? `+91-${formData.phone}` : "+91-9629693794",
+      source: "Quick Lead Entry",
+      courseInterest: formData.formInterested,
+      campus: "KARUR" as CampusLocation,
+      state: formData.state,
+      district: formData.city,
+      gender: formData.gender,
+      status: "NEW",
+      createdAt: new Date().toISOString(),
+      application: {
+        id: `app_quick_${Date.now()}`,
+        leadId: `lead_quick_${Date.now()}`,
+        stage: "INQUIRY",
+        marks10th: 85,
+        marks12th: 88,
+        paymentStatus: "PENDING",
+      },
+    };
+
+    onLeadAdded(newLead);
+
+    if (saveAndNew) {
+      setFormData({
+        formInterested: VSB_DEPARTMENTS_COURSES[0],
+        name: "",
+        email: "",
+        gender: "Male",
+        phone: "",
+        state: "Tamil Nadu",
+        city: "Salem",
+      });
+    } else {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white text-slate-800 w-full max-w-md h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-300">
+        {/* Header */}
+        <div>
+          <div className="p-4 border-b flex items-center justify-between bg-slate-50">
+            <h3 className="text-base font-bold text-slate-800">Add Quick Lead</h3>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Sub-tabs */}
+          <div className="flex border-b bg-slate-100 text-xs font-semibold">
+            <button
+              onClick={() => setActiveTab("LEAD")}
+              className={`flex-1 py-2.5 text-center border-b-2 ${
+                activeTab === "LEAD"
+                  ? "border-sky-600 text-sky-600 bg-white"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Lead Details *
+            </button>
+            <button
+              onClick={() => setActiveTab("ADDITIONAL")}
+              className={`flex-1 py-2.5 text-center border-b-2 ${
+                activeTab === "ADDITIONAL"
+                  ? "border-sky-600 text-sky-600 bg-white"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Additional Details
+            </button>
+            <button
+              onClick={() => setActiveTab("FACEBOOK")}
+              className={`flex-1 py-2.5 text-center border-b-2 ${
+                activeTab === "FACEBOOK"
+                  ? "border-sky-600 text-sky-600 bg-white"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Facebook Details
+            </button>
+          </div>
+
+          {/* Body Form */}
+          <div className="p-5 space-y-4">
+            {/* Upload Via */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                UPLOAD VIA
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setUploadVia("EMAIL")}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
+                    uploadVia === "EMAIL"
+                      ? "border-sky-500 bg-sky-50 text-sky-600 shadow-sm"
+                      : "border-slate-200 text-slate-500 hover:border-slate-300"
+                  }`}
+                >
+                  <Mail className="w-3.5 h-3.5" /> EMAIL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadVia("MOBILE")}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
+                    uploadVia === "MOBILE"
+                      ? "border-sky-500 bg-sky-50 text-sky-600 shadow-sm"
+                      : "border-slate-200 text-slate-500 hover:border-slate-300"
+                  }`}
+                >
+                  <Phone className="w-3.5 h-3.5" /> MOBILE
+                </button>
+              </div>
+            </div>
+
+            {/* Choose Form Interested In */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Choose Form Interested In
+              </label>
+              <select
+                value={formData.formInterested}
+                onChange={(e) => setFormData({ ...formData, formInterested: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                {VSB_DEPARTMENTS_COURSES.map((course) => (
+                  <option key={course} value={course}>
+                    {course}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Enter Name */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Enter Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Name"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+
+            {/* Enter Email Address */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Enter Email Address *
+              </label>
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="Email Address"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+
+            {/* Select Gender */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Select Gender *
+              </label>
+              <select
+                value={formData.gender}
+                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Enter WhatsApp Number */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Enter WhatsApp Number *
+              </label>
+              <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden">
+                <span className="bg-slate-100 px-3 py-2.5 text-xs font-mono text-slate-500 border-r">
+                  +91
+                </span>
+                <input
+                  type="text"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Enter WhatsApp Number"
+                  className="w-full p-2.5 text-xs text-slate-800 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Select State */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Select State *
+              </label>
+              <select
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+              </select>
+            </div>
+
+            {/* Select City */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Select City *
+              </label>
+              <select
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="Salem">Salem</option>
+                <option value="Karur">Karur</option>
+                <option value="Coimbatore">Coimbatore</option>
+                <option value="Trichy">Trichy</option>
+                <option value="Namakkal">Namakkal</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-4 border-t bg-slate-50 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSubmit(true)}
+            className="px-4 py-2 rounded-lg border border-sky-600 text-xs font-bold text-sky-600 hover:bg-sky-50 transition-colors"
+          >
+            Save and Add new
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSubmit(false)}
+            className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-md transition-colors"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

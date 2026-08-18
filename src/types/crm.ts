@@ -55,6 +55,9 @@ export interface Lead {
   state?: string;
   address?: string;
   status: LeadStatus;
+  subStage?: string;
+  leadScore?: number;
+  gender?: string;
   counselorId?: string | null;
   assignedTo?: string;
   appliedCounselling?: boolean;

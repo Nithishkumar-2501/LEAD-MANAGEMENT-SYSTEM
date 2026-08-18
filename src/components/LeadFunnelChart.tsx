@@ -23,7 +23,28 @@ export default function LeadFunnelChart({
   onSelectStage,
 }: LeadFunnelChartProps) {
   const [internalSelectedStage, setInternalSelectedStage] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"SINGLE" | "ALL">("SINGLE");
+  const [viewMode, setViewMode] = useState<"SINGLE" | "ALL" | "SEGREGATION">("SINGLE");
+
+  const segregationData = [
+    { label: "Closed", count: 56456, color: "bg-blue-600" },
+    { label: "Interested to Study Engineering", count: 22755, color: "bg-amber-500" },
+    { label: "Admitted in VSB", count: 2197, color: "bg-green-600" },
+    { label: "Not Reachable", count: 69083, color: "bg-pink-600" },
+    { label: "Untouched", count: 34035, color: "bg-blue-500" },
+    { label: "Not Interested in Engineering", count: 14027, color: "bg-amber-500" },
+    { label: "Walkin", count: 3384, color: "bg-green-600" },
+    { label: "After NEET", count: 1954, color: "bg-pink-600" },
+    { label: "Not Decided", count: 26911, color: "bg-blue-600" },
+    { label: "Counseling applied", count: 3216, color: "bg-amber-500" },
+    { label: "Partially Interested in Engineering", count: 3256, color: "bg-green-600" },
+    { label: "Interested to Join VSB", count: 362, color: "bg-pink-600" },
+    { label: "Test Lead", count: 58, color: "bg-blue-500" },
+    { label: "Studying +1", count: 119, color: "bg-amber-400" },
+    { label: "Partially Interested to Join VSB", count: 109, color: "bg-green-500" },
+    { label: "WhatsApp contact", count: 3, color: "bg-pink-500" },
+  ];
+
+  const maxSegregationCount = Math.max(...segregationData.map((d) => d.count));
 
   const activeStageKey = externalSelectedStage !== undefined ? externalSelectedStage : internalSelectedStage;
 
@@ -160,6 +181,16 @@ export default function LeadFunnelChart({
               }`}
             >
               Show All Grid
+            </button>
+            <button
+              onClick={() => setViewMode("SEGREGATION")}
+              className={`px-3 py-1 rounded-lg transition-all ${
+                viewMode === "SEGREGATION"
+                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Stage Segregation Chart 📊
             </button>
           </div>
 
@@ -401,6 +432,44 @@ export default function LeadFunnelChart({
               </div>
             );
           })}
+        </div>
+      )}
+      {/* VIEW MODE 3: LEAD STAGE SEGREGATION HORIZONTAL BAR CHART (PICTURE 5) */}
+      {viewMode === "SEGREGATION" && (
+        <div className="bg-white text-slate-800 p-6 rounded-2xl shadow-2xl space-y-4">
+          <div className="flex items-center justify-between border-b pb-3">
+            <h3 className="text-base font-bold text-slate-800">Lead Stage Segregation</h3>
+            <button
+              onClick={() => setViewMode("SINGLE")}
+              className="text-xs font-bold text-slate-500 hover:text-slate-800"
+            >
+              ✖
+            </button>
+          </div>
+
+          <div className="space-y-2.5 pt-2 font-sans">
+            {segregationData.map((item) => {
+              const widthPct = Math.max((item.count / maxSegregationCount) * 100, 1.5);
+              return (
+                <div key={item.label} className="grid grid-cols-12 items-center gap-3 text-xs">
+                  <div className="col-span-4 sm:col-span-3 text-right font-medium text-slate-700 truncate">
+                    {item.label}
+                  </div>
+                  <div className="col-span-8 sm:col-span-9 flex items-center gap-2">
+                    <div className="w-full bg-slate-100 rounded-sm h-5 relative overflow-hidden flex items-center">
+                      <div
+                        style={{ width: `${widthPct}%` }}
+                        className={`h-full ${item.color} transition-all duration-500 rounded-r-sm`}
+                      />
+                      <span className="text-[11px] font-bold text-slate-800 ml-2">
+                        {item.count.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
