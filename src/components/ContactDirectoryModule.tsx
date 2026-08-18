@@ -54,6 +54,37 @@ export default function ContactDirectoryModule({
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [counsellingFilter, setCounsellingFilter] = useState<"ALL" | "COUNSELLING_ONLY" | "GOVT_QUOTA" | "MANAGEMENT_ONLY">("ALL");
 
+  // Table Column Header Filtering & Sorting State
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [activeHeaderFilterPopover, setActiveHeaderFilterPopover] = useState<string | null>(null);
+
+  const getFieldValueForCol = (c: Lead & { application?: Application | null }, col: string): string => {
+    if (col === "Registered Name") return c.name || "";
+    if (col === "Registered Email") return c.email || "";
+    if (col === "Registered Mobile") return c.phone || "";
+    if (col === "Registered Country") return "India";
+    if (col === "State") return "Tamil Nadu";
+    if (col === "City") return c.district || "Karur";
+    if (col === "Campus") return c.campus || "";
+    if (col === "Course") return c.courseInterest || "B.E. Computer Science";
+    if (col === "Specialization") return "TNEA Engineering";
+    if (col === "Utm Keyword") return "tnea_admissions_2026";
+    if (col === "Gender") return (c as any).gender || "Male";
+    if (col === "Father's Name") return (c as any).fatherName || "K. Ramachandran";
+    if (col === "Mother's Name") return (c as any).motherName || "R. Priya";
+    if (col === "Blood Group") return (c as any).bloodGroup || "O+";
+    if (col === "Physically Disabled") return (c as any).physicallyDisabled ? "Yes" : "No";
+    if (col === "SSLC Mark") return String((c as any).marks10th || 85);
+    if (col === "School Name with Place") return c.school || "Govt Higher Sec School";
+    if (col === "Address For communication") return c.address || "Karur, Tamil Nadu";
+    if (col === "Community") return (c as any).community || "BC";
+    if (col === "User Registration Date") return "Aug 12, 2026";
+    if (col === "Lead Stage") return c.status || "";
+    return "";
+  };
+
   // Candidate Profile Modal State (Image 2)
   const [selectedCandidateForModal, setSelectedCandidateForModal] = useState<(Lead & { application: Application }) | null>(null);
 
@@ -348,6 +379,16 @@ export default function ContactDirectoryModule({
         ? filterRules.every((r) => evaluateRule(c, r))
         : filterRules.some((r) => evaluateRule(c, r));
 
+    const matchesColumnFilters = Object.entries(columnFilters).every(([col, filterVal]) => {
+      if (!filterVal || filterVal === "ALL") return true;
+      const actual = getFieldValueForCol(c, col).toLowerCase();
+      const filter = filterVal.toLowerCase().trim();
+      if (col === "Lead Stage" || col === "Campus" || col === "Gender" || col === "Community" || col === "State") {
+        return actual === filter;
+      }
+      return actual.includes(filter);
+    });
+
     return (
       matchesSearch &&
       matchesCampus &&
@@ -355,8 +396,18 @@ export default function ContactDirectoryModule({
       matchesStatus &&
       matchesCounselling &&
       matchesTeacherAssignment &&
-      matchesDrawerRules
+      matchesDrawerRules &&
+      matchesColumnFilters
     );
+  });
+
+  const sortedAndFilteredContacts = [...filteredContacts].sort((a, b) => {
+    if (!sortColumn) return 0;
+    const valA = getFieldValueForCol(a, sortColumn).toLowerCase();
+    const valB = getFieldValueForCol(b, sortColumn).toLowerCase();
+    if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+    if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+    return 0;
   });
 
   // Tamil Nadu Districts list (All 38 Districts)
@@ -985,14 +1036,15 @@ export default function ContactDirectoryModule({
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[11px] tracking-wider">
-                <tr>
+                {/* Row 1: Header Titles with Sort & Interactive Filter Icon Popovers */}
+                <tr className="bg-slate-100/90 text-slate-700 font-extrabold border-b border-slate-200">
                   <th className="p-3 w-10 text-center">
                     <input
                       type="checkbox"
-                      checked={selectedRows.length === filteredContacts.length && filteredContacts.length > 0}
+                      checked={selectedRows.length === sortedAndFilteredContacts.length && sortedAndFilteredContacts.length > 0}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedRows(filteredContacts.map((c) => c.id));
+                          setSelectedRows(sortedAndFilteredContacts.map((c) => c.id));
                         } else {
                           setSelectedRows([]);
                         }
@@ -1000,18 +1052,318 @@ export default function ContactDirectoryModule({
                       className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
                     />
                   </th>
-                  {selectedColumns.map((col) => (
-                    <th key={col} className="p-3 font-semibold text-slate-600">
-                      <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600">
-                        {col} <span className="text-[10px] text-slate-400">↑↓</span>
-                      </span>
-                    </th>
-                  ))}
+                  {selectedColumns.map((col) => {
+                    const hasActiveFilter = !!columnFilters[col] && columnFilters[col] !== "ALL";
+                    const isSortedThisCol = sortColumn === col;
+                    return (
+                      <th key={col} className="p-2.5 font-bold text-slate-700 relative whitespace-nowrap">
+                        <div className="flex items-center justify-between gap-1 group">
+                          <span
+                            onClick={() => {
+                              if (sortColumn === col) {
+                                if (sortDirection === "asc") setSortDirection("desc");
+                                else {
+                                  setSortColumn(null);
+                                  setSortDirection("asc");
+                                }
+                              } else {
+                                setSortColumn(col);
+                                setSortDirection("asc");
+                              }
+                            }}
+                            className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors select-none"
+                            title={`Click to sort by ${col}`}
+                          >
+                            <span>{col}</span>
+                            <span className={`text-[10px] ${isSortedThisCol ? "text-blue-600 font-extrabold" : "text-slate-400"}`}>
+                              {isSortedThisCol ? (sortDirection === "asc" ? "▲" : "▼") : "↑↓"}
+                            </span>
+                          </span>
+
+                          {/* Filter Popover Icon Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveHeaderFilterPopover(activeHeaderFilterPopover === col ? null : col);
+                            }}
+                            className={`p-1 rounded-md transition-all ${
+                              hasActiveFilter
+                                ? "bg-blue-600 text-white font-bold shadow-sm"
+                                : "text-slate-400 hover:text-blue-600 hover:bg-slate-200/80"
+                            }`}
+                            title={`Filter by ${col}`}
+                          >
+                            <Filter className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Interactive Column Header Filter Popover Dropdown */}
+                        {activeHeaderFilterPopover === col && (
+                          <div className="absolute top-full left-0 mt-1 z-30 w-52 bg-white rounded-xl shadow-2xl border border-slate-200 p-2.5 text-xs text-slate-800 normal-case font-normal animate-in fade-in">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-2 font-bold text-[11px] text-slate-700">
+                              <span>Filter by {col}</span>
+                              <button
+                                onClick={() => setActiveHeaderFilterPopover(null)}
+                                className="text-slate-400 hover:text-slate-700"
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            {/* Column specific control inside popover */}
+                            {col === "City" ? (
+                              <select
+                                value={columnFilters[col] || "ALL"}
+                                onChange={(e) => {
+                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
+                                }}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="ALL">All Cities/Districts</option>
+                                {TAMIL_NADU_DISTRICTS.map((d) => (
+                                  <option key={d} value={d}>
+                                    {d}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : col === "Lead Stage" ? (
+                              <select
+                                value={columnFilters[col] || "ALL"}
+                                onChange={(e) => {
+                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
+                                }}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="ALL">All Lead Stages</option>
+                                <option value="NEW">NEW</option>
+                                <option value="CONTACTED">CONTACTED</option>
+                                <option value="IN_REVIEW">IN_REVIEW</option>
+                                <option value="ADMITTED">ADMITTED</option>
+                                <option value="REJECTED">REJECTED</option>
+                              </select>
+                            ) : col === "Campus" ? (
+                              <select
+                                value={columnFilters[col] || "ALL"}
+                                onChange={(e) => {
+                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
+                                }}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="ALL">All Campuses</option>
+                                <option value="KARUR">KARUR</option>
+                                <option value="COIMBATORE">COIMBATORE</option>
+                              </select>
+                            ) : col === "Community" ? (
+                              <select
+                                value={columnFilters[col] || "ALL"}
+                                onChange={(e) => {
+                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
+                                }}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="ALL">All Communities</option>
+                                <option value="OC">OC</option>
+                                <option value="BC">BC</option>
+                                <option value="MBC">MBC</option>
+                                <option value="SC">SC</option>
+                                <option value="ST">ST</option>
+                              </select>
+                            ) : col === "Gender" ? (
+                              <select
+                                value={columnFilters[col] || "ALL"}
+                                onChange={(e) => {
+                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
+                                }}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="ALL">All Genders</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                value={columnFilters[col] || ""}
+                                onChange={(e) => {
+                                  setColumnFilters({ ...columnFilters, [col]: e.target.value });
+                                }}
+                                placeholder={`Filter ${col}...`}
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500"
+                                autoFocus
+                              />
+                            )}
+
+                            {hasActiveFilter && (
+                              <button
+                                onClick={() => {
+                                  const updated = { ...columnFilters };
+                                  delete updated[col];
+                                  setColumnFilters(updated);
+                                }}
+                                className="mt-2 w-full py-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors"
+                              >
+                                Clear Filter
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </th>
+                    );
+                  })}
+                </tr>
+
+                {/* Row 2: Sub-Header Filter Bar Row (Direct Inline Filter Options under Column Headers) */}
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-normal normal-case">
+                  <td className="p-2 text-center text-[10px] font-bold text-slate-400">
+                    <Filter className="w-3.5 h-3.5 mx-auto text-blue-500" />
+                  </td>
+                  {selectedColumns.map((col) => {
+                    const filterVal = columnFilters[col] || "";
+                    if (col === "City") {
+                      return (
+                        <td key={`filter_${col}`} className="p-1.5">
+                          <select
+                            value={filterVal || "ALL"}
+                            onChange={(e) =>
+                              setColumnFilters({ ...columnFilters, [col]: e.target.value })
+                            }
+                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                          >
+                            <option value="ALL">All Cities</option>
+                            {TAMIL_NADU_DISTRICTS.map((d) => (
+                              <option key={d} value={d}>
+                                {d}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      );
+                    }
+                    if (col === "Lead Stage") {
+                      return (
+                        <td key={`filter_${col}`} className="p-1.5">
+                          <select
+                            value={filterVal || "ALL"}
+                            onChange={(e) =>
+                              setColumnFilters({ ...columnFilters, [col]: e.target.value })
+                            }
+                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                          >
+                            <option value="ALL">All Stages</option>
+                            <option value="NEW">NEW</option>
+                            <option value="CONTACTED">CONTACTED</option>
+                            <option value="IN_REVIEW">IN_REVIEW</option>
+                            <option value="ADMITTED">ADMITTED</option>
+                            <option value="REJECTED">REJECTED</option>
+                          </select>
+                        </td>
+                      );
+                    }
+                    if (col === "Campus") {
+                      return (
+                        <td key={`filter_${col}`} className="p-1.5">
+                          <select
+                            value={filterVal || "ALL"}
+                            onChange={(e) =>
+                              setColumnFilters({ ...columnFilters, [col]: e.target.value })
+                            }
+                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                          >
+                            <option value="ALL">All Campuses</option>
+                            <option value="KARUR">KARUR</option>
+                            <option value="COIMBATORE">COIMBATORE</option>
+                          </select>
+                        </td>
+                      );
+                    }
+                    if (col === "State") {
+                      return (
+                        <td key={`filter_${col}`} className="p-1.5">
+                          <select
+                            value={filterVal || "ALL"}
+                            onChange={(e) =>
+                              setColumnFilters({ ...columnFilters, [col]: e.target.value })
+                            }
+                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                          >
+                            <option value="ALL">All States</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                          </select>
+                        </td>
+                      );
+                    }
+                    if (col === "Community") {
+                      return (
+                        <td key={`filter_${col}`} className="p-1.5">
+                          <select
+                            value={filterVal || "ALL"}
+                            onChange={(e) =>
+                              setColumnFilters({ ...columnFilters, [col]: e.target.value })
+                            }
+                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                          >
+                            <option value="ALL">All</option>
+                            <option value="OC">OC</option>
+                            <option value="BC">BC</option>
+                            <option value="MBC">MBC</option>
+                            <option value="SC">SC</option>
+                            <option value="ST">ST</option>
+                          </select>
+                        </td>
+                      );
+                    }
+                    if (col === "Gender") {
+                      return (
+                        <td key={`filter_${col}`} className="p-1.5">
+                          <select
+                            value={filterVal || "ALL"}
+                            onChange={(e) =>
+                              setColumnFilters({ ...columnFilters, [col]: e.target.value })
+                            }
+                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                          >
+                            <option value="ALL">All</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                          </select>
+                        </td>
+                      );
+                    }
+                    return (
+                      <td key={`filter_${col}`} className="p-1.5">
+                        <div className="relative flex items-center">
+                          <input
+                            type="text"
+                            value={filterVal}
+                            onChange={(e) =>
+                              setColumnFilters({ ...columnFilters, [col]: e.target.value })
+                            }
+                            placeholder="Filter..."
+                            className="w-full bg-white border border-slate-300 rounded-md pl-2 pr-5 py-1 text-[11px] text-slate-800 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                          />
+                          {filterVal && (
+                            <button
+                              onClick={() => {
+                                const updated = { ...columnFilters };
+                                delete updated[col];
+                                setColumnFilters(updated);
+                              }}
+                              className="absolute right-1 text-slate-400 hover:text-slate-600 text-[10px] font-bold px-1"
+                              title="Clear Filter"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-slate-100 bg-white">
-                {filteredContacts.slice(0, rowsPerPage).map((contact) => (
+                {sortedAndFilteredContacts.slice(0, rowsPerPage).map((contact) => (
                   <tr
                     key={contact.id}
                     onClick={() => handleCandidateClick(contact)}
