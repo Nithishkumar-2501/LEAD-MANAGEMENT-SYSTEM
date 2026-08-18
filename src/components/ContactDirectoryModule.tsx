@@ -148,6 +148,7 @@ export default function ContactDirectoryModule({
   const [columnSearchQuery, setColumnSearchQuery] = useState("");
   const [selectedColumns, setSelectedColumns] = useState<string[]>([
     "Registered Name",
+    "Student QR Code",
     "Registered Email",
     "Registered Mobile",
     "State",
@@ -158,6 +159,7 @@ export default function ContactDirectoryModule({
 
   const allAvailableColumns = [
     "Registered Name",
+    "Student QR Code",
     "Registered Email",
     "Registered Mobile",
     "Registered Country",
@@ -265,6 +267,21 @@ export default function ContactDirectoryModule({
             ⋮
           </button>
         </div>
+      );
+    }
+    if (col === "Student QR Code") {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenQrModal(contact);
+          }}
+          className="px-2.5 py-1 rounded-lg bg-purple-100 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-300 transition-all font-bold text-[11px] flex items-center gap-1 shadow-sm"
+          title={`Scan & View QR Pass for ${contact.name}`}
+        >
+          <QrCode className="w-3.5 h-3.5" />
+          <span>QR Pass</span>
+        </button>
       );
     }
     if (col === "Registered Email") {

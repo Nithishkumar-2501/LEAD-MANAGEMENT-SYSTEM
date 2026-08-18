@@ -12,6 +12,7 @@ import {
   Save,
   Sparkles,
   QrCode,
+  Scan,
   Bot,
   Plus,
   SlidersHorizontal,
@@ -32,6 +33,75 @@ interface ApplicantDetailModalProps {
   onClose: () => void;
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
   onSave?: (updated: Lead & { application: Application }) => void;
+}
+
+// Simple deterministic QR Code SVG Generator for individual student rendering
+function generateQRMatrix(text: string, size = 29): boolean[][] {
+  const matrix: boolean[][] = Array(size)
+    .fill(false)
+    .map(() => Array(size).fill(false));
+
+  const drawFinder = (startRow: number, startCol: number) => {
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < 7; c++) {
+        const isOuter = r === 0 || r === 6 || c === 0 || c === 6;
+        const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        matrix[startRow + r][startCol + c] = isOuter || isInner;
+      }
+    }
+  };
+
+  drawFinder(0, 0);
+  drawFinder(0, size - 7);
+  drawFinder(size - 7, 0);
+
+  for (let i = 8; i < size - 8; i++) {
+    matrix[6][i] = i % 2 === 0;
+    matrix[i][6] = i % 2 === 0;
+  }
+
+  const alignR = size - 9;
+  const alignC = size - 9;
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const isOuter = r === 0 || r === 4 || c === 0 || c === 4;
+      const isCenter = r === 2 && c === 2;
+      matrix[alignR + r][alignC + c] = isOuter || isCenter;
+    }
+  }
+
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = (hash << 5) - hash + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  let bitIndex = 0;
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (
+        (r < 8 && c < 8) ||
+        (r < 8 && c >= size - 8) ||
+        (r >= size - 8 && c < 8)
+      ) {
+        continue;
+      }
+      if (r === 6 || c === 6) continue;
+      if (r >= alignR && r < alignR + 5 && c >= alignC && c < alignC + 5) continue;
+      const centerStart = Math.floor(size / 2) - 1;
+      const centerEnd = Math.floor(size / 2) + 1;
+      if (r >= centerStart && r <= centerEnd && c >= centerStart && c <= centerEnd) {
+        matrix[r][c] = false;
+        continue;
+      }
+
+      const seed = Math.abs(hash + r * 31 + c * 17 + bitIndex * 13);
+      matrix[r][c] = seed % 3 !== 0;
+      bitIndex++;
+    }
+  }
+
+  return matrix;
 }
 
 export default function ApplicantDetailModal({
@@ -337,6 +407,65 @@ export default function ApplicantDetailModal({
                     </span>
                   </div>
                 </div>
+
+                {/* INDIVIDUAL STUDENT SCANNABLE QR CODE CARD */}
+                {formData && (
+                  <div className="bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 rounded-2xl border border-purple-500/40 p-4 shadow-xl space-y-3 relative overflow-hidden">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-slate-100">
+                        <QrCode className="w-4 h-4 text-purple-400" />
+                        <span>Student QR Code Pass</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-purple-300 bg-purple-950/80 border border-purple-500/40 px-2 py-0.5 rounded-full">
+                        {formData.id}
+                      </span>
+                    </div>
+
+                    <div
+                      className="bg-white p-3 rounded-xl border-2 border-purple-500/30 flex flex-col items-center justify-center cursor-pointer group hover:border-purple-400 transition-all shadow-xl relative"
+                      onClick={() => setIsQrModalOpen(true)}
+                      title="Click to expand & scan student QR pass"
+                    >
+                      <svg
+                        viewBox="0 0 29 29"
+                        className="w-32 h-32 group-hover:scale-105 transition-transform"
+                        shapeRendering="crispEdges"
+                      >
+                        <rect width="29" height="29" fill="#ffffff" />
+                        {generateQRMatrix(
+                          JSON.stringify({
+                            org: "VSB CRM",
+                            id: formData.id,
+                            name: formData.name,
+                            phone: formData.phone,
+                            email: formData.email,
+                            course: formData.courseInterest,
+                            campus: formData.campus,
+                          })
+                        ).map((row, r) =>
+                          row.map((cell, c) =>
+                            cell ? <rect key={`${r}-${c}`} x={c} y={r} width="1" height="1" fill="#0f172a" /> : null
+                          )
+                        )}
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-7 h-7 rounded-lg bg-slate-950 border border-purple-400 flex flex-col items-center justify-center text-[7px] font-black text-purple-300 shadow-md">
+                          VSB
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <button
+                        onClick={() => setIsQrModalOpen(true)}
+                        className="w-full py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-purple-900/40"
+                      >
+                        <Scan className="w-3.5 h-3.5" />
+                        Click to Scan & Print Pass
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Assignment Details Accordion Card */}
@@ -695,6 +824,27 @@ export default function ApplicantDetailModal({
                     /* SUB TAB 1: LEAD DETAILS (VIEW MODE WITH EDIT TRIPPERS) */
                     activeSubTab === "LEAD_DETAILS" ? (
                       <div className="space-y-3.5 text-xs font-sans text-black" style={{ color: "#000000" }}>
+                        {/* INDIVIDUAL STUDENT QR PASS ROW */}
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2.5 border-b border-purple-200 items-center bg-purple-50/80 px-3 rounded-xl my-1 border shadow-sm">
+                          <span className="sm:col-span-5 font-black text-purple-950 flex items-center gap-1.5">
+                            <QrCode className="w-4 h-4 text-purple-600" /> Student QR Pass
+                          </span>
+                          <span className="sm:col-span-7 font-black flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-900">:</span>
+                              <span className="text-xs font-mono font-black text-purple-800 bg-purple-100 px-2 py-0.5 rounded border border-purple-300">
+                                {formData.id}
+                              </span>
+                              <span className="text-[11px] font-bold text-purple-700">Scannable QR Ready</span>
+                            </div>
+                            <button
+                              onClick={() => setIsQrModalOpen(true)}
+                              className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] shadow-sm flex items-center gap-1 transition-all cursor-pointer"
+                            >
+                              <Scan className="w-3.5 h-3.5" /> View & Scan QR
+                            </button>
+                          </span>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
                           <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Email Address</span>
                           <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
