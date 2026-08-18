@@ -97,8 +97,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
         {/* Branding & Logo */}
         <div className="text-center mb-5">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white mx-auto shadow-xl shadow-indigo-500/40 ring-4 ring-white/30 mb-2 animate-pulse">
-            <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-white font-black" />
+          {/* Official V.S.B. Engineering College Logo Emblem */}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-amber-400 shadow-xl shadow-amber-500/30 bg-white mx-auto mb-3 p-0.5 transform hover:scale-105 transition-transform">
+            <img
+              src="/vsb-logo.png"
+              alt="V.S.B. Engineering College Official Logo"
+              className="w-full h-full object-contain rounded-full"
+            />
           </div>
           <h2 className="text-xl font-black text-white tracking-tight">
             V.S.B. ENGINEERING COLLEGE

@@ -101,8 +101,13 @@ export default function Header({
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/40 ring-2 ring-white/30 animate-pulse shrink-0">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          {/* Official V.S.B. Engineering College Logo Emblem */}
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-amber-400/80 shadow-lg shadow-amber-500/30 bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+            <img
+              src="/vsb-logo.png"
+              alt="V.S.B. Engineering College Official Logo"
+              className="w-full h-full object-contain rounded-full"
+            />
           </div>
           <div className="min-w-0">
             <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
