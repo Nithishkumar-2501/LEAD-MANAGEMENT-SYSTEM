@@ -390,7 +390,7 @@ export default function ApplicantDetailModal({
 
                   {/* Tab Content: Lead Details */}
               {activeMainTab === "LEAD_DETAILS" && (
-                <div className="bg-white text-slate-900 rounded-2xl border border-slate-200 p-5 space-y-4 shadow-xl font-sans">
+                <div className="bg-white text-black rounded-2xl border border-slate-200 p-5 space-y-4 shadow-xl font-sans" style={{ color: "#000000" }}>
                   {/* Sub Tabs */}
                   <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
                     {[
@@ -400,71 +400,78 @@ export default function ApplicantDetailModal({
                     ].map((sub) => (
                       <button
                         key={sub.id}
+                        type="button"
                         onClick={() => setActiveSubTab(sub.id as any)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
                           activeSubTab === sub.id
-                            ? "bg-slate-100 text-slate-950 border border-slate-300 shadow-sm"
-                            : "text-slate-700 hover:text-slate-950 hover:bg-slate-50"
+                            ? "bg-slate-200 text-black border border-slate-400 shadow-sm"
+                            : "text-slate-800 hover:text-black hover:bg-slate-100"
                         }`}
+                        style={{ color: "#000000" }}
                       >
                         {sub.label}
                       </button>
                     ))}
 
                     <button
+                      type="button"
                       onClick={() => setIsEditing(!isEditing)}
-                      className="ml-auto text-xs font-bold text-slate-900 hover:text-slate-950 flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-xl border border-slate-300 shadow-sm"
+                      className="ml-auto text-xs font-extrabold text-black hover:text-slate-900 flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-xl border border-slate-300 shadow-sm"
+                      style={{ color: "#000000" }}
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-slate-800" /> {isEditing ? "Cancel Edit" : "Edit All Details"}
+                      <Edit3 className="w-3.5 h-3.5 text-black" /> {isEditing ? "Cancel Edit" : "Edit All Details"}
                     </button>
                   </div>
 
                   {/* FORM EDIT MODE - EDIT ALL DETAILS */}
                   {isEditing ? (
-                    <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
-                      <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 font-bold flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <Edit3 className="w-4 h-4" /> Editing All Student Details
+                    <form onSubmit={handleFormSubmit} className="space-y-4 text-xs text-black" style={{ color: "#000000" }}>
+                      <div className="p-3 rounded-xl bg-amber-100 border border-amber-300 text-black font-bold flex items-center justify-between" style={{ color: "#000000" }}>
+                        <span className="flex items-center gap-2 text-black font-extrabold" style={{ color: "#000000" }}>
+                          <Edit3 className="w-4 h-4 text-black" /> Editing All Student Details
                         </span>
-                        <span className="text-[10px] text-slate-400 font-normal">
+                        <span className="text-[10px] text-black font-medium" style={{ color: "#000000" }}>
                           Modify fields below and click Save All Changes
                         </span>
                       </div>
 
                       {/* SECTION 1: Personal & Contact Information */}
                       <div className="space-y-3 pt-1">
-                        <h4 className="text-sky-400 font-extrabold border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5" /> Personal & Contact Details
+                        <h4 className="text-black font-black border-b border-slate-300 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5" style={{ color: "#000000" }}>
+                          <User className="w-3.5 h-3.5 text-black" /> Personal & Contact Details
                         </h4>
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Student Full Name</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Student Full Name</label>
                             <input
                               type="text"
                               required
                               value={formData.name}
                               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             />
                           </div>
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Mobile Number</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Mobile Number</label>
                             <div className="flex items-center gap-2">
-                              <div className="flex flex-1 items-center bg-slate-950 border border-slate-700 rounded-xl overflow-hidden px-2">
-                                <span className="text-slate-400 text-xs font-mono pr-1">+91</span>
+                              <div className="flex flex-1 items-center bg-white border border-slate-300 rounded-xl overflow-hidden px-2">
+                                <span className="text-black text-xs font-mono font-bold pr-1" style={{ color: "#000000" }}>+91</span>
                                 <input
                                   type="text"
                                   required
                                   value={formData.phone.replace("+91-", "").replace("+91 ", "")}
                                   onChange={(e) => setFormData({ ...formData, phone: `+91-${e.target.value}` })}
-                                  className="w-full bg-transparent py-2 text-white text-xs focus:outline-none font-mono"
+                                  className="w-full bg-transparent py-2 text-black text-xs focus:outline-none font-mono font-bold"
+                                  style={{ color: "#000000" }}
                                 />
                               </div>
                               <button
                                 type="button"
                                 onClick={() => alert("Verification code sent to " + formData.phone)}
-                                className="px-3 py-2 bg-sky-950 border border-sky-500/40 text-sky-300 hover:text-white rounded-xl text-[11px] font-bold shrink-0 transition-all"
+                                className="px-3 py-2 bg-slate-200 border border-slate-400 text-black hover:bg-slate-300 rounded-xl text-[11px] font-extrabold shrink-0 transition-all"
+                                style={{ color: "#000000" }}
                               >
                                 Verify Number
                               </button>
@@ -474,34 +481,36 @@ export default function ApplicantDetailModal({
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Email Address</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Email Address</label>
                             <div className="flex items-center gap-2">
                               <input
                                 type="email"
                                 required
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400 text-xs font-mono"
+                                className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-slate-900 text-xs font-mono font-bold"
+                                style={{ color: "#000000" }}
                               />
                               <button
                                 type="button"
                                 onClick={() => alert("Verification email sent to " + formData.email)}
-                                className="px-3 py-2 bg-indigo-950 border border-indigo-500/40 text-indigo-300 hover:text-white rounded-xl text-[11px] font-bold shrink-0 transition-all"
+                                className="px-3 py-2 bg-slate-200 border border-slate-400 text-black hover:bg-slate-300 rounded-xl text-[11px] font-extrabold shrink-0 transition-all"
+                                style={{ color: "#000000" }}
                               >
-                                Send Verification Email
+                                Send Email
                               </button>
                             </div>
                           </div>
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Alternate Mobile Number</label>
-                            <div className="flex items-center bg-slate-950 border border-slate-700 rounded-xl px-2">
-                              <span className="text-slate-400 text-xs font-mono pr-1">+91</span>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Alternate Mobile Number</label>
+                            <div className="flex items-center bg-white border border-slate-300 rounded-xl px-2">
+                              <span className="text-black text-xs font-mono font-bold pr-1" style={{ color: "#000000" }}>+91</span>
                               <input
                                 type="text"
                                 value={(formData.alternatePhone || "").replace("+91-", "").replace("+91 ", "")}
                                 onChange={(e) => setFormData({ ...formData, alternatePhone: `+91-${e.target.value}` })}
-                                placeholder=""
-                                className="w-full bg-transparent py-2 text-white text-xs focus:outline-none font-mono"
+                                className="w-full bg-transparent py-2 text-black text-xs focus:outline-none font-mono font-bold"
+                                style={{ color: "#000000" }}
                               />
                             </div>
                           </div>
@@ -510,34 +519,35 @@ export default function ApplicantDetailModal({
                         {/* Parent & Personal Information */}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">{"Father's Name"}</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>{"Father's Name"}</label>
                             <input
                               type="text"
                               value={formData.fatherName || "K. Ramachandran"}
                               onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
-                              placeholder="Father's Full Name"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             />
                           </div>
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">{"Mother's Name"}</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>{"Mother's Name"}</label>
                             <input
                               type="text"
                               value={formData.motherName || "R. Priya"}
                               onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
-                              placeholder="Mother's Full Name"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-4 gap-3">
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Student Gender</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Student Gender</label>
                             <select
                               value={formData.gender || "Male"}
                               onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             >
                               <option value="Male">Male</option>
                               <option value="Female">Female</option>
@@ -546,11 +556,12 @@ export default function ApplicantDetailModal({
                           </div>
 
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Blood Group</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Blood Group</label>
                             <select
                               value={formData.bloodGroup || "O+"}
                               onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             >
                               <option value="A+">A+</option>
                               <option value="A-">A-</option>
@@ -564,11 +575,12 @@ export default function ApplicantDetailModal({
                           </div>
 
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Physically Disabled</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Physically Disabled</label>
                             <select
                               value={formData.physicallyDisabled || "No"}
                               onChange={(e) => setFormData({ ...formData, physicallyDisabled: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             >
                               <option value="No">No</option>
                               <option value="Yes">Yes</option>
@@ -576,11 +588,12 @@ export default function ApplicantDetailModal({
                           </div>
 
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Community Category</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Community Category</label>
                             <select
                               value={formData.community || "BC"}
                               onChange={(e) => setFormData({ ...formData, community: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-extrabold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             >
                               <option value="BC">BC (Backward Class)</option>
                               <option value="BCM">BCM (BC Muslim)</option>
@@ -595,34 +608,35 @@ export default function ApplicantDetailModal({
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">Home Address</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>Home Address</label>
                             <input
                               type="text"
                               value={formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}
                               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                              placeholder="Full Residential Address"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             />
                           </div>
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">School Name</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>School Name</label>
                             <input
                               type="text"
                               value={formData.school || "Govt Higher Secondary School, Salem"}
                               onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                              placeholder="Higher Sec School Name"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">State</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>State</label>
                             <select
                               value={formData.state || "Tamil Nadu"}
                               onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             >
                               <option value="Tamil Nadu">Tamil Nadu</option>
                               <option value="Kerala">Kerala</option>
@@ -632,171 +646,31 @@ export default function ApplicantDetailModal({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-slate-300 font-bold mb-1">City / District</label>
+                            <label className="block text-black font-extrabold mb-1" style={{ color: "#000000" }}>City / District</label>
                             <input
                               type="text"
                               value={formData.district || "Salem"}
                               onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                              placeholder="e.g. Salem, Karur, Coimbatore"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* SECTION 2: Lead Stage & Sub-Stage & Follow-up Details (Picture 3) */}
-                      <div className="space-y-3 pt-3">
-                        <h4 className="text-indigo-400 font-extrabold border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                          <GraduationCap className="w-3.5 h-3.5" /> Stage Segregation & Follow-up Settings
-                        </h4>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Select Lead Stage</label>
-                            <select
-                              value={formData.status === "NEW" ? "Untouched" : "Interested to Join VSB"}
-                              onChange={(e) => setFormData({ ...formData, status: e.target.value === "Untouched" ? "NEW" : "CONTACTED" })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            >
-                              <option value="Untouched">Untouched</option>
-                              <option value="Interested to Join VSB">Interested to Join VSB</option>
-                              <option value="Interested to Study Engineering">Interested to Study Engineering</option>
-                              <option value="Admitted in VSB">Admitted in VSB</option>
-                              <option value="Not Reachable">Not Reachable</option>
-                              <option value="Not Interested in Engineering">Not Interested in Engineering</option>
-                              <option value="Walkin">Walkin</option>
-                              <option value="After NEET">After NEET</option>
-                              <option value="Not Decided">Not Decided</option>
-                              <option value="Counseling applied">Counseling applied</option>
-                              <option value="Partially Interested in Engineering">Partially Interested in Engineering</option>
-                              <option value="Closed">Closed</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Select Lead Sub Stage</label>
-                            <select
-                              value={formData.subStage || "Asked to Call Back"}
-                              onChange={(e) => setFormData({ ...formData, subStage: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            >
-                              <option value="Lead Sub Stage">Lead Sub Stage</option>
-                              <option value="Asked to Call Back">Asked to Call Back</option>
-                              <option value="Within a Week">Within a Week</option>
-                              <option value="After a Week">After a Week</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Select Timezone</label>
-                            <select className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400">
-                              <option value="IST">(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Set Follow-up Date</label>
-                            <input
-                              type="date"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Set Follow-up End Date</label>
-                            <input
-                              type="date"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Follow-up Assigned To</label>
-                            <select
-                              value={formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
-                              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            >
-                              <option value="Dr Dhanabal M Assistant Professor MECH">Dr Dhanabal M Assistant Professor MECH</option>
-                              <option value="Dr. K. Arulmurugan (Karur)">Dr. K. Arulmurugan (Karur)</option>
-                              <option value="Dr. S. Meenakshi (Coimbatore)">Dr. S. Meenakshi (Coimbatore)</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Campus / Department</label>
-                            <select
-                              value={formData.campus}
-                              onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            >
-                              <option value="KARUR">V.S.B. Karur</option>
-                              <option value="COIMBATORE">V.S.B. Coimbatore</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">Affiliated School</label>
-                            <input
-                              type="text"
-                              value={formData.school || ""}
-                              onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                              placeholder="e.g. Govt Higher Secondary School"
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* SECTION 3: Marks & Cutoff Score Details */}
-                      <div className="space-y-3 pt-3">
-                        <h4 className="text-emerald-400 font-extrabold border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Marks & Cutoff Score Details
-                        </h4>
-
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">10th Mark (%)</label>
-                            <input
-                              type="number"
-                              value={app.marks10th}
-                              readOnly
-                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-slate-400 font-mono font-bold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">12th Mark (%)</label>
-                            <input
-                              type="number"
-                              value={app.marks12th}
-                              readOnly
-                              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-emerald-400 font-mono font-bold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-slate-300 font-bold mb-1">TNEA Cutoff Score</label>
-                            <input
-                              type="number"
-                              step="0.1"
-                              value={formData.tneaCutoff || 188.5}
-                              onChange={(e) => setFormData({ ...formData, tneaCutoff: parseFloat(e.target.value) || 0 })}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-400"
+                              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-black font-bold focus:outline-none focus:ring-2 focus:ring-slate-900"
+                              style={{ color: "#000000" }}
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex justify-end gap-2 pt-4 border-t border-slate-800">
+                      <div className="flex justify-end gap-2 pt-4 border-t border-slate-300">
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="px-5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white font-bold"
+                          className="px-5 py-2.5 rounded-xl bg-slate-200 border border-slate-300 text-black font-bold"
+                          style={{ color: "#000000" }}
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black shadow-lg shadow-sky-500/30"
+                          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-black text-white font-black shadow-lg"
                         >
                           <Save className="w-4 h-4" /> Save All Changes
                         </button>
@@ -805,211 +679,211 @@ export default function ApplicantDetailModal({
                   ) : (
                     /* SUB TAB 1: LEAD DETAILS (VIEW MODE WITH EDIT TRIPPERS) */
                     activeSubTab === "LEAD_DETAILS" ? (
-                      <div className="space-y-3.5 text-xs font-sans text-slate-900">
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Email Address</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: <strong className="text-slate-950 font-mono font-bold">{formData.email}</strong></span>
+                      <div className="space-y-3.5 text-xs font-sans text-black" style={{ color: "#000000" }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Email Address</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: <strong className="text-black font-mono font-black" style={{ color: "#000000" }}>{formData.email}</strong></span>
                             <span title="Edit Email">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900 flex items-center gap-1">
-                            Mobile Number <Info className="w-3 h-3 text-slate-500" />
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black flex items-center gap-1" style={{ color: "#000000" }}>
+                            Mobile Number <Info className="w-3 h-3 text-black" />
                           </span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: <strong className="text-slate-950 font-mono font-bold">{formData.phone}</strong></span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: <strong className="text-black font-mono font-black" style={{ color: "#000000" }}>{formData.phone}</strong></span>
                             <span title="Edit Phone">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Alternate Mobile Number</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.alternatePhone || "NA"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Alternate Mobile Number</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.alternatePhone || "NA"}</span>
                             <span title="Edit Alternate Phone">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Name</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.name}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Name</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.name}</span>
                             <span title="Edit Name">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">{"Father's Name"}</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.fatherName || "K. Ramachandran"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>{"Father's Name"}</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.fatherName || "K. Ramachandran"}</span>
                             <span title="Edit Father's Name">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">{"Mother's Name"}</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.motherName || "R. Priya"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>{"Mother's Name"}</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.motherName || "R. Priya"}</span>
                             <span title="Edit Mother's Name">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Student Gender</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.gender || "Male"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Student Gender</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.gender || "Male"}</span>
                             <span title="Edit Gender">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Blood Group</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.bloodGroup || "O+"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Blood Group</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.bloodGroup || "O+"}</span>
                             <span title="Edit Blood Group">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Physically Disabled</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.physicallyDisabled || "No"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Physically Disabled</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.physicallyDisabled || "No"}</span>
                             <span title="Edit Physically Disabled">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Community Category</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.community || "BC"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Community Category</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.community || "BC"}</span>
                             <span title="Edit Community">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Home Address</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Home Address</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
                             <span title="Edit Home Address">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">School Name</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.school || "Govt Higher Secondary School, Salem"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>School Name</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.school || "Govt Higher Secondary School, Salem"}</span>
                             <span title="Edit School Name">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">State</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.state || "Tamil Nadu"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>State</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.state || "Tamil Nadu"}</span>
                             <span title="Edit State">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">City</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: {formData.district || "Salem"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>City</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: {formData.district || "Salem"}</span>
                             <span title="Edit City">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Campus</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: V.S.B. {formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Campus</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: V.S.B. {formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"}</span>
                             <span title="Edit Campus">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center group">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Course</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 flex items-center justify-between">
-                            <span>: UG ({formData.courseInterest})</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center group">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Course</span>
+                          <span className="sm:col-span-7 font-black text-black flex items-center justify-between" style={{ color: "#000000" }}>
+                            <span style={{ color: "#000000" }}>: UG ({formData.courseInterest})</span>
                             <span title="Edit Course">
                               <Edit3
-                                className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 cursor-pointer transition-all"
+                                className="w-3.5 h-3.5 text-black opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
                                 onClick={() => setIsEditing(true)}
                               />
                             </span>
@@ -1018,70 +892,70 @@ export default function ApplicantDetailModal({
                       </div>
                     ) : activeSubTab === "ADDITIONAL" ? (
                       /* SUB TAB 2: ADDITIONAL DETAILS */
-                      <div className="space-y-3.5 text-xs font-sans text-slate-900">
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">{"Father's Name"}</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.fatherName || "K. Ramachandran"}</span>
+                      <div className="space-y-3.5 text-xs font-sans text-black" style={{ color: "#000000" }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>{"Father's Name"}</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.fatherName || "K. Ramachandran"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">{"Mother's Name"}</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.motherName || "R. Priya"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>{"Mother's Name"}</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.motherName || "R. Priya"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Gender</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.gender || "Male"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Gender</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.gender || "Male"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Blood Group</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.bloodGroup || "O+"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Blood Group</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.bloodGroup || "O+"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Physically Disabled</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.physicallyDisabled || "No"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Physically Disabled</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.physicallyDisabled || "No"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Community Category</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.community || "BC"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Community Category</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.community || "BC"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Home Address</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Home Address</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.address || "14 West Car Street, Salem, Tamil Nadu 636001"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">10th Marks (%)</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {app.marks10th}%</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>10th Marks (%)</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {app.marks10th}%</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">12th Marks (%)</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {app.marks12th}%</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>12th Marks (%)</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {app.marks12th}%</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">TNEA Cutoff Score</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950 font-mono">: {formData.tneaCutoff || 188.5} / 200</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>TNEA Cutoff Score</span>
+                          <span className="sm:col-span-7 font-black text-black font-mono" style={{ color: "#000000" }}>: {formData.tneaCutoff || 188.5} / 200</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Affiliated School</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.school || "Govt HSS"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Affiliated School</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.school || "Govt HSS"}</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Lead Acquisition Source</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: {formData.source || "Organic"}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Lead Acquisition Source</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: {formData.source || "Organic"}</span>
                         </div>
                       </div>
                     ) : (
                       /* SUB TAB 3: FACEBOOK DETAILS */
-                      <div className="space-y-3.5 text-xs font-sans text-slate-900">
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Facebook Campaign Name</span>
-                          <span className="sm:col-span-7 font-bold text-slate-950">: VSB_TNEA_Admissions_2026</span>
+                      <div className="space-y-3.5 text-xs font-sans text-black" style={{ color: "#000000" }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Facebook Campaign Name</span>
+                          <span className="sm:col-span-7 font-black text-black" style={{ color: "#000000" }}>: VSB_TNEA_Admissions_2026</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Ad Set ID</span>
-                          <span className="sm:col-span-7 font-mono text-slate-950 font-bold">: fb_adset_918237</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Ad Set ID</span>
+                          <span className="sm:col-span-7 font-mono text-black font-black" style={{ color: "#000000" }}>: fb_adset_918237</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-200 items-center">
-                          <span className="sm:col-span-5 font-extrabold text-slate-900">Form ID</span>
-                          <span className="sm:col-span-7 font-mono text-slate-950 font-bold">: fb_form_382109</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 py-2 border-b border-slate-300 items-center">
+                          <span className="sm:col-span-5 font-black text-black" style={{ color: "#000000" }}>Form ID</span>
+                          <span className="sm:col-span-7 font-mono text-black font-black" style={{ color: "#000000" }}>: fb_form_382109</span>
                         </div>
                       </div>
                     )
