@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { useState, useEffect } from "react";
+import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
@@ -39,6 +39,7 @@ interface ContactDirectoryModuleProps {
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
   onTriggerToast?: (msg: string) => void;
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
+  onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
 }
 
 export default function ContactDirectoryModule({
@@ -49,8 +50,13 @@ export default function ContactDirectoryModule({
   onActionTrigger,
   onTriggerToast,
   onSelectApplicant,
+  onImportLeads,
 }: ContactDirectoryModuleProps) {
   const [contacts, setContacts] = useState(initialContacts);
+
+  useEffect(() => {
+    setContacts(initialContacts);
+  }, [initialContacts]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
@@ -330,17 +336,16 @@ export default function ContactDirectoryModule({
     if (col === "Lead Stage") {
       return (
         <span
-          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
-            contact.status === "ADMITTED"
+          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${contact.status === "ADMITTED"
               ? "bg-emerald-100 text-emerald-700 border-emerald-300"
               : contact.status === "CONTACTED"
-              ? "bg-indigo-100 text-indigo-700 border-indigo-300"
-              : contact.status === "IN_REVIEW"
-              ? "bg-amber-100 text-amber-700 border-amber-300"
-              : contact.status === "REJECTED"
-              ? "bg-rose-100 text-rose-700 border-rose-300"
-              : "bg-sky-100 text-sky-700 border-sky-300"
-          }`}
+                ? "bg-indigo-100 text-indigo-700 border-indigo-300"
+                : contact.status === "IN_REVIEW"
+                  ? "bg-amber-100 text-amber-700 border-amber-300"
+                  : contact.status === "REJECTED"
+                    ? "bg-rose-100 text-rose-700 border-rose-300"
+                    : "bg-sky-100 text-sky-700 border-sky-300"
+            }`}
         >
           {contact.status}
         </span>
@@ -402,10 +407,10 @@ export default function ContactDirectoryModule({
       counsellingFilter === "ALL"
         ? true
         : counsellingFilter === "COUNSELLING_ONLY"
-        ? c.appliedCounselling === true || c.source?.includes("TNEA")
-        : counsellingFilter === "GOVT_QUOTA"
-        ? c.counsellingCategory?.includes("7.5%")
-        : c.appliedCounselling === false || c.counsellingCategory?.includes("Management");
+          ? c.appliedCounselling === true || c.source?.includes("TNEA")
+          : counsellingFilter === "GOVT_QUOTA"
+            ? c.counsellingCategory?.includes("7.5%")
+            : c.appliedCounselling === false || c.counsellingCategory?.includes("Management");
 
     const matchesTeacherAssignment =
       currentUserRole === "ADMIN" ||
@@ -416,8 +421,8 @@ export default function ContactDirectoryModule({
       filterRules.length === 0
         ? true
         : filterLogicMode === "ALL"
-        ? filterRules.every((r) => evaluateRule(c, r))
-        : filterRules.some((r) => evaluateRule(c, r));
+          ? filterRules.every((r) => evaluateRule(c, r))
+          : filterRules.some((r) => evaluateRule(c, r));
 
     const matchesColumnFilters = Object.entries(columnFilters).every(([col, filterVal]) => {
       if (!filterVal || filterVal === "ALL") return true;
@@ -503,7 +508,7 @@ export default function ContactDirectoryModule({
     }
   };
 
-  // CSV File Importer Handler
+  // CSV File Importer Handler with Smart Column Mapping & Student Database Detail Sync
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -513,42 +518,135 @@ export default function ContactDirectoryModule({
       const text = event.target?.result as string;
       if (!text) return;
 
-      const lines = text.split(/\r?\n/);
-      const imported: Lead[] = [];
+      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      if (lines.length === 0) return;
 
-      // Detect header row if it contains columns names
-      const startIndex = lines[0].toLowerCase().includes("name") ? 1 : 0;
+      const imported: (Lead & { application: Application })[] = [];
+
+      // Check header row for dynamic column mapping
+      const firstLineLower = lines[0].toLowerCase();
+      const hasHeader =
+        firstLineLower.includes("name") ||
+        firstLineLower.includes("phone") ||
+        firstLineLower.includes("mobile") ||
+        firstLineLower.includes("email") ||
+        firstLineLower.includes("course");
+
+      const headerCols = hasHeader
+        ? lines[0].split(",").map((c) => c.trim().toLowerCase().replace(/^["']|["']$/g, ""))
+        : [];
+      const startIndex = hasHeader ? 1 : 0;
+
+      const findColIndex = (keywords: string[]) => {
+        return headerCols.findIndex((col) => keywords.some((k) => col.includes(k)));
+      };
+
+      const nameIdx = findColIndex(["name", "student", "candidate"]);
+      const phoneIdx = findColIndex(["phone", "mobile", "contact"]);
+      const emailIdx = findColIndex(["email", "mail"]);
+      const schoolIdx = findColIndex(["school", "institution", "college"]);
+      const districtIdx = findColIndex(["district", "city", "location"]);
+      const addressIdx = findColIndex(["address", "place"]);
+      const courseIdx = findColIndex(["course", "dept", "department", "branch", "interest"]);
+      const marks10Idx = findColIndex(["10th", "sslc", "10_mark"]);
+      const marks12Idx = findColIndex(["12th", "hsc", "12_mark"]);
+      const cutoffIdx = findColIndex(["cutoff", "tnea"]);
+      const fatherIdx = findColIndex(["father", "parent"]);
+      const motherIdx = findColIndex(["mother"]);
+      const genderIdx = findColIndex(["gender", "sex"]);
+      const communityIdx = findColIndex(["community", "caste", "category"]);
+      const campusIdx = findColIndex(["campus"]);
+      const statusIdx = findColIndex(["status", "stage"]);
 
       for (let i = startIndex; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
+        const line = lines[i];
+        const parts = line.split(",").map((p) => p.trim().replace(/^["']|["']$/g, ""));
+        if (parts.length < 1) continue;
 
-        // Simple CSV splitter
-        const parts = line.split(",").map(p => p.trim().replace(/^["']|["']$/g, ''));
-        if (parts.length < 2) continue; // Requires at least Name and Phone
+        const getVal = (idx: number, positionalIdx: number, fallback: string = "") => {
+          if (hasHeader && idx >= 0 && idx < parts.length && parts[idx]) return parts[idx];
+          if (!hasHeader && positionalIdx >= 0 && positionalIdx < parts.length && parts[positionalIdx])
+            return parts[positionalIdx];
+          return fallback;
+        };
 
-        const [name, phone, email, school, district, address, courseInterest] = parts;
+        const name = getVal(nameIdx, 0, `Candidate ${i}`);
+        const phone = getVal(phoneIdx, 1, "+91 98765 43210");
+        const email = getVal(emailIdx, 2, `${name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@gmail.com`);
+        const school = getVal(schoolIdx, 3, "Govt Higher Secondary School");
+        const district = getVal(districtIdx, 4, selectedCampus === "KARUR" ? "Karur" : "Coimbatore");
+        const address = getVal(addressIdx, 5, "Tamil Nadu");
+        const courseInterest = getVal(courseIdx, 6, "B.E. Computer Science and Engineering");
+        const marks10Str = getVal(marks10Idx, 7, "85");
+        const marks12Str = getVal(marks12Idx, 8, "88");
+        const cutoffStr = getVal(cutoffIdx, 9, "185.5");
+        const fatherName = getVal(fatherIdx, 10, "Parent / Guardian");
+        const motherName = getVal(motherIdx, 11, "");
+        const gender = getVal(genderIdx, 12, "Male");
+        const community = getVal(communityIdx, 13, "BC");
+        const campusVal = getVal(campusIdx, 14, selectedCampus);
+        const statusVal = getVal(statusIdx, 15, "NEW");
 
-        imported.push({
-          id: `lead_csv_${Date.now()}_${i}`,
-          name: name || "Imported Candidate",
-          phone: phone || "+91 99999 99999",
-          email: email || `${(name || "candidate").toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
+        const leadId = `lead_csv_${Date.now()}_${i}`;
+        const appId = `app_csv_${Date.now()}_${i}`;
+
+        const parsed10 = parseFloat(marks10Str) || 85;
+        const parsed12 = parseFloat(marks12Str) || 88;
+        const parsedCutoff = parseFloat(cutoffStr) || 185.5;
+
+        const importedLead: Lead & { application: Application } = {
+          id: leadId,
+          name,
+          phone,
+          email,
           source: "CSV Import",
-          courseInterest: courseInterest || "B.E. Computer Science",
-          campus: selectedCampus === "ALL" ? "KARUR" : selectedCampus,
-          school: school || "Govt Higher Secondary School",
-          district: district || (selectedCampus === "KARUR" ? "Karur" : "Coimbatore"),
-          address: address || "Tamil Nadu",
-          status: "NEW",
+          courseInterest,
+          campus: (campusVal.toUpperCase() === "COIMBATORE"
+            ? "COIMBATORE"
+            : selectedCampus === "ALL"
+            ? "KARUR"
+            : selectedCampus) as CampusLocation,
+          school,
+          district,
+          state: "Tamil Nadu",
+          address,
+          status: (statusVal.toUpperCase() as LeadStatus) || "NEW",
+          fatherName,
+          motherName,
+          gender,
+          community,
+          tneaCutoff: parsedCutoff,
+          leadScore: Math.min(100, Math.round(parsedCutoff / 2)),
+          assignedTo: loggedInUsername || "adminkarur@123",
+          appliedCounselling: true,
+          counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
+          counsellingCategory: "TNEA General Counselling",
           createdAt: new Date().toISOString(),
-        });
+          application: {
+            id: appId,
+            leadId,
+            stage: "INQUIRY",
+            marks10th: parsed10,
+            marks12th: parsed12,
+            paymentStatus: "PENDING",
+            payments: [],
+          },
+        };
+
+        imported.push(importedLead);
       }
 
       if (imported.length > 0) {
         setContacts((prev) => [...imported, ...prev]);
+
+        if (onImportLeads) {
+          onImportLeads(imported);
+        }
+
         if (onTriggerToast) {
-          onTriggerToast(`📥 Successfully imported ${imported.length} candidate contacts from CSV!`);
+          onTriggerToast(
+            `📥 Successfully imported ${imported.length} candidate(s) into Student Database!`
+          );
         }
       } else {
         if (onTriggerToast) {
@@ -557,7 +655,6 @@ export default function ContactDirectoryModule({
       }
     };
     reader.readAsText(file);
-    // Reset file input value
     e.target.value = "";
   };
 
@@ -669,29 +766,19 @@ export default function ContactDirectoryModule({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
-          {/* Ask Mio AI Button */}
-          <button
-            onClick={() => alert("✨ Mio AI Assistant: All candidate registered leads are active and synced.")}
-            className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold flex items-center gap-1.5 shadow-md shadow-purple-500/20"
-          >
-            <span>✨ Ask Mio AI</span>
-          </button>
-
           {/* View Mode Toggle: Table View (Image 2) vs Cards View (Image 1) */}
           <div className="flex items-center bg-slate-200 p-0.5 rounded-xl border border-slate-300">
             <button
               onClick={() => setDirectoryViewMode("TABLE")}
-              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
-                directoryViewMode === "TABLE" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
-              }`}
+              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${directoryViewMode === "TABLE" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
+                }`}
             >
               📋 Lead Manager Table
             </button>
             <button
               onClick={() => setDirectoryViewMode("GRID")}
-              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
-                directoryViewMode === "GRID" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
-              }`}
+              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${directoryViewMode === "GRID" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
+                }`}
             >
               🎴 Cards View
             </button>
@@ -887,47 +974,43 @@ export default function ContactDirectoryModule({
             </h3>
             <p className="text-xs text-slate-400">Filter candidate inquiries by stage or TNEA counselling category</p>
           </div>
-          
+
           {/* Counselling Status Quick Filters */}
           <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar text-xs font-bold">
             <span className="text-slate-400 text-[11px] uppercase tracking-wider shrink-0 mr-1">Counselling Intake:</span>
             <button
               onClick={() => setCounsellingFilter("ALL")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 ${
-                counsellingFilter === "ALL"
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 ${counsellingFilter === "ALL"
                   ? "bg-slate-800 text-white border-white/30 font-black"
                   : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-              }`}
+                }`}
             >
               All Intake
             </button>
             <button
               onClick={() => setCounsellingFilter("COUNSELLING_ONLY")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${
-                counsellingFilter === "COUNSELLING_ONLY"
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "COUNSELLING_ONLY"
                   ? "bg-emerald-500/30 text-emerald-300 border-emerald-400/60 shadow-md font-black"
                   : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-              }`}
+                }`}
             >
               <span>✅ Applied TNEA</span>
             </button>
             <button
               onClick={() => setCounsellingFilter("GOVT_QUOTA")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${
-                counsellingFilter === "GOVT_QUOTA"
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "GOVT_QUOTA"
                   ? "bg-indigo-500/30 text-indigo-300 border-indigo-400/60 shadow-md font-black"
                   : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-              }`}
+                }`}
             >
               <span>🏛️ 7.5% Govt Quota</span>
             </button>
             <button
               onClick={() => setCounsellingFilter("MANAGEMENT_ONLY")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${
-                counsellingFilter === "MANAGEMENT_ONLY"
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "MANAGEMENT_ONLY"
                   ? "bg-purple-500/30 text-purple-300 border-purple-400/60 shadow-md font-black"
                   : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-              }`}
+                }`}
             >
               <span>💼 Management Quota</span>
             </button>
@@ -938,11 +1021,10 @@ export default function ContactDirectoryModule({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
           <button
             onClick={() => setSelectedStatus("ALL")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
-              selectedStatus === "ALL"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ALL"
                 ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white border-white/40 shadow-lg shadow-sky-500/30 font-black scale-[1.03]"
                 : "bg-slate-950/80 text-slate-300 border-white/15 hover:border-white/30"
-            }`}
+              }`}
           >
             <span className="text-lg">🌟</span>
             <div className="text-left leading-tight">
@@ -953,11 +1035,10 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("NEW")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 relative overflow-hidden ${
-              selectedStatus === "NEW"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 relative overflow-hidden ${selectedStatus === "NEW"
                 ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-300 shadow-xl shadow-sky-500/40 ring-2 ring-sky-400/50 font-black scale-[1.03]"
                 : "bg-sky-950/50 text-sky-300 border-sky-500/40 hover:bg-sky-900/60"
-            }`}
+              }`}
           >
             <span className="text-lg animate-pulse">🆕</span>
             <div className="text-left leading-tight">
@@ -968,11 +1049,10 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("CONTACTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
-              selectedStatus === "CONTACTED"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "CONTACTED"
                 ? "bg-gradient-to-r from-teal-500 to-emerald-600 text-white border-teal-300 shadow-lg shadow-teal-500/30 font-black scale-[1.03]"
                 : "bg-teal-950/40 text-teal-300 border-teal-500/30 hover:bg-teal-900/50"
-            }`}
+              }`}
           >
             <span className="text-lg">📞</span>
             <div className="text-left leading-tight">
@@ -983,11 +1063,10 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("IN_REVIEW")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
-              selectedStatus === "IN_REVIEW"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "IN_REVIEW"
                 ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-300 shadow-lg shadow-amber-500/30 font-black scale-[1.03]"
                 : "bg-amber-950/40 text-amber-300 border-amber-500/30 hover:bg-amber-900/50"
-            }`}
+              }`}
           >
             <span className="text-lg">📊</span>
             <div className="text-left leading-tight">
@@ -998,11 +1077,10 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("ADMITTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
-              selectedStatus === "ADMITTED"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ADMITTED"
                 ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white border-emerald-300 shadow-lg shadow-emerald-500/30 font-black scale-[1.03]"
                 : "bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50"
-            }`}
+              }`}
           >
             <span className="text-lg">🎓</span>
             <div className="text-left leading-tight">
@@ -1013,11 +1091,10 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("REJECTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${
-              selectedStatus === "REJECTED"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "REJECTED"
                 ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-rose-300 shadow-lg shadow-rose-500/30 font-black scale-[1.03]"
                 : "bg-rose-950/40 text-rose-300 border-rose-500/30 hover:bg-rose-900/50"
-            }`}
+              }`}
           >
             <span className="text-lg">❌</span>
             <div className="text-left leading-tight">
@@ -1309,9 +1386,8 @@ export default function ContactDirectoryModule({
                     {selectedColumns.map((col) => (
                       <td
                         key={col}
-                        className={`p-3 ${
-                          col === "Registered Name" ? "font-bold text-blue-600 hover:underline" : ""
-                        }`}
+                        className={`p-3 ${col === "Registered Name" ? "font-bold text-blue-600 hover:underline" : ""
+                          }`}
                       >
                         {renderCellContent(contact, col)}
                       </td>
@@ -1365,224 +1441,223 @@ export default function ContactDirectoryModule({
       ) : (
         /* CARDS VIEW (Image 1 Layout) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredContacts.length > 0 ? (
-          filteredContacts.map((contact) => (
-            <div
-              key={contact.id}
-              className="bubble-card p-5 border border-white/20 hover:border-sky-400/60 transition-all duration-300 flex flex-col justify-between group transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-sky-500/20 cursor-pointer"
-            >
-              <div>
-                {/* Header: Name & Campus Badge */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 text-white font-black flex items-center justify-center shadow-md text-sm border border-white/20 transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
-                      {contact.name.slice(0, 2).toUpperCase()}
+          {filteredContacts.length > 0 ? (
+            filteredContacts.map((contact) => (
+              <div
+                key={contact.id}
+                className="bubble-card p-5 border border-white/20 hover:border-sky-400/60 transition-all duration-300 flex flex-col justify-between group transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-sky-500/20 cursor-pointer"
+              >
+                <div>
+                  {/* Header: Name & Campus Badge */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-pink-500 text-white font-black flex items-center justify-center shadow-md text-sm border border-white/20 transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                        {contact.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-white group-hover:text-sky-300 transition-colors">
+                          {contact.name}
+                        </h3>
+                        <p className="text-[11px] text-sky-300 font-semibold">{contact.courseInterest}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-black text-white group-hover:text-sky-300 transition-colors">
-                        {contact.name}
-                      </h3>
-                      <p className="text-[11px] text-sky-300 font-semibold">{contact.courseInterest}</p>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {/* Stage Status Badge */}
+                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-sm ${contact.status === "NEW"
+                          ? "bg-sky-500/20 text-sky-300 border-sky-400/50 animate-pulse"
+                          : contact.status === "CONTACTED"
+                            ? "bg-teal-500/20 text-teal-300 border-teal-400/50"
+                            : contact.status === "IN_REVIEW"
+                              ? "bg-amber-500/20 text-amber-300 border-amber-400/50"
+                              : contact.status === "ADMITTED"
+                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/50"
+                                : "bg-rose-500/20 text-rose-300 border-rose-400/50"
+                        }`}>
+                        {contact.status === "NEW" && "🆕 New Inquiry"}
+                        {contact.status === "CONTACTED" && "📞 Contacted"}
+                        {contact.status === "IN_REVIEW" && "📊 Cutoff Review"}
+                        {contact.status === "ADMITTED" && "🎓 Admitted"}
+                        {contact.status === "REJECTED" && "❌ Rejected"}
+                      </span>
+
+                      <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300">
+                        {contact.campus || "KARUR"}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {/* Stage Status Badge */}
-                    <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-sm ${
-                      contact.status === "NEW"
-                        ? "bg-sky-500/20 text-sky-300 border-sky-400/50 animate-pulse"
-                        : contact.status === "CONTACTED"
-                        ? "bg-teal-500/20 text-teal-300 border-teal-400/50"
-                        : contact.status === "IN_REVIEW"
-                        ? "bg-amber-500/20 text-amber-300 border-amber-400/50"
-                        : contact.status === "ADMITTED"
-                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/50"
-                        : "bg-rose-500/20 text-rose-300 border-rose-400/50"
-                    }`}>
-                      {contact.status === "NEW" && "🆕 New Inquiry"}
-                      {contact.status === "CONTACTED" && "📞 Contacted"}
-                      {contact.status === "IN_REVIEW" && "📊 Cutoff Review"}
-                      {contact.status === "ADMITTED" && "🎓 Admitted"}
-                      {contact.status === "REJECTED" && "❌ Rejected"}
-                    </span>
 
-                    <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950 border border-white/20 text-sky-300">
-                      {contact.campus || "KARUR"}
-                    </span>
+                  {/* Details List */}
+                  <div className="space-y-2 text-xs text-slate-300 bg-slate-950/70 p-3.5 rounded-2xl border border-white/10 mb-4">
+                    {/* Phone */}
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span className="font-mono font-bold text-white">
+                        {showPhone ? contact.phone : "+91 ••••• •••••"}
+                      </span>
+                    </div>
+
+                    {/* Email */}
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span className="truncate">
+                        {showEmail ? contact.email : "•••••@•••••.•••"}
+                      </span>
+                    </div>
+
+                    {/* School */}
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/10">
+                      <School className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="font-medium text-amber-200 truncate">{contact.school || "Govt HSS"}</span>
+                    </div>
+
+                    {/* District */}
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                      <span className="font-bold text-pink-300">{contact.district || "Karur"} District</span>
+                    </div>
+
+                    {/* TNEA Counselling Details Box */}
+                    <div className="pt-2 border-t border-white/10 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <GraduationCap className="w-3 h-3 text-sky-400" /> TNEA Counselling:
+                        </span>
+                        {contact.appliedCounselling !== false ? (
+                          <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                            ✅ Applied ({contact.counsellingAppNo || "TNEA2026-61201"})
+                          </span>
+                        ) : (
+                          <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                            ⏳ Direct Management Intake
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
+                        <span className="text-slate-300">
+                          Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff || 188.5} / 200</strong>
+                        </span>
+                        <span className="text-indigo-300 text-[10px]">
+                          {contact.counsellingCategory || "TNEA General"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Admin Teacher Assignment Dropdown */}
+                    {currentUserRole === "ADMIN" && (
+                      <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px]">
+                        <span className="text-slate-400 font-bold flex items-center gap-1 shrink-0">
+                          🧑‍🏫 Assign Faculty:
+                        </span>
+                        <select
+                          value={contact.assignedTo || (contact.campus === "COIMBATORE" ? "teachercovai@123" : "teacherkarur@123")}
+                          onChange={(e) => handleAssignTeacher(contact.id, e.target.value)}
+                          className="bg-slate-900 border border-white/20 text-sky-300 font-bold px-2 py-0.5 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
+                        >
+                          <option value="teacherkarur@123">Dr. K. Arulmurugan (Karur)</option>
+                          <option value="teachercovai@123">Dr. S. Meenakshi (Coimbatore)</option>
+                          <option value="teacher_general">Prof. P. Rajesh (Mechanical)</option>
+                          <option value="teacher_it">Dr. N. Gayathri (IT)</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Details List */}
-                <div className="space-y-2 text-xs text-slate-300 bg-slate-950/70 p-3.5 rounded-2xl border border-white/10 mb-4">
-                  {/* Phone */}
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span className="font-mono font-bold text-white">
-                      {showPhone ? contact.phone : "+91 ••••• •••••"}
-                    </span>
-                  </div>
-
-                  {/* Email */}
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                    <span className="truncate">
-                      {showEmail ? contact.email : "•••••@•••••.•••"}
-                    </span>
-                  </div>
-
-                  {/* School */}
-                  <div className="flex items-center gap-2 pt-1 border-t border-white/10">
-                    <School className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span className="font-medium text-amber-200 truncate">{contact.school || "Govt HSS"}</span>
-                  </div>
-
-                  {/* District */}
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-pink-400 shrink-0" />
-                    <span className="font-bold text-pink-300">{contact.district || "Karur"} District</span>
-                  </div>
-
-                  {/* TNEA Counselling Details Box */}
-                  <div className="pt-2 border-t border-white/10 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                        <GraduationCap className="w-3 h-3 text-sky-400" /> TNEA Counselling:
-                      </span>
-                      {contact.appliedCounselling !== false ? (
-                        <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                          ✅ Applied ({contact.counsellingAppNo || "TNEA2026-61201"})
-                        </span>
-                      ) : (
-                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
-                          ⏳ Direct Management Intake
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
-                      <span className="text-slate-300">
-                        Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff || 188.5} / 200</strong>
-                      </span>
-                      <span className="text-indigo-300 text-[10px]">
-                        {contact.counsellingCategory || "TNEA General"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Admin Teacher Assignment Dropdown */}
-                  {currentUserRole === "ADMIN" && (
-                    <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px]">
-                      <span className="text-slate-400 font-bold flex items-center gap-1 shrink-0">
-                        🧑‍🏫 Assign Faculty:
-                      </span>
-                      <select
-                        value={contact.assignedTo || (contact.campus === "COIMBATORE" ? "teachercovai@123" : "teacherkarur@123")}
-                        onChange={(e) => handleAssignTeacher(contact.id, e.target.value)}
-                        className="bg-slate-900 border border-white/20 text-sky-300 font-bold px-2 py-0.5 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
+                {/* Action Buttons: Edit, Call, Email, WhatsApp, Delete */}
+                <div className="flex items-center justify-between pt-3 border-t border-white/10 relative z-10">
+                  <div className="flex items-center gap-1.5">
+                    <Tooltip text={`Scan & View QR Code Pass for ${contact.name}`} position="bottom">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenQrModal(contact);
+                        }}
+                        className="p-2 rounded-full bg-purple-500/20 text-purple-300 hover:bg-purple-500 hover:text-white border border-purple-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-purple-500/40"
                       >
-                        <option value="teacherkarur@123">Dr. K. Arulmurugan (Karur)</option>
-                        <option value="teachercovai@123">Dr. S. Meenakshi (Coimbatore)</option>
-                        <option value="teacher_general">Prof. P. Rajesh (Mechanical)</option>
-                        <option value="teacher_it">Dr. N. Gayathri (IT)</option>
-                      </select>
-                    </div>
-                  )}
+                        <QrCode className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip text={`In-Portal Call ${contact.name}`} position="bottom">
+                      <button
+                        onClick={() => handleOpenCommModal("CALL", {
+                          name: contact.name,
+                          phone: contact.phone,
+                          email: contact.email,
+                          courseInterest: contact.courseInterest,
+                          campus: contact.campus,
+                          school: contact.school || undefined,
+                          district: contact.district || undefined,
+                        })}
+                        className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip text={`In-Portal Email ${contact.name}`} position="bottom">
+                      <button
+                        onClick={() => handleOpenCommModal("EMAIL", {
+                          name: contact.name,
+                          phone: contact.phone,
+                          email: contact.email,
+                          courseInterest: contact.courseInterest,
+                          campus: contact.campus,
+                          school: contact.school || undefined,
+                          district: contact.district || undefined,
+                        })}
+                        className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip text={`In-Portal Message ${contact.name}`} position="bottom">
+                      <button
+                        onClick={() => handleOpenCommModal("MESSAGE", {
+                          name: contact.name,
+                          phone: contact.phone,
+                          email: contact.email,
+                          courseInterest: contact.courseInterest,
+                          campus: contact.campus,
+                          school: contact.school || undefined,
+                          district: contact.district || undefined,
+                        })}
+                        className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {/* Edit Button */}
+                    <Tooltip text={`Edit ${contact.name}`} position="bottom">
+                      <button
+                        onClick={() => setEditingContact(contact)}
+                        className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit
+                      </button>
+                    </Tooltip>
+
+                    {/* Delete Button */}
+                    <Tooltip text={`Delete ${contact.name}`} position="bottom">
+                      <button
+                        onClick={() => handleDeleteContact(contact.id, contact.name)}
+                        className="p-1.5 rounded-full bg-rose-500/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 active:scale-95"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
+                  </div>
                 </div>
               </div>
-
-              {/* Action Buttons: Edit, Call, Email, WhatsApp, Delete */}
-              <div className="flex items-center justify-between pt-3 border-t border-white/10 relative z-10">
-                <div className="flex items-center gap-1.5">
-                  <Tooltip text={`Scan & View QR Code Pass for ${contact.name}`} position="bottom">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenQrModal(contact);
-                      }}
-                      className="p-2 rounded-full bg-purple-500/20 text-purple-300 hover:bg-purple-500 hover:text-white border border-purple-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-purple-500/40"
-                    >
-                      <QrCode className="w-3.5 h-3.5" />
-                    </button>
-                  </Tooltip>
-                  <Tooltip text={`In-Portal Call ${contact.name}`} position="bottom">
-                    <button
-                      onClick={() => handleOpenCommModal("CALL", {
-                        name: contact.name,
-                        phone: contact.phone,
-                        email: contact.email,
-                        courseInterest: contact.courseInterest,
-                        campus: contact.campus,
-                        school: contact.school || undefined,
-                        district: contact.district || undefined,
-                      })}
-                      className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
-                    >
-                      <Phone className="w-3.5 h-3.5" />
-                    </button>
-                  </Tooltip>
-                  <Tooltip text={`In-Portal Email ${contact.name}`} position="bottom">
-                    <button
-                      onClick={() => handleOpenCommModal("EMAIL", {
-                        name: contact.name,
-                        phone: contact.phone,
-                        email: contact.email,
-                        courseInterest: contact.courseInterest,
-                        campus: contact.campus,
-                        school: contact.school || undefined,
-                        district: contact.district || undefined,
-                      })}
-                      className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
-                    >
-                      <Mail className="w-3.5 h-3.5" />
-                    </button>
-                  </Tooltip>
-                  <Tooltip text={`In-Portal Message ${contact.name}`} position="bottom">
-                    <button
-                      onClick={() => handleOpenCommModal("MESSAGE", {
-                        name: contact.name,
-                        phone: contact.phone,
-                        email: contact.email,
-                        courseInterest: contact.courseInterest,
-                        campus: contact.campus,
-                        school: contact.school || undefined,
-                        district: contact.district || undefined,
-                      })}
-                      className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                    </button>
-                  </Tooltip>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  {/* Edit Button */}
-                  <Tooltip text={`Edit ${contact.name}`} position="bottom">
-                    <button
-                      onClick={() => setEditingContact(contact)}
-                      className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" /> Edit
-                    </button>
-                  </Tooltip>
-
-                  {/* Delete Button */}
-                  <Tooltip text={`Delete ${contact.name}`} position="bottom">
-                    <button
-                      onClick={() => handleDeleteContact(contact.id, contact.name)}
-                      className="p-1.5 rounded-full bg-rose-500/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 active:scale-95"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </Tooltip>
-                </div>
-              </div>
+            ))
+          ) : (
+            <div className="col-span-full py-12 text-center text-slate-400 bubble-card">
+              No contacts match the search or district filter.
             </div>
-          ))
-        ) : (
-          <div className="col-span-full py-12 text-center text-slate-400 bubble-card">
-            No contacts match the search or district filter.
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       )}
 
       {/* ADD NEW CONTACT MODAL */}
@@ -1908,9 +1983,8 @@ export default function ContactDirectoryModule({
                 <button
                   type="button"
                   onClick={() => setIncludeActivityFilters(!includeActivityFilters)}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    includeActivityFilters ? "bg-blue-600 justify-end" : "bg-slate-300 justify-start"
-                  }`}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${includeActivityFilters ? "bg-blue-600 justify-end" : "bg-slate-300 justify-start"
+                    }`}
                 >
                   <span className="w-4 h-4 rounded-full bg-white shadow-md transform transition-transform" />
                 </button>
@@ -1925,18 +1999,16 @@ export default function ContactDirectoryModule({
                       <button
                         type="button"
                         onClick={() => setFilterLogicMode("ALL")}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                          filterLogicMode === "ALL" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
-                        }`}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${filterLogicMode === "ALL" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+                          }`}
                       >
                         All
                       </button>
                       <button
                         type="button"
                         onClick={() => setFilterLogicMode("ANY")}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                          filterLogicMode === "ANY" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
-                        }`}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${filterLogicMode === "ANY" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+                          }`}
                       >
                         Any
                       </button>

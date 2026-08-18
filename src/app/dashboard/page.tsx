@@ -259,6 +259,12 @@ export default function DashboardPage() {
             onActionTrigger={handleActionTrigger}
             onTriggerToast={triggerToast}
             onSelectApplicant={handleSelectApplicant}
+            onImportLeads={(newLeads) => {
+              setApplicants((prev) => [...newLeads, ...prev]);
+              if (newLeads.length > 0) {
+                handleSelectApplicant(newLeads[0]);
+              }
+            }}
           />
         )}
 

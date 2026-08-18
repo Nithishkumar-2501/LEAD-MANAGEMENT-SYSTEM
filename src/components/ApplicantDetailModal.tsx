@@ -10,10 +10,8 @@ import {
   CheckCircle2,
   Edit3,
   Save,
-  Sparkles,
   QrCode,
   Scan,
-  Bot,
   Plus,
   SlidersHorizontal,
   XCircle,
@@ -125,12 +123,8 @@ export default function ApplicantDetailModal({
     "LEAD_DETAILS"
   );
 
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-
   useEffect(() => {
     setFormData(applicant);
-    setAiSummary(null);
   }, [applicant]);
 
   if (!applicant || !formData) return null;
@@ -141,16 +135,6 @@ export default function ApplicantDetailModal({
       onSave(formData);
     }
     setIsEditing(false);
-  };
-
-  const generateAiSummary = () => {
-    setIsGeneratingAi(true);
-    setTimeout(() => {
-      setAiSummary(
-        `Candidate ${formData.name} demonstrates high intent with 12th score ${formData.application.marks12th}% and TNEA Cutoff ${formData.tneaCutoff || 188.5}. Recommended for immediate Merit Scholarship counseling.`
-      );
-      setIsGeneratingAi(false);
-    }, 800);
   };
 
   const app = formData.application;
@@ -217,12 +201,6 @@ export default function ApplicantDetailModal({
               <Plus className="w-3.5 h-3.5 text-sky-400" /> Add Event
             </button>
             <button
-              onClick={generateAiSummary}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-all"
-            >
-              <Sparkles className="w-3.5 h-3.5" /> Ask Mio AI
-            </button>
-            <button
               onClick={onClose}
               className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
@@ -233,28 +211,6 @@ export default function ApplicantDetailModal({
 
         {/* Modal Scrollable Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
-          {/* Mio AI Coach Banner */}
-          <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-inner">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-400 shrink-0">
-                <Bot className="w-4 h-4" />
-              </div>
-              <div className="text-xs">
-                <span className="font-extrabold text-indigo-300 mr-2">✨ Mio AI Coach</span>
-                <span className="text-slate-300 font-medium">
-                  {aiSummary ? aiSummary : "Summary will appear here once generated."}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={generateAiSummary}
-              disabled={isGeneratingAi}
-              className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shrink-0 disabled:opacity-50 transition-all"
-            >
-              {isGeneratingAi ? "Generating..." : "+ Generate Summary"}
-            </button>
-          </div>
-
           {/* Chevron Stage Tracker Progress Bar */}
           <div className="overflow-x-auto pb-1 hide-scrollbar">
             <div className="flex items-center gap-1 min-w-[650px] bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
