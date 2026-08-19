@@ -262,13 +262,28 @@ html.light .text-pink-600 {
 }
 
 /* Background surfaces in Light Mode */
+html.light [class*="dark:bg-slate-"],
+html.light [class*="dark:bg-indigo-"],
+html.light [class*="dark:bg-sky-"],
+html.light [class*="dark:bg-purple-"],
+html.light [class*="dark:bg-emerald-"],
+html.light [class*="dark:bg-amber-"],
+html.light [class*="dark:bg-rose-"],
+html.light [class*="dark:bg-teal-"],
+html.light [class*="dark:bg-[#"],
 html.light .bg-slate-900,
 html.light .bg-slate-950,
 html.light .bg-[#0b0f19],
 html.light .bg-[#050813],
 html.light .bg-[#070a14],
 html.light .bg-[#0f172a] {
-  background-color: #ffffff !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light [class*="dark:text-slate-"],
+html.light [class*="dark:text-white"] {
   color: #0f172a !important;
 }
 

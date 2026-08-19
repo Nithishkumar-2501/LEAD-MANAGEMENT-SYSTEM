@@ -242,24 +242,24 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                 </span>
               </div>
 
-              <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-300 bg-slate-100 dark:bg-slate-950/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Experience</span>
-                  <span className="font-semibold text-slate-900 dark:text-slate-200">{tch.experienceYears} Years</span>
+              <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Experience</span>
+                  <span className="font-black text-slate-900 dark:text-slate-100">{tch.experienceYears} Years</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Email</span>
-                  <span className="font-semibold text-slate-900 dark:text-slate-200">{tch.email}</span>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Email</span>
+                  <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-[11px]">{tch.email}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Phone</span>
-                  <span className="font-semibold text-slate-900 dark:text-slate-200">{tch.phone}</span>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Phone</span>
+                  <span className="font-black text-slate-900 dark:text-slate-100 font-mono">{tch.phone}</span>
                 </div>
-                <div className="flex justify-between pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
-                  <span className="text-sky-600 dark:text-sky-400 flex items-center gap-1">
+                <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800 font-bold">
+                  <span className="text-sky-600 dark:text-sky-400 flex items-center gap-1 font-black">
                     <UserCheck className="w-3.5 h-3.5" /> Assigned Lead Quota
                   </span>
-                  <span className="text-sky-700 dark:text-sky-300">{tch.assignedQuota?.toLocaleString() || "1,000"} Contacts</span>
+                  <span className="text-sky-700 dark:text-sky-300 font-black">{tch.assignedQuota?.toLocaleString() || "1,000"} Contacts</span>
                 </div>
               </div>
 
