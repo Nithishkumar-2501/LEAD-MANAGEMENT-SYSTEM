@@ -11,12 +11,14 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   Sparkles,
   MapPin,
   X,
   Sun,
   Moon,
+  LayoutDashboard,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -53,13 +55,14 @@ export default function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(true);
 
-  const navItems = [
+  const admissionSubItems = [
     {
       id: "ADMISSIONS" as ActiveTab,
-      label: "Admissions CRM",
-      sublabel: "Open Admissions CRM",
-      icon: GraduationCap,
+      label: "Admissions Dashboard",
+      sublabel: "Funnel & Overview",
+      icon: LayoutDashboard,
       color: "from-sky-500 to-blue-600",
       activeBorder: "border-sky-400",
       activeGlow: "shadow-sky-500/30",
@@ -67,7 +70,7 @@ export default function Sidebar({
     {
       id: "CONTACTS" as ActiveTab,
       label: "Lead Manager",
-      sublabel: "Open Lead Manager",
+      sublabel: "Manage Student Leads",
       icon: UserCheck,
       color: "from-indigo-500 to-purple-600",
       activeBorder: "border-indigo-400",
@@ -76,7 +79,7 @@ export default function Sidebar({
     {
       id: "TEACHERS" as ActiveTab,
       label: "Teacher Directory",
-      sublabel: "Open Teacher Directory",
+      sublabel: "Faculty Profiles",
       icon: BookOpen,
       color: "from-purple-500 to-pink-600",
       activeBorder: "border-purple-400",
@@ -85,7 +88,7 @@ export default function Sidebar({
     {
       id: "CAMPUSES" as ActiveTab,
       label: "Campus & Courses",
-      sublabel: "Open Campus & Courses",
+      sublabel: "Campus & Programs",
       icon: Building2,
       color: "from-amber-500 to-orange-600",
       activeBorder: "border-amber-400",
@@ -93,8 +96,8 @@ export default function Sidebar({
     },
     {
       id: "PAYMENTS" as ActiveTab,
-      label: "Fee Payments",
-      sublabel: "Open Fee Payments",
+      label: "Fee Payment",
+      sublabel: "Payment Verification",
       icon: CreditCard,
       color: "from-emerald-500 to-teal-600",
       activeBorder: "border-emerald-400",
@@ -103,7 +106,7 @@ export default function Sidebar({
     {
       id: "SETTINGS" as ActiveTab,
       label: "Admin Settings",
-      sublabel: "Open Admin Settings",
+      sublabel: "System Configuration",
       icon: Settings,
       color: "from-rose-500 to-pink-600",
       activeBorder: "border-rose-400",
@@ -111,17 +114,27 @@ export default function Sidebar({
     },
   ];
 
-  const filteredNavItems =
+  const filteredSubItems =
     currentUserRole === "TEACHER"
-      ? navItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS")
-      : navItems;
+      ? admissionSubItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS")
+      : admissionSubItems;
 
   const handleNavClick = (id: ActiveTab) => {
     onTabChange(id);
     if (onCloseMobile) onCloseMobile();
   };
 
+  const toggleAdmissionMenu = () => {
+    if (isCollapsed) {
+      setIsCollapsed(false);
+      setIsAdmissionCrmOpen(true);
+    } else {
+      setIsAdmissionCrmOpen(!isAdmissionCrmOpen);
+    }
+  };
+
   const isLight = theme === "LIGHT";
+  const isAnySubItemActive = filteredSubItems.some((item) => item.id === activeTab);
 
   return (
     <>
@@ -217,86 +230,182 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Items Section */}
-        <div className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto hide-scrollbar">
+        <div className="flex-1 px-3 py-4 space-y-3 overflow-y-auto hide-scrollbar">
+          {/* SECTION HEADLINE */}
           <div
-            className={`px-2 pb-2 text-[10px] font-black uppercase tracking-wider ${
-              isCollapsed ? "text-center" : ""
-            } ${isLight ? "text-slate-400" : "text-slate-400"}`}
+            className={`px-2 text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
+              isCollapsed ? "justify-center text-center" : ""
+            } ${isLight ? "text-slate-400" : "text-sky-400/80"}`}
           >
-            {isCollapsed ? "NAV" : "MAIN NAVIGATION"}
+            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+            <span>{isCollapsed ? "SYS" : "SYSTEM MENU"}</span>
           </div>
 
-          {filteredNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-
-            const buttonContent = (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-xs font-bold transition-all duration-300 group relative ${
-                  isActive
-                    ? `bg-gradient-to-r ${item.color} text-white shadow-xl ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
-                    : isLight
-                    ? "bg-slate-50 hover:bg-slate-100 text-slate-800 hover:text-slate-950 border border-slate-200 hover:border-slate-300"
-                    : "bg-slate-900/60 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/20"
-                }`}
-              >
-                <div
-                  className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 ${
-                    isActive
-                      ? "bg-white/20 text-white"
+          {/* PARENT MENU ITEM: ADMISSION CRM */}
+          <div className="space-y-1">
+            {isCollapsed ? (
+              <Tooltip text="Admission CRM" position="right">
+                <button
+                  onClick={toggleAdmissionMenu}
+                  className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
+                    isAnySubItemActive
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
                       : isLight
-                      ? "bg-slate-200/80 text-slate-700"
-                      : "bg-slate-800 text-slate-300"
+                      ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200"
+                      : "bg-slate-900/80 text-slate-300 hover:text-white border border-white/10 hover:border-white/20"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                </div>
-
-                {!isCollapsed && (
-                  <div className="flex flex-col items-start min-w-0 text-left">
-                    <span
-                      className={`font-black text-xs tracking-tight truncate w-full ${
-                        isActive
-                          ? "text-white"
-                          : isLight
-                          ? "text-slate-900 group-hover:text-black"
-                          : "text-slate-200 group-hover:text-white"
-                      }`}
-                    >
-                      {item.label}
+                  <GraduationCap className="w-5 h-5" />
+                  {isAnySubItemActive && (
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                  )}
+                </button>
+              </Tooltip>
+            ) : (
+              <div
+                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
+                  isAnySubItemActive
+                    ? isLight
+                      ? "bg-sky-50 border-sky-300 text-sky-900 shadow-md"
+                      : "bg-sky-950/50 border-sky-500/40 text-sky-200 shadow-lg shadow-sky-950/50"
+                    : isLight
+                    ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
+                    : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                }`}
+                onClick={toggleAdmissionMenu}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
+                      isAnySubItemActive
+                        ? "bg-gradient-to-tr from-sky-500 to-blue-600 text-white"
+                        : isLight
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-slate-800 text-slate-300"
+                    }`}
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col text-left truncate">
+                    <span className="font-extrabold text-xs tracking-tight truncate">
+                      Admission CRM
                     </span>
                     <span
-                      className={`text-[10px] font-semibold truncate w-full ${
-                        isActive
-                          ? "text-white/80"
-                          : isLight
-                          ? "text-slate-500 group-hover:text-slate-700"
-                          : "text-slate-400 group-hover:text-slate-300"
+                      className={`text-[10px] font-semibold truncate ${
+                        isLight ? "text-slate-500" : "text-slate-400"
                       }`}
                     >
-                      {item.sublabel}
+                      Management Hub
                     </span>
                   </div>
-                )}
+                </div>
 
-                {isActive && (
-                  <span className="absolute right-2.5 w-2 h-2 rounded-full bg-white animate-pulse" />
-                )}
-              </button>
-            );
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span
+                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                      isLight
+                        ? "bg-sky-100 text-sky-700"
+                        : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
+                    }`}
+                  >
+                    {filteredSubItems.length}
+                  </span>
+                  <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
+                    {isAdmissionCrmOpen ? (
+                      <ChevronDown className="w-4 h-4 text-sky-400" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
-            if (isCollapsed) {
-              return (
-                <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
-                  {buttonContent}
-                </Tooltip>
-              );
-            }
+            {/* NESTED INSIDE ADMISSION CRM */}
+            {(isAdmissionCrmOpen || isCollapsed) && (
+              <div
+                className={`space-y-1 transition-all duration-300 ${
+                  isCollapsed
+                    ? "pt-2 space-y-2 border-t border-white/10 mt-2"
+                    : "ml-3 pl-3 border-l-2 border-sky-500/30 dark:border-sky-400/20 mt-1.5 space-y-1.5"
+                }`}
+              >
+                {filteredSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
 
-            return buttonContent;
-          })}
+                  const buttonContent = (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNavClick(item.id)}
+                      className={`w-full flex items-center gap-3 ${
+                        isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
+                      } rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                        isActive
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
+                          : isLight
+                          ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                      }`}
+                    >
+                      <div
+                        className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : isLight
+                            ? "bg-slate-100 text-slate-600"
+                            : "bg-slate-800/90 text-slate-300"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+
+                      {!isCollapsed && (
+                        <div className="flex flex-col items-start min-w-0 text-left">
+                          <span
+                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                              isActive
+                                ? "text-white"
+                                : isLight
+                                ? "text-slate-900"
+                                : "text-slate-200 group-hover:text-white"
+                            }`}
+                          >
+                            {item.label}
+                          </span>
+                          <span
+                            className={`text-[9px] font-medium truncate w-full ${
+                              isActive
+                                ? "text-white/80"
+                                : isLight
+                                ? "text-slate-500"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {item.sublabel}
+                          </span>
+                        </div>
+                      )}
+
+                      {isActive && !isCollapsed && (
+                        <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      )}
+                    </button>
+                  );
+
+                  if (isCollapsed) {
+                    return (
+                      <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
+                        {buttonContent}
+                      </Tooltip>
+                    );
+                  }
+
+                  return buttonContent;
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Sidebar Footer: Theme Toggle & Logout */}
@@ -383,3 +492,4 @@ export default function Sidebar({
     </>
   );
 }
+
