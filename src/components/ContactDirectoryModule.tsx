@@ -756,7 +756,192 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* FILTER CONTROLS BAR (Matching Image Reference) */}
+
+
+      {/* District & Metric Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bubble-card p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 flex items-center justify-center font-bold">
+            <UserCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Total Contacts</p>
+            <h4 className="text-lg font-black text-white">{contacts.length}</h4>
+          </div>
+        </div>
+
+        <div className="bubble-card p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center font-bold">
+            <MapPin className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Districts Covered</p>
+            <h4 className="text-lg font-black text-white">8 Tamil Nadu Districts</h4>
+          </div>
+        </div>
+
+        <div className="bubble-card p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-pink-500/20 text-pink-300 border border-pink-400/30 flex items-center justify-center font-bold">
+            <School className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Schools Tracked</p>
+            <h4 className="text-lg font-black text-white">7 Higher Sec Schools</h4>
+          </div>
+        </div>
+
+        <div className="bubble-card p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold">
+            <Building className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Selected Campus</p>
+            <h4 className="text-lg font-black text-amber-300">{selectedCampus} CAMPUS</h4>
+          </div>
+        </div>
+      </div>
+
+      {/* V.S.B. TNEA & Lead Stage Icon Filters */}
+      <div className="bubble-card p-4 space-y-3.5 border border-sky-400/30">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div>
+            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-sky-400" /> V.S.B. TNEA & Lead Stage Filters
+            </h3>
+            <p className="text-xs text-slate-400">Filter candidate inquiries by stage or TNEA counselling category</p>
+          </div>
+
+          {/* Counselling Status Quick Filters */}
+          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar text-xs font-bold">
+            <span className="text-slate-400 text-[11px] uppercase tracking-wider shrink-0 mr-1">Counselling Intake:</span>
+            <button
+              onClick={() => setCounsellingFilter("ALL")}
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 ${counsellingFilter === "ALL"
+                  ? "bg-slate-800 text-white border-white/30 font-black"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                }`}
+            >
+              All Intake
+            </button>
+            <button
+              onClick={() => setCounsellingFilter("COUNSELLING_ONLY")}
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "COUNSELLING_ONLY"
+                  ? "bg-emerald-500/30 text-emerald-300 border-emerald-400/60 shadow-md font-black"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                }`}
+            >
+              <span>✅ Applied TNEA</span>
+            </button>
+            <button
+              onClick={() => setCounsellingFilter("GOVT_QUOTA")}
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "GOVT_QUOTA"
+                  ? "bg-indigo-500/30 text-indigo-300 border-indigo-400/60 shadow-md font-black"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                }`}
+            >
+              <span>🏛️ 7.5% Govt Quota</span>
+            </button>
+            <button
+              onClick={() => setCounsellingFilter("MANAGEMENT_ONLY")}
+              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "MANAGEMENT_ONLY"
+                  ? "bg-purple-500/30 text-purple-300 border-purple-400/60 shadow-md font-black"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                }`}
+            >
+              <span>💼 Management Quota</span>
+            </button>
+          </div>
+        </div>
+
+        {/* One by One Icon Status Filter Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
+          <button
+            onClick={() => setSelectedStatus("ALL")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ALL"
+                ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white border-white/40 shadow-lg shadow-sky-500/30 font-black scale-[1.03]"
+                : "bg-slate-950/80 text-slate-300 border-white/15 hover:border-white/30"
+              }`}
+          >
+            <span className="text-lg">🌟</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">All Leads</span>
+              <span className="text-[10px] opacity-80">{contacts.length} Total</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setSelectedStatus("NEW")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 relative overflow-hidden ${selectedStatus === "NEW"
+                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-300 shadow-xl shadow-sky-500/40 ring-2 ring-sky-400/50 font-black scale-[1.03]"
+                : "bg-sky-950/50 text-sky-300 border-sky-500/40 hover:bg-sky-900/60"
+              }`}
+          >
+            <span className="text-lg animate-pulse">🆕</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs text-sky-200 font-extrabold">New Inquiry</span>
+              <span className="text-[10px] opacity-90">{contacts.filter(c => c.status === "NEW").length} Leads</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setSelectedStatus("CONTACTED")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "CONTACTED"
+                ? "bg-gradient-to-r from-teal-500 to-emerald-600 text-white border-teal-300 shadow-lg shadow-teal-500/30 font-black scale-[1.03]"
+                : "bg-teal-950/40 text-teal-300 border-teal-500/30 hover:bg-teal-900/50"
+              }`}
+          >
+            <span className="text-lg">📞</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">Contacted</span>
+              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "CONTACTED").length} Leads</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setSelectedStatus("IN_REVIEW")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "IN_REVIEW"
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-300 shadow-lg shadow-amber-500/30 font-black scale-[1.03]"
+                : "bg-amber-950/40 text-amber-300 border-amber-500/30 hover:bg-amber-900/50"
+              }`}
+          >
+            <span className="text-lg">📊</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">Cutoff Review</span>
+              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "IN_REVIEW").length} Leads</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setSelectedStatus("ADMITTED")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ADMITTED"
+                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white border-emerald-300 shadow-lg shadow-emerald-500/30 font-black scale-[1.03]"
+                : "bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50"
+              }`}
+          >
+            <span className="text-lg">🎓</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">Admitted</span>
+              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "ADMITTED").length} Leads</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setSelectedStatus("REJECTED")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "REJECTED"
+                ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-rose-300 shadow-lg shadow-rose-500/30 font-black scale-[1.03]"
+                : "bg-rose-950/40 text-rose-300 border-rose-500/30 hover:bg-rose-900/50"
+              }`}
+          >
+            <span className="text-lg">❌</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs">Rejected</span>
+              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "REJECTED").length} Leads</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* FILTER CONTROLS BAR (Placed UNDER V.S.B. TNEA & Lead Stage Icon Filters) */}
       <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
         <div className="flex flex-wrap items-center gap-3">
           {/* User Registration Date Selector & Interactive Monthly Calendar */}
@@ -1016,189 +1201,6 @@ export default function ContactDirectoryModule({
           >
             <Settings className="w-4 h-4 text-slate-500" />
             <span>Customize Column</span>
-          </button>
-        </div>
-      </div>
-
-      {/* District & Metric Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bubble-card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 flex items-center justify-center font-bold">
-            <UserCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Total Contacts</p>
-            <h4 className="text-lg font-black text-white">{contacts.length}</h4>
-          </div>
-        </div>
-
-        <div className="bubble-card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center font-bold">
-            <MapPin className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Districts Covered</p>
-            <h4 className="text-lg font-black text-white">8 Tamil Nadu Districts</h4>
-          </div>
-        </div>
-
-        <div className="bubble-card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-pink-500/20 text-pink-300 border border-pink-400/30 flex items-center justify-center font-bold">
-            <School className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Schools Tracked</p>
-            <h4 className="text-lg font-black text-white">7 Higher Sec Schools</h4>
-          </div>
-        </div>
-
-        <div className="bubble-card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold">
-            <Building className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Selected Campus</p>
-            <h4 className="text-lg font-black text-amber-300">{selectedCampus} CAMPUS</h4>
-          </div>
-        </div>
-      </div>
-
-      {/* V.S.B. TNEA & Lead Stage Icon Filters */}
-      <div className="bubble-card p-4 space-y-3.5 border border-sky-400/30">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
-          <div>
-            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-sky-400" /> V.S.B. TNEA & Lead Stage Filters
-            </h3>
-            <p className="text-xs text-slate-400">Filter candidate inquiries by stage or TNEA counselling category</p>
-          </div>
-
-          {/* Counselling Status Quick Filters */}
-          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar text-xs font-bold">
-            <span className="text-slate-400 text-[11px] uppercase tracking-wider shrink-0 mr-1">Counselling Intake:</span>
-            <button
-              onClick={() => setCounsellingFilter("ALL")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 ${counsellingFilter === "ALL"
-                  ? "bg-slate-800 text-white border-white/30 font-black"
-                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-                }`}
-            >
-              All Intake
-            </button>
-            <button
-              onClick={() => setCounsellingFilter("COUNSELLING_ONLY")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "COUNSELLING_ONLY"
-                  ? "bg-emerald-500/30 text-emerald-300 border-emerald-400/60 shadow-md font-black"
-                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-                }`}
-            >
-              <span>✅ Applied TNEA</span>
-            </button>
-            <button
-              onClick={() => setCounsellingFilter("GOVT_QUOTA")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "GOVT_QUOTA"
-                  ? "bg-indigo-500/30 text-indigo-300 border-indigo-400/60 shadow-md font-black"
-                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-                }`}
-            >
-              <span>🏛️ 7.5% Govt Quota</span>
-            </button>
-            <button
-              onClick={() => setCounsellingFilter("MANAGEMENT_ONLY")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "MANAGEMENT_ONLY"
-                  ? "bg-purple-500/30 text-purple-300 border-purple-400/60 shadow-md font-black"
-                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-                }`}
-            >
-              <span>💼 Management Quota</span>
-            </button>
-          </div>
-        </div>
-
-        {/* One by One Icon Status Filter Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
-          <button
-            onClick={() => setSelectedStatus("ALL")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ALL"
-                ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white border-white/40 shadow-lg shadow-sky-500/30 font-black scale-[1.03]"
-                : "bg-slate-950/80 text-slate-300 border-white/15 hover:border-white/30"
-              }`}
-          >
-            <span className="text-lg">🌟</span>
-            <div className="text-left leading-tight">
-              <span className="block text-xs">All Leads</span>
-              <span className="text-[10px] opacity-80">{contacts.length} Total</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedStatus("NEW")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 relative overflow-hidden ${selectedStatus === "NEW"
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-300 shadow-xl shadow-sky-500/40 ring-2 ring-sky-400/50 font-black scale-[1.03]"
-                : "bg-sky-950/50 text-sky-300 border-sky-500/40 hover:bg-sky-900/60"
-              }`}
-          >
-            <span className="text-lg animate-pulse">🆕</span>
-            <div className="text-left leading-tight">
-              <span className="block text-xs text-sky-200 font-extrabold">New Inquiry</span>
-              <span className="text-[10px] opacity-90">{contacts.filter(c => c.status === "NEW").length} Leads</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedStatus("CONTACTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "CONTACTED"
-                ? "bg-gradient-to-r from-teal-500 to-emerald-600 text-white border-teal-300 shadow-lg shadow-teal-500/30 font-black scale-[1.03]"
-                : "bg-teal-950/40 text-teal-300 border-teal-500/30 hover:bg-teal-900/50"
-              }`}
-          >
-            <span className="text-lg">📞</span>
-            <div className="text-left leading-tight">
-              <span className="block text-xs">Contacted</span>
-              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "CONTACTED").length} Leads</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedStatus("IN_REVIEW")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "IN_REVIEW"
-                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-300 shadow-lg shadow-amber-500/30 font-black scale-[1.03]"
-                : "bg-amber-950/40 text-amber-300 border-amber-500/30 hover:bg-amber-900/50"
-              }`}
-          >
-            <span className="text-lg">📊</span>
-            <div className="text-left leading-tight">
-              <span className="block text-xs">Cutoff Review</span>
-              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "IN_REVIEW").length} Leads</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedStatus("ADMITTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ADMITTED"
-                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white border-emerald-300 shadow-lg shadow-emerald-500/30 font-black scale-[1.03]"
-                : "bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50"
-              }`}
-          >
-            <span className="text-lg">🎓</span>
-            <div className="text-left leading-tight">
-              <span className="block text-xs">Admitted</span>
-              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "ADMITTED").length} Leads</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedStatus("REJECTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "REJECTED"
-                ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-rose-300 shadow-lg shadow-rose-500/30 font-black scale-[1.03]"
-                : "bg-rose-950/40 text-rose-300 border-rose-500/30 hover:bg-rose-900/50"
-              }`}
-          >
-            <span className="text-lg">❌</span>
-            <div className="text-left leading-tight">
-              <span className="block text-xs">Rejected</span>
-              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "REJECTED").length} Leads</span>
-            </div>
           </button>
         </div>
       </div>
