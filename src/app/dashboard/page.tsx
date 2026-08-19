@@ -90,10 +90,10 @@ export default function DashboardPage() {
   // Action Notification State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const [theme, setTheme] = useState<"LIGHT" | "DARK">("DARK");
+  const [theme, setTheme] = useState<"LIGHT" | "DARK">("LIGHT");
 
   useEffect(() => {
-    const savedTheme = (localStorage.getItem("vsb_theme") as "LIGHT" | "DARK") || "DARK";
+    const savedTheme = (localStorage.getItem("vsb_theme") as "LIGHT" | "DARK") || "LIGHT";
     setTheme(savedTheme);
     document.documentElement.className = savedTheme === "LIGHT" ? "light" : "dark";
   }, []);

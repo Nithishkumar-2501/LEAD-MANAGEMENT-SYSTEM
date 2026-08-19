@@ -261,7 +261,7 @@ html.light .text-pink-600 {
   color: #db2777 !important;
 }
 
-/* Background surfaces in Light Mode */
+/* Background surfaces in Light Mode - ABSOLUTELY NO BLACK OR DARK BACKGROUNDS */
 html.light [class*="dark:bg-slate-"],
 html.light [class*="dark:bg-indigo-"],
 html.light [class*="dark:bg-sky-"],
@@ -271,6 +271,10 @@ html.light [class*="dark:bg-amber-"],
 html.light [class*="dark:bg-rose-"],
 html.light [class*="dark:bg-teal-"],
 html.light [class*="dark:bg-[#"],
+html.light [class*="bg-slate-800"],
+html.light [class*="bg-slate-850"],
+html.light [class*="bg-slate-900"],
+html.light [class*="bg-slate-950"],
 html.light .bg-slate-900,
 html.light .bg-slate-950,
 html.light .bg-[#0b0f19],
@@ -290,10 +294,12 @@ html.light [class*="dark:text-white"] {
 html.light .bg-slate-900\/80,
 html.light .bg-slate-900\/90,
 html.light .bg-slate-900\/70,
+html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/70,
 html.light .bg-slate-950\/80,
 html.light .bg-slate-950\/90,
 html.light .bg-slate-950\/95 {
-  background-color: #ffffff !important;
+  background-color: #f8fafc !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
