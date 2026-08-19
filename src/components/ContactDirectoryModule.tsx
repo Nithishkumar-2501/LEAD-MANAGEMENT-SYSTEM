@@ -129,6 +129,7 @@ export default function ContactDirectoryModule({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(7); // 7 = August
   const [calendarYear, setCalendarYear] = useState(2026);
+  const [districtSearchQuery, setDistrictSearchQuery] = useState<string>("");
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -1252,12 +1253,94 @@ export default function ContactDirectoryModule({
 
       </div>
 
-      {/* MAIN CONTENT VIEW: LEAD MANAGER TABLE (Image 2) OR CARDS GRID (Image 1) */}
-      {directoryViewMode === "TABLE" ? (
-        /* MERITTO LEAD MANAGER DATA TABLE (Exact Image 2 Implementation) */
-        <div className="bg-[#ffffff] text-slate-800 rounded-2xl border border-slate-200 shadow-xl overflow-hidden font-sans">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+      {/* ALL DISTRICTS (38) & MAIN CONTENT AREA */}
+      <div className="flex flex-col lg:flex-row items-start gap-4 w-full">
+        {/* ALL DISTRICTS (38) SIDEBAR PANEL (Matching Screenshot Layout) */}
+        <div className="w-full lg:w-60 shrink-0 bg-slate-900 border-2 border-sky-400/40 rounded-2xl p-3.5 shadow-xl flex flex-col gap-2">
+          <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-sky-400" />
+              <span>ALL DISTRICTS (38)</span>
+            </h3>
+            {selectedDistrict !== "ALL" && (
+              <button
+                onClick={() => setSelectedDistrict("ALL")}
+                className="text-[10px] text-sky-400 font-extrabold hover:underline"
+              >
+                Clear Filter
+              </button>
+            )}
+          </div>
+
+          {/* District Search Bar */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search 38 districts..."
+              value={districtSearchQuery}
+              onChange={(e) => setDistrictSearchQuery(e.target.value)}
+              className="w-full bg-slate-950 border border-white/20 rounded-xl pl-8 pr-2.5 py-1 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 font-semibold"
+            />
+          </div>
+
+          {/* Scrollable List of 38 Tamil Nadu Districts */}
+          <div className="space-y-1 max-h-[550px] overflow-y-auto hide-scrollbar pt-1">
+            {/* All Districts Option */}
+            <button
+              onClick={() => setSelectedDistrict("ALL")}
+              className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-all flex items-center justify-between font-black ${
+                selectedDistrict === "ALL"
+                  ? "bg-blue-600 text-white shadow-md font-black"
+                  : "bg-slate-950/60 hover:bg-slate-800 text-slate-300 border border-white/5"
+              }`}
+            >
+              <span>All Districts</span>
+              <span className="text-[10px] opacity-80 px-2 py-0.5 rounded-full bg-white/20">
+                {contacts.length} Records
+              </span>
+            </button>
+
+            {/* List of 38 Tamil Nadu Districts (Ariyalur ... Dindigul ... Virudhunagar) */}
+            {TAMIL_NADU_DISTRICTS.filter((dist) =>
+              dist.toLowerCase().includes(districtSearchQuery.toLowerCase())
+            ).map((dist) => {
+              const isSelected = selectedDistrict.toLowerCase() === dist.toLowerCase();
+              const distCount = contacts.filter((c) => c.district?.toLowerCase() === dist.toLowerCase()).length;
+
+              return (
+                <button
+                  key={dist}
+                  onClick={() => {
+                    setSelectedDistrict(dist);
+                    if (onTriggerToast) {
+                      onTriggerToast(`📍 Filtered student records for district: ${dist}`);
+                    }
+                  }}
+                  className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-all flex items-center justify-between cursor-pointer ${
+                    isSelected
+                      ? "bg-blue-600 text-white font-extrabold shadow-md ring-1 ring-white"
+                      : "bg-slate-950/40 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/5"
+                  }`}
+                >
+                  <span className={isSelected ? "font-black" : "font-semibold"}>{dist}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? "bg-white text-blue-900 font-black" : "bg-slate-800 text-slate-400"}`}>
+                    {distCount}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* MAIN CONTENT VIEW CONTAINER */}
+        <div className="flex-1 min-w-0 w-full space-y-4">
+          {/* MAIN CONTENT VIEW: LEAD MANAGER TABLE (Image 2) OR CARDS GRID (Image 1) */}
+          {directoryViewMode === "TABLE" ? (
+            /* MERITTO LEAD MANAGER DATA TABLE (Exact Image 2 Implementation) */
+            <div className="bg-[#ffffff] text-slate-800 rounded-2xl border border-slate-200 shadow-xl overflow-hidden font-sans">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
               <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[11px] tracking-wider">
                 {/* Row 1: Header Titles with Sort & Interactive Filter Icon Popovers */}
                 <tr className="bg-slate-100/90 text-slate-700 font-extrabold border-b border-slate-200">
@@ -1744,6 +1827,8 @@ export default function ContactDirectoryModule({
           )}
         </div>
       )}
+    </div>
+  </div>
 
       {/* ADD NEW CONTACT MODAL */}
       {isAddModalOpen && (
