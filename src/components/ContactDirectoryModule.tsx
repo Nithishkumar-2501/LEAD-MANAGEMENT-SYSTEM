@@ -2448,23 +2448,57 @@ export default function ContactDirectoryModule({
                   </div>
 
                   <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                    {selectedColumns.map((col) => (
+                    {selectedColumns.map((col, idx) => (
                       <div
                         key={col}
-                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 shadow-sm"
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300 transition-all"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-slate-400 cursor-grab">⋮⋮</span>
+                          <span className="text-slate-400 cursor-grab font-bold text-sm">::</span>
                           <span>{col}</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedColumns(selectedColumns.filter((c) => c !== col))}
-                          className="text-slate-400 hover:text-slate-700 p-0.5"
-                          title="Remove Column"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          {idx > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCols = [...selectedColumns];
+                                const temp = newCols[idx];
+                                newCols[idx] = newCols[idx - 1];
+                                newCols[idx - 1] = temp;
+                                setSelectedColumns(newCols);
+                              }}
+                              className="text-slate-400 hover:text-blue-600 p-1 text-[10px] font-bold"
+                              title="Move Up"
+                            >
+                              ▲
+                            </button>
+                          )}
+                          {idx < selectedColumns.length - 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCols = [...selectedColumns];
+                                const temp = newCols[idx];
+                                newCols[idx] = newCols[idx + 1];
+                                newCols[idx + 1] = temp;
+                                setSelectedColumns(newCols);
+                              }}
+                              className="text-slate-400 hover:text-blue-600 p-1 text-[10px] font-bold"
+                              title="Move Down"
+                            >
+                              ▼
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedColumns(selectedColumns.filter((c) => c !== col))}
+                            className="text-slate-400 hover:text-rose-600 p-1 ml-1"
+                            title="Remove Column"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
