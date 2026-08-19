@@ -33,7 +33,7 @@ import {
 
 import {
   MOCK_ADMIN_USER,
-  MOCK_LEADS_ALL,
+  MOCK_LEADS,
   MOCK_TODAYS_TASKS,
   MOCK_PAYMENTS,
 } from "@/lib/mockData";
@@ -49,7 +49,7 @@ export default function DashboardPage() {
   const [loggedInUsername, setLoggedInUsername] = useState<string>("adminkarur@123");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS_ALL as (Lead & { application: Application })[]);
+  const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
 
   // Modals

@@ -70,6 +70,24 @@ export default function Header({
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const navItems = [
+    { id: "ADMISSIONS" as ActiveTab, label: "Admissions CRM", icon: GraduationCap },
+    { id: "CONTACTS" as ActiveTab, label: "Lead Manager", icon: UserCheck },
+    { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen },
+    { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2 },
+    { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard },
+    { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings },
+  ];
+
+  const filteredNavItems = currentUserRole === "TEACHER"
+    ? navItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS")
+    : navItems;
+
+  const handleNavClick = (tab: ActiveTab) => {
+    onTabChange(tab);
+    setMobileMenuOpen(false);
+  };
+
   return (
     <header className="sticky top-0 z-30 w-full liquid-glass border-b border-white/20 px-3 sm:px-6 py-3 flex flex-col gap-2.5 sm:gap-3.5 shadow-2xl">
       {/* Top Bar: Brand, Campus Selector & Admin Profile */}
@@ -326,6 +344,77 @@ export default function Header({
             </button>
           )}
         </div>
+      </div>
+
+      {/* Mobile Full Navigation Menu — slide-down panel */}
+      {mobileMenuOpen && (
+        <div className="sm:hidden flex flex-col gap-1.5 pb-1 border-t border-white/15 pt-2 animate-in slide-in-from-top duration-200">
+          {filteredNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 ${
+                  isActive
+                    ? "glossy-btn"
+                    : "bg-slate-900/60 border border-white/10 text-slate-300 active:bg-white/10"
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Desktop Floating Bubble Navigation Dock */}
+      <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar pb-0.5 border-t border-white/15 pt-3">
+        {filteredNavItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <Tooltip key={item.id} text={`Open ${item.label}`}>
+              <button
+                onClick={() => onTabChange(item.id)}
+                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-110 active:scale-95 shadow-md ${
+                  isActive
+                    ? "glossy-btn scale-[1.05] shadow-lg shadow-indigo-500/40 ring-2 ring-white/30"
+                    : "bg-slate-900/80 border border-white/15 text-slate-300 hover:text-white hover:bg-gradient-to-r hover:from-sky-500/30 hover:to-indigo-500/30 hover:border-sky-400/60 hover:shadow-xl hover:shadow-sky-500/20"
+                }`}
+              >
+                <Icon className="w-4 h-4 transition-transform group-hover:scale-125" />
+                <span className="hidden md:inline">{item.label}</span>
+              </button>
+            </Tooltip>
+          );
+        })}
+      </div>
+
+      {/* Mobile Bottom Navigation Dock — fixed icon-only nav for phones */}
+      <div className="sm:hidden flex items-center justify-around gap-0.5 overflow-x-auto hide-scrollbar pb-0.5 border-t border-white/15 pt-2">
+        {filteredNavItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNavClick(item.id)}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-[10px] font-bold transition-all duration-300 min-w-[40px] ${
+                isActive
+                  ? "text-sky-400 bg-sky-500/10 border border-sky-400/30"
+                  : "text-slate-400 border border-transparent"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span className="truncate max-w-[48px]">
+                {item.label.split(" ")[0]}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </header>
   );

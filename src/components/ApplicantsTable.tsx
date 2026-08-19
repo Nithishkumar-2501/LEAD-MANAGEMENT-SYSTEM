@@ -29,7 +29,8 @@ export default function ApplicantsTable({
   onImportLeads,
 }: ApplicantsTableProps) {
   const [selectedStage, setSelectedStage] = useState<string>("ALL");
-  const [regDateFilter, setRegDateFilter] = useState<string>("Select Here");
+
+
 
   // In-Portal Communication Modal State
   const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
@@ -44,39 +45,6 @@ export default function ApplicantsTable({
     onActionTrigger(type === "MESSAGE" ? "WHATSAPP" : type, activeCommContact?.name || "Candidate");
   };
 
-  const isMatchingRegDate = (createdAtStr?: string) => {
-    if (!regDateFilter || regDateFilter === "Select Here" || regDateFilter === "All Time") return true;
-    if (!createdAtStr) return true;
-
-    const itemDate = new Date(createdAtStr);
-    const now = new Date();
-    const itemDateStr = createdAtStr.slice(0, 10);
-
-    if (regDateFilter === "Today") {
-      const isTodayActual = itemDate.toDateString() === now.toDateString();
-      const isTodayMock = itemDateStr === "2026-08-12" || itemDateStr === "2026-08-19";
-      return isTodayActual || isTodayMock;
-    }
-
-    if (regDateFilter === "Yesterday") {
-      const yesterday = new Date(now);
-      yesterday.setDate(now.getDate() - 1);
-      const isYesterdayActual = itemDate.toDateString() === yesterday.toDateString();
-      const isYesterdayMock = itemDateStr === "2026-08-11" || itemDateStr === "2026-08-18";
-      return isYesterdayActual || isYesterdayMock;
-    }
-
-    if (regDateFilter === "Last 7 Days") {
-      const sevenDaysAgo = new Date(now);
-      sevenDaysAgo.setDate(now.getDate() - 7);
-      const isWithin7 = itemDate >= sevenDaysAgo;
-      const isWithin7Mock = itemDateStr >= "2026-08-05" && itemDateStr <= "2026-08-19";
-      return isWithin7 || isWithin7Mock;
-    }
-
-    return true;
-  };
-
   const filteredApplicants = applicants.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -84,9 +52,8 @@ export default function ApplicantsTable({
       item.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStage = selectedStage === "ALL" || item.application.stage === selectedStage;
-    const matchesRegDate = isMatchingRegDate(item.createdAt);
 
-    return matchesSearch && matchesStage && matchesRegDate;
+    return matchesSearch && matchesStage;
   });
 
   const getStageBadge = (stage: AppStage) => {
@@ -121,25 +88,7 @@ export default function ApplicantsTable({
             <p className="text-xs text-slate-400">TNEA & Management intake candidates at V.S.B.</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* USER REGISTRATION DATE SELECTOR */}
-            <div className="flex items-center gap-2 bg-slate-900/80 border border-sky-400/40 p-1.5 px-3 rounded-2xl shadow-inner">
-              <label className="text-[10px] font-black text-sky-300 uppercase tracking-wider">
-                USER REGISTRATION DATE:
-              </label>
-              <select
-                value={regDateFilter}
-                onChange={(e) => setRegDateFilter(e.target.value)}
-                className="bg-slate-800 text-white font-extrabold text-xs px-2.5 py-1 rounded-xl border border-sky-400/30 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer"
-              >
-                <option value="Select Here">Select Here 📅</option>
-                <option value="Today">Today (12/08/2026)</option>
-                <option value="Yesterday">Yesterday</option>
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="All Time">All Time</option>
-              </select>
-            </div>
-
+          <div className="flex flex-wrap items-center gap-2">
             {onOpenQuickLeadModal && (
               <SpecularButton
                 size="sm"

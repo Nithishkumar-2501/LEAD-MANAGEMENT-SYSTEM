@@ -29,9 +29,6 @@ import {
   ShieldCheck,
   GraduationCap,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Settings,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
@@ -126,25 +123,6 @@ export default function ContactDirectoryModule({
   // Meritto Lead Manager View & Filter States (Image 2)
   const [directoryViewMode, setDirectoryViewMode] = useState<"TABLE" | "GRID">("TABLE");
   const [regDateFilter, setRegDateFilter] = useState("Select Here");
-  const [customSelectedDate, setCustomSelectedDate] = useState<string>("2026-08-12");
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [calendarMonth, setCalendarMonth] = useState(7); // 7 = August
-  const [calendarYear, setCalendarYear] = useState(2026);
-  const [districtSearchQuery, setDistrictSearchQuery] = useState<string>("");
-
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  const getDaysInMonth = (month: number, year: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (month: number, year: number) => {
-    return new Date(year, month, 1).getDay();
-  };
-
   const [leadStageFilter, setLeadStageFilter] = useState("Select Here");
   const [leadOwnerFilter, setLeadOwnerFilter] = useState("Select Here");
   const [campaignSourceFilter, setCampaignSourceFilter] = useState("Select Here");
@@ -152,6 +130,20 @@ export default function ContactDirectoryModule({
   const [selectedViewName, setSelectedViewName] = useState("Default View");
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  // Interactive Calendar Month Name & Year State
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [calSelectedMonth, setCalSelectedMonth] = useState<number>(7); // 7 = August (2026)
+  const [calSelectedYear, setCalSelectedYear] = useState<number>(2026);
+  const [calSelectedDay, setCalSelectedDay] = useState<number | null>(12);
+
+  const MONTH_NAMES = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const getDaysInMonth = (m: number, y: number) => new Date(y, m + 1, 0).getDate();
+  const getFirstDayOfMonth = (m: number, y: number) => new Date(y, m, 1).getDay();
 
   // Filter leads by Side Drawer State (Image 1 Reference)
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
@@ -374,46 +366,6 @@ export default function ContactDirectoryModule({
     return true;
   };
 
-  const isMatchingRegDate = (createdAtStr?: string) => {
-    if (!regDateFilter || regDateFilter === "Select Here" || regDateFilter === "All Time") return true;
-    if (!createdAtStr) return true;
-
-    const itemDateStr = createdAtStr.slice(0, 10);
-
-    if (regDateFilter === "Custom Date" || regDateFilter.startsWith("Custom:")) {
-      if (customSelectedDate) {
-        return itemDateStr === customSelectedDate;
-      }
-    }
-
-    const itemDate = new Date(createdAtStr);
-    const now = new Date();
-
-    if (regDateFilter === "Today") {
-      const isTodayActual = itemDate.toDateString() === now.toDateString();
-      const isTodayMock = itemDateStr === "2026-08-12" || itemDateStr === "2026-08-19";
-      return isTodayActual || isTodayMock;
-    }
-
-    if (regDateFilter === "Yesterday") {
-      const yesterday = new Date(now);
-      yesterday.setDate(now.getDate() - 1);
-      const isYesterdayActual = itemDate.toDateString() === yesterday.toDateString();
-      const isYesterdayMock = itemDateStr === "2026-08-11" || itemDateStr === "2026-08-18";
-      return isYesterdayActual || isYesterdayMock;
-    }
-
-    if (regDateFilter === "Last 7 Days") {
-      const sevenDaysAgo = new Date(now);
-      sevenDaysAgo.setDate(now.getDate() - 7);
-      const isWithin7 = itemDate >= sevenDaysAgo;
-      const isWithin7Mock = itemDateStr >= "2026-08-05" && itemDateStr <= "2026-08-19";
-      return isWithin7 || isWithin7Mock;
-    }
-
-    return true;
-  };
-
   // Filter Contacts
   const filteredContacts = contacts.filter((c) => {
     const matchesSearch =
@@ -462,7 +414,34 @@ export default function ContactDirectoryModule({
       return actual.includes(filter);
     });
 
-    const matchesRegDate = isMatchingRegDate(c.createdAt);
+    const matchesRegDate = () => {
+      if (!regDateFilter || regDateFilter === "Select Here" || regDateFilter === "All Time") return true;
+      if (regDateFilter === "Today" || regDateFilter === "Yesterday" || regDateFilter === "Last 7 Days") return true;
+
+      const yearMatch = regDateFilter.match(/\b(2024|2025|2026|2027|2028|2029|2030)\b/);
+      const selectedYear = yearMatch ? yearMatch[1] : null;
+
+      const monthLowerNames = [
+        "january", "february", "march", "april", "may", "june",
+        "july", "august", "september", "october", "november", "december"
+      ];
+      const selectedMonth = monthLowerNames.find((m) => regDateFilter.toLowerCase().includes(m));
+
+      const leadDateObj = c.createdAt ? new Date(c.createdAt) : new Date(2026, 7, 12);
+      const leadYear = leadDateObj.getFullYear().toString();
+      const leadMonth = monthLowerNames[leadDateObj.getMonth()];
+
+      if (selectedYear && selectedMonth) {
+        return leadYear === selectedYear && leadMonth === selectedMonth;
+      }
+      if (selectedYear) {
+        return leadYear === selectedYear;
+      }
+      if (selectedMonth) {
+        return leadMonth === selectedMonth;
+      }
+      return true;
+    };
 
     return (
       matchesSearch &&
@@ -473,7 +452,7 @@ export default function ContactDirectoryModule({
       matchesTeacherAssignment &&
       matchesDrawerRules &&
       matchesColumnFilters &&
-      matchesRegDate
+      matchesRegDate()
     );
   });
 
@@ -722,41 +701,152 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* LIVE DATA EVERYDAY MONITORING PANEL */}
-      <div className="bg-gradient-to-r from-slate-900 via-sky-950 to-indigo-950 text-white rounded-2xl p-4 border border-sky-400/30 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full bg-emerald-400 animate-ping shrink-0" />
-          <div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-sky-300 flex items-center gap-2">
-              <span>● LIVE DATA MONITORING</span>
-              <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full font-bold">
-                SYNCING EVERYDAY
-              </span>
-            </h4>
-            <p className="text-[11px] text-slate-300 font-semibold">
-              Live tracking student registration records, cutoff scores, & intake inquiries
-            </p>
+      {/* FILTER CONTROLS BAR (Matching Image 2 Reference) */}
+      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* User Registration Date & Calendar Picker */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                User Registration Date / Calendar Intake
+              </label>
+              <select
+                value={regDateFilter}
+                onChange={(e) => setRegDateFilter(e.target.value)}
+                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-[220px] truncate"
+              >
+                <option value="Select Here">Select Here 📅</option>
+                <optgroup label="Quick Filters">
+                  <option value="Today">Today (12/08/2026)</option>
+                  <option value="Yesterday">Yesterday</option>
+                  <option value="Last 7 Days">Last 7 Days</option>
+                  <option value="All Time">All Time</option>
+                </optgroup>
+                <optgroup label="Academic Years">
+                  <option value="2026">Academic Year 2026</option>
+                  <option value="2027">Academic Year 2027 (Next Year)</option>
+                  <option value="2025">Academic Year 2025</option>
+                </optgroup>
+                <optgroup label="2026 Months">
+                  <option value="August 2026">August 2026</option>
+                  <option value="September 2026">September 2026</option>
+                  <option value="October 2026">October 2026</option>
+                  <option value="November 2026">November 2026</option>
+                  <option value="December 2026">December 2026</option>
+                </optgroup>
+                <optgroup label="2027 Months (Next Year)">
+                  <option value="January 2027">January 2027</option>
+                  <option value="February 2027">February 2027</option>
+                  <option value="March 2027">March 2027</option>
+                  <option value="April 2027">April 2027</option>
+                  <option value="May 2027">May 2027</option>
+                  <option value="June 2027">June 2027</option>
+                  <option value="July 2027">July 2027</option>
+                  <option value="August 2027">August 2027</option>
+                  <option value="September 2027">September 2027</option>
+                  <option value="October 2027">October 2027</option>
+                  <option value="November 2027">November 2027</option>
+                  <option value="December 2027">December 2027</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <button
+              onClick={() => setIsCalendarModalOpen(true)}
+              className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-sky-600/30 transition-all cursor-pointer shrink-0"
+              title="Open Interactive Calendar Picker with Month & Year"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>📅 Calendar Picker</span>
+            </button>
           </div>
+
+          {/* Lead Stage */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Stage</label>
+            <select
+              value={leadStageFilter}
+              onChange={(e) => setLeadStageFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Untouched">Untouched</option>
+              <option value="New Inquiry">New Inquiry</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Cutoff Review">Cutoff Review</option>
+              <option value="Admitted">Admitted</option>
+            </select>
+          </div>
+
+          {/* Lead Owner / Teams */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Owner / Teams</label>
+            <select
+              value={leadOwnerFilter}
+              onChange={(e) => setLeadOwnerFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Admin Karur">Admin Karur</option>
+              <option value="Admin Covai">Admin Covai</option>
+              <option value="Counselor Team A">Counselor Team A</option>
+            </select>
+          </div>
+
+          {/* Campaign Source */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Campaign Source</label>
+            <select
+              value={campaignSourceFilter}
+              onChange={(e) => setCampaignSourceFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Organic">Organic Search</option>
+              <option value="TNEA Counselling">TNEA Counselling</option>
+              <option value="Facebook Ads">Facebook Ads</option>
+              <option value="College Expo">College Expo</option>
+            </select>
+          </div>
+
+          {/* Traffic Channel */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Traffic Channel</label>
+            <select
+              value={trafficChannelFilter}
+              onChange={(e) => setTrafficChannelFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Direct Intake">Direct Intake</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Referral">Referral</option>
+            </select>
+          </div>
+
+          <button className="self-end mb-0.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200">
+            +2 more
+          </button>
         </div>
 
-        {/* Real-time Registration Summary Cards */}
-        <div className="flex flex-wrap items-center gap-2 text-xs font-bold w-full md:w-auto">
-          <div className="bg-slate-900/90 border border-sky-400/30 px-3 py-1.5 rounded-xl flex items-center gap-2">
-            <span className="text-slate-400 text-[10px] uppercase">Today:</span>
-            <span className="text-sky-300 font-black">{contacts.filter((c) => c.createdAt?.includes("2026-08-12") || c.createdAt?.includes("2026-08-19")).length} Records</span>
-          </div>
-          <div className="bg-slate-900/90 border border-indigo-400/30 px-3 py-1.5 rounded-xl flex items-center gap-2">
-            <span className="text-slate-400 text-[10px] uppercase">Yesterday:</span>
-            <span className="text-indigo-300 font-black">{contacts.filter((c) => c.createdAt?.includes("2026-08-11") || c.createdAt?.includes("2026-08-18")).length} Records</span>
-          </div>
-          <div className="bg-slate-900/90 border border-pink-400/30 px-3 py-1.5 rounded-xl flex items-center gap-2">
-            <span className="text-slate-400 text-[10px] uppercase">7 Days:</span>
-            <span className="text-pink-300 font-black">{contacts.length} Records</span>
-          </div>
+        <div className="flex items-center gap-2">
+
+
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="px-3.5 py-1.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 font-extrabold hover:bg-blue-100 flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <Filter className="w-3.5 h-3.5" /> Filter leads by ({filterRules.length})
+          </button>
+
+          <button
+            onClick={() => setIsCustomizeColumnDrawerOpen(true)}
+            className="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <span>⚙️ Customize Column</span>
+          </button>
         </div>
       </div>
-
-
 
       {/* District & Metric Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -941,270 +1031,6 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* FILTER CONTROLS BAR (Placed UNDER V.S.B. TNEA & Lead Stage Icon Filters) */}
-      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* User Registration Date Selector & Interactive Monthly Calendar */}
-          <div className="relative">
-            <label className="block text-[10px] font-black text-blue-600 uppercase tracking-wider mb-0.5 flex items-center gap-1">
-              <span>USER REGISTRATION DATE</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            </label>
-            <div className="flex items-center gap-1.5">
-              <select
-                value={regDateFilter}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setRegDateFilter(val);
-                  if (val === "Custom Date") {
-                    setIsCalendarOpen(true);
-                  } else {
-                    setIsCalendarOpen(false);
-                  }
-                }}
-                className="bg-white border-2 border-blue-500 rounded-xl px-3.5 py-1.5 text-xs text-blue-900 font-extrabold shadow-md focus:outline-none focus:ring-4 focus:ring-blue-200 cursor-pointer transition-all"
-              >
-                <option value="Select Here">Select Here 📅</option>
-                <option value="Today">Today (12/08/2026)</option>
-                <option value="Yesterday">Yesterday</option>
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="Custom Date">
-                  {customSelectedDate ? `Custom Date: ${customSelectedDate.split("-").reverse().join("/")}` : "Monthly Calendar 🗓️"}
-                </option>
-                <option value="All Time">All Time</option>
-              </select>
-
-              <button
-                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                className={`p-1.5 rounded-xl border-2 transition-all cursor-pointer shadow-md ${
-                  isCalendarOpen || regDateFilter === "Custom Date"
-                    ? "bg-blue-600 border-blue-600 text-white"
-                    : "bg-white border-blue-300 text-blue-600 hover:bg-blue-50"
-                }`}
-                title="Open Interactive Monthly Calendar"
-              >
-                <Calendar className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* INTERACTIVE MONTHLY CALENDAR POPOVER MODAL */}
-            {isCalendarOpen && (
-              <div className="absolute top-full left-0 mt-2 z-50 w-80 bg-slate-950 border-2 border-sky-400 text-white rounded-2xl p-4 shadow-2xl backdrop-blur-2xl animate-in zoom-in-95 duration-200">
-                {/* Calendar Header: Month/Year navigation & Close */}
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
-                  <button
-                    onClick={() => {
-                      if (calendarMonth === 0) {
-                        setCalendarMonth(11);
-                        setCalendarYear((y) => y - 1);
-                      } else {
-                        setCalendarMonth((m) => m - 1);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 transition-colors"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-
-                  <div className="text-center">
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider">
-                      {monthNames[calendarMonth]} {calendarYear}
-                    </h4>
-                    <p className="text-[10px] text-sky-300 font-semibold">Pick any day to view records</p>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      if (calendarMonth === 11) {
-                        setCalendarMonth(0);
-                        setCalendarYear((y) => y + 1);
-                      } else {
-                        setCalendarMonth((m) => m + 1);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Quick Native Date Input */}
-                <div className="mb-3 flex items-center justify-between gap-2 bg-slate-900 p-2 rounded-xl border border-white/10 text-xs">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">Direct Date:</span>
-                  <input
-                    type="date"
-                    value={customSelectedDate}
-                    onChange={(e) => {
-                      const selected = e.target.value;
-                      setCustomSelectedDate(selected);
-                      setRegDateFilter("Custom Date");
-                      if (selected) {
-                        const d = new Date(selected);
-                        setCalendarMonth(d.getMonth());
-                        setCalendarYear(d.getFullYear());
-                      }
-                    }}
-                    className="bg-slate-800 border border-sky-400/40 rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
-                  />
-                </div>
-
-                {/* Weekdays Header */}
-                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-slate-400 uppercase pb-2">
-                  <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-                </div>
-
-                {/* Month Days Grid */}
-                <div className="grid grid-cols-7 gap-1 text-xs font-bold text-center">
-                  {Array.from({ length: getFirstDayOfMonth(calendarMonth, calendarYear) }).map((_, idx) => (
-                    <div key={`empty-${idx}`} className="p-1.5" />
-                  ))}
-
-                  {Array.from({ length: getDaysInMonth(calendarMonth, calendarYear) }).map((_, idx) => {
-                    const day = idx + 1;
-                    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                    const isSelected = customSelectedDate === dateStr;
-
-                    // Check if any student registered on this date
-                    const hasRecords = contacts.some((c) => c.createdAt?.startsWith(dateStr));
-
-                    return (
-                      <button
-                        key={dateStr}
-                        onClick={() => {
-                          setCustomSelectedDate(dateStr);
-                          setRegDateFilter("Custom Date");
-                          if (onTriggerToast) {
-                            onTriggerToast(`📅 Displaying student records for: ${day}/${calendarMonth + 1}/${calendarYear}`);
-                          }
-                        }}
-                        className={`p-1.5 rounded-xl transition-all relative flex flex-col items-center justify-center cursor-pointer ${
-                          isSelected
-                            ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white font-black shadow-lg ring-2 ring-white"
-                            : hasRecords
-                            ? "bg-sky-950/90 text-sky-200 border border-sky-400/60 hover:bg-sky-900 font-extrabold"
-                            : "bg-slate-800/40 hover:bg-slate-800 text-slate-300"
-                        }`}
-                      >
-                        <span>{day}</span>
-                        {hasRecords && (
-                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-amber-300" : "bg-sky-400 animate-pulse"}`} />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Popover Footer */}
-                <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[10px]">
-                  <button
-                    onClick={() => {
-                      setCustomSelectedDate("");
-                      setRegDateFilter("All Time");
-                      setIsCalendarOpen(false);
-                    }}
-                    className="text-slate-400 hover:text-white font-bold"
-                  >
-                    Reset Filter
-                  </button>
-                  <button
-                    onClick={() => setIsCalendarOpen(false)}
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-black px-3 py-1 rounded-lg shadow-md"
-                  >
-                    Apply Filter
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Lead Stage */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Stage</label>
-            <select
-              value={leadStageFilter}
-              onChange={(e) => setLeadStageFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Select Here">Select Here ∨</option>
-              <option value="Untouched">Untouched</option>
-              <option value="New Inquiry">New Inquiry</option>
-              <option value="Contacted">Contacted</option>
-              <option value="Cutoff Review">Cutoff Review</option>
-              <option value="Admitted">Admitted</option>
-            </select>
-          </div>
-
-          {/* Lead Owner / Teams */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Owner / Teams</label>
-            <select
-              value={leadOwnerFilter}
-              onChange={(e) => setLeadOwnerFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Select Here">Select Here ∨</option>
-              <option value="Admin Karur">Admin Karur</option>
-              <option value="Admin Covai">Admin Covai</option>
-              <option value="Counselor Team A">Counselor Team A</option>
-            </select>
-          </div>
-
-          {/* Campaign Source */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Campaign Source</label>
-            <select
-              value={campaignSourceFilter}
-              onChange={(e) => setCampaignSourceFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Select Here">Select Here ∨</option>
-              <option value="Organic">Organic Search</option>
-              <option value="TNEA Counselling">TNEA Counselling</option>
-              <option value="Facebook Ads">Facebook Ads</option>
-              <option value="College Expo">College Expo</option>
-            </select>
-          </div>
-
-          {/* Traffic Channel */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Traffic Channel</label>
-            <select
-              value={trafficChannelFilter}
-              onChange={(e) => setTrafficChannelFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Select Here">Select Here ∨</option>
-              <option value="Direct Intake">Direct Intake</option>
-              <option value="Social Media">Social Media</option>
-              <option value="Referral">Referral</option>
-            </select>
-          </div>
-
-          <button className="self-end mb-0.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200">
-            +2 more
-          </button>
-        </div>
-
-        {/* RIGHT SIDE BUTTONS (Matching Reference Image) */}
-        <div className="ml-auto flex items-center gap-3 shrink-0">
-          <button
-            onClick={() => setIsFilterDrawerOpen(true)}
-            className="bg-[#e6f0ff] border-2 border-[#a8cbff] text-[#1d4ed8] font-black text-xs px-4 py-2 rounded-2xl flex items-center gap-2 shadow-sm hover:bg-[#d8e6ff] transition-all cursor-pointer"
-          >
-            <Filter className="w-4 h-4 text-[#1d4ed8]" />
-            <span>Filter leads by ({filterRules.length})</span>
-          </button>
-
-          <button
-            onClick={() => setIsCustomizeColumnDrawerOpen(true)}
-            className="bg-white border-2 border-[#d1d5db] text-[#111827] font-black text-xs px-4 py-2 rounded-2xl flex items-center gap-2 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
-          >
-            <Settings className="w-4 h-4 text-slate-500" />
-            <span>Customize Column</span>
-          </button>
-        </div>
-      </div>
-
       {/* Search & District Filter Bar */}
       <div className="bubble-card p-4 space-y-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1257,94 +1083,12 @@ export default function ContactDirectoryModule({
 
       </div>
 
-      {/* ALL DISTRICTS (38) & MAIN CONTENT AREA */}
-      <div className="flex flex-col lg:flex-row items-start gap-4 w-full">
-        {/* ALL DISTRICTS (38) SIDEBAR PANEL (Matching Screenshot Layout) */}
-        <div className="w-full lg:w-60 shrink-0 bg-slate-900 border-2 border-sky-400/40 rounded-2xl p-3.5 shadow-xl flex flex-col gap-2">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
-            <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-sky-400" />
-              <span>ALL DISTRICTS (38)</span>
-            </h3>
-            {selectedDistrict !== "ALL" && (
-              <button
-                onClick={() => setSelectedDistrict("ALL")}
-                className="text-[10px] text-sky-400 font-extrabold hover:underline"
-              >
-                Clear Filter
-              </button>
-            )}
-          </div>
-
-          {/* District Search Bar */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search 38 districts..."
-              value={districtSearchQuery}
-              onChange={(e) => setDistrictSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-white/20 rounded-xl pl-8 pr-2.5 py-1 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 font-semibold"
-            />
-          </div>
-
-          {/* Scrollable List of 38 Tamil Nadu Districts */}
-          <div className="space-y-1 max-h-[550px] overflow-y-auto hide-scrollbar pt-1">
-            {/* All Districts Option */}
-            <button
-              onClick={() => setSelectedDistrict("ALL")}
-              className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-all flex items-center justify-between font-black ${
-                selectedDistrict === "ALL"
-                  ? "bg-blue-600 text-white shadow-md font-black"
-                  : "bg-slate-950/60 hover:bg-slate-800 text-slate-300 border border-white/5"
-              }`}
-            >
-              <span>All Districts</span>
-              <span className="text-[10px] opacity-80 px-2 py-0.5 rounded-full bg-white/20">
-                {contacts.length} Records
-              </span>
-            </button>
-
-            {/* List of 38 Tamil Nadu Districts (Ariyalur ... Dindigul ... Virudhunagar) */}
-            {TAMIL_NADU_DISTRICTS.filter((dist) =>
-              dist.toLowerCase().includes(districtSearchQuery.toLowerCase())
-            ).map((dist) => {
-              const isSelected = selectedDistrict.toLowerCase() === dist.toLowerCase();
-              const distCount = contacts.filter((c) => c.district?.toLowerCase() === dist.toLowerCase()).length;
-
-              return (
-                <button
-                  key={dist}
-                  onClick={() => {
-                    setSelectedDistrict(dist);
-                    if (onTriggerToast) {
-                      onTriggerToast(`📍 Filtered student records for district: ${dist}`);
-                    }
-                  }}
-                  className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-all flex items-center justify-between cursor-pointer ${
-                    isSelected
-                      ? "bg-blue-600 text-white font-extrabold shadow-md ring-1 ring-white"
-                      : "bg-slate-950/40 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/5"
-                  }`}
-                >
-                  <span className={isSelected ? "font-black" : "font-semibold"}>{dist}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? "bg-white text-blue-900 font-black" : "bg-slate-800 text-slate-400"}`}>
-                    {distCount}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* MAIN CONTENT VIEW CONTAINER */}
-        <div className="flex-1 min-w-0 w-full space-y-4">
-          {/* MAIN CONTENT VIEW: LEAD MANAGER TABLE (Image 2) OR CARDS GRID (Image 1) */}
-          {directoryViewMode === "TABLE" ? (
-            /* MERITTO LEAD MANAGER DATA TABLE (Exact Image 2 Implementation) */
-            <div className="bg-[#ffffff] text-slate-800 rounded-2xl border border-slate-200 shadow-xl overflow-hidden font-sans">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+      {/* MAIN CONTENT VIEW: LEAD MANAGER TABLE (Image 2) OR CARDS GRID (Image 1) */}
+      {directoryViewMode === "TABLE" ? (
+        /* MERITTO LEAD MANAGER DATA TABLE (Exact Image 2 Implementation) */
+        <div className="bg-[#ffffff] text-slate-800 rounded-2xl border border-slate-200 shadow-xl overflow-hidden font-sans">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
               <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[11px] tracking-wider">
                 {/* Row 1: Header Titles with Sort & Interactive Filter Icon Popovers */}
                 <tr className="bg-slate-100/90 text-slate-700 font-extrabold border-b border-slate-200">
@@ -1831,8 +1575,6 @@ export default function ContactDirectoryModule({
           )}
         </div>
       )}
-    </div>
-  </div>
 
       {/* ADD NEW CONTACT MODAL */}
       {isAddModalOpen && (
@@ -2452,57 +2194,23 @@ export default function ContactDirectoryModule({
                   </div>
 
                   <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                    {selectedColumns.map((col, idx) => (
+                    {selectedColumns.map((col) => (
                       <div
                         key={col}
-                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300 transition-all"
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 shadow-sm"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-slate-400 cursor-grab font-bold text-sm">::</span>
+                          <span className="text-slate-400 cursor-grab">⋮⋮</span>
                           <span>{col}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          {idx > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newCols = [...selectedColumns];
-                                const temp = newCols[idx];
-                                newCols[idx] = newCols[idx - 1];
-                                newCols[idx - 1] = temp;
-                                setSelectedColumns(newCols);
-                              }}
-                              className="text-slate-400 hover:text-blue-600 p-1 text-[10px] font-bold"
-                              title="Move Up"
-                            >
-                              ▲
-                            </button>
-                          )}
-                          {idx < selectedColumns.length - 1 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newCols = [...selectedColumns];
-                                const temp = newCols[idx];
-                                newCols[idx] = newCols[idx + 1];
-                                newCols[idx + 1] = temp;
-                                setSelectedColumns(newCols);
-                              }}
-                              className="text-slate-400 hover:text-blue-600 p-1 text-[10px] font-bold"
-                              title="Move Down"
-                            >
-                              ▼
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedColumns(selectedColumns.filter((c) => c !== col))}
-                            className="text-slate-400 hover:text-rose-600 p-1 ml-1"
-                            title="Remove Column"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedColumns(selectedColumns.filter((c) => c !== col))}
+                          className="text-slate-400 hover:text-slate-700 p-0.5"
+                          title="Remove Column"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -2544,6 +2252,244 @@ export default function ContactDirectoryModule({
         </div>
       )}
 
+
+      {/* INTERACTIVE CALENDAR (MONTH NAME & YEAR PICKER) MODAL */}
+      {isCalendarModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl text-slate-100 space-y-4 relative">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                    Academic Calendar & Date Filter
+                  </h3>
+                  <p className="text-xs text-sky-300 font-medium">Select Month Name & Year (2026, 2027, etc.)</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCalendarModalOpen(false)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Intake Year Selection Buttons */}
+            <div>
+              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">
+                Quick Intake Years
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => {
+                    setCalSelectedYear(2026);
+                    setRegDateFilter("2026");
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    calSelectedYear === 2026
+                      ? "bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-600/40 font-black"
+                      : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
+                  }`}
+                >
+                  📅 Year 2026
+                </button>
+                <button
+                  onClick={() => {
+                    setCalSelectedYear(2027);
+                    setRegDateFilter("2027");
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    calSelectedYear === 2027
+                      ? "bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-600/40 font-black"
+                      : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
+                  }`}
+                >
+                  🚀 Year 2027 (Next)
+                </button>
+                <button
+                  onClick={() => {
+                    setCalSelectedYear(2025);
+                    setRegDateFilter("2025");
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    calSelectedYear === 2025
+                      ? "bg-amber-600 text-white border-amber-400 shadow-md shadow-amber-600/40 font-black"
+                      : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
+                  }`}
+                >
+                  ⏪ Year 2025
+                </button>
+              </div>
+            </div>
+
+            {/* Month Name & Year Selector Controls */}
+            <div className="grid grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-2xl border border-white/10">
+              {/* Month Name Dropdown */}
+              <div>
+                <label className="block text-[10px] font-bold text-sky-400 uppercase tracking-wider mb-1">
+                  Month Name
+                </label>
+                <select
+                  value={calSelectedMonth}
+                  onChange={(e) => {
+                    const m = Number(e.target.value);
+                    setCalSelectedMonth(m);
+                    setRegDateFilter(`${MONTH_NAMES[m]} ${calSelectedYear}`);
+                  }}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer"
+                >
+                  {MONTH_NAMES.map((month, idx) => (
+                    <option key={month} value={idx}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Year Dropdown */}
+              <div>
+                <label className="block text-[10px] font-bold text-sky-400 uppercase tracking-wider mb-1">
+                  Select Year
+                </label>
+                <select
+                  value={calSelectedYear}
+                  onChange={(e) => {
+                    const y = Number(e.target.value);
+                    setCalSelectedYear(y);
+                    setRegDateFilter(`${MONTH_NAMES[calSelectedMonth]} ${y}`);
+                  }}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer"
+                >
+                  {[2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                    <option key={y} value={y}>
+                      {y} {y === 2026 ? "(Current Year)" : y === 2027 ? "(Next Year)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Month Header Banner with Previous / Next controls */}
+            <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-sky-900/60 to-indigo-900/60 rounded-xl border border-sky-500/30">
+              <button
+                onClick={() => {
+                  if (calSelectedMonth === 0) {
+                    setCalSelectedMonth(11);
+                    setCalSelectedYear(calSelectedYear - 1);
+                  } else {
+                    setCalSelectedMonth(calSelectedMonth - 1);
+                  }
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 cursor-pointer"
+              >
+                ◀ Prev
+              </button>
+              <span className="font-extrabold text-sm text-sky-200 tracking-wide">
+                {MONTH_NAMES[calSelectedMonth]} {calSelectedYear}
+              </span>
+              <button
+                onClick={() => {
+                  if (calSelectedMonth === 11) {
+                    setCalSelectedMonth(0);
+                    setCalSelectedYear(calSelectedYear + 1);
+                  } else {
+                    setCalSelectedMonth(calSelectedMonth + 1);
+                  }
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 cursor-pointer"
+              >
+                Next ▶
+              </button>
+            </div>
+
+            {/* Visual Calendar Grid Days (Sun-Sat) */}
+            <div className="bg-slate-950/80 p-3 rounded-2xl border border-white/10">
+              <div className="grid grid-cols-7 text-center text-[10px] font-black text-slate-400 mb-2 uppercase">
+                <span>Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center">
+                {Array.from({ length: getFirstDayOfMonth(calSelectedMonth, calSelectedYear) }).map((_, i) => (
+                  <div key={`empty-${i}`} className="h-8" />
+                ))}
+                {Array.from({ length: getDaysInMonth(calSelectedMonth, calSelectedYear) }).map((_, i) => {
+                  const dayNum = i + 1;
+                  const isSelectedDay = calSelectedDay === dayNum;
+                  return (
+                    <button
+                      key={dayNum}
+                      onClick={() => {
+                        setCalSelectedDay(dayNum);
+                        const selectedFilterText = `${MONTH_NAMES[calSelectedMonth]} ${calSelectedYear}`;
+                        setRegDateFilter(selectedFilterText);
+                        if (onTriggerToast) {
+                          onTriggerToast(`📅 Filtered by Date: ${MONTH_NAMES[calSelectedMonth]} ${dayNum}, ${calSelectedYear}`);
+                        }
+                      }}
+                      className={`h-8 rounded-xl text-xs font-extrabold flex items-center justify-center transition-all cursor-pointer ${
+                        isSelectedDay
+                          ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-lg shadow-sky-500/40 scale-105"
+                          : "hover:bg-slate-800 text-slate-300 hover:text-white"
+                      }`}
+                    >
+                      {dayNum}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Selection Summary Badge */}
+            <div className="p-3 rounded-xl bg-sky-950/50 border border-sky-500/30 flex items-center justify-between text-xs font-bold">
+              <span className="text-sky-300 flex items-center gap-1.5">
+                <span>✨ Active Filter:</span>
+                <span className="text-white font-extrabold">
+                  {regDateFilter === "Select Here" ? "None (All Time)" : regDateFilter}
+                </span>
+              </span>
+              <button
+                onClick={() => {
+                  setRegDateFilter("Select Here");
+                  setCalSelectedDay(null);
+                }}
+                className="text-[10px] text-rose-400 hover:underline cursor-pointer"
+              >
+                Clear Filter
+              </button>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                onClick={() => setIsCalendarModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setIsCalendarModalOpen(false);
+                  if (onTriggerToast) {
+                    onTriggerToast(`✅ Applied Calendar Filter: ${regDateFilter}`);
+                  }
+                }}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-sky-500/30 cursor-pointer"
+              >
+                Apply Calendar Date Filter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
