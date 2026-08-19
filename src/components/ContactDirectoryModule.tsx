@@ -8,7 +8,6 @@ import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
-import LeadQRCodeModal from "@/components/LeadQRCodeModal";
 import {
   Phone,
   Mail,
@@ -29,7 +28,6 @@ import {
   Upload,
   ShieldCheck,
   GraduationCap,
-  QrCode,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
@@ -97,14 +95,7 @@ export default function ContactDirectoryModule({
   // Candidate Profile Modal State (Image 2)
   const [selectedCandidateForModal, setSelectedCandidateForModal] = useState<(Lead & { application: Application }) | null>(null);
 
-  // QR Code Modal State
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [selectedQrLead, setSelectedQrLead] = useState<(Lead & { application?: Application | null }) | null>(null);
 
-  const handleOpenQrModal = (contact: Lead & { application?: Application | null }) => {
-    setSelectedQrLead(contact);
-    setIsQrModalOpen(true);
-  };
 
   const getFullCandidateWithApp = (contact: Lead & { application?: Application | null }): (Lead & { application: Application }) => {
     return {
@@ -155,7 +146,6 @@ export default function ContactDirectoryModule({
   const [columnSearchQuery, setColumnSearchQuery] = useState("");
   const [selectedColumns, setSelectedColumns] = useState<string[]>([
     "Registered Name",
-    "Student QR Code",
     "Registered Email",
     "Registered Mobile",
     "State",
@@ -166,7 +156,6 @@ export default function ContactDirectoryModule({
 
   const allAvailableColumns = [
     "Registered Name",
-    "Student QR Code",
     "Registered Email",
     "Registered Mobile",
     "Registered Country",
@@ -249,16 +238,6 @@ export default function ContactDirectoryModule({
       return (
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOpenQrModal(contact);
-              }}
-              className="p-1 rounded bg-sky-100 hover:bg-sky-500 text-sky-600 hover:text-white transition-all shadow-sm group-hover:scale-110"
-              title="Click to view & scan Lead QR Code"
-            >
-              <QrCode className="w-3.5 h-3.5" />
-            </button>
             <span onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
               {contact.name}
             </span>
@@ -274,21 +253,6 @@ export default function ContactDirectoryModule({
             ⋮
           </button>
         </div>
-      );
-    }
-    if (col === "Student QR Code") {
-      return (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleOpenQrModal(contact);
-          }}
-          className="px-2.5 py-1 rounded-lg bg-purple-100 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-300 transition-all font-bold text-[11px] flex items-center gap-1 shadow-sm"
-          title={`Scan & View QR Pass for ${contact.name}`}
-        >
-          <QrCode className="w-3.5 h-3.5" />
-          <span>QR Pass</span>
-        </button>
       );
     }
     if (col === "Registered Email") {
@@ -780,16 +744,7 @@ export default function ContactDirectoryModule({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setSelectedQrLead(sortedAndFilteredContacts[0] || null);
-              setIsQrModalOpen(true);
-            }}
-            className="px-3.5 py-1.5 rounded-lg border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-          >
-            <QrCode className="w-4 h-4 text-purple-600" />
-            <span>Scan & QR Code Pass</span>
-          </button>
+
 
           <button
             onClick={() => setIsFilterDrawerOpen(true)}
@@ -1452,17 +1407,7 @@ export default function ContactDirectoryModule({
                 {/* Action Buttons: Edit, Call, Email, WhatsApp, Delete */}
                 <div className="flex items-center justify-between pt-3 border-t border-white/10 relative z-10">
                   <div className="flex items-center gap-1.5">
-                    <Tooltip text={`Scan & View QR Code Pass for ${contact.name}`} position="bottom">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenQrModal(contact);
-                        }}
-                        className="p-2 rounded-full bg-purple-500/20 text-purple-300 hover:bg-purple-500 hover:text-white border border-purple-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-purple-500/40"
-                      >
-                        <QrCode className="w-3.5 h-3.5" />
-                      </button>
-                    </Tooltip>
+
                     <Tooltip text={`In-Portal Call ${contact.name}`} position="bottom">
                       <button
                         onClick={() => handleOpenCommModal("CALL", {
@@ -2221,15 +2166,7 @@ export default function ContactDirectoryModule({
         </div>
       )}
 
-      {/* QR Code Scan & Lead Pass Modal */}
-      <LeadQRCodeModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-        lead={selectedQrLead}
-        allLeads={contacts}
-        onActionTrigger={onActionTrigger}
-        onTriggerToast={onTriggerToast}
-      />
+
     </div>
   );
 }

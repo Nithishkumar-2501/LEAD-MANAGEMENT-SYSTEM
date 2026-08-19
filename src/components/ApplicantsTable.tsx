@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
-import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, QrCode, Upload } from "lucide-react";
+import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, Upload } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
-import LeadQRCodeModal from "@/components/LeadQRCodeModal";
 import { parseCSVToLeads } from "@/lib/csvParser";
 
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -31,9 +30,7 @@ export default function ApplicantsTable({
 }: ApplicantsTableProps) {
   const [selectedStage, setSelectedStage] = useState<string>("ALL");
 
-  // QR Modal State
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [selectedQrLead, setSelectedQrLead] = useState<(Lead & { application?: Application | null }) | null>(null);
+
 
   // In-Portal Communication Modal State
   const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
@@ -268,17 +265,7 @@ export default function ApplicantsTable({
                     {/* Actions */}
                     <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
-                        <Tooltip text={`Scan & View QR Code Pass for ${item.name}`}>
-                          <button
-                            onClick={() => {
-                              setSelectedQrLead(item);
-                              setIsQrModalOpen(true);
-                            }}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-purple-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-purple-500/40"
-                          >
-                            <QrCode className="w-3.5 h-3.5" />
-                          </button>
-                        </Tooltip>
+
                         <Tooltip text={`View ${item.name} Details`}>
                           <button
                             onClick={() => onSelectApplicant(item)}
@@ -367,14 +354,7 @@ export default function ApplicantsTable({
         onLogSuccess={handleCommLogSuccess}
       />
 
-      {/* QR CODE SCAN & DETAILS MODAL */}
-      <LeadQRCodeModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-        lead={selectedQrLead}
-        allLeads={applicants}
-        onActionTrigger={onActionTrigger}
-      />
+
     </div>
   );
 }

@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
-import { GraduationCap, Award, CheckCircle2, Search, Eye, Plus, ChevronRight, FileText, UserCheck, QrCode } from "lucide-react";
-import LeadQRCodeModal from "@/components/LeadQRCodeModal";
+import { GraduationCap, Award, CheckCircle2, Search, Eye, Plus, ChevronRight, FileText, UserCheck } from "lucide-react";
 
 interface StudentApplicationsModuleProps {
   applicants: (Lead & { application: Application })[];
@@ -20,9 +19,7 @@ export default function StudentApplicationsModule({
   const [selectedStage, setSelectedStage] = useState("ALL");
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
 
-  // QR Modal State
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [selectedQrLead, setSelectedQrLead] = useState<(Lead & { application?: Application | null }) | null>(null);
+
 
   const filteredApplicants = applicants.filter((item) => {
     const matchesSearch =
@@ -174,34 +171,12 @@ export default function StudentApplicationsModule({
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full bg-indigo-950 border border-indigo-800/80 flex items-center justify-center text-xs font-bold text-indigo-300 relative group/qr cursor-pointer hover:border-purple-400"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedQrLead(item);
-                      setIsQrModalOpen(true);
-                    }}
-                    title="Click to view & scan student QR pass"
-                  >
+                  <div className="w-10 h-10 rounded-full bg-indigo-950 border border-indigo-800/80 flex items-center justify-center text-xs font-bold text-indigo-300">
                     {item.name.slice(0, 2).toUpperCase()}
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-purple-950 border border-purple-400 flex items-center justify-center text-purple-300">
-                      <QrCode className="w-2.5 h-2.5" />
-                    </div>
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-100 group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                    <h4 className="text-sm font-bold text-slate-100 group-hover:text-indigo-300 transition-colors">
                       {item.name}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedQrLead(item);
-                          setIsQrModalOpen(true);
-                        }}
-                        className="px-1.5 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-[9px] font-bold text-purple-300 hover:bg-purple-600 hover:text-white transition-all flex items-center gap-0.5"
-                        title="Student QR Pass"
-                      >
-                        <QrCode className="w-2.5 h-2.5" /> QR Pass
-                      </button>
                     </h4>
                     <p className="text-[11px] text-slate-400">{item.email}</p>
                   </div>
@@ -259,13 +234,7 @@ export default function StudentApplicationsModule({
         </div>
       </div>
 
-      {/* QR CODE SCAN & DETAILS MODAL */}
-      <LeadQRCodeModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-        lead={selectedQrLead}
-        allLeads={applicants}
-      />
+
     </div>
   );
 }
