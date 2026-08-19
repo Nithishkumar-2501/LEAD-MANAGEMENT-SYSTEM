@@ -37,6 +37,7 @@ interface HeaderProps {
   currentUserRole: "ADMIN" | "TEACHER";
   theme?: "LIGHT" | "DARK";
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
+  onToggleMobileSidebar?: () => void;
 }
 
 export default function Header({
@@ -52,6 +53,7 @@ export default function Header({
   currentUserRole,
   theme = "DARK",
   onThemeChange,
+  onToggleMobileSidebar,
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -87,18 +89,18 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full liquid-glass border-b border-white/20 px-3 sm:px-6 py-3 sm:py-3.5 flex flex-col gap-2.5 sm:gap-3.5 shadow-2xl">
+    <header className="sticky top-0 z-30 w-full liquid-glass border-b border-white/20 px-3 sm:px-6 py-3 flex flex-col gap-2.5 sm:gap-3.5 shadow-2xl">
       {/* Top Bar: Brand, Campus Selector & Admin Profile */}
       <div className="flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Hamburger (mobile) + Brand */}
         <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
-          {/* Hamburger for mobile */}
+          {/* Hamburger button to open mobile left sidebar */}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="sm:hidden p-2 rounded-full bg-slate-900/70 border border-white/20 text-sky-200 transition-all"
-            aria-label="Toggle navigation menu"
+            onClick={() => onToggleMobileSidebar ? onToggleMobileSidebar() : setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 rounded-xl bg-slate-900/80 border border-white/20 text-sky-300 hover:text-white transition-all shadow-md flex items-center justify-center cursor-pointer"
+            aria-label="Toggle navigation sidebar"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <Menu className="w-5 h-5" />
           </button>
 
           {/* Official V.S.B. Engineering College Logo Emblem */}

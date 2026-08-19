@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 import MetricCards from "@/components/MetricCards";
 import LeadFunnelChart from "@/components/LeadFunnelChart";
 import ApplicantsTable from "@/components/ApplicantsTable";
@@ -46,6 +47,7 @@ export default function DashboardPage() {
   const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
   const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER">("ADMIN");
   const [loggedInUsername, setLoggedInUsername] = useState<string>("adminkarur@123");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
@@ -196,7 +198,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen flex font-sans bg-slate-950 text-slate-100">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold text-xs px-5 py-3 rounded-full shadow-2xl animate-bounce flex items-center gap-2 border border-white/30 justify-center sm:justify-start">
@@ -204,11 +206,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Main Header */}
-      <Header
+      {/* Left Sidebar Navigation Drawer */}
+      <Sidebar
         user={MOCK_ADMIN_USER}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         selectedCampus={selectedCampus}
@@ -216,12 +216,34 @@ export default function DashboardPage() {
         onLogout={handleLogout}
         loggedInCampus={loggedInCampus}
         currentUserRole={currentUserRole}
+        loggedInUsername={loggedInUsername}
         theme={theme}
         onThemeChange={handleThemeChange}
+        isOpenMobile={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
+      {/* Main Container Pushed Right by Sidebar on Desktop */}
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-64 transition-all duration-300">
+        {/* Main Header */}
+        <Header
+          user={MOCK_ADMIN_USER}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          selectedCampus={selectedCampus}
+          onCampusChange={setSelectedCampus}
+          onLogout={handleLogout}
+          loggedInCampus={loggedInCampus}
+          currentUserRole={currentUserRole}
+          theme={theme}
+          onThemeChange={handleThemeChange}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        />
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
         {/* ADMISSIONS CRM MODULE */}
         {activeTab === "ADMISSIONS" && (
           <>
@@ -327,6 +349,7 @@ export default function DashboardPage() {
           onSave={handleUpdateApplicant}
         />
       )}
+      </div>
     </div>
   );
 }
