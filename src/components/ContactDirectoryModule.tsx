@@ -28,6 +28,9 @@ import {
   Upload,
   ShieldCheck,
   GraduationCap,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
@@ -122,6 +125,24 @@ export default function ContactDirectoryModule({
   // Meritto Lead Manager View & Filter States (Image 2)
   const [directoryViewMode, setDirectoryViewMode] = useState<"TABLE" | "GRID">("TABLE");
   const [regDateFilter, setRegDateFilter] = useState("Select Here");
+  const [customSelectedDate, setCustomSelectedDate] = useState<string>("2026-08-12");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(7); // 7 = August
+  const [calendarYear, setCalendarYear] = useState(2026);
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month: number, year: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
   const [leadStageFilter, setLeadStageFilter] = useState("Select Here");
   const [leadOwnerFilter, setLeadOwnerFilter] = useState("Select Here");
   const [campaignSourceFilter, setCampaignSourceFilter] = useState("Select Here");
@@ -355,9 +376,16 @@ export default function ContactDirectoryModule({
     if (!regDateFilter || regDateFilter === "Select Here" || regDateFilter === "All Time") return true;
     if (!createdAtStr) return true;
 
+    const itemDateStr = createdAtStr.slice(0, 10);
+
+    if (regDateFilter === "Custom Date" || regDateFilter.startsWith("Custom:")) {
+      if (customSelectedDate) {
+        return itemDateStr === customSelectedDate;
+      }
+    }
+
     const itemDate = new Date(createdAtStr);
     const now = new Date();
-    const itemDateStr = createdAtStr.slice(0, 10);
 
     if (regDateFilter === "Today") {
       const isTodayActual = itemDate.toDateString() === now.toDateString();
@@ -729,23 +757,177 @@ export default function ContactDirectoryModule({
       {/* FILTER CONTROLS BAR (Matching Image Reference) */}
       <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
         <div className="flex flex-wrap items-center gap-3">
-          {/* User Registration Date Selector (Highlighted as requested) */}
+          {/* User Registration Date Selector & Interactive Monthly Calendar */}
           <div className="relative">
             <label className="block text-[10px] font-black text-blue-600 uppercase tracking-wider mb-0.5 flex items-center gap-1">
               <span>USER REGISTRATION DATE</span>
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
             </label>
-            <select
-              value={regDateFilter}
-              onChange={(e) => setRegDateFilter(e.target.value)}
-              className="bg-white border-2 border-blue-500 rounded-xl px-3.5 py-1.5 text-xs text-blue-900 font-extrabold shadow-md focus:outline-none focus:ring-4 focus:ring-blue-200 cursor-pointer transition-all"
-            >
-              <option value="Select Here">Select Here 📅</option>
-              <option value="Today">Today (12/08/2026)</option>
-              <option value="Yesterday">Yesterday</option>
-              <option value="Last 7 Days">Last 7 Days</option>
-              <option value="All Time">All Time</option>
-            </select>
+            <div className="flex items-center gap-1.5">
+              <select
+                value={regDateFilter}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setRegDateFilter(val);
+                  if (val === "Custom Date") {
+                    setIsCalendarOpen(true);
+                  } else {
+                    setIsCalendarOpen(false);
+                  }
+                }}
+                className="bg-white border-2 border-blue-500 rounded-xl px-3.5 py-1.5 text-xs text-blue-900 font-extrabold shadow-md focus:outline-none focus:ring-4 focus:ring-blue-200 cursor-pointer transition-all"
+              >
+                <option value="Select Here">Select Here 📅</option>
+                <option value="Today">Today (12/08/2026)</option>
+                <option value="Yesterday">Yesterday</option>
+                <option value="Last 7 Days">Last 7 Days</option>
+                <option value="Custom Date">
+                  {customSelectedDate ? `Custom Date: ${customSelectedDate.split("-").reverse().join("/")}` : "Monthly Calendar 🗓️"}
+                </option>
+                <option value="All Time">All Time</option>
+              </select>
+
+              <button
+                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                className={`p-1.5 rounded-xl border-2 transition-all cursor-pointer shadow-md ${
+                  isCalendarOpen || regDateFilter === "Custom Date"
+                    ? "bg-blue-600 border-blue-600 text-white"
+                    : "bg-white border-blue-300 text-blue-600 hover:bg-blue-50"
+                }`}
+                title="Open Interactive Monthly Calendar"
+              >
+                <Calendar className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* INTERACTIVE MONTHLY CALENDAR POPOVER MODAL */}
+            {isCalendarOpen && (
+              <div className="absolute top-full left-0 mt-2 z-50 w-80 bg-slate-950 border-2 border-sky-400 text-white rounded-2xl p-4 shadow-2xl backdrop-blur-2xl animate-in zoom-in-95 duration-200">
+                {/* Calendar Header: Month/Year navigation & Close */}
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+                  <button
+                    onClick={() => {
+                      if (calendarMonth === 0) {
+                        setCalendarMonth(11);
+                        setCalendarYear((y) => y - 1);
+                      } else {
+                        setCalendarMonth((m) => m - 1);
+                      }
+                    }}
+                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <div className="text-center">
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider">
+                      {monthNames[calendarMonth]} {calendarYear}
+                    </h4>
+                    <p className="text-[10px] text-sky-300 font-semibold">Pick any day to view records</p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (calendarMonth === 11) {
+                        setCalendarMonth(0);
+                        setCalendarYear((y) => y + 1);
+                      } else {
+                        setCalendarMonth((m) => m + 1);
+                      }
+                    }}
+                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Quick Native Date Input */}
+                <div className="mb-3 flex items-center justify-between gap-2 bg-slate-900 p-2 rounded-xl border border-white/10 text-xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Direct Date:</span>
+                  <input
+                    type="date"
+                    value={customSelectedDate}
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      setCustomSelectedDate(selected);
+                      setRegDateFilter("Custom Date");
+                      if (selected) {
+                        const d = new Date(selected);
+                        setCalendarMonth(d.getMonth());
+                        setCalendarYear(d.getFullYear());
+                      }
+                    }}
+                    className="bg-slate-800 border border-sky-400/40 rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+                  />
+                </div>
+
+                {/* Weekdays Header */}
+                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black text-slate-400 uppercase pb-2">
+                  <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                </div>
+
+                {/* Month Days Grid */}
+                <div className="grid grid-cols-7 gap-1 text-xs font-bold text-center">
+                  {Array.from({ length: getFirstDayOfMonth(calendarMonth, calendarYear) }).map((_, idx) => (
+                    <div key={`empty-${idx}`} className="p-1.5" />
+                  ))}
+
+                  {Array.from({ length: getDaysInMonth(calendarMonth, calendarYear) }).map((_, idx) => {
+                    const day = idx + 1;
+                    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                    const isSelected = customSelectedDate === dateStr;
+
+                    // Check if any student registered on this date
+                    const hasRecords = contacts.some((c) => c.createdAt?.startsWith(dateStr));
+
+                    return (
+                      <button
+                        key={dateStr}
+                        onClick={() => {
+                          setCustomSelectedDate(dateStr);
+                          setRegDateFilter("Custom Date");
+                          if (onTriggerToast) {
+                            onTriggerToast(`📅 Displaying student records for: ${day}/${calendarMonth + 1}/${calendarYear}`);
+                          }
+                        }}
+                        className={`p-1.5 rounded-xl transition-all relative flex flex-col items-center justify-center cursor-pointer ${
+                          isSelected
+                            ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white font-black shadow-lg ring-2 ring-white"
+                            : hasRecords
+                            ? "bg-sky-950/90 text-sky-200 border border-sky-400/60 hover:bg-sky-900 font-extrabold"
+                            : "bg-slate-800/40 hover:bg-slate-800 text-slate-300"
+                        }`}
+                      >
+                        <span>{day}</span>
+                        {hasRecords && (
+                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-amber-300" : "bg-sky-400 animate-pulse"}`} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Popover Footer */}
+                <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[10px]">
+                  <button
+                    onClick={() => {
+                      setCustomSelectedDate("");
+                      setRegDateFilter("All Time");
+                      setIsCalendarOpen(false);
+                    }}
+                    className="text-slate-400 hover:text-white font-bold"
+                  >
+                    Reset Filter
+                  </button>
+                  <button
+                    onClick={() => setIsCalendarOpen(false)}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-black px-3 py-1 rounded-lg shadow-md"
+                  >
+                    Apply Filter
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Lead Stage */}
