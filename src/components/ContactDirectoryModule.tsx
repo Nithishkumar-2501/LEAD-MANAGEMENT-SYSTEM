@@ -31,6 +31,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
@@ -999,21 +1000,22 @@ export default function ContactDirectoryModule({
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-
-
+        {/* RIGHT SIDE BUTTONS (Matching Reference Image) */}
+        <div className="ml-auto flex items-center gap-3 shrink-0">
           <button
             onClick={() => setIsFilterDrawerOpen(true)}
-            className="px-3.5 py-1.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 font-extrabold hover:bg-blue-100 flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            className="bg-[#e6f0ff] border-2 border-[#a8cbff] text-[#1d4ed8] font-black text-xs px-4 py-2 rounded-2xl flex items-center gap-2 shadow-sm hover:bg-[#d8e6ff] transition-all cursor-pointer"
           >
-            <Filter className="w-3.5 h-3.5" /> Filter leads by ({filterRules.length})
+            <Filter className="w-4 h-4 text-[#1d4ed8]" />
+            <span>Filter leads by ({filterRules.length})</span>
           </button>
 
           <button
             onClick={() => setIsCustomizeColumnDrawerOpen(true)}
-            className="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            className="bg-white border-2 border-[#d1d5db] text-[#111827] font-black text-xs px-4 py-2 rounded-2xl flex items-center gap-2 shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
           >
-            <span>⚙️ Customize Column</span>
+            <Settings className="w-4 h-4 text-slate-500" />
+            <span>Customize Column</span>
           </button>
         </div>
       </div>
