@@ -120,10 +120,21 @@ body {
   }
 }
 
-/* GLOBAL LIGHT MODE STYLES & OVERRIDES - PURE BLACK HIGH-CONTRAST TEXT */
-html.light, html.light body, .light-mode {
+/* GLOBAL LIGHT MODE STYLES & OVERRIDES - PURE LIGHT CANVAS & HIGH-CONTRAST TEXT */
+html.light, 
+html.light body, 
+html.light main, 
+html.light .min-h-screen, 
+.light-mode {
   background: #f8fafc !important;
   color: #0f172a !important;
+}
+
+html.light aside, .light-mode aside {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.05) !important;
 }
 
 html.light .liquid-glass, .light-mode .liquid-glass {
@@ -183,18 +194,19 @@ html.light textarea::placeholder {
   font-weight: 500 !important;
 }
 
-/* FORCE PURE BLACK HIGH-CONTRAST TEXT FOR HEADER BRANDING IN LIGHT MODE */
+/* FORCE PURE BLACK HIGH-CONTRAST TEXT IN LIGHT MODE */
 html.light header h1,
 html.light header h1 span,
 html.light header p,
 html.light header p span,
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
 html.light .text-black,
 html.light .text-slate-900,
 html.light .text-slate-800 {
   color: #0f172a !important;
 }
 
-/* Pure White Text Preservation for Dark Cards & Fills in Light Mode */
+/* Pure White Text Preservation for Dark Cards & Filled Buttons in Light Mode */
 html.light .text-white {
   color: #ffffff !important;
 }
@@ -264,7 +276,8 @@ html.light .bg-slate-900\/80,
 html.light .bg-slate-900\/90,
 html.light .bg-slate-900\/70,
 html.light .bg-slate-950\/80,
-html.light .bg-slate-950\/90 {
+html.light .bg-slate-950\/90,
+html.light .bg-slate-950\/95 {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
@@ -279,9 +292,58 @@ html.light .bg-slate-800\/90 {
 
 html.light .bg-indigo-950\/40,
 html.light .bg-indigo-950\/60,
-html.light .bg-indigo-950\/70 {
+html.light .bg-indigo-950\/70,
+html.light .bg-indigo-950\/80,
+html.light .bg-indigo-950\/90,
+html.light .bg-indigo-950 {
   background-color: #eff6ff !important;
   border-color: #bfdbfe !important;
+  color: #1e40af !important;
+}
+
+html.light .bg-sky-950\/40,
+html.light .bg-sky-950\/60,
+html.light .bg-sky-950\/80,
+html.light .bg-sky-950 {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+  color: #0369a1 !important;
+}
+
+html.light .bg-purple-950\/40,
+html.light .bg-purple-950\/60,
+html.light .bg-purple-950\/80,
+html.light .bg-purple-950 {
+  background-color: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #7e22ce !important;
+}
+
+html.light .bg-emerald-950\/40,
+html.light .bg-emerald-950\/60,
+html.light .bg-emerald-950\/80,
+html.light .bg-emerald-950 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+html.light .bg-amber-950\/40,
+html.light .bg-amber-950\/60,
+html.light .bg-amber-950\/80,
+html.light .bg-amber-950 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+html.light .bg-rose-950\/40,
+html.light .bg-rose-950\/60,
+html.light .bg-rose-950\/80,
+html.light .bg-rose-950 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
 }
 
 /* Borders in Light Mode */
