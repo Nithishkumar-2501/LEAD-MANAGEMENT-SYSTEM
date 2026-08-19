@@ -701,154 +701,7 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* FILTER CONTROLS BAR (Matching Image 2 Reference) */}
-      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* User Registration Date & Calendar Picker */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                User Registration Date / Calendar Intake
-              </label>
-              <select
-                value={regDateFilter}
-                onChange={(e) => setRegDateFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-[220px] truncate"
-              >
-                <option value="Select Here">Select Here 📅</option>
-                <optgroup label="Quick Filters">
-                  <option value="Today">Today (12/08/2026)</option>
-                  <option value="Yesterday">Yesterday</option>
-                  <option value="Last 7 Days">Last 7 Days</option>
-                  <option value="All Time">All Time</option>
-                </optgroup>
-                <optgroup label="Academic Years">
-                  <option value="2026">Academic Year 2026</option>
-                  <option value="2027">Academic Year 2027 (Next Year)</option>
-                  <option value="2025">Academic Year 2025</option>
-                </optgroup>
-                <optgroup label="2026 Months">
-                  <option value="August 2026">August 2026</option>
-                  <option value="September 2026">September 2026</option>
-                  <option value="October 2026">October 2026</option>
-                  <option value="November 2026">November 2026</option>
-                  <option value="December 2026">December 2026</option>
-                </optgroup>
-                <optgroup label="2027 Months (Next Year)">
-                  <option value="January 2027">January 2027</option>
-                  <option value="February 2027">February 2027</option>
-                  <option value="March 2027">March 2027</option>
-                  <option value="April 2027">April 2027</option>
-                  <option value="May 2027">May 2027</option>
-                  <option value="June 2027">June 2027</option>
-                  <option value="July 2027">July 2027</option>
-                  <option value="August 2027">August 2027</option>
-                  <option value="September 2027">September 2027</option>
-                  <option value="October 2027">October 2027</option>
-                  <option value="November 2027">November 2027</option>
-                  <option value="December 2027">December 2027</option>
-                </optgroup>
-              </select>
-            </div>
-
-            <button
-              onClick={() => setIsCalendarModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-sky-600/30 transition-all cursor-pointer shrink-0"
-              title="Open Interactive Calendar Picker with Month & Year"
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>📅 Calendar Picker</span>
-            </button>
-          </div>
-
-          {/* Lead Stage */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Stage</label>
-            <select
-              value={leadStageFilter}
-              onChange={(e) => setLeadStageFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Select Here">Select Here ∨</option>
-              <option value="Untouched">Untouched</option>
-              <option value="New Inquiry">New Inquiry</option>
-              <option value="Contacted">Contacted</option>
-              <option value="Cutoff Review">Cutoff Review</option>
-              <option value="Admitted">Admitted</option>
-            </select>
-          </div>
-
-          {/* Lead Owner / Teams */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Owner / Teams</label>
-            <select
-              value={leadOwnerFilter}
-              onChange={(e) => setLeadOwnerFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Select Here">Select Here ∨</option>
-              <option value="Admin Karur">Admin Karur</option>
-              <option value="Admin Covai">Admin Covai</option>
-              <option value="Counselor Team A">Counselor Team A</option>
-            </select>
-          </div>
-
-          {/* Campaign Source */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Campaign Source</label>
-            <select
-              value={campaignSourceFilter}
-              onChange={(e) => setCampaignSourceFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Select Here">Select Here ∨</option>
-              <option value="Organic">Organic Search</option>
-              <option value="TNEA Counselling">TNEA Counselling</option>
-              <option value="Facebook Ads">Facebook Ads</option>
-              <option value="College Expo">College Expo</option>
-            </select>
-          </div>
-
-          {/* Traffic Channel */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Traffic Channel</label>
-            <select
-              value={trafficChannelFilter}
-              onChange={(e) => setTrafficChannelFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Select Here">Select Here ∨</option>
-              <option value="Direct Intake">Direct Intake</option>
-              <option value="Social Media">Social Media</option>
-              <option value="Referral">Referral</option>
-            </select>
-          </div>
-
-          <button className="self-end mb-0.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200">
-            +2 more
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-
-
-          <button
-            onClick={() => setIsFilterDrawerOpen(true)}
-            className="px-3.5 py-1.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 font-extrabold hover:bg-blue-100 flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-          >
-            <Filter className="w-3.5 h-3.5" /> Filter leads by ({filterRules.length})
-          </button>
-
-          <button
-            onClick={() => setIsCustomizeColumnDrawerOpen(true)}
-            className="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-extrabold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-          >
-            <span>⚙️ Customize Column</span>
-          </button>
-        </div>
-      </div>
-
-      {/* District & Metric Summary Cards */}
+      {/* District & Metric Summary Cards (Image 2 Top) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bubble-card p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 flex items-center justify-center font-bold">
@@ -891,7 +744,7 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* V.S.B. TNEA & Lead Stage Icon Filters */}
+      {/* V.S.B. TNEA & Lead Stage Icon Filters (Image 2 Bottom) */}
       <div className="bubble-card p-4 space-y-3.5 border border-sky-400/30">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
           <div>
@@ -1027,6 +880,152 @@ export default function ContactDirectoryModule({
               <span className="block text-xs">Rejected</span>
               <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "REJECTED").length} Leads</span>
             </div>
+          </button>
+        </div>
+      </div>
+
+      {/* FILTER CONTROLS BAR WITH RIGHT-ALIGNED FILTER LEADS BY & CUSTOMIZE COLUMN BUTTONS (IMAGE 1 UNDER IMAGE 2 ON RIGHT SIDE) */}
+      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* User Registration Date & Calendar Picker */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                User Registration Date / Calendar Intake
+              </label>
+              <select
+                value={regDateFilter}
+                onChange={(e) => setRegDateFilter(e.target.value)}
+                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-[220px] truncate"
+              >
+                <option value="Select Here">Select Here 📅</option>
+                <optgroup label="Quick Filters">
+                  <option value="Today">Today (12/08/2026)</option>
+                  <option value="Yesterday">Yesterday</option>
+                  <option value="Last 7 Days">Last 7 Days</option>
+                  <option value="All Time">All Time</option>
+                </optgroup>
+                <optgroup label="Academic Years">
+                  <option value="2026">Academic Year 2026</option>
+                  <option value="2027">Academic Year 2027 (Next Year)</option>
+                  <option value="2025">Academic Year 2025</option>
+                </optgroup>
+                <optgroup label="2026 Months">
+                  <option value="August 2026">August 2026</option>
+                  <option value="September 2026">September 2026</option>
+                  <option value="October 2026">October 2026</option>
+                  <option value="November 2026">November 2026</option>
+                  <option value="December 2026">December 2026</option>
+                </optgroup>
+                <optgroup label="2027 Months (Next Year)">
+                  <option value="January 2027">January 2027</option>
+                  <option value="February 2027">February 2027</option>
+                  <option value="March 2027">March 2027</option>
+                  <option value="April 2027">April 2027</option>
+                  <option value="May 2027">May 2027</option>
+                  <option value="June 2027">June 2027</option>
+                  <option value="July 2027">July 2027</option>
+                  <option value="August 2027">August 2027</option>
+                  <option value="September 2027">September 2027</option>
+                  <option value="October 2027">October 2027</option>
+                  <option value="November 2027">November 2027</option>
+                  <option value="December 2027">December 2027</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <button
+              onClick={() => setIsCalendarModalOpen(true)}
+              className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-sky-600/30 transition-all cursor-pointer shrink-0"
+              title="Open Interactive Calendar Picker with Month & Year"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>📅 Calendar Picker</span>
+            </button>
+          </div>
+
+          {/* Lead Stage */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Stage</label>
+            <select
+              value={leadStageFilter}
+              onChange={(e) => setLeadStageFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Untouched">Untouched</option>
+              <option value="New Inquiry">New Inquiry</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Cutoff Review">Cutoff Review</option>
+              <option value="Admitted">Admitted</option>
+            </select>
+          </div>
+
+          {/* Lead Owner / Teams */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Owner / Teams</label>
+            <select
+              value={leadOwnerFilter}
+              onChange={(e) => setLeadOwnerFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Admin Karur">Admin Karur</option>
+              <option value="Admin Covai">Admin Covai</option>
+              <option value="Counselor Team A">Counselor Team A</option>
+            </select>
+          </div>
+
+          {/* Campaign Source */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Campaign Source</label>
+            <select
+              value={campaignSourceFilter}
+              onChange={(e) => setCampaignSourceFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Organic">Organic Search</option>
+              <option value="TNEA Counselling">TNEA Counselling</option>
+              <option value="Facebook Ads">Facebook Ads</option>
+              <option value="College Expo">College Expo</option>
+            </select>
+          </div>
+
+          {/* Traffic Channel */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Traffic Channel</label>
+            <select
+              value={trafficChannelFilter}
+              onChange={(e) => setTrafficChannelFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Select Here">Select Here ∨</option>
+              <option value="Direct Intake">Direct Intake</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Referral">Referral</option>
+            </select>
+          </div>
+
+          <button className="self-end mb-0.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200">
+            +2 more
+          </button>
+        </div>
+
+        {/* FIRST IMAGE BUTTONS RIGHT-ALIGNED ON THE RIGHT SIDE UNDER SECOND IMAGE */}
+        <div className="flex items-center gap-2.5 ml-auto shrink-0">
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="px-4 py-2 rounded-2xl border border-sky-300 bg-sky-50 text-sky-700 font-extrabold hover:bg-sky-100 flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+          >
+            <Filter className="w-4 h-4 text-sky-600" /> Filter leads by ({filterRules.length})
+          </button>
+
+          <button
+            onClick={() => setIsCustomizeColumnDrawerOpen(true)}
+            className="px-4 py-2 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-extrabold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+          >
+            <span className="text-purple-600">⚙️</span> Customize Column
           </button>
         </div>
       </div>
