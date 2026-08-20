@@ -284,23 +284,19 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
             {/* Upload CSV File Button */}
             <button
               onClick={() => document.getElementById("teacher-csv-file-upload")?.click()}
-              className="px-3 py-1.5 rounded-xl border border-indigo-500/50 bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
+              className="px-3 py-1.5 rounded-xl border border-indigo-400/50 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
               title="Upload CSV File to Import Faculty Directory"
             >
-              <Upload className="w-3.5 h-3.5 text-indigo-400" /> <span>Import CSV</span>
+              <Upload className="w-3.5 h-3.5 text-indigo-100" /> <span>Import CSV</span>
             </button>
 
             {currentUserRole === "ADMIN" && (
-              <SpecularButton
-                size="sm"
-                tint="#6366f1"
-                tintOpacity={0.25}
-                lineColor="#818cf8"
-                baseColor="#4f46e5"
+              <button
                 onClick={() => setShowAddModal(true)}
+                className="px-3.5 py-1.5 rounded-xl border border-purple-400/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/30 cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> <span>Add Faculty</span>
-              </SpecularButton>
+              </button>
             )}
           </div>
         </div>
@@ -752,17 +748,13 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                 >
                   Cancel
                 </button>
-                <SpecularButton
-                  size="sm"
-                  tint="#10b981"
-                  tintOpacity={0.25}
-                  lineColor="#34d399"
-                  baseColor="#059669"
+                <button
                   onClick={handleConfirmCSVImport}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/40 border border-emerald-300/40 flex items-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
                 >
-                  <CheckCircle2 className="w-4 h-4" />{" "}
+                  <CheckCircle2 className="w-4 h-4 text-emerald-100" />
                   <span>Import {csvParsedTeachers.length} Faculty Members</span>
-                </SpecularButton>
+                </button>
               </div>
             </div>
           </div>
