@@ -128,7 +128,7 @@ export default function ContactDirectoryModule({
   const [campaignSourceFilter, setCampaignSourceFilter] = useState("Select Here");
   const [trafficChannelFilter, setTrafficChannelFilter] = useState("Select Here");
   const [selectedViewName, setSelectedViewName] = useState("Default View");
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   // Interactive Calendar Month Name & Year State
@@ -153,7 +153,6 @@ export default function ContactDirectoryModule({
     Array<{ id: string; field: string; operator: string; value: string }>
   >([
     { id: "1", field: "State", operator: "Equals", value: "Tamil Nadu" },
-    { id: "2", field: "City", operator: "Equals", value: "Karur" },
   ]);
 
   // Customize Column Side Drawer State (Image 2 Reference)
