@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
+import { parseCSVToTeachers } from "@/lib/csvParser";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
-import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck } from "lucide-react";
+import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 
@@ -32,6 +33,56 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
 
   const handleCommLogSuccess = (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => {
     onTriggerToast(`✨ In-Portal ${type} to faculty completed: ${details}`);
+  };
+
+  // CSV Import State
+  const [csvParsedTeachers, setCsvParsedTeachers] = useState<Teacher[]>([]);
+  const [showCsvPreviewModal, setShowCsvPreviewModal] = useState(false);
+
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+      const parsed = parseCSVToTeachers(text, loggedInCampus);
+      if (parsed.length === 0) {
+        onTriggerToast("⚠️ No valid faculty records found in the uploaded CSV file.");
+        return;
+      }
+      setCsvParsedTeachers(parsed);
+      setShowCsvPreviewModal(true);
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const handleConfirmCSVImport = () => {
+    if (csvParsedTeachers.length === 0) return;
+    setTeachers((prev) => [...csvParsedTeachers, ...prev]);
+    onTriggerToast(`✨ Successfully imported ${csvParsedTeachers.length} faculty members into V.S.B. ${loggedInCampus} Directory!`);
+    setCsvParsedTeachers([]);
+    setShowCsvPreviewModal(false);
+  };
+
+  const handleDownloadSampleCSV = () => {
+    const csvContent =
+      "Name,Email,Phone,Department,Campus,Courses,Experience,Lead Quota\n" +
+      "Dr. S. Kanthaswamy,kanthaswamy@vsb.ac.in,+91 94432 11223,Computer Science & Engineering,KARUR,B.E. Computer Science,14,1200\n" +
+      "Prof. M. Soundarya,soundarya.ece@vsb.ac.in,+91 98421 99887,Electronics & Communication,COIMBATORE,B.E. ECE,8,950\n" +
+      "Dr. R. Vignesh,vignesh.mech@vsb.ac.in,+91 97860 44556,Mechanical Engineering,KARUR,B.E. Mechanical,10,1100\n";
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `vsb_faculty_import_template_${loggedInCampus.toLowerCase()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    onTriggerToast("📥 Faculty CSV Template downloaded!");
   };
 
   const [newTeacher, setNewTeacher] = useState({
@@ -197,6 +248,33 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                 </option>
               ))}
             </select>
+
+            {/* Hidden File Input for CSV Upload */}
+            <input
+              id="teacher-csv-file-upload"
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleCSVUpload}
+            />
+
+            {/* Download Sample CSV Template */}
+            <button
+              onClick={handleDownloadSampleCSV}
+              className="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              title="Download Faculty CSV Template"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-400" /> <span>Sample CSV</span>
+            </button>
+
+            {/* Upload CSV File Button */}
+            <button
+              onClick={() => document.getElementById("teacher-csv-file-upload")?.click()}
+              className="px-3 py-1.5 rounded-xl border border-indigo-500/50 bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
+              title="Upload CSV File to Import Faculty Directory"
+            >
+              <Upload className="w-3.5 h-3.5 text-indigo-400" /> <span>Import CSV</span>
+            </button>
 
             {currentUserRole === "ADMIN" && (
               <SpecularButton
@@ -575,6 +653,97 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* CSV IMPORTER PREVIEW MODAL */}
+      {showCsvPreviewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-3xl shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <FileSpreadsheet className="w-6 h-6 text-indigo-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    Import Faculty CSV Preview
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Found <span className="font-bold text-indigo-400">{csvParsedTeachers.length}</span> faculty members in file
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCsvPreviewModal(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 border border-slate-800 rounded-2xl">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold sticky top-0 backdrop-blur">
+                  <tr>
+                    <th className="px-4 py-3">Faculty Name</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Phone</th>
+                    <th className="px-4 py-3">Department</th>
+                    <th className="px-4 py-3">Campus</th>
+                    <th className="px-4 py-3">Experience</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 bg-slate-900/60">
+                  {csvParsedTeachers.map((t, idx) => (
+                    <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-2.5 font-bold text-slate-100 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-md bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px]">
+                          {t.avatar}
+                        </span>
+                        {t.name}
+                      </td>
+                      <td className="px-4 py-2.5 font-mono text-indigo-300">{t.email}</td>
+                      <td className="px-4 py-2.5 font-mono text-slate-300">{t.phone}</td>
+                      <td className="px-4 py-2.5 text-purple-300 font-medium">{t.department}</td>
+                      <td className="px-4 py-2.5">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                          {t.campus}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 font-bold text-amber-300">{t.experienceYears} Yrs</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                All CSV records validated against V.S.B. Directory schema.
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowCsvPreviewModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <SpecularButton
+                  size="sm"
+                  tint="#10b981"
+                  tintOpacity={0.25}
+                  lineColor="#34d399"
+                  baseColor="#059669"
+                  onClick={handleConfirmCSVImport}
+                >
+                  <CheckCircle2 className="w-4 h-4" />{" "}
+                  <span>Import {csvParsedTeachers.length} Faculty Members</span>
+                </SpecularButton>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { Lead, Application, CampusLocation, LeadStatus } from "@/types/crm";
+import { Lead, Application, CampusLocation, LeadStatus, Teacher } from "@/types/crm";
 
 export function parseCSVToLeads(
   csvText: string,
@@ -128,3 +128,87 @@ export function parseCSVToLeads(
 
   return imported;
 }
+
+export function parseCSVToTeachers(
+  csvText: string,
+  defaultCampus: CampusLocation = "KARUR"
+): Teacher[] {
+  const lines = csvText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return [];
+
+  const imported: Teacher[] = [];
+  const firstLine = lines[0];
+  const delimiter = firstLine.includes("\t") ? "\t" : firstLine.includes(";") ? ";" : ",";
+  const firstLineLower = firstLine.toLowerCase();
+
+  const hasHeader =
+    firstLineLower.includes("name") ||
+    firstLineLower.includes("email") ||
+    firstLineLower.includes("phone") ||
+    firstLineLower.includes("department") ||
+    firstLineLower.includes("course") ||
+    firstLineLower.includes("experience");
+
+  const headerCols = hasHeader
+    ? firstLine.split(delimiter).map((c) => c.trim().toLowerCase().replace(/^["']|["']$/g, ""))
+    : [];
+  const startIndex = hasHeader ? 1 : 0;
+
+  const findColIndex = (keywords: string[]) => {
+    return headerCols.findIndex((col) => keywords.some((k) => col.includes(k)));
+  };
+
+  const nameIdx = findColIndex(["name", "teacher", "faculty", "professor"]);
+  const emailIdx = findColIndex(["email", "mail"]);
+  const phoneIdx = findColIndex(["phone", "mobile", "contact"]);
+  const deptIdx = findColIndex(["department", "dept", "branch"]);
+  const campusIdx = findColIndex(["campus", "location"]);
+  const coursesIdx = findColIndex(["course", "courses", "subject", "program"]);
+  const expIdx = findColIndex(["experience", "exp", "years"]);
+  const quotaIdx = findColIndex(["quota", "contacts", "lead"]);
+
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i];
+    const parts = line.split(delimiter).map((p) => p.trim().replace(/^["']|["']$/g, ""));
+    if (parts.length < 1) continue;
+
+    const getVal = (idx: number, positionalIdx: number, fallback: string = "") => {
+      if (hasHeader && idx >= 0 && idx < parts.length && parts[idx]) return parts[idx];
+      if (!hasHeader && positionalIdx >= 0 && positionalIdx < parts.length && parts[positionalIdx])
+        return parts[positionalIdx];
+      return fallback;
+    };
+
+    const name = getVal(nameIdx, 0, `Faculty ${i}`);
+    if (!name || name.toLowerCase().includes("sample")) continue;
+
+    const email = getVal(emailIdx, 1, `${name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@vsb.ac.in`);
+    const phone = getVal(phoneIdx, 2, "+91 98765 00000");
+    const department = getVal(deptIdx, 3, "Computer Science & Engineering");
+    const campusStr = getVal(campusIdx, 4, defaultCampus);
+    const campus: CampusLocation = campusStr.toUpperCase().includes("COIMBATORE") ? "COIMBATORE" : defaultCampus;
+    const coursesStr = getVal(coursesIdx, 5, "B.E. Computer Science");
+    const coursesAssigned = coursesStr.split(/[,;|]/).map((s) => s.trim()).filter(Boolean);
+    const expStr = getVal(expIdx, 6, "5");
+    const experienceYears = parseInt(expStr, 10) || 5;
+    const quotaStr = getVal(quotaIdx, 7, "1000");
+    const assignedQuota = parseInt(quotaStr, 10) || 1000;
+
+    imported.push({
+      id: `tch_csv_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`,
+      name,
+      email,
+      phone,
+      department,
+      campus,
+      coursesAssigned: coursesAssigned.length > 0 ? coursesAssigned : ["B.E. Computer Science"],
+      experienceYears,
+      status: "ACTIVE",
+      avatar: name.slice(0, 2).toUpperCase(),
+      assignedQuota,
+    });
+  }
+
+  return imported;
+}
+
