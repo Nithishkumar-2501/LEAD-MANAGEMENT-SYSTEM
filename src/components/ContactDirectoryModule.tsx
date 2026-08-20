@@ -442,6 +442,31 @@ export default function ContactDirectoryModule({
       return true;
     };
 
+    const matchesSelectedView = () => {
+      if (!selectedViewName || selectedViewName === "Default View") return true;
+      if (selectedViewName === "Karur Intake View") {
+        return (
+          c.campus === "KARUR" ||
+          (c.district && c.district.toLowerCase().includes("karur")) ||
+          (c.address && c.address.toLowerCase().includes("karur")) ||
+          (c.school && c.school.toLowerCase().includes("karur"))
+        );
+      }
+      if (selectedViewName === "TNEA Candidates") {
+        return (
+          c.appliedCounselling === true ||
+          (c.counsellingCategory && c.counsellingCategory.toLowerCase().includes("tnea")) ||
+          (c.counsellingAppNo && c.counsellingAppNo.toLowerCase().includes("tnea")) ||
+          (c.source && c.source.toLowerCase().includes("tnea"))
+        );
+      }
+      if (selectedViewName === "High Cutoff Leads") {
+        const cutoff = (c as any).tneaCutoff ?? (c as any).cutoff ?? 180;
+        return cutoff >= 170;
+      }
+      return true;
+    };
+
     return (
       matchesSearch &&
       matchesCampus &&
@@ -451,7 +476,8 @@ export default function ContactDirectoryModule({
       matchesTeacherAssignment &&
       matchesDrawerRules &&
       matchesColumnFilters &&
-      matchesRegDate()
+      matchesRegDate() &&
+      matchesSelectedView()
     );
   });
 
@@ -630,7 +656,13 @@ export default function ContactDirectoryModule({
           <div className="relative">
             <select
               value={selectedViewName}
-              onChange={(e) => setSelectedViewName(e.target.value)}
+              onChange={(e) => {
+                const newView = e.target.value;
+                setSelectedViewName(newView);
+                if (onTriggerToast) {
+                  onTriggerToast(`Applied View Filter: ${newView}`);
+                }
+              }}
               className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value="Default View">Default View ∨</option>
