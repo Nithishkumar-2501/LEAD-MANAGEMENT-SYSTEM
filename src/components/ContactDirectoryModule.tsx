@@ -884,8 +884,8 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* FILTER CONTROLS BAR WITH RIGHT-ALIGNED FILTER LEADS BY & CUSTOMIZE COLUMN BUTTONS (IMAGE 1 UNDER IMAGE 2 ON RIGHT SIDE) */}
-      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
+      {/* FILTER CONTROLS BAR WITH RIGHT-ALIGNED FILTER LEADS BY & CUSTOMIZE COLUMN BUTTONS (MATCHING IMAGE 2 PILL SHAPES) */}
+      <div className="bg-[#ffffff] border border-slate-200 rounded-3xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
         <div className="flex flex-wrap items-center gap-3">
           {/* User Registration Date & Calendar Picker */}
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2">
@@ -896,7 +896,7 @@ export default function ContactDirectoryModule({
               <select
                 value={regDateFilter}
                 onChange={(e) => setRegDateFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-[220px] truncate"
+                className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-[220px] truncate"
               >
                 <option value="Select Here">Select Here 📅</option>
                 <optgroup label="Quick Filters">
@@ -936,11 +936,13 @@ export default function ContactDirectoryModule({
 
             <button
               onClick={() => setIsCalendarModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-sky-600/30 transition-all cursor-pointer shrink-0"
+              className="px-4 py-1.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-sky-500/30 transition-all cursor-pointer shrink-0"
               title="Open Interactive Calendar Picker with Month & Year"
             >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>📅 Calendar Picker</span>
+              <div className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center shrink-0">
+                <Calendar className="w-3 h-3 text-white" />
+              </div>
+              <span>Calendar Picker</span>
             </button>
           </div>
 
@@ -950,7 +952,7 @@ export default function ContactDirectoryModule({
             <select
               value={leadStageFilter}
               onChange={(e) => setLeadStageFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Untouched">Untouched</option>
@@ -967,7 +969,7 @@ export default function ContactDirectoryModule({
             <select
               value={leadOwnerFilter}
               onChange={(e) => setLeadOwnerFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Admin Karur">Admin Karur</option>
@@ -982,7 +984,7 @@ export default function ContactDirectoryModule({
             <select
               value={campaignSourceFilter}
               onChange={(e) => setCampaignSourceFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Organic">Organic Search</option>
@@ -998,7 +1000,7 @@ export default function ContactDirectoryModule({
             <select
               value={trafficChannelFilter}
               onChange={(e) => setTrafficChannelFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Direct Intake">Direct Intake</option>
@@ -1007,7 +1009,7 @@ export default function ContactDirectoryModule({
             </select>
           </div>
 
-          <button className="self-end mb-0.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200">
+          <button className="self-end mb-0.5 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200">
             +2 more
           </button>
         </div>

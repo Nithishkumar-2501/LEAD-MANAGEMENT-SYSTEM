@@ -370,52 +370,6 @@ export default function Header({
         </div>
       )}
 
-      {/* Desktop Floating Bubble Navigation Dock */}
-      <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar pb-0.5 border-t border-white/15 pt-3">
-        {filteredNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <Tooltip key={item.id} text={`Open ${item.label}`}>
-              <button
-                onClick={() => onTabChange(item.id)}
-                className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-110 active:scale-95 shadow-md ${
-                  isActive
-                    ? "glossy-btn scale-[1.05] shadow-lg shadow-indigo-500/40 ring-2 ring-white/30"
-                    : "bg-slate-900/80 border border-white/15 text-slate-300 hover:text-white hover:bg-gradient-to-r hover:from-sky-500/30 hover:to-indigo-500/30 hover:border-sky-400/60 hover:shadow-xl hover:shadow-sky-500/20"
-                }`}
-              >
-                <Icon className="w-4 h-4 transition-transform group-hover:scale-125" />
-                <span className="hidden md:inline">{item.label}</span>
-              </button>
-            </Tooltip>
-          );
-        })}
-      </div>
-
-      {/* Mobile Bottom Navigation Dock — fixed icon-only nav for phones */}
-      <div className="sm:hidden flex items-center justify-around gap-0.5 overflow-x-auto hide-scrollbar pb-0.5 border-t border-white/15 pt-2">
-        {filteredNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-[10px] font-bold transition-all duration-300 min-w-[40px] ${
-                isActive
-                  ? "text-sky-400 bg-sky-500/10 border border-sky-400/30"
-                  : "text-slate-400 border border-transparent"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span className="truncate max-w-[48px]">
-                {item.label.split(" ")[0]}
-              </span>
-            </button>
-          );
-        })}
-      </div>
     </header>
   );
 }

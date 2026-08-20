@@ -211,7 +211,7 @@ function CallModal({
 }
 
 // ----------------------------------------------------
-// 2. IN-PORTAL DIRECT MESSAGE / WHATSAPP MODAL
+// 2. IN-PORTAL DIRECT MESSAGE / WHATSAPP / EMAIL MODAL
 // ----------------------------------------------------
 function MessageModal({
   contact,
@@ -222,7 +222,10 @@ function MessageModal({
   onClose: () => void;
   onLogSuccess: (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => void;
 }) {
-  const [channel, setChannel] = useState<"WHATSAPP" | "SMS">("WHATSAPP");
+  const [channel, setChannel] = useState<"WHATSAPP" | "SMS" | "EMAIL">("WHATSAPP");
+  const [emailSubject, setEmailSubject] = useState(
+    `V.S.B. Engineering College Admission Update - ${contact.name}`
+  );
 
   const templates = [
     {
@@ -267,7 +270,11 @@ function MessageModal({
       },
     ]);
 
-    onLogSuccess("MESSAGE", `Dispatched ${channel} message to ${contact.name}`);
+    if (channel === "EMAIL") {
+      onLogSuccess("EMAIL", `Dispatched Email ("${emailSubject}") to ${contact.email}`);
+    } else {
+      onLogSuccess("MESSAGE", `Dispatched ${channel} message to ${contact.name}`);
+    }
     setTimeout(() => onClose(), 800);
   };
 
@@ -290,34 +297,49 @@ function MessageModal({
           <div>
             <h3 className="text-base font-black text-white">In-Portal Direct Messenger</h3>
             <p className="text-xs text-slate-400">
-              Send SMS / WhatsApp directly from CRM to candidate: <strong className="text-teal-300">{contact.name}</strong> ({contact.phone})
+              {channel === "EMAIL" ? (
+                <>Send Email directly from CRM to candidate: <strong className="text-violet-300">{contact.name}</strong> ({contact.email || "No Email Provided"})</>
+              ) : (
+                <>Send SMS / WhatsApp directly from CRM to candidate: <strong className="text-teal-300">{contact.name}</strong> ({contact.phone})</>
+              )}
             </p>
           </div>
         </div>
 
         {/* Channel Selector */}
-        <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-white/10 text-xs font-bold">
+        <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-white/10 text-xs font-bold">
           <button
             type="button"
             onClick={() => setChannel("WHATSAPP")}
-            className={`flex-1 py-1.5 rounded-lg transition-all ${
+            className={`flex-1 py-1.5 px-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 ${
               channel === "WHATSAPP"
                 ? "bg-teal-500 text-white shadow-md font-extrabold"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            💬 WhatsApp Gateway
+            <span>💬</span> <span>WhatsApp Gateway</span>
           </button>
           <button
             type="button"
             onClick={() => setChannel("SMS")}
-            className={`flex-1 py-1.5 rounded-lg transition-all ${
+            className={`flex-1 py-1.5 px-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 ${
               channel === "SMS"
                 ? "bg-indigo-600 text-white shadow-md font-extrabold"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            📱 Direct SMS Portal
+            <span>📱</span> <span>Direct SMS Portal</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setChannel("EMAIL")}
+            className={`flex-1 py-1.5 px-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 ${
+              channel === "EMAIL"
+                ? "bg-violet-600 text-white shadow-md font-extrabold"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <span>📧</span> <span>Direct E-mail Portal</span>
           </button>
         </div>
 
@@ -342,8 +364,24 @@ function MessageModal({
 
         {/* Message Input & Submit */}
         <form onSubmit={handleSendMessage} className="space-y-3 text-xs">
+          {channel === "EMAIL" && (
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1">Subject Line</label>
+              <input
+                type="text"
+                required
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-violet-400"
+                placeholder="Enter email subject line..."
+              />
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">Message Text</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">
+              {channel === "EMAIL" ? "Email Content" : "Message Text"}
+            </label>
             <textarea
               rows={4}
               required
@@ -368,9 +406,20 @@ function MessageModal({
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-white font-bold shadow-lg shadow-teal-500/30 text-xs"
+                className={`flex items-center gap-1.5 px-5 py-2 rounded-xl font-bold text-white shadow-lg text-xs transition-all ${
+                  channel === "EMAIL"
+                    ? "bg-violet-600 hover:bg-violet-500 shadow-violet-600/30"
+                    : channel === "SMS"
+                    ? "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30"
+                    : "bg-teal-500 hover:bg-teal-400 shadow-teal-500/30"
+                }`}
               >
-                <Send className="w-3.5 h-3.5" /> Send In-Portal Message
+                <Send className="w-3.5 h-3.5" />
+                {channel === "EMAIL"
+                  ? "Send Direct E-mail"
+                  : channel === "SMS"
+                  ? "Send Direct SMS"
+                  : "Send In-Portal Message"}
               </button>
             </div>
           </div>
