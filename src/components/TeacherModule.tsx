@@ -61,8 +61,12 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
 
   const handleConfirmCSVImport = () => {
     if (csvParsedTeachers.length === 0) return;
-    setTeachers((prev) => [...csvParsedTeachers, ...prev]);
-    onTriggerToast(`✨ Successfully imported ${csvParsedTeachers.length} faculty members into V.S.B. ${loggedInCampus} Directory!`);
+    const normalizedTeachers = csvParsedTeachers.map((t) => ({
+      ...t,
+      campus: loggedInCampus,
+    }));
+    setTeachers((prev) => [...normalizedTeachers, ...prev]);
+    onTriggerToast(`✨ Successfully imported ${normalizedTeachers.length} faculty members into V.S.B. ${loggedInCampus} Directory!`);
     setCsvParsedTeachers([]);
     setShowCsvPreviewModal(false);
   };
@@ -107,9 +111,16 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
       t.email.toLowerCase().includes(search.toLowerCase()) ||
       t.coursesAssigned.some((c) => c.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesDept = selectedDept === "ALL" || t.department === selectedDept;
+    const matchesDept =
+      selectedDept === "ALL" ||
+      t.department === selectedDept ||
+      t.department.toLowerCase().includes(selectedDept.toLowerCase()) ||
+      selectedDept.toLowerCase().includes(t.department.toLowerCase());
 
-    const matchesCampus = t.campus === loggedInCampus;
+    const matchesCampus =
+      !t.campus ||
+      t.campus === loggedInCampus ||
+      t.campus.toUpperCase().includes(loggedInCampus);
 
     return matchesSearch && matchesDept && matchesCampus;
   });
@@ -150,6 +161,9 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
     if (!editingTeacher) return;
 
     setTeachers((prev) =>
+      prev.map((t) => (t.id === editingTeacher.id ? editingTeacher : t))
+    );
+    setCsvParsedTeachers((prev) =>
       prev.map((t) => (t.id === editingTeacher.id ? editingTeacher : t))
     );
     onTriggerToast(`🔑 Profile updated for faculty member ${editingTeacher.name}!`);
@@ -359,16 +373,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
 
               <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 relative z-10">
                 <div>
-                  {currentUserRole === "ADMIN" && (
-                    <Tooltip text={`Edit ${tch.name}`} position="bottom">
-                      <button
-                        onClick={() => setEditingTeacher(tch)}
-                        className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
-                      </button>
-                    </Tooltip>
-                  )}
+                  <Tooltip text={`Edit ${tch.name}`} position="bottom">
+                    <button
+                      onClick={() => setEditingTeacher(tch)}
+                      className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
+                    </button>
+                  </Tooltip>
                 </div>
                 <div className="flex gap-1.5">
                   <Tooltip text={`In-Portal Email ${tch.name}`} position="bottom">
@@ -693,6 +705,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                     <th className="px-4 py-3">Department</th>
                     <th className="px-4 py-3">Campus</th>
                     <th className="px-4 py-3">Experience</th>
+                    <th className="px-4 py-3">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 bg-slate-900/60">
@@ -713,6 +726,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
                         </span>
                       </td>
                       <td className="px-4 py-2.5 font-bold text-amber-300">{t.experienceYears} Yrs</td>
+                      <td className="px-4 py-2.5">
+                        <button
+                          onClick={() => setEditingTeacher(t)}
+                          className="px-2 py-1 rounded-lg bg-sky-950 text-sky-400 hover:text-sky-200 border border-sky-800 font-bold text-[11px] flex items-center gap-1"
+                        >
+                          <Edit3 className="w-3 h-3" /> Edit
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
