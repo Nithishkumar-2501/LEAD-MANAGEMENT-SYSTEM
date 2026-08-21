@@ -59,16 +59,63 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
     e.target.value = "";
   };
 
-  const handleConfirmCSVImport = () => {
+  // Persistent Storage Sync Helper (LocalStorage + Database API)
+  const saveTeachersList = (updatedList: Teacher[]) => {
+    setTeachers(updatedList);
+    try {
+      localStorage.setItem("vsb_crm_teachers", JSON.stringify(updatedList));
+    } catch (e) {}
+  };
+
+  // Initial Load: Fetch from LocalStorage & Database API
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("vsb_crm_teachers");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTeachers(parsed);
+        }
+      }
+    } catch (err) {}
+
+    fetch(`/api/teachers?campus=${loggedInCampus}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setTeachers((prev) => {
+            const dbIds = new Set(data.map((d: Teacher) => d.id || d.email));
+            const localOnly = prev.filter((p) => !dbIds.has(p.id) && !dbIds.has(p.email));
+            const merged = [...data, ...localOnly];
+            try {
+              localStorage.setItem("vsb_crm_teachers", JSON.stringify(merged));
+            } catch (e) {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
+  }, [loggedInCampus]);
+
+  const handleConfirmCSVImport = async () => {
     if (csvParsedTeachers.length === 0) return;
     const normalizedTeachers = csvParsedTeachers.map((t) => ({
       ...t,
       campus: loggedInCampus,
     }));
-    setTeachers((prev) => [...normalizedTeachers, ...prev]);
+    const updated = [...normalizedTeachers, ...teachers];
+    saveTeachersList(updated);
     onTriggerToast(`✨ Successfully imported ${normalizedTeachers.length} faculty members into V.S.B. ${loggedInCampus} Directory!`);
     setCsvParsedTeachers([]);
     setShowCsvPreviewModal(false);
+
+    try {
+      await fetch("/api/teachers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(normalizedTeachers),
+      });
+    } catch (err) {}
   };
 
   const handleDownloadSampleCSV = () => {
@@ -125,7 +172,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
     return matchesSearch && matchesDept && matchesCampus;
   });
 
-  const handleAddTeacher = (e: React.FormEvent) => {
+  const handleAddTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTeacher.name || !newTeacher.email) return;
 
@@ -142,7 +189,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
       avatar: newTeacher.name.slice(0, 2).toUpperCase(),
     };
 
-    setTeachers([teacherToAdd, ...teachers]);
+    const updated = [teacherToAdd, ...teachers];
+    saveTeachersList(updated);
     setShowAddModal(false);
     onTriggerToast(`Faculty member ${teacherToAdd.name} registered at V.S.B. ${teacherToAdd.campus} Campus!`);
     setNewTeacher({
@@ -154,20 +202,37 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
       courses: "B.E. Computer Science",
       experienceYears: 5,
     });
+
+    try {
+      await fetch("/api/teachers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(teacherToAdd),
+      });
+    } catch (err) {}
   };
 
-  const handleUpdateTeacherSubmit = (e: React.FormEvent) => {
+  const handleUpdateTeacherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTeacher) return;
 
-    setTeachers((prev) =>
-      prev.map((t) => (t.id === editingTeacher.id ? editingTeacher : t))
-    );
+    const updatedList = teachers.map((t) => (t.id === editingTeacher.id ? editingTeacher : t));
+    saveTeachersList(updatedList);
+
     setCsvParsedTeachers((prev) =>
       prev.map((t) => (t.id === editingTeacher.id ? editingTeacher : t))
     );
     onTriggerToast(`🔑 Profile updated for faculty member ${editingTeacher.name}!`);
+    const teacherToSave = editingTeacher;
     setEditingTeacher(null);
+
+    try {
+      await fetch("/api/teachers", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(teacherToSave),
+      });
+    } catch (err) {}
   };
 
   return (

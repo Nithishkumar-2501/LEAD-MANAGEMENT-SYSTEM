@@ -112,3 +112,19 @@ model Payment {
   // Relations
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
+
+model Teacher {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  phone           String
+  department      String
+  campus          String   @default("KARUR")
+  coursesAssigned String[]
+  experienceYears Int      @default(3)
+  status          String   @default("ACTIVE")
+  avatar          String   @default("VS")
+  assignedQuota   Int      @default(1000)
+  contactedCount  Int      @default(0)
+  createdAt       DateTime @default(now())
+}
