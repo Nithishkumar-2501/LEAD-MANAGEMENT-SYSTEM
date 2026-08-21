@@ -79,7 +79,8 @@ export default function Sidebar({
       activeTab === "STUDENTS" ||
       activeTab === "TEACHERS" ||
       activeTab === "CAMPUSES" ||
-      activeTab === "PAYMENTS"
+      activeTab === "PAYMENTS" ||
+      activeTab === "SETTINGS"
     ) {
       setIsAdmissionCrmOpen(true);
     } else if (activeTab === "CONTACT_PLATFORM") {
@@ -133,11 +134,20 @@ export default function Sidebar({
       activeBorder: "border-emerald-400",
       activeGlow: "shadow-emerald-500/30",
     },
+    {
+      id: "SETTINGS" as ActiveTab,
+      label: "Admin Settings",
+      sublabel: "System Configuration",
+      icon: Settings,
+      color: "from-rose-500 to-pink-600",
+      activeBorder: "border-rose-400",
+      activeGlow: "shadow-rose-500/30",
+    },
   ];
 
   const filteredSubItems =
     currentUserRole === "TEACHER"
-      ? admissionSubItems.filter((item) => item.id !== "PAYMENTS")
+      ? admissionSubItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS")
       : admissionSubItems;
 
   const contactPlatformSubItems = [
