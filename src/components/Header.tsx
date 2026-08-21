@@ -20,7 +20,6 @@ import {
   Lock,
   Sun,
   Moon,
-  Share2,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -77,7 +76,6 @@ export default function Header({
     { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen },
     { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2 },
     { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard },
-    { id: "CONTACT_PLATFORM" as ActiveTab, label: "Contact Platform", icon: Share2 },
     { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings },
   ];
 

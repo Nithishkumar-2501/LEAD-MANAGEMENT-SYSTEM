@@ -32,7 +32,15 @@ export type ActiveTab =
   | "CAMPUSES"
   | "PAYMENTS"
   | "SETTINGS"
-  | "CONTACT_PLATFORM";
+  | "CONTACT_PLATFORM"
+  | "SOCIAL_ADS"
+  | "SOCIAL_FACEBOOK"
+  | "SOCIAL_TWITTER"
+  | "SOCIAL_WHATSAPP"
+  | "SOCIAL_EMAIL"
+  | "SOCIAL_SMS"
+  | "SOCIAL_CAMPAIGN"
+  | "SOCIAL_EXPO";
 
 export interface User {
   id: string;

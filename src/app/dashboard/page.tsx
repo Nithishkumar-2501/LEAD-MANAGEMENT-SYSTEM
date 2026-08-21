@@ -16,8 +16,8 @@ import CampusCourseModule from "@/components/CampusCourseModule";
 import PaymentBillingModule from "@/components/PaymentBillingModule";
 import AdminSettingsModule from "@/components/AdminSettingsModule";
 import ContactDirectoryModule from "@/components/ContactDirectoryModule";
-import ContactPlatformModule, { SocialSubChannel } from "@/components/ContactPlatformModule";
 import AddQuickLeadModal from "@/components/AddQuickLeadModal";
+import SocialMediaPlatformModule from "@/components/SocialMediaPlatformModule";
 
 import {
   User,
@@ -49,7 +49,6 @@ export default function DashboardPage() {
   const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER">("ADMIN");
   const [loggedInUsername, setLoggedInUsername] = useState<string>("adminkarur@123");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [activeSocialChannel, setActiveSocialChannel] = useState<SocialSubChannel>("ALL");
 
   const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
@@ -223,8 +222,6 @@ export default function DashboardPage() {
         onThemeChange={handleThemeChange}
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
-        activeSocialChannel={activeSocialChannel}
-        onSelectSocialChannel={setActiveSocialChannel}
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}
@@ -330,13 +327,14 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* CONTACT PLATFORM / SOCIAL MEDIA MODULE */}
-        {activeTab === "CONTACT_PLATFORM" && (
-          <ContactPlatformModule
-            loggedInCampus={loggedInCampus}
+        {/* CONTACT & SOCIAL MEDIA PLATFORM MODULE */}
+        {(activeTab === "CONTACT_PLATFORM" ||
+          activeTab.startsWith("SOCIAL_")) && (
+          <SocialMediaPlatformModule
+            activeTab={activeTab}
+            loggedInCampus={selectedCampus}
             onTriggerToast={triggerToast}
-            activeChannel={activeSocialChannel}
-            onSelectChannel={setActiveSocialChannel}
+            onNavigateTab={handleTabChange}
           />
         )}
       </main>
