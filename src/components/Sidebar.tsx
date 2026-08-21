@@ -103,20 +103,11 @@ export default function Sidebar({
       activeBorder: "border-emerald-400",
       activeGlow: "shadow-emerald-500/30",
     },
-    {
-      id: "SETTINGS" as ActiveTab,
-      label: "Admin Settings",
-      sublabel: "System Configuration",
-      icon: Settings,
-      color: "from-rose-500 to-pink-600",
-      activeBorder: "border-rose-400",
-      activeGlow: "shadow-rose-500/30",
-    },
   ];
 
   const filteredSubItems =
     currentUserRole === "TEACHER"
-      ? admissionSubItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS")
+      ? admissionSubItems.filter((item) => item.id !== "PAYMENTS")
       : admissionSubItems;
 
   const handleNavClick = (id: ActiveTab) => {
@@ -408,12 +399,73 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Sidebar Footer: Theme Toggle & Logout */}
+        {/* Sidebar Footer: Admin Settings, Theme Toggle & Logout */}
         <div
           className={`p-3 border-t space-y-2 ${
             isLight ? "border-slate-200 bg-slate-50" : "border-white/10 bg-slate-950/60"
           }`}
         >
+          {/* Admin Settings (Moved to Left Side Bottom above Light Mode) */}
+          {currentUserRole === "ADMIN" && (
+            isCollapsed ? (
+              <Tooltip text="Admin Settings (System Configuration)" position="right">
+                <button
+                  onClick={() => handleNavClick("SETTINGS")}
+                  className={`w-full flex items-center justify-center p-2.5 rounded-xl border transition-all ${
+                    activeTab === "SETTINGS"
+                      ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-105"
+                      : isLight
+                      ? "bg-white hover:bg-slate-100 text-slate-800 border-slate-200"
+                      : "bg-slate-900/90 text-slate-200 hover:text-white border-white/10 hover:border-white/20"
+                  }`}
+                >
+                  <Settings className="w-4 h-4 text-rose-400" />
+                </button>
+              </Tooltip>
+            ) : (
+              <button
+                onClick={() => handleNavClick("SETTINGS")}
+                className={`w-full flex items-center justify-between p-2.5 rounded-2xl border text-xs font-black transition-all duration-300 cursor-pointer group ${
+                  activeTab === "SETTINGS"
+                    ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-[1.02]"
+                    : isLight
+                    ? "bg-white hover:bg-slate-100 text-slate-900 border-slate-200 shadow-sm"
+                    : "bg-slate-900/90 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
+                      activeTab === "SETTINGS"
+                        ? "bg-white/20 text-white"
+                        : isLight
+                        ? "bg-rose-100 text-rose-600"
+                        : "bg-rose-950/80 text-rose-400 border border-rose-800/50"
+                    }`}
+                  >
+                    <Settings className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col text-left truncate">
+                    <span className="font-extrabold text-xs tracking-tight truncate">
+                      Admin Settings
+                    </span>
+                    <span
+                      className={`text-[9px] font-medium truncate ${
+                        activeTab === "SETTINGS"
+                          ? "text-rose-100"
+                          : isLight
+                          ? "text-slate-500"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      System Configuration
+                    </span>
+                  </div>
+                </div>
+              </button>
+            )
+          )}
+
           {/* Theme Quick Toggle */}
           {!isCollapsed && onThemeChange && (
             <div
