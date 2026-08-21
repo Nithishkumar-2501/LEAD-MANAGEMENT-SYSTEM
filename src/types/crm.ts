@@ -31,7 +31,8 @@ export type ActiveTab =
   | "TEACHERS"
   | "CAMPUSES"
   | "PAYMENTS"
-  | "SETTINGS";
+  | "SETTINGS"
+  | "CONTACT_PLATFORM";
 
 export interface User {
   id: string;

@@ -19,8 +19,17 @@ import {
   Sun,
   Moon,
   LayoutDashboard,
+  Share2,
+  Megaphone,
+  Facebook,
+  Twitter,
+  MessageSquare,
+  Mail,
+  Smartphone,
+  Rocket,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation } from "@/types/crm";
+import { SocialSubChannel } from "@/components/ContactPlatformModule";
 import Tooltip from "@/components/Tooltip";
 
 interface SidebarProps {
@@ -37,6 +46,8 @@ interface SidebarProps {
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
+  activeSocialChannel?: SocialSubChannel;
+  onSelectSocialChannel?: (channel: SocialSubChannel) => void;
 }
 
 export default function Sidebar({
@@ -53,9 +64,12 @@ export default function Sidebar({
   onThemeChange,
   isOpenMobile = false,
   onCloseMobile,
+  activeSocialChannel = "ALL",
+  onSelectSocialChannel,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(true);
+  const [isContactPlatformOpen, setIsContactPlatformOpen] = useState(true);
 
   const admissionSubItems = [
     {
@@ -110,8 +124,89 @@ export default function Sidebar({
       ? admissionSubItems.filter((item) => item.id !== "PAYMENTS")
       : admissionSubItems;
 
+  const contactPlatformSubItems = [
+    {
+      channelId: "ADS" as SocialSubChannel,
+      label: "Ads & Paid Media",
+      sublabel: "Google & Meta Ads ROI",
+      icon: Megaphone,
+      color: "from-amber-500 to-red-600",
+      activeBorder: "border-amber-400",
+      activeGlow: "shadow-amber-500/30",
+    },
+    {
+      channelId: "FACEBOOK" as SocialSubChannel,
+      label: "Facebook Leads",
+      sublabel: "Meta Page Lead Forms",
+      icon: Facebook,
+      color: "from-blue-600 to-indigo-700",
+      activeBorder: "border-blue-400",
+      activeGlow: "shadow-blue-500/30",
+    },
+    {
+      channelId: "TWITTER" as SocialSubChannel,
+      label: "X (Twitter) Feed",
+      sublabel: "X Social Outreach",
+      icon: Twitter,
+      color: "from-slate-700 to-slate-900",
+      activeBorder: "border-slate-400",
+      activeGlow: "shadow-slate-500/30",
+    },
+    {
+      channelId: "WHATSAPP" as SocialSubChannel,
+      label: "WhatsApp Portal",
+      sublabel: "Direct & Bulk Chat",
+      icon: MessageSquare,
+      color: "from-emerald-500 to-teal-600",
+      activeBorder: "border-emerald-400",
+      activeGlow: "shadow-emerald-500/30",
+    },
+    {
+      channelId: "EMAIL" as SocialSubChannel,
+      label: "E-Mail Direct",
+      sublabel: "Gmail API Mailer",
+      icon: Mail,
+      color: "from-rose-500 to-pink-600",
+      activeBorder: "border-rose-400",
+      activeGlow: "shadow-rose-500/30",
+    },
+    {
+      channelId: "SMS" as SocialSubChannel,
+      label: "SMS Broadcast",
+      sublabel: "Bulk SMS & Alerts",
+      icon: Smartphone,
+      color: "from-purple-500 to-indigo-600",
+      activeBorder: "border-purple-400",
+      activeGlow: "shadow-purple-500/30",
+    },
+    {
+      channelId: "CAMPAIGN" as SocialSubChannel,
+      label: "Campaign Manager",
+      sublabel: "Outreach Campaigns",
+      icon: Sparkles,
+      color: "from-amber-400 to-orange-600",
+      activeBorder: "border-amber-400",
+      activeGlow: "shadow-amber-500/30",
+    },
+    {
+      channelId: "EXPO" as SocialSubChannel,
+      label: "Project Expo",
+      sublabel: "V.S.B. Tech Expo Leads",
+      icon: Rocket,
+      color: "from-indigo-500 to-cyan-500",
+      activeBorder: "border-cyan-400",
+      activeGlow: "shadow-cyan-500/30",
+    },
+  ];
+
   const handleNavClick = (id: ActiveTab) => {
     onTabChange(id);
+    if (onCloseMobile) onCloseMobile();
+  };
+
+  const handleSocialSubChannelClick = (channel: SocialSubChannel) => {
+    onTabChange("CONTACT_PLATFORM");
+    if (onSelectSocialChannel) onSelectSocialChannel(channel);
     if (onCloseMobile) onCloseMobile();
   };
 
@@ -121,6 +216,15 @@ export default function Sidebar({
       setIsAdmissionCrmOpen(true);
     } else {
       setIsAdmissionCrmOpen(!isAdmissionCrmOpen);
+    }
+  };
+
+  const toggleContactPlatformMenu = () => {
+    if (isCollapsed) {
+      setIsCollapsed(false);
+      setIsContactPlatformOpen(true);
+    } else {
+      setIsContactPlatformOpen(!isContactPlatformOpen);
     }
   };
 
@@ -387,6 +491,177 @@ export default function Sidebar({
                   if (isCollapsed) {
                     return (
                       <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
+                        {buttonContent}
+                      </Tooltip>
+                    );
+                  }
+
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* PARENT MENU ITEM: CONTACT PLATFORM / SOCIAL MEDIA */}
+          <div className="space-y-1 mt-3">
+            {isCollapsed ? (
+              <Tooltip text="Contact Platform (Social Media & Channels)" position="right">
+                <button
+                  onClick={() => {
+                    toggleContactPlatformMenu();
+                    handleNavClick("CONTACT_PLATFORM");
+                  }}
+                  className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
+                    activeTab === "CONTACT_PLATFORM"
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/30 border border-indigo-400 scale-105"
+                      : isLight
+                      ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200"
+                      : "bg-slate-900/80 text-slate-300 hover:text-white border border-white/10 hover:border-white/20"
+                  }`}
+                >
+                  <Share2 className="w-5 h-5 text-indigo-400" />
+                  {activeTab === "CONTACT_PLATFORM" && (
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  )}
+                </button>
+              </Tooltip>
+            ) : (
+              <div
+                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
+                  activeTab === "CONTACT_PLATFORM"
+                    ? isLight
+                      ? "bg-indigo-50 border-indigo-300 text-indigo-900 shadow-md"
+                      : "bg-indigo-950/50 border-indigo-500/40 text-indigo-200 shadow-lg shadow-indigo-950/50"
+                    : isLight
+                    ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
+                    : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                }`}
+                onClick={() => {
+                  toggleContactPlatformMenu();
+                  handleNavClick("CONTACT_PLATFORM");
+                }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
+                      activeTab === "CONTACT_PLATFORM"
+                        ? "bg-gradient-to-tr from-indigo-500 to-purple-600 text-white"
+                        : isLight
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-slate-800 text-slate-300"
+                    }`}
+                  >
+                    <Share2 className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <div className="flex flex-col text-left truncate">
+                    <span className="font-extrabold text-xs tracking-tight truncate">
+                      Contact Platform
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold truncate ${
+                        isLight ? "text-slate-500" : "text-slate-400"
+                      }`}
+                    >
+                      Social Media & Channels
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span
+                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                      isLight
+                        ? "bg-indigo-100 text-indigo-700"
+                        : "bg-indigo-500/20 text-indigo-300 border border-indigo-400/30"
+                    }`}
+                  >
+                    {contactPlatformSubItems.length}
+                  </span>
+                  <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
+                    {isContactPlatformOpen ? (
+                      <ChevronDown className="w-4 h-4 text-indigo-400" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* NESTED INSIDE CONTACT PLATFORM */}
+            {(isContactPlatformOpen || isCollapsed) && (
+              <div
+                className={`space-y-1 transition-all duration-300 ${
+                  isCollapsed
+                    ? "pt-2 space-y-2 border-t border-white/10 mt-2"
+                    : "ml-3 pl-3 border-l-2 border-indigo-500/30 dark:border-indigo-400/20 mt-1.5 space-y-1.5"
+                }`}
+              >
+                {contactPlatformSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === "CONTACT_PLATFORM" && activeSocialChannel === item.channelId;
+
+                  const buttonContent = (
+                    <button
+                      key={item.channelId}
+                      onClick={() => handleSocialSubChannelClick(item.channelId)}
+                      className={`w-full flex items-center gap-3 ${
+                        isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
+                      } rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                        isActive
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
+                          : isLight
+                          ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                      }`}
+                    >
+                      <div
+                        className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : isLight
+                            ? "bg-slate-100 text-slate-600"
+                            : "bg-slate-800/90 text-slate-300"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+
+                      {!isCollapsed && (
+                        <div className="flex flex-col items-start min-w-0 text-left">
+                          <span
+                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                              isActive
+                                ? "text-white"
+                                : isLight
+                                ? "text-slate-900"
+                                : "text-slate-200 group-hover:text-white"
+                            }`}
+                          >
+                            {item.label}
+                          </span>
+                          <span
+                            className={`text-[9px] font-medium truncate w-full ${
+                              isActive
+                                ? "text-white/80"
+                                : isLight
+                                ? "text-slate-500"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {item.sublabel}
+                          </span>
+                        </div>
+                      )}
+
+                      {isActive && !isCollapsed && (
+                        <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      )}
+                    </button>
+                  );
+
+                  if (isCollapsed) {
+                    return (
+                      <Tooltip key={item.channelId} text={`${item.label} (${item.sublabel})`} position="right">
                         {buttonContent}
                       </Tooltip>
                     );
