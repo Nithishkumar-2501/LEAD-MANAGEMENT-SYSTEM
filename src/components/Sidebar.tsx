@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   GraduationCap,
   UserCheck,
@@ -70,6 +70,22 @@ export default function Sidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(true);
   const [isContactPlatformOpen, setIsContactPlatformOpen] = useState(true);
+
+  // Auto-expand menu section based on activeTab selection
+  useEffect(() => {
+    if (
+      activeTab === "ADMISSIONS" ||
+      activeTab === "CONTACTS" ||
+      activeTab === "STUDENTS" ||
+      activeTab === "TEACHERS" ||
+      activeTab === "CAMPUSES" ||
+      activeTab === "PAYMENTS"
+    ) {
+      setIsAdmissionCrmOpen(true);
+    } else if (activeTab === "CONTACT_PLATFORM") {
+      setIsContactPlatformOpen(true);
+    }
+  }, [activeTab]);
 
   const admissionSubItems = [
     {
