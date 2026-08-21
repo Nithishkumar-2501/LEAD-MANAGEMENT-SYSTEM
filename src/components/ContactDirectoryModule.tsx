@@ -58,6 +58,15 @@ export default function ContactDirectoryModule({
     setContacts(initialContacts);
   }, [initialContacts]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchField, setSearchField] = useState<"Mobile" | "Email" | "Name" | "User Id" | "Lead Id" | "All Fields">("Mobile");
+  const [isSearchFieldDropdownOpen, setIsSearchFieldDropdownOpen] = useState(false);
+  const [starredSearchFields, setStarredSearchFields] = useState<Record<string, boolean>>({
+    Email: true,
+    Mobile: false,
+    Name: false,
+    "User Id": false,
+    "Lead Id": false,
+  });
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [counsellingFilter, setCounsellingFilter] = useState<"ALL" | "COUNSELLING_ONLY" | "GOVT_QUOTA" | "MANAGEMENT_ONLY">("ALL");
@@ -313,20 +322,33 @@ export default function ContactDirectoryModule({
     if (col === "Community") return <span className="font-extrabold text-blue-600">{(contact as any).community || "BC"}</span>;
     if (col === "User Registration Date") return <span className="text-slate-600 font-medium">Aug 12, 2026</span>;
     if (col === "Lead Stage") {
+      const statusText =
+        contact.status === "NEW"
+          ? "Untouched"
+          : contact.status === "CONTACTED"
+          ? "Interested to Study Engin..."
+          : contact.status === "IN_REVIEW"
+          ? "Not Reachable"
+          : contact.status === "ADMITTED"
+          ? "Admitted"
+          : contact.status === "REJECTED"
+          ? "Closed"
+          : contact.status || "Untouched";
+
+      const badgeStyle =
+        statusText === "Untouched"
+          ? "bg-red-50 text-red-600 border-red-200 font-bold"
+          : statusText.startsWith("Interested")
+          ? "bg-sky-50 text-sky-700 border-sky-200 font-bold"
+          : statusText === "Not Reachable"
+          ? "bg-slate-100 text-slate-600 border-slate-200 font-medium"
+          : statusText === "Admitted"
+          ? "bg-emerald-50 text-emerald-700 border-emerald-300 font-bold"
+          : "bg-slate-100 text-slate-700 border-slate-300 font-medium";
+
       return (
-        <span
-          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${contact.status === "ADMITTED"
-              ? "bg-emerald-100 text-emerald-700 border-emerald-300"
-              : contact.status === "CONTACTED"
-                ? "bg-indigo-100 text-indigo-700 border-indigo-300"
-                : contact.status === "IN_REVIEW"
-                  ? "bg-amber-100 text-amber-700 border-amber-300"
-                  : contact.status === "REJECTED"
-                    ? "bg-rose-100 text-rose-700 border-rose-300"
-                    : "bg-sky-100 text-sky-700 border-sky-300"
-            }`}
-        >
-          {contact.status}
+        <span className={`px-2.5 py-0.5 rounded-full text-[11px] border whitespace-nowrap inline-block ${badgeStyle}`}>
+          {statusText}
         </span>
       );
     }
@@ -367,12 +389,23 @@ export default function ContactDirectoryModule({
 
   // Filter Contacts
   const filteredContacts = contacts.filter((c) => {
-    const matchesSearch =
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.phone.includes(searchQuery) ||
-      (c.school && c.school.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (c.district && c.district.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (c.address && c.address.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = (() => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      if (searchField === "Mobile") return c.phone.toLowerCase().includes(q);
+      if (searchField === "Email") return c.email.toLowerCase().includes(q);
+      if (searchField === "Name") return c.name.toLowerCase().includes(q);
+      if (searchField === "User Id" || searchField === "Lead Id") return (c.id || "").toLowerCase().includes(q);
+      return (
+        c.name.toLowerCase().includes(q) ||
+        c.phone.includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        (c.id || "").toLowerCase().includes(q) ||
+        (c.school && c.school.toLowerCase().includes(q)) ||
+        (c.district && c.district.toLowerCase().includes(q)) ||
+        (c.address && c.address.toLowerCase().includes(q))
+      );
+    })();
 
     const matchesCampus = selectedCampus === "ALL" || c.campus === selectedCampus;
 
@@ -963,71 +996,35 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* FILTER CONTROLS BAR WITH RIGHT-ALIGNED FILTER LEADS BY & CUSTOMIZE COLUMN BUTTONS (MATCHING IMAGE 2 PILL SHAPES) */}
-      <div className="bg-[#ffffff] border border-slate-200 rounded-3xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* User Registration Date & Calendar Picker */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                User Registration Date / Calendar Intake
-              </label>
-              <select
-                value={regDateFilter}
-                onChange={(e) => setRegDateFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-[220px] truncate"
-              >
-                <option value="Select Here">Select Here 📅</option>
-                <optgroup label="Quick Filters">
-                  <option value="Today">Today (12/08/2026)</option>
-                  <option value="Yesterday">Yesterday</option>
-                  <option value="Last 7 Days">Last 7 Days</option>
-                  <option value="All Time">All Time</option>
-                </optgroup>
-                <optgroup label="Academic Years">
-                  <option value="2026">Academic Year 2026</option>
-                  <option value="2027">Academic Year 2027 (Next Year)</option>
-                  <option value="2025">Academic Year 2025</option>
-                </optgroup>
-                <optgroup label="2026 Months">
-                  <option value="August 2026">August 2026</option>
-                  <option value="September 2026">September 2026</option>
-                  <option value="October 2026">October 2026</option>
-                  <option value="November 2026">November 2026</option>
-                  <option value="December 2026">December 2026</option>
-                </optgroup>
-                <optgroup label="2027 Months (Next Year)">
-                  <option value="January 2027">January 2027</option>
-                  <option value="February 2027">February 2027</option>
-                  <option value="March 2027">March 2027</option>
-                  <option value="April 2027">April 2027</option>
-                  <option value="May 2027">May 2027</option>
-                  <option value="June 2027">June 2027</option>
-                  <option value="July 2027">July 2027</option>
-                  <option value="August 2027">August 2027</option>
-                  <option value="September 2027">September 2027</option>
-                  <option value="October 2027">October 2027</option>
-                  <option value="November 2027">November 2027</option>
-                  <option value="December 2027">December 2027</option>
-                </optgroup>
-              </select>
-            </div>
-
-            <button
-              onClick={() => setIsCalendarModalOpen(true)}
-              className="px-4 py-1.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-sky-500/30 transition-all cursor-pointer shrink-0"
-              title="Open Interactive Calendar Picker with Month & Year"
+      {/* MERITTO LEAD MANAGER QUICK FILTER PILLS & FIELD SEARCH BAR (MATCHING SCREENSHOT) */}
+      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
+        {/* Left: Quick Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* User Registration Date */}
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">User Registration Date:</span>
+            <select
+              value={regDateFilter}
+              onChange={(e) => setRegDateFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
             >
-              <div className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center shrink-0">
-                <Calendar className="w-3 h-3 text-white" />
-              </div>
-              <span>Calendar Picker</span>
-            </button>
+              <option value="Select Here">Select Here 📅</option>
+              <optgroup label="Quick Filters">
+                <option value="Today">Today</option>
+                <option value="Yesterday">Yesterday</option>
+                <option value="Last 7 Days">Last 7 Days</option>
+                <option value="All Time">All Time</option>
+              </optgroup>
+              <optgroup label="Academic Years">
+                <option value="2026">Academic Year 2026</option>
+                <option value="2027">Academic Year 2027</option>
+              </optgroup>
+            </select>
           </div>
 
           {/* Lead Stage */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Stage</label>
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">Lead Stage:</span>
             <select
               value={leadStageFilter}
               onChange={(e) => {
@@ -1037,7 +1034,7 @@ export default function ContactDirectoryModule({
                   onTriggerToast(`Filtered leads by Lead Stage: ${val}`);
                 }
               }}
-              className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Untouched">Untouched</option>
@@ -1049,12 +1046,12 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* Lead Owner / Teams */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Owner / Teams</label>
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">Lead Owner / Teams:</span>
             <select
               value={leadOwnerFilter}
               onChange={(e) => setLeadOwnerFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Admin Karur">Admin Karur</option>
@@ -1064,55 +1061,135 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* Campaign Source */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Campaign Source</label>
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">Campaign Source:</span>
             <select
               value={campaignSourceFilter}
               onChange={(e) => setCampaignSourceFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Organic">Organic Search</option>
               <option value="TNEA Counselling">TNEA Counselling</option>
               <option value="Facebook Ads">Facebook Ads</option>
-              <option value="College Expo">College Expo</option>
             </select>
           </div>
 
           {/* Traffic Channel */}
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Traffic Channel</label>
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">Traffic Channel:</span>
             <select
               value={trafficChannelFilter}
               onChange={(e) => setTrafficChannelFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Direct Intake">Direct Intake</option>
               <option value="Social Media">Social Media</option>
-              <option value="Referral">Referral</option>
             </select>
           </div>
 
-          <button className="self-end mb-0.5 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200">
+          <button className="px-3 py-1.5 rounded-full bg-slate-100 border border-slate-300 text-slate-600 font-semibold hover:bg-slate-200 transition-colors">
             +2 more
           </button>
         </div>
 
-        {/* FIRST IMAGE BUTTONS RIGHT-ALIGNED ON THE RIGHT SIDE UNDER SECOND IMAGE */}
-        <div className="flex items-center gap-2.5 ml-auto shrink-0">
-          <button
-            onClick={() => setIsFilterDrawerOpen(true)}
-            className="px-4 py-2 rounded-2xl border border-sky-300 bg-sky-50 text-sky-700 font-extrabold hover:bg-sky-100 flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-          >
-            <Filter className="w-4 h-4 text-sky-600" /> Filter leads by ({filterRules.length})
-          </button>
+        {/* Right: Quick Search Dropdown & Field Search Input (Matching Meritto Screenshot) */}
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          {/* Combined Field Selector + Search Input Bar */}
+          <div className="relative flex items-center bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+            {/* Field Dropdown Selector Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsSearchFieldDropdownOpen(!isSearchFieldDropdownOpen)}
+                className="px-3 py-1.5 text-xs font-semibold text-slate-700 border-r border-slate-300 flex items-center gap-1.5 hover:bg-slate-100 rounded-l-lg transition-colors"
+              >
+                <span>{searchField}</span>
+                <span className="text-[10px] text-slate-400">∧</span>
+              </button>
 
+              {/* Popover Dropdown for Field Selection (Matching Screenshot) */}
+              {isSearchFieldDropdownOpen && (
+                <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 py-1.5 text-xs font-sans text-slate-800 animate-in fade-in zoom-in-95">
+                  {(["Email", "Mobile", "Name", "User Id", "Lead Id"] as const).map((field) => (
+                    <div
+                      key={field}
+                      onClick={() => {
+                        setSearchField(field);
+                        setIsSearchFieldDropdownOpen(false);
+                      }}
+                      className={`px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-blue-50 transition-colors ${
+                        searchField === field ? "bg-blue-50/80 font-bold text-blue-600" : "text-slate-700 font-medium"
+                      }`}
+                    >
+                      <span>{field}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStarredSearchFields((prev) => ({ ...prev, [field]: !prev[field] }));
+                        }}
+                        className={`text-sm hover:scale-110 transition-transform ${
+                          starredSearchFields[field] ? "text-amber-400" : "text-slate-300 hover:text-amber-400"
+                        }`}
+                        title="Toggle Favorite Search Field"
+                      >
+                        ★
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Input Box */}
+            <div className="relative flex items-center w-48 sm:w-60">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={`Search by ${searchField}`}
+                className="w-full bg-transparent text-xs font-medium text-slate-800 placeholder-slate-400 pl-3 pr-8 py-1.5 focus:outline-none"
+              />
+              <div className="absolute right-2 flex items-center gap-1 text-slate-400">
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="hover:text-slate-600 text-xs font-bold px-1"
+                    title="Clear Search"
+                  >
+                    ✕
+                  </button>
+                )}
+                <Search className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Grid Layout Toggle Icon */}
           <button
             onClick={() => setIsCustomizeColumnDrawerOpen(true)}
-            className="px-4 py-2 rounded-2xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-extrabold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+            className="p-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-sm"
+            title="Customize Grid Columns"
           >
-            <span className="text-purple-600">⚙️</span> Customize Column
+            <div className="w-4 h-4 grid grid-cols-2 gap-0.5 items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+            </div>
+          </button>
+
+          {/* Advanced Filter Funnel Button with Active Count Badge */}
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <Filter className="w-3.5 h-3.5 text-blue-600" />
+            <span className="text-xs">Advanced Filter</span>
+            <span className="bg-blue-600 text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
+              {filterRules.length}
+            </span>
           </button>
         </div>
       </div>
@@ -1410,36 +1487,46 @@ export default function ContactDirectoryModule({
             </table>
           </div>
 
-          {/* TABLE FOOTER CONTROLS BAR (Image 2 Reference) */}
+          {/* TABLE FOOTER CONTROLS BAR (Matching Meritto Screenshot) */}
           <div className="bg-slate-50 border-t border-slate-200 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 font-sans">
             {/* Classic View Toggle */}
-            <button
-              onClick={() => setDirectoryViewMode("GRID")}
-              className="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold shadow-sm"
-            >
-              Classic View
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setDirectoryViewMode("GRID")}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5"
+              >
+                <span>Classic View</span>
+              </button>
+            </div>
 
             {/* Load More Leads Center Button */}
             <button
-              onClick={() => onTriggerToast?.("Loaded more records from database!")}
-              className="px-4 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold flex items-center gap-1.5 shadow-sm"
+              onClick={() => {
+                setRowsPerPage((prev) => prev + 20);
+                if (onTriggerToast) {
+                  onTriggerToast("Loaded more lead records from database!");
+                }
+              }}
+              className="px-4 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold flex items-center gap-2 shadow-sm transition-colors"
             >
-              🔄 Load More Leads
+              <span className="text-slate-500">🔄</span> Load More Leads
             </button>
 
             {/* Total Records & Rows Selector */}
             <div className="flex items-center gap-3">
-              <button className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold shadow-sm">
+              <button
+                onClick={() => onTriggerToast?.(`Total Records Count: ${filteredContacts.length}`)}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold shadow-sm hover:bg-slate-100"
+              >
                 Show Total Records ({filteredContacts.length})
               </button>
 
-              <div className="flex items-center gap-1.5 font-bold">
+              <div className="flex items-center gap-1.5 font-bold text-slate-700">
                 <span>Show Rows</span>
                 <select
                   value={rowsPerPage}
                   onChange={(e) => setRowsPerPage(Number(e.target.value))}
-                  className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-slate-800 font-bold focus:outline-none cursor-pointer"
+                  className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm"
                 >
                   <option value={10}>10 ∨</option>
                   <option value={20}>20 ∨</option>
