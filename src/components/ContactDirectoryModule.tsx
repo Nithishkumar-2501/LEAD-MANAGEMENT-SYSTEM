@@ -467,6 +467,50 @@ export default function ContactDirectoryModule({
       return true;
     };
 
+    const matchesLeadStage = () => {
+      if (!leadStageFilter || leadStageFilter === "Select Here" || leadStageFilter === "ALL") return true;
+      const statusUpper = (c.status || "").toUpperCase();
+      const valLower = leadStageFilter.toLowerCase();
+
+      if (valLower === "untouched") {
+        return statusUpper === "NEW" || statusUpper === "UNTOUCHED" || !c.assignedTo;
+      }
+      if (valLower === "new inquiry") {
+        return statusUpper === "NEW" || statusUpper === "INQUIRY" || statusUpper === "IN_REVIEW";
+      }
+      if (valLower === "contacted") {
+        return statusUpper === "CONTACTED";
+      }
+      if (valLower === "cutoff review") {
+        return statusUpper === "IN_REVIEW" || statusUpper === "CUTOFF_REVIEW" || ((c as any).tneaCutoff && (c as any).tneaCutoff > 0);
+      }
+      if (valLower === "admitted") {
+        return statusUpper === "ADMITTED";
+      }
+      return statusUpper.includes(valLower.toUpperCase());
+    };
+
+    const matchesLeadOwner = () => {
+      if (!leadOwnerFilter || leadOwnerFilter === "Select Here") return true;
+      const ownerLower = leadOwnerFilter.toLowerCase();
+      const assignedLower = (c.assignedTo || "").toLowerCase();
+      if (ownerLower.includes("karur")) return assignedLower.includes("karur") || c.campus === "KARUR";
+      if (ownerLower.includes("covai") || ownerLower.includes("coimbatore")) return assignedLower.includes("covai") || assignedLower.includes("coimbatore") || c.campus === "COIMBATORE";
+      return assignedLower.includes(ownerLower);
+    };
+
+    const matchesCampaignSource = () => {
+      if (!campaignSourceFilter || campaignSourceFilter === "Select Here") return true;
+      const srcLower = (c.source || "").toLowerCase();
+      const filterLower = campaignSourceFilter.toLowerCase();
+      return srcLower.includes(filterLower) || filterLower.includes(srcLower);
+    };
+
+    const matchesTrafficChannel = () => {
+      if (!trafficChannelFilter || trafficChannelFilter === "Select Here") return true;
+      return true;
+    };
+
     return (
       matchesSearch &&
       matchesCampus &&
@@ -477,7 +521,11 @@ export default function ContactDirectoryModule({
       matchesDrawerRules &&
       matchesColumnFilters &&
       matchesRegDate() &&
-      matchesSelectedView()
+      matchesSelectedView() &&
+      matchesLeadStage() &&
+      matchesLeadOwner() &&
+      matchesCampaignSource() &&
+      matchesTrafficChannel()
     );
   });
 
@@ -982,7 +1030,13 @@ export default function ContactDirectoryModule({
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lead Stage</label>
             <select
               value={leadStageFilter}
-              onChange={(e) => setLeadStageFilter(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLeadStageFilter(val);
+                if (onTriggerToast) {
+                  onTriggerToast(`Filtered leads by Lead Stage: ${val}`);
+                }
+              }}
               className="bg-slate-50 border border-slate-300 rounded-full px-4 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value="Select Here">Select Here ∨</option>
