@@ -334,7 +334,7 @@ export default function DashboardPage() {
             activeTab={activeTab}
             loggedInCampus={selectedCampus}
             onTriggerToast={triggerToast}
-            onNavigateTab={handleTabChange}
+            onNavigateTab={setActiveTab}
           />
         )}
       </main>
