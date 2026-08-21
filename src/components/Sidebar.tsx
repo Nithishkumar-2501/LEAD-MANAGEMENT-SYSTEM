@@ -214,8 +214,13 @@ export default function Sidebar({
     if (isCollapsed) {
       setIsCollapsed(false);
       setIsAdmissionCrmOpen(true);
+      onTabChange("ADMISSIONS");
     } else {
-      setIsAdmissionCrmOpen(!isAdmissionCrmOpen);
+      const nextState = !isAdmissionCrmOpen;
+      setIsAdmissionCrmOpen(nextState);
+      if (nextState && !isAnySubItemActive) {
+        onTabChange("ADMISSIONS");
+      }
     }
   };
 
@@ -223,8 +228,13 @@ export default function Sidebar({
     if (isCollapsed) {
       setIsCollapsed(false);
       setIsContactPlatformOpen(true);
+      onTabChange("CONTACT_PLATFORM");
     } else {
-      setIsContactPlatformOpen(!isContactPlatformOpen);
+      const nextState = !isContactPlatformOpen;
+      setIsContactPlatformOpen(nextState);
+      if (nextState && activeTab !== "CONTACT_PLATFORM") {
+        onTabChange("CONTACT_PLATFORM");
+      }
     }
   };
 
