@@ -238,6 +238,7 @@ export default function DashboardPage() {
           onLogout={handleLogout}
           loggedInCampus={loggedInCampus}
           currentUserRole={currentUserRole}
+          loggedInUsername={loggedInUsername}
           theme={theme}
           onThemeChange={handleThemeChange}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}

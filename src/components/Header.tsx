@@ -35,6 +35,7 @@ interface HeaderProps {
   onLogout: () => void;
   loggedInCampus: "KARUR" | "COIMBATORE";
   currentUserRole: "ADMIN" | "TEACHER";
+  loggedInUsername?: string;
   theme?: "LIGHT" | "DARK";
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
   onToggleMobileSidebar?: () => void;
@@ -51,6 +52,7 @@ export default function Header({
   onLogout,
   loggedInCampus,
   currentUserRole,
+  loggedInUsername,
   theme = "DARK",
   onThemeChange,
   onToggleMobileSidebar,
@@ -261,16 +263,14 @@ export default function Header({
             )}
           </div>
 
-          {/* Admin User Profile */}
+          {/* User Profile Badge */}
           <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-slate-300 dark:border-white/15">
             <div className="flex items-center gap-2 sm:gap-2.5 bg-slate-100 dark:bg-slate-900/80 border border-slate-300 dark:border-white/20 px-2 sm:px-3.5 py-1 rounded-full backdrop-blur-xl">
               <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 text-white font-black text-[10px] flex items-center justify-center shadow-md">
-                VSB
+                {currentUserRole === "ADMIN" ? "ADM" : (loggedInUsername ? loggedInUsername.slice(0, 2).toUpperCase() : "TCH")}
               </div>
               <span className="hidden sm:inline text-xs font-bold text-slate-900 dark:text-slate-200">
-                {loggedInCampus === "KARUR"
-                  ? currentUserRole === "ADMIN" ? "adminkarur@123" : "teacherkarur@123"
-                  : currentUserRole === "ADMIN" ? "admincovai@123" : "teachercovai@123"}{" "}
+                {loggedInUsername || (loggedInCampus === "KARUR" ? "adminkarur@123" : "admincovai@123")}{" "}
                 <span className="text-[10px] text-sky-600 dark:text-sky-300 font-bold">({currentUserRole === "ADMIN" ? "Admin" : "Teacher"})</span>
               </span>
             </div>

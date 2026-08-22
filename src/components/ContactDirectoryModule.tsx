@@ -927,7 +927,7 @@ export default function ContactDirectoryModule({
             </div>
             <h3 className="text-lg font-black text-white flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-emerald-400" />
-              Assigned Lead Batch: <span className="text-emerald-400 font-black">100 Contacts (#1 to #100)</span> out of 1,000 Total
+              Faculty Portal: <span className="text-emerald-300 font-black">{FACULTY_MEMBERS.find((f) => f.id === loggedInUsername || f.id.toLowerCase() === loggedInUsername.toLowerCase())?.name || loggedInUsername} ({loggedInUsername})</span>
             </h3>
             <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
