@@ -211,8 +211,21 @@ html.light .text-slate-800 {
   color: #0f172a !important;
 }
 
+/* STUDENT NAME HIGH-CONTRAST BLACK COLOR RULE */
+html.light td div .font-bold,
+html.light td div .font-black,
+html.light tr td .font-bold,
+html.light tr td .font-extrabold,
+html.light .student-name {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
 /* Pure White Text Preservation for Dark Cards & Filled Buttons in Light Mode */
-html.light .text-white {
+html.light button.bg-blue-600,
+html.light button.bg-indigo-600,
+html.light button.bg-emerald-600,
+html.light .glossy-btn {
   color: #ffffff !important;
 }
 

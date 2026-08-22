@@ -261,7 +261,7 @@ export default function ContactDirectoryModule({
       return (
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <span onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
+            <span className="font-extrabold text-[#0f172a] dark:text-blue-600 text-sm hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
               {contact.name}
             </span>
           </div>
@@ -1554,7 +1554,7 @@ export default function ContactDirectoryModule({
                         {contact.name.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <h3 className="text-sm font-black text-white group-hover:text-sky-300 transition-colors">
+                        <h3 className="text-sm font-extrabold text-[#0f172a] dark:text-slate-100 group-hover:text-blue-600 transition-colors">
                           {contact.name}
                         </h3>
                         <p className="text-[11px] text-sky-300 font-semibold">{contact.courseInterest}</p>
