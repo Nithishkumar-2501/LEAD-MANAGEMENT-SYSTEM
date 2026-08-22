@@ -1135,85 +1135,85 @@ export default function ContactDirectoryModule({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
           <button
             onClick={() => setSelectedStatus("ALL")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ALL"
-              ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white border-white/40 shadow-lg shadow-sky-500/30 font-black scale-[1.03]"
-              : "bg-slate-950/80 text-slate-300 border-white/15 hover:border-white/30"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "ALL"
+              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
+              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
               }`}
           >
             <span className="text-lg">🌟</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs">All Leads</span>
-              <span className="text-[10px] opacity-80">{contacts.length} Total</span>
+              <span className="block text-xs font-black">All Leads</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.length} Total</span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("NEW")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 relative overflow-hidden ${selectedStatus === "NEW"
-              ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-300 shadow-xl shadow-sky-500/40 ring-2 ring-sky-400/50 font-black scale-[1.03]"
-              : "bg-sky-950/50 text-sky-300 border-sky-500/40 hover:bg-sky-900/60"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "NEW"
+              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
+              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
               }`}
           >
-            <span className="text-lg animate-pulse">🆕</span>
+            <span className="text-lg">🆕</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs text-sky-200 font-extrabold">New Inquiry</span>
-              <span className="text-[10px] opacity-90">{contacts.filter(c => c.status === "NEW").length} Leads</span>
+              <span className="block text-xs font-black">New Inquiry</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "NEW").length} Leads</span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("CONTACTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "CONTACTED"
-              ? "bg-gradient-to-r from-teal-500 to-emerald-600 text-white border-teal-300 shadow-lg shadow-teal-500/30 font-black scale-[1.03]"
-              : "bg-teal-950/40 text-teal-300 border-teal-500/30 hover:bg-teal-900/50"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "CONTACTED"
+              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
+              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
               }`}
           >
             <span className="text-lg">📞</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs">Contacted</span>
-              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "CONTACTED").length} Leads</span>
+              <span className="block text-xs font-black">Contacted</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "CONTACTED").length} Leads</span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("IN_REVIEW")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "IN_REVIEW"
-              ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-300 shadow-lg shadow-amber-500/30 font-black scale-[1.03]"
-              : "bg-amber-950/40 text-amber-300 border-amber-500/30 hover:bg-amber-900/50"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "IN_REVIEW"
+              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
+              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
               }`}
           >
             <span className="text-lg">📊</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs">Cutoff Review</span>
-              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "IN_REVIEW").length} Leads</span>
+              <span className="block text-xs font-black">Cutoff Review</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "IN_REVIEW").length} Leads</span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("ADMITTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ADMITTED"
-              ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white border-emerald-300 shadow-lg shadow-emerald-500/30 font-black scale-[1.03]"
-              : "bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "ADMITTED"
+              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
+              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
               }`}
           >
             <span className="text-lg">🎓</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs">Admitted</span>
-              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "ADMITTED").length} Leads</span>
+              <span className="block text-xs font-black">Admitted</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "ADMITTED").length} Leads</span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("REJECTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "REJECTED"
-              ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-rose-300 shadow-lg shadow-rose-500/30 font-black scale-[1.03]"
-              : "bg-rose-950/40 text-rose-300 border-rose-500/30 hover:bg-rose-900/50"
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "REJECTED"
+              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
+              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
               }`}
           >
             <span className="text-lg">❌</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs">Rejected</span>
-              <span className="text-[10px] opacity-80">{contacts.filter(c => c.status === "REJECTED").length} Leads</span>
+              <span className="block text-xs font-black">Rejected</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "REJECTED").length} Leads</span>
             </div>
           </button>
         </div>
