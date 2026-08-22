@@ -390,72 +390,84 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
         {/* Teachers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {paginatedTeachers.map((tch) => (
-            <div
-              key={tch.id}
-              className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/20 cursor-pointer group"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
-                    {tch.avatar}
+          {paginatedTeachers.map((tch, index) => {
+            const rangeDisplay =
+              tch.assignedRangeText ||
+              `Contacts #${((index % 10) * 100) + 1} to #${((index % 10) + 1) * 100}`;
+
+            return (
+              <div
+                key={tch.id}
+                className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/20 cursor-pointer group"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                      {tch.avatar}
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-black dark:text-white group-hover:text-sky-400 transition-colors">{tch.name}</h4>
+                      <p className="text-xs text-indigo-500 dark:text-indigo-400 font-bold">{tch.department}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-base font-black text-black dark:text-white group-hover:text-sky-400 transition-colors">{tch.name}</h4>
-                    <p className="text-xs text-indigo-500 dark:text-indigo-400 font-bold">{tch.department}</p>
+
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-950 text-slate-300 border-slate-700 shadow-sm">
+                      {tch.campus} CAMPUS
+                    </span>
+
+                    {/* Interactive Active / On Leave Status Toggle Switch */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newStatus: "ACTIVE" | "ON_LEAVE" = tch.status === "ACTIVE" ? "ON_LEAVE" : "ACTIVE";
+                        const updatedList = teachers.map((t) => (t.id === tch.id || t.email === tch.email ? { ...t, status: newStatus } : t));
+                        saveTeachersList(updatedList);
+                        onTriggerToast(
+                          `🔄 Status updated for ${tch.name}: ${newStatus === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}`
+                        );
+                      }}
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 transition-all cursor-pointer shadow-md transform hover:scale-105 active:scale-95 ${
+                        tch.status === "ACTIVE"
+                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/60 hover:bg-emerald-500/30"
+                          : "bg-amber-500/20 text-amber-300 border-amber-400/60 hover:bg-amber-500/30"
+                      }`}
+                      title="Click to toggle Active vs On Leave availability status"
+                    >
+                      <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                      <span>{tch.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}</span>
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-1.5">
-                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-950 text-slate-300 border-slate-700 shadow-sm">
-                    {tch.campus} CAMPUS
-                  </span>
-
-                  {/* Interactive Active / On Leave Status Toggle Switch */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const newStatus: "ACTIVE" | "ON_LEAVE" = tch.status === "ACTIVE" ? "ON_LEAVE" : "ACTIVE";
-                      const updatedList = teachers.map((t) => (t.id === tch.id || t.email === tch.email ? { ...t, status: newStatus } : t));
-                      saveTeachersList(updatedList);
-                      onTriggerToast(
-                        `🔄 Status updated for ${tch.name}: ${newStatus === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}`
-                      );
-                    }}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 transition-all cursor-pointer shadow-md transform hover:scale-105 active:scale-95 ${
-                      tch.status === "ACTIVE"
-                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/60 hover:bg-emerald-500/30"
-                        : "bg-amber-500/20 text-amber-300 border-amber-400/60 hover:bg-amber-500/30"
-                    }`}
-                    title="Click to toggle Active vs On Leave availability status"
-                  >
-                    <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-                    <span>{tch.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}</span>
-                  </button>
+                <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-700 dark:text-slate-300">Experience</span>
+                    <span className="font-black text-slate-900 dark:text-slate-100">{tch.experienceYears} Years</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-700 dark:text-slate-300">Email</span>
+                    <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-[11px]">{tch.email}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-700 dark:text-slate-300">Phone</span>
+                    <span className="font-black text-slate-900 dark:text-slate-100 font-mono">{tch.phone}</span>
+                  </div>
+                  <div className="flex justify-between items-start pt-2 border-t border-slate-200 dark:border-slate-800 font-bold">
+                    <span className="text-sky-600 dark:text-sky-400 flex items-center gap-1 font-black">
+                      <UserCheck className="w-3.5 h-3.5" /> Assigned Lead Quota
+                    </span>
+                    <div className="text-right">
+                      <span className="text-sky-700 dark:text-sky-300 font-black block">
+                        {tch.assignedQuota?.toLocaleString() || "100"} Contacts
+                      </span>
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-black bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 rounded-full inline-block mt-0.5 shadow-sm">
+                        🎯 {rangeDisplay}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Experience</span>
-                  <span className="font-black text-slate-900 dark:text-slate-100">{tch.experienceYears} Years</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Email</span>
-                  <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-[11px]">{tch.email}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Phone</span>
-                  <span className="font-black text-slate-900 dark:text-slate-100 font-mono">{tch.phone}</span>
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800 font-bold">
-                  <span className="text-sky-600 dark:text-sky-400 flex items-center gap-1 font-black">
-                    <UserCheck className="w-3.5 h-3.5" /> Assigned Lead Quota
-                  </span>
-                  <span className="text-sky-700 dark:text-sky-300 font-black">{tch.assignedQuota?.toLocaleString() || "1,000"} Contacts</span>
-                </div>
-              </div>
 
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
@@ -519,7 +531,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 )}
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
 
         {/* Table Pagination Footer Bar */}

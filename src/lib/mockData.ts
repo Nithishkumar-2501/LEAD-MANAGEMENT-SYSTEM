@@ -62,6 +62,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "PR",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #1 to #100",
     contactedCount: 88,
   },
   {
@@ -76,6 +77,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "KA",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #101 to #200",
     contactedCount: 142,
   },
   {
@@ -90,6 +92,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "SM",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #201 to #300",
     contactedCount: 215,
   },
   {
@@ -104,6 +107,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "NG",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #301 to #400",
     contactedCount: 64,
   },
   {
@@ -118,6 +122,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "MK",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #401 to #500",
     contactedCount: 52,
   },
   {
@@ -132,6 +137,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "RS",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #501 to #600",
     contactedCount: 79,
   },
   {
@@ -146,6 +152,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "VA",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #601 to #700",
     contactedCount: 91,
   },
   {
@@ -160,6 +167,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "TS",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #701 to #800",
     contactedCount: 43,
   },
   {
@@ -174,6 +182,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "PK",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #801 to #900",
     contactedCount: 68,
   },
   {
@@ -188,6 +197,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "GR",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #901 to #1000",
     contactedCount: 84,
   },
   {
@@ -202,6 +212,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "SD",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #1 to #100",
     contactedCount: 37,
   },
   {
@@ -216,6 +227,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "AM",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #101 to #200",
     contactedCount: 110,
   },
   {
@@ -230,6 +242,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "RP",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #201 to #300",
     contactedCount: 72,
   },
   {
@@ -244,6 +257,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "KS",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #301 to #400",
     contactedCount: 95,
   },
   {
@@ -258,6 +272,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "ND",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #401 to #500",
     contactedCount: 58,
   },
   {
@@ -272,6 +287,7 @@ export const MOCK_TEACHERS: Teacher[] = [
     status: "ACTIVE",
     avatar: "MP",
     assignedQuota: 100,
+    assignedRangeText: "Contacts #501 to #600",
     contactedCount: 104,
   },
 ];

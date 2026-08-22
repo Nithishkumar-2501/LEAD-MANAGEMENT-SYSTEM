@@ -153,6 +153,7 @@ export interface Teacher {
   status: "ACTIVE" | "ON_LEAVE";
   avatar: string;
   assignedQuota?: number;
+  assignedRangeText?: string;
   contactedCount?: number;
 }
 
