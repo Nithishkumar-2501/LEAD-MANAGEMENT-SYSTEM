@@ -406,15 +406,34 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   </div>
                 </div>
 
-                <span
-                  className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border transform group-hover:scale-105 transition-transform ${
-                    tch.status === "ACTIVE"
-                      ? "bg-emerald-950 text-emerald-400 border-emerald-800"
-                      : "bg-amber-950 text-amber-400 border-amber-800"
-                  }`}
-                >
-                  {tch.campus} CAMPUS
-                </span>
+                <div className="flex flex-col items-end gap-1.5">
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-950 text-slate-300 border-slate-700 shadow-sm">
+                    {tch.campus} CAMPUS
+                  </span>
+
+                  {/* Interactive Active / On Leave Status Toggle Switch */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const newStatus: "ACTIVE" | "ON_LEAVE" = tch.status === "ACTIVE" ? "ON_LEAVE" : "ACTIVE";
+                      const updatedList = teachers.map((t) => (t.id === tch.id || t.email === tch.email ? { ...t, status: newStatus } : t));
+                      saveTeachersList(updatedList);
+                      onTriggerToast(
+                        `🔄 Status updated for ${tch.name}: ${newStatus === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}`
+                      );
+                    }}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 transition-all cursor-pointer shadow-md transform hover:scale-105 active:scale-95 ${
+                      tch.status === "ACTIVE"
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/60 hover:bg-emerald-500/30"
+                        : "bg-amber-500/20 text-amber-300 border-amber-400/60 hover:bg-amber-500/30"
+                    }`}
+                    title="Click to toggle Active vs On Leave availability status"
+                  >
+                    <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                    <span>{tch.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
@@ -706,47 +725,68 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               </button>
             </div>
 
+            {currentUserRole === "TEACHER" && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-medium flex items-center gap-2">
+                <span>🔒</span>
+                <span>
+                  <strong>Faculty Profile Scoping:</strong> Name, Email, Department & Quota are managed by College Admin. You are authorized to update your <strong>Active vs. On Leave</strong> status below.
+                </span>
+              </div>
+            )}
+
             <form onSubmit={handleUpdateTeacherSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Full Name</label>
+                <label className="block text-slate-300 font-semibold mb-1">Full Name {currentUserRole === "TEACHER" && "(Locked)"}</label>
                 <input
                   type="text"
                   required
+                  disabled={currentUserRole === "TEACHER"}
                   value={editingTeacher.name}
                   onChange={(e) => setEditingTeacher({ ...editingTeacher, name: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                  className={`w-full border rounded-xl px-3 py-2 text-slate-100 ${
+                    currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Email</label>
+                <label className="block text-slate-300 font-semibold mb-1">Email {currentUserRole === "TEACHER" && "(Locked)"}</label>
                 <input
                   type="email"
                   required
+                  disabled={currentUserRole === "TEACHER"}
                   value={editingTeacher.email}
                   onChange={(e) => setEditingTeacher({ ...editingTeacher, email: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                  className={`w-full border rounded-xl px-3 py-2 text-slate-100 ${
+                    currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Mobile Phone</label>
+                <label className="block text-slate-300 font-semibold mb-1">Mobile Phone {currentUserRole === "TEACHER" && "(Locked)"}</label>
                 <input
                   type="text"
                   required
+                  disabled={currentUserRole === "TEACHER"}
                   value={editingTeacher.phone}
                   onChange={(e) => setEditingTeacher({ ...editingTeacher, phone: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                  className={`w-full border rounded-xl px-3 py-2 text-slate-100 ${
+                    currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Campus</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Campus {currentUserRole === "TEACHER" && "(Locked)"}</label>
                   <select
+                    disabled={currentUserRole === "TEACHER"}
                     value={editingTeacher.campus}
                     onChange={(e) => setEditingTeacher({ ...editingTeacher, campus: e.target.value as CampusLocation })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                    className={`w-full border rounded-xl px-3 py-2 text-slate-100 ${
+                      currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
+                    }`}
                   >
                     <option value="KARUR">Karur Campus</option>
                     <option value="COIMBATORE">Coimbatore Campus</option>
@@ -754,11 +794,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Department</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Department {currentUserRole === "TEACHER" && "(Locked)"}</label>
                   <select
+                    disabled={currentUserRole === "TEACHER"}
                     value={editingTeacher.department}
                     onChange={(e) => setEditingTeacher({ ...editingTeacher, department: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                    className={`w-full border rounded-xl px-3 py-2 text-slate-100 ${
+                      currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
+                    }`}
                   >
                     {departments.filter((d) => d !== "ALL").map((d) => (
                       <option key={d} value={d}>
@@ -771,50 +814,59 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Assigned Lead Quota</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Assigned Lead Quota {currentUserRole === "TEACHER" && "(Locked)"}</label>
                   <input
                     type="number"
                     required
                     min={1}
+                    disabled={currentUserRole === "TEACHER"}
                     value={editingTeacher.assignedQuota || 1000}
                     onChange={(e) => setEditingTeacher({ ...editingTeacher, assignedQuota: Number(e.target.value) })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-bold text-sky-300"
+                    className={`w-full border rounded-xl px-3 py-2 text-slate-100 font-bold text-sky-300 ${
+                      currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
+                    }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Faculty Status</label>
+                  <label className="block text-slate-300 font-semibold mb-1 text-emerald-400">Faculty Status (Editable ✨)</label>
                   <select
                     value={editingTeacher.status}
                     onChange={(e) => setEditingTeacher({ ...editingTeacher, status: e.target.value as "ACTIVE" | "ON_LEAVE" })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                    className="w-full bg-slate-900 border border-emerald-500/60 rounded-xl px-3 py-2 text-slate-100 font-bold focus:ring-2 focus:ring-emerald-500"
                   >
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="ON_LEAVE">ON LEAVE</option>
+                    <option value="ACTIVE">🟢 ACTIVE</option>
+                    <option value="ON_LEAVE">🟡 ON LEAVE</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Experience (Years)</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Experience (Years) {currentUserRole === "TEACHER" && "(Locked)"}</label>
                   <input
                     type="number"
                     required
+                    disabled={currentUserRole === "TEACHER"}
                     value={editingTeacher.experienceYears}
                     onChange={(e) => setEditingTeacher({ ...editingTeacher, experienceYears: Number(e.target.value) })}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                    className={`w-full border rounded-xl px-3 py-2 text-slate-100 ${
+                      currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
+                    }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Primary Course</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Primary Course {currentUserRole === "TEACHER" && "(Locked)"}</label>
                   <select
+                    disabled={currentUserRole === "TEACHER"}
                     value={editingTeacher.coursesAssigned[0] || VSB_DEPARTMENTS_COURSES[0]}
                     onChange={(e) => {
                       const courses = [...editingTeacher.coursesAssigned];
                       courses[0] = e.target.value;
                       setEditingTeacher({ ...editingTeacher, coursesAssigned: courses });
                     }}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                    className={`w-full border rounded-xl px-3 py-2 text-slate-100 ${
+                      currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
+                    }`}
                   >
                     {VSB_DEPARTMENTS_COURSES.map((course) => (
                       <option key={course} value={course}>
