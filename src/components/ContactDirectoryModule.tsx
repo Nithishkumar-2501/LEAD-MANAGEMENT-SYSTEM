@@ -575,14 +575,12 @@ export default function ContactDirectoryModule({
       currentUserRole === "ADMIN"
         ? true
         : Boolean(
-          c.assignedTo &&
-          (c.assignedTo === loggedInUsername ||
-            c.assignedTo.toLowerCase().includes(loggedInUsername.toLowerCase()) ||
-            loggedInUsername.toLowerCase().includes(c.assignedTo.toLowerCase()) ||
-            (loggedInUsername.includes("karur") && c.assignedTo.includes("karur")) ||
-            (loggedInUsername.includes("covai") && c.assignedTo.includes("covai")) ||
-            (loggedInUsername.includes("rajesh") && c.assignedTo.includes("rajesh")))
-        );
+            c.assignedTo &&
+              (c.assignedTo.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
+                (c.assignedTo === "teacher_rajesh@123" && loggedInUsername.includes("rajesh")) ||
+                (c.assignedTo === "teacherkarur@123" && loggedInUsername.includes("arul")) ||
+                (c.assignedTo === "teachercovai@123" && loggedInUsername.includes("meenakshi")))
+          );
 
     const matchesDrawerRules =
       filterRules.length === 0

@@ -154,32 +154,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const departments = ["ALL", ...VSB_DEPARTMENTS_COURSES];
 
   const filteredTeachers = teachers.filter((t) => {
-    // If logged in as TEACHER role, strictly scope to ONLY their own faculty profile!
+    // If logged in as TEACHER role, strictly scope to ONLY their unique User ID / Email!
     const matchesTeacherSelf =
       currentUserRole === "ADMIN"
         ? true
         : Boolean(
             loggedInUsername &&
-              (t.email.toLowerCase() === loggedInUsername.toLowerCase() ||
-                t.id.toLowerCase() === loggedInUsername.toLowerCase() ||
-                t.name.toLowerCase().includes(loggedInUsername.toLowerCase()) ||
-                loggedInUsername.toLowerCase().includes(t.name.toLowerCase()) ||
-                (loggedInUsername.includes("rajesh") && t.name.includes("Rajesh")) ||
-                (loggedInUsername.includes("arul") && t.name.includes("Arulmurugan")) ||
-                (loggedInUsername.includes("meenakshi") && t.name.includes("Meenakshi")) ||
-                (loggedInUsername.includes("gayathri") && t.name.includes("Gayathri")) ||
-                (loggedInUsername.includes("karthik") && t.name.includes("Karthik")) ||
-                (loggedInUsername.includes("saravanan") && t.name.includes("Saravanan")) ||
-                (loggedInUsername.includes("anitha") && t.name.includes("Anitha")) ||
-                (loggedInUsername.includes("senthil") && t.name.includes("Senthil")) ||
-                (loggedInUsername.includes("kavitha") && t.name.includes("Kavitha")) ||
-                (loggedInUsername.includes("ramesh") && t.name.includes("Ramesh")) ||
-                (loggedInUsername.includes("divya") && t.name.includes("Divya")) ||
-                (loggedInUsername.includes("manikandan") && t.name.includes("Manikandan")) ||
-                (loggedInUsername.includes("priya") && t.name.includes("Priya")) ||
-                (loggedInUsername.includes("suresh") && t.name.includes("Suresh")) ||
-                (loggedInUsername.includes("deepa") && t.name.includes("Deepa")) ||
-                (loggedInUsername.includes("prakash") && t.name.includes("Prakash")))
+              (t.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
+                t.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim())
           );
 
     const matchesSearch =
