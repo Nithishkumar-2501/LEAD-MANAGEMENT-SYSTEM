@@ -473,20 +473,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 relative z-10">
-                <div>
-                  {currentUserRole === "ADMIN" && (
-                    <Tooltip text={`Edit ${tch.name}`} position="bottom">
-                      <button
-                        onClick={() => setEditingTeacher(tch)}
-                        className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
-                      </button>
-                    </Tooltip>
-                  )}
-                </div>
-                <div className="flex gap-1.5">
+              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-start gap-2 relative z-10">
+                <div className="flex items-center gap-2">
                   <Tooltip text={`In-Portal Email ${tch.name}`} position="bottom">
                     <button
                       onClick={() => handleOpenCommModal("EMAIL", {
@@ -496,7 +484,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                         campus: tch.campus,
                         courseInterest: tch.department,
                       })}
-                      className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-3 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
+                      className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-bold px-3 py-1.5 rounded-xl bg-indigo-950/60 border border-indigo-800/60 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     >
                       <Mail className="w-3.5 h-3.5" /> Email
                     </button>
@@ -510,12 +498,25 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                         campus: tch.campus,
                         courseInterest: tch.department,
                       })}
-                      className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
+                      className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     >
                       <Phone className="w-3.5 h-3.5" /> Call
                     </button>
                   </Tooltip>
                 </div>
+
+                {currentUserRole === "ADMIN" && (
+                  <div className="ml-auto">
+                    <Tooltip text={`Edit ${tch.name}`} position="bottom">
+                      <button
+                        onClick={() => setEditingTeacher(tch)}
+                        className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
+                      </button>
+                    </Tooltip>
+                  </div>
+                )}
               </div>
             </div>
           ))}
