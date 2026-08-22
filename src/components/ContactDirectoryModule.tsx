@@ -137,7 +137,8 @@ export default function ContactDirectoryModule({
   const [campaignSourceFilter, setCampaignSourceFilter] = useState("Select Here");
   const [trafficChannelFilter, setTrafficChannelFilter] = useState("Select Here");
   const [selectedViewName, setSelectedViewName] = useState("Default View");
-  const [rowsPerPage, setRowsPerPage] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   // Interactive Calendar Month Name & Year State
@@ -622,6 +623,13 @@ export default function ContactDirectoryModule({
     if (valA > valB) return sortDirection === "asc" ? 1 : -1;
     return 0;
   });
+
+  // Table Pagination Calculations
+  const totalPages = Math.max(1, Math.ceil(sortedAndFilteredContacts.length / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const dirStartIndex = (safeCurrentPage - 1) * rowsPerPage;
+  const dirEndIndex = Math.min(sortedAndFilteredContacts.length, dirStartIndex + rowsPerPage);
+  const paginatedContacts = sortedAndFilteredContacts.slice(dirStartIndex, dirEndIndex);
 
   // Tamil Nadu Districts list (All 38 Districts)
   const districts = ["ALL", ...TAMIL_NADU_DISTRICTS];
@@ -1556,7 +1564,7 @@ export default function ContactDirectoryModule({
               </thead>
 
               <tbody className="divide-y divide-slate-100 bg-white">
-                {sortedAndFilteredContacts.slice(0, rowsPerPage).map((contact) => (
+                {paginatedContacts.map((contact) => (
                   <tr
                     key={contact.id}
                     onClick={() => handleCandidateClick(contact)}
@@ -1594,53 +1602,98 @@ export default function ContactDirectoryModule({
             </table>
           </div>
 
-          {/* TABLE FOOTER CONTROLS BAR (Matching Meritto Screenshot) */}
-          <div className="bg-slate-50 border-t border-slate-200 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 font-sans">
-            {/* Classic View Toggle */}
-            <div className="flex items-center gap-2">
+          {/* TABLE FOOTER CONTROLS BAR WITH FULL PAGINATION */}
+          <div className="bg-slate-50 border-t border-slate-200 p-3.5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-700 font-sans shadow-inner">
+            {/* Left: Classic View & Record Range Indicator */}
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => setDirectoryViewMode("GRID")}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
               >
                 <span>Classic View</span>
               </button>
+              <span className="font-extrabold text-slate-800 bg-slate-200/80 px-3 py-1.5 rounded-lg border border-slate-300">
+                Showing {sortedAndFilteredContacts.length > 0 ? dirStartIndex + 1 : 0} - {dirEndIndex} of {sortedAndFilteredContacts.length} Leads
+              </span>
             </div>
 
-            {/* Load More Leads Center Button */}
-            <button
-              onClick={() => {
-                setRowsPerPage((prev) => prev + 20);
-                if (onTriggerToast) {
-                  onTriggerToast("Loaded more lead records from database!");
-                }
-              }}
-              className="px-4 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-bold flex items-center gap-2 shadow-sm transition-colors"
-            >
-              <span className="text-slate-500">🔄</span> Load More Leads
-            </button>
-
-            {/* Total Records & Rows Selector */}
-            <div className="flex items-center gap-3">
+            {/* Center: Full Page Navigation Pills */}
+            <div className="flex items-center gap-1.5">
               <button
-                onClick={() => onTriggerToast?.(`Total Records Count: ${filteredContacts.length}`)}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold shadow-sm hover:bg-slate-100"
+                disabled={safeCurrentPage === 1}
+                onClick={() => setCurrentPage(1)}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-700 cursor-pointer shadow-sm"
+                title="First Page"
               >
-                Show Total Records ({filteredContacts.length})
+                ⏮ First
               </button>
 
-              <div className="flex items-center gap-1.5 font-bold text-slate-700">
-                <span>Show Rows</span>
-                <select
-                  value={rowsPerPage}
-                  onChange={(e) => setRowsPerPage(Number(e.target.value))}
-                  className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 font-bold focus:outline-none cursor-pointer shadow-sm"
-                >
-                  <option value={10}>10 ∨</option>
-                  <option value={20}>20 ∨</option>
-                  <option value={50}>50 ∨</option>
-                  <option value={100}>100 ∨</option>
-                </select>
+              <button
+                disabled={safeCurrentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-700 cursor-pointer shadow-sm"
+              >
+                ◀ Prev
+              </button>
+
+              {/* Page Number Buttons */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+                  let pNum = safeCurrentPage - 2 + idx;
+                  if (pNum < 1) pNum = idx + 1;
+                  if (pNum > totalPages) return null;
+                  const isActive = pNum === safeCurrentPage;
+
+                  return (
+                    <button
+                      key={pNum}
+                      onClick={() => setCurrentPage(pNum)}
+                      className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/40 scale-105"
+                          : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      {pNum}
+                    </button>
+                  );
+                })}
               </div>
+
+              <button
+                disabled={safeCurrentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-700 cursor-pointer shadow-sm"
+              >
+                Next ▶
+              </button>
+
+              <button
+                disabled={safeCurrentPage === totalPages}
+                onClick={() => setCurrentPage(totalPages)}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-700 cursor-pointer shadow-sm"
+                title="Last Page"
+              >
+                Last ⏭
+              </button>
+            </div>
+
+            {/* Right: Show Rows Selector */}
+            <div className="flex items-center gap-2 font-extrabold text-slate-800">
+              <span>Show Rows:</span>
+              <select
+                value={rowsPerPage}
+                onChange={(e) => {
+                  setRowsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 font-black focus:outline-none cursor-pointer shadow-sm"
+              >
+                <option value={10}>10 rows</option>
+                <option value={25}>25 rows</option>
+                <option value={50}>50 rows</option>
+                <option value={100}>100 rows</option>
+              </select>
             </div>
           </div>
         </div>

@@ -18,8 +18,8 @@ export default function StudentApplicationsModule({
   const [search, setSearch] = useState("");
   const [selectedStage, setSelectedStage] = useState("ALL");
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
-
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(6);
 
   const filteredApplicants = applicants.filter((item) => {
     const matchesSearch =
@@ -31,6 +31,13 @@ export default function StudentApplicationsModule({
 
     return matchesSearch && matchesStage;
   });
+
+  // Table Pagination Calculations
+  const totalPages = Math.max(1, Math.ceil(filteredApplicants.length / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const stuStartIndex = (safeCurrentPage - 1) * rowsPerPage;
+  const stuEndIndex = Math.min(filteredApplicants.length, stuStartIndex + rowsPerPage);
+  const paginatedApplicants = filteredApplicants.slice(stuStartIndex, stuEndIndex);
 
   const highPerformers = applicants.filter((a) => a.application.marks12th >= 90).length;
   const docsVerified = applicants.filter((a) =>
@@ -163,7 +170,7 @@ export default function StudentApplicationsModule({
 
         {/* Student Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredApplicants.map((item) => (
+          {paginatedApplicants.map((item) => (
             <div
               key={item.id}
               onClick={() => onSelectApplicant(item)}
@@ -231,6 +238,90 @@ export default function StudentApplicationsModule({
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Table Pagination Footer Bar */}
+        <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-300 font-sans shadow-xl">
+          <div className="flex items-center gap-3">
+            <span className="font-extrabold text-slate-200">
+              Showing {filteredApplicants.length > 0 ? stuStartIndex + 1 : 0} - {stuEndIndex} of {filteredApplicants.length} Applications
+            </span>
+          </div>
+
+          {/* Page Control Pills */}
+          <div className="flex items-center gap-1.5">
+            <button
+              disabled={safeCurrentPage === 1}
+              onClick={() => setCurrentPage(1)}
+              className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+              title="First Page"
+            >
+              ⏮
+            </button>
+            <button
+              disabled={safeCurrentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              className="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            >
+              ◀ Prev
+            </button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+                let pNum = safeCurrentPage - 2 + idx;
+                if (pNum < 1) pNum = idx + 1;
+                if (pNum > totalPages) return null;
+                const isActive = pNum === safeCurrentPage;
+
+                return (
+                  <button
+                    key={pNum}
+                    onClick={() => setCurrentPage(pNum)}
+                    className={`w-7 h-7 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/40 scale-105"
+                        : "bg-slate-950 border border-slate-700 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    {pNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              disabled={safeCurrentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              className="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            >
+              Next ▶
+            </button>
+            <button
+              disabled={safeCurrentPage === totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+              className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+              title="Last Page"
+            >
+              ⏭
+            </button>
+          </div>
+
+          {/* Rows Per Page */}
+          <div className="flex items-center gap-2 font-bold text-slate-300">
+            <span>Show Per Page:</span>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-100 font-extrabold focus:outline-none cursor-pointer"
+            >
+              <option value={6}>6 items</option>
+              <option value={12}>12 items</option>
+              <option value={24}>24 items</option>
+            </select>
+          </div>
         </div>
       </div>
 

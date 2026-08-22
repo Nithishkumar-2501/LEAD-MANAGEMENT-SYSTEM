@@ -235,6 +235,15 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
     } catch (err) {}
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(6);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTeachers.length / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const tchStartIndex = (safeCurrentPage - 1) * rowsPerPage;
+  const tchEndIndex = Math.min(filteredTeachers.length, tchStartIndex + rowsPerPage);
+  const paginatedTeachers = filteredTeachers.slice(tchStartIndex, tchEndIndex);
+
   return (
     <div className="space-y-6">
       {/* Module Overview Stat Cards */}
@@ -368,7 +377,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
 
         {/* Teachers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredTeachers.map((tch) => (
+          {paginatedTeachers.map((tch) => (
             <div
               key={tch.id}
               className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/20 cursor-pointer group"
@@ -476,6 +485,90 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Table Pagination Footer Bar */}
+        <div className="mt-4 bg-slate-900 border border-slate-800 p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-300 font-sans shadow-xl">
+          <div className="flex items-center gap-3">
+            <span className="font-extrabold text-slate-200">
+              Showing {filteredTeachers.length > 0 ? tchStartIndex + 1 : 0} - {tchEndIndex} of {filteredTeachers.length} Faculty Members
+            </span>
+          </div>
+
+          {/* Page Control Pills */}
+          <div className="flex items-center gap-1.5">
+            <button
+              disabled={safeCurrentPage === 1}
+              onClick={() => setCurrentPage(1)}
+              className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+              title="First Page"
+            >
+              ⏮
+            </button>
+            <button
+              disabled={safeCurrentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              className="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            >
+              ◀ Prev
+            </button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+                let pNum = safeCurrentPage - 2 + idx;
+                if (pNum < 1) pNum = idx + 1;
+                if (pNum > totalPages) return null;
+                const isActive = pNum === safeCurrentPage;
+
+                return (
+                  <button
+                    key={pNum}
+                    onClick={() => setCurrentPage(pNum)}
+                    className={`w-7 h-7 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/40 scale-105"
+                        : "bg-slate-950 border border-slate-700 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    {pNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              disabled={safeCurrentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              className="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            >
+              Next ▶
+            </button>
+            <button
+              disabled={safeCurrentPage === totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+              className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+              title="Last Page"
+            >
+              ⏭
+            </button>
+          </div>
+
+          {/* Rows Per Page */}
+          <div className="flex items-center gap-2 font-bold text-slate-300">
+            <span>Show Per Page:</span>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-100 font-extrabold focus:outline-none cursor-pointer"
+            >
+              <option value={6}>6 items</option>
+              <option value={12}>12 items</option>
+              <option value={24}>24 items</option>
+            </select>
+          </div>
         </div>
       </div>
 

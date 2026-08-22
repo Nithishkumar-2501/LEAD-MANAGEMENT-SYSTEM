@@ -29,8 +29,8 @@ export default function ApplicantsTable({
   onImportLeads,
 }: ApplicantsTableProps) {
   const [selectedStage, setSelectedStage] = useState<string>("ALL");
-
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // In-Portal Communication Modal State
   const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
@@ -55,6 +55,13 @@ export default function ApplicantsTable({
 
     return matchesSearch && matchesStage;
   });
+
+  // Table Pagination Calculations
+  const totalPages = Math.max(1, Math.ceil(filteredApplicants.length / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const appStartIndex = (safeCurrentPage - 1) * rowsPerPage;
+  const appEndIndex = Math.min(filteredApplicants.length, appStartIndex + rowsPerPage);
+  const paginatedApplicants = filteredApplicants.slice(appStartIndex, appEndIndex);
 
   const getStageBadge = (stage: AppStage) => {
     switch (stage) {
@@ -170,8 +177,8 @@ export default function ApplicantsTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {filteredApplicants.length > 0 ? (
-                filteredApplicants.map((item) => (
+              {paginatedApplicants.length > 0 ? (
+                paginatedApplicants.map((item) => (
                   <tr
                     key={item.id}
                     onClick={() => onSelectApplicant(item)}
@@ -326,12 +333,88 @@ export default function ApplicantsTable({
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
-        <span>Showing <strong>{filteredApplicants.length}</strong> of <strong>{applicants.length}</strong> applicants</span>
-        <span className="flex items-center gap-1 text-sky-400 hover:underline cursor-pointer font-bold">
-          Export Candidate List <ChevronRight className="w-3.5 h-3.5" />
-        </span>
+      {/* Table Pagination Footer Bar */}
+      <div className="mt-4 pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-300 font-sans">
+        <div className="flex items-center gap-3">
+          <span className="font-extrabold text-slate-200">
+            Showing {filteredApplicants.length > 0 ? appStartIndex + 1 : 0} - {appEndIndex} of {filteredApplicants.length} Applicants
+          </span>
+        </div>
+
+        {/* Page Control Pills */}
+        <div className="flex items-center gap-1.5">
+          <button
+            disabled={safeCurrentPage === 1}
+            onClick={() => setCurrentPage(1)}
+            className="px-2 py-1 rounded-lg border border-white/20 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            title="First Page"
+          >
+            ⏮
+          </button>
+          <button
+            disabled={safeCurrentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            className="px-2.5 py-1 rounded-lg border border-white/20 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+          >
+            ◀ Prev
+          </button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+              let pNum = safeCurrentPage - 2 + idx;
+              if (pNum < 1) pNum = idx + 1;
+              if (pNum > totalPages) return null;
+              const isActive = pNum === safeCurrentPage;
+
+              return (
+                <button
+                  key={pNum}
+                  onClick={() => setCurrentPage(pNum)}
+                  className={`w-7 h-7 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-sky-500 text-white shadow-md shadow-sky-500/40 scale-105"
+                      : "bg-slate-900 border border-white/20 text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  {pNum}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            disabled={safeCurrentPage === totalPages}
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            className="px-2.5 py-1 rounded-lg border border-white/20 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+          >
+            Next ▶
+          </button>
+          <button
+            disabled={safeCurrentPage === totalPages}
+            onClick={() => setCurrentPage(totalPages)}
+            className="px-2 py-1 rounded-lg border border-white/20 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            title="Last Page"
+          >
+            ⏭
+          </button>
+        </div>
+
+        {/* Rows Per Page */}
+        <div className="flex items-center gap-2 font-bold text-slate-300">
+          <span>Show Rows:</span>
+          <select
+            value={rowsPerPage}
+            onChange={(e) => {
+              setRowsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="bg-slate-900 border border-white/20 rounded-lg px-2.5 py-1 text-slate-100 font-extrabold focus:outline-none cursor-pointer"
+          >
+            <option value={10}>10 rows</option>
+            <option value={25}>25 rows</option>
+            <option value={50}>50 rows</option>
+          </select>
+        </div>
       </div>
 
       {/* IN-PORTAL DIRECT COMMUNICATION MODALS */}
