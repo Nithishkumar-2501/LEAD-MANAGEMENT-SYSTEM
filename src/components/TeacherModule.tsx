@@ -23,6 +23,12 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
 
+  // Admin Lead Allocation Control Panel State
+  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
+  const [splitTargetTeacher, setSplitTargetTeacher] = useState("rajesh.mech@vsbec.in");
+  const [splitQuantity, setSplitQuantity] = useState(100);
+  const [splitStartNumber, setSplitStartNumber] = useState(1);
+
   // In-Portal Communication Modal State
   const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
   const [activeCommContact, setActiveCommContact] = useState<ContactTarget | null>(null);
@@ -317,6 +323,59 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
           <p className="text-xs text-amber-300 font-medium mt-3">Senior Academic Leadership</p>
         </div>
       </div>
+
+      {/* Admin Lead Allocation Control Panel (At Top of Teacher Directory) */}
+      {currentUserRole === "ADMIN" && (
+        <div className="bubble-card p-5 border border-indigo-500/40 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 shadow-2xl animate-in fade-in">
+          <div className="space-y-1.5 max-w-3xl">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
+                Admin Lead Allocation Control Panel
+              </span>
+              <span className="text-xs text-slate-300 font-bold">1,000 Total Database Contacts</span>
+            </div>
+            <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <span className="text-xl">⚡</span> Total Database Leads: <span className="text-indigo-400 font-black">1,000 Contacts</span>
+            </h3>
+            <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
+              <span>Admin can split database leads into specific teacher batches (e.g. 100 contacts to Prof. P. Rajesh). Teachers exclusively view & edit their assigned batch while remaining 900 leads stay protected.</span>
+            </p>
+
+            {/* Allocated Batches Summary Chips */}
+            <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
+              <div className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 flex items-center gap-1 font-bold">
+                <span>👤 P. Rajesh:</span>
+                <span className="text-emerald-400 font-black">100 Leads (#1 - #100)</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-200 border border-sky-400/30 flex items-center gap-1 font-bold">
+                <span>👤 Dr. Arulmurugan:</span>
+                <span className="text-sky-400 font-black">100 Leads (#101 - #200)</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-lg bg-pink-500/20 text-pink-200 border border-pink-400/30 flex items-center gap-1 font-bold">
+                <span>👤 Dr. Meenakshi:</span>
+                <span className="text-pink-400 font-black">100 Leads (#201 - #300)</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-400/30 flex items-center gap-1 font-bold">
+                <span>👤 Dr. Gayathri:</span>
+                <span className="text-purple-400 font-black">100 Leads (#301 - #400)</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold">
+                <span>⏳ 600 Unassigned Leads</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto shrink-0">
+            <button
+              onClick={() => setIsSplitModalOpen(true)}
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
+            >
+              <span className="text-base">⚡</span>
+              <span>Split Contacts to Teacher</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Faculty Directory Card */}
       <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800">
@@ -1004,6 +1063,128 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   <span>Import {csvParsedTeachers.length} Faculty Members</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SPLIT CONTACTS TO TEACHER MODAL */}
+      {isSplitModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="glass-card w-full max-w-lg rounded-3xl border border-indigo-500/50 p-6 space-y-5 shadow-2xl bg-slate-900 text-white">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 text-lg">⚡</span>
+                <div>
+                  <h3 className="text-base font-black text-white">Admin Batch Lead Allocation</h3>
+                  <p className="text-xs text-slate-400">Assign database lead contact ranges to specific teachers</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsSplitModalOpen(false)}
+                className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Select Faculty Member */}
+              <div>
+                <label className="block text-slate-300 font-extrabold mb-1">
+                  Select Target Faculty / Teacher:
+                </label>
+                <select
+                  value={splitTargetTeacher}
+                  onChange={(e) => setSplitTargetTeacher(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-black dark:text-white font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
+                >
+                  {MOCK_TEACHERS.map((f) => (
+                    <option key={f.id} value={f.id} className="text-black bg-white dark:bg-slate-900 dark:text-white font-black">
+                      {f.name} ({f.department} - {f.campus})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Range Inputs */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Start Contact No (#):</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={splitStartNumber}
+                    onChange={(e) => setSplitStartNumber(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Split Batch Quantity:</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={splitQuantity}
+                    onChange={(e) => setSplitQuantity(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Summary Banner */}
+              <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold space-y-1">
+                <div className="flex items-center justify-between">
+                  <span>Target Allocation Range:</span>
+                  <span className="text-emerald-400 font-black font-mono text-sm">
+                    #{splitStartNumber} to #{Math.min(1000, splitStartNumber + splitQuantity - 1)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-normal">
+                  This batch will be exclusively assigned to {MOCK_TEACHERS.find(t => t.id === splitTargetTeacher)?.name || splitTargetTeacher}.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setIsSplitModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const teacherObj = MOCK_TEACHERS.find(t => t.id === splitTargetTeacher);
+                  const teacherName = teacherObj ? teacherObj.name : splitTargetTeacher;
+                  const endNum = Math.min(1000, splitStartNumber + splitQuantity - 1);
+
+                  // Update teacher record's assignedRangeText & quota
+                  const updatedTeachers = teachers.map((t) => {
+                    if (t.id === splitTargetTeacher || t.email === splitTargetTeacher) {
+                      return {
+                        ...t,
+                        assignedQuota: splitQuantity,
+                        assignedRangeText: `Contacts #${splitStartNumber} to #${endNum}`,
+                      };
+                    }
+                    return t;
+                  });
+                  saveTeachersList(updatedTeachers);
+
+                  onTriggerToast(
+                    `⚡ Successfully allocated batch #${splitStartNumber} to #${endNum} (${splitQuantity} Contacts) to ${teacherName}!`
+                  );
+                  setIsSplitModalOpen(false);
+                }}
+                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
+              >
+                <span>Confirm Lead Allocation</span>
+              </button>
             </div>
           </div>
         </div>
