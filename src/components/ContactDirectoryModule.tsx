@@ -1638,26 +1638,35 @@ export default function ContactDirectoryModule({
 
               {/* Page Number Buttons */}
               <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
-                  let pNum = safeCurrentPage - 2 + idx;
-                  if (pNum < 1) pNum = idx + 1;
-                  if (pNum > totalPages) return null;
-                  const isActive = pNum === safeCurrentPage;
-
-                  return (
-                    <button
-                      key={pNum}
-                      onClick={() => setCurrentPage(pNum)}
-                      className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer ${
-                        isActive
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/40 scale-105"
-                          : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
-                      }`}
-                    >
-                      {pNum}
-                    </button>
-                  );
-                })}
+                {(() => {
+                  const maxVisible = 5;
+                  let start = Math.max(1, safeCurrentPage - Math.floor(maxVisible / 2));
+                  let end = start + maxVisible - 1;
+                  if (end > totalPages) {
+                    end = totalPages;
+                    start = Math.max(1, end - maxVisible + 1);
+                  }
+                  const pages = [];
+                  for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                  }
+                  return pages.map((pNum) => {
+                    const isActive = pNum === safeCurrentPage;
+                    return (
+                      <button
+                        key={pNum}
+                        onClick={() => setCurrentPage(pNum)}
+                        className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-500/40 scale-105"
+                            : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
 
               <button

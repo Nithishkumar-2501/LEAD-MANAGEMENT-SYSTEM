@@ -267,26 +267,35 @@ export default function StudentApplicationsModule({
             </button>
 
             <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
-                let pNum = safeCurrentPage - 2 + idx;
-                if (pNum < 1) pNum = idx + 1;
-                if (pNum > totalPages) return null;
-                const isActive = pNum === safeCurrentPage;
-
-                return (
-                  <button
-                    key={pNum}
-                    onClick={() => setCurrentPage(pNum)}
-                    className={`w-7 h-7 rounded-lg font-black text-xs transition-all cursor-pointer ${
-                      isActive
-                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/40 scale-105"
-                        : "bg-slate-950 border border-slate-700 text-slate-300 hover:bg-slate-800"
-                    }`}
-                  >
-                    {pNum}
-                  </button>
-                );
-              })}
+              {(() => {
+                const maxVisible = 5;
+                let start = Math.max(1, safeCurrentPage - Math.floor(maxVisible / 2));
+                let end = start + maxVisible - 1;
+                if (end > totalPages) {
+                  end = totalPages;
+                  start = Math.max(1, end - maxVisible + 1);
+                }
+                const pages = [];
+                for (let i = start; i <= end; i++) {
+                  pages.push(i);
+                }
+                return pages.map((pNum) => {
+                  const isActive = pNum === safeCurrentPage;
+                  return (
+                    <button
+                      key={pNum}
+                      onClick={() => setCurrentPage(pNum)}
+                      className={`w-7 h-7 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/40 scale-105"
+                          : "bg-slate-950 border border-slate-700 text-slate-300 hover:bg-slate-800"
+                      }`}
+                    >
+                      {pNum}
+                    </button>
+                  );
+                });
+              })()}
             </div>
 
             <button
