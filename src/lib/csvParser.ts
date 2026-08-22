@@ -182,7 +182,7 @@ export function parseCSVToTeachers(
     const name = getVal(nameIdx, 0, `Faculty ${i}`);
     if (!name || name.toLowerCase().includes("sample")) continue;
 
-    const email = getVal(emailIdx, 1, `${name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@vsb.ac.in`);
+    const email = getVal(emailIdx, 1, `${name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@vsbec.in`);
     const phone = getVal(phoneIdx, 2, "+91 98765 00000");
     const department = getVal(deptIdx, 3, "Computer Science & Engineering");
     const campusStr = getVal(campusIdx, 4, defaultCampus);

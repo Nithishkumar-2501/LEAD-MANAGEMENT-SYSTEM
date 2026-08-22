@@ -214,22 +214,22 @@ export default function ContactDirectoryModule({
   const [splitStartNumber, setSplitStartNumber] = useState(1);
 
   const FACULTY_MEMBERS = [
-    { id: "rajesh.mech@vsb.ac.in", name: "Prof. P. Rajesh", department: "Mechanical Engineering", campus: "KARUR" },
-    { id: "arulmurugan.cse@vsb.ac.in", name: "Dr. K. Arulmurugan", department: "Computer Science", campus: "KARUR" },
-    { id: "meenakshi.ece@vsb.ac.in", name: "Dr. S. Meenakshi", department: "Electronics & Communication", campus: "COIMBATORE" },
-    { id: "gayathri.it@vsb.ac.in", name: "Dr. N. Gayathri", department: "Information Technology", campus: "KARUR" },
-    { id: "karthik.ai@vsb.ac.in", name: "Prof. M. Karthik", department: "Artificial Intelligence & Data Science", campus: "KARUR" },
-    { id: "saravanan.eee@vsb.ac.in", name: "Dr. R. Saravanan", department: "Electrical & Electronics Engg", campus: "KARUR" },
-    { id: "anitha.bme@vsb.ac.in", name: "Prof. V. Anitha", department: "Biomedical Engineering", campus: "KARUR" },
-    { id: "senthil.civil@vsb.ac.in", name: "Dr. T. Senthil", department: "Civil Engineering", campus: "KARUR" },
-    { id: "kavitha.cyber@vsb.ac.in", name: "Prof. P. Kavitha", department: "Cyber Security", campus: "COIMBATORE" },
-    { id: "ramesh.robotics@vsb.ac.in", name: "Dr. G. Ramesh", department: "Robotics & Automation", campus: "KARUR" },
-    { id: "divya.chem@vsb.ac.in", name: "Prof. S. Divya", department: "Chemical Engineering", campus: "KARUR" },
-    { id: "manikandan.aero@vsb.ac.in", name: "Dr. A. Manikandan", department: "Aeronautical Engineering", campus: "COIMBATORE" },
-    { id: "priya.biotech@vsb.ac.in", name: "Prof. R. Priya", department: "Biotechnology", campus: "KARUR" },
-    { id: "suresh.ds@vsb.ac.in", name: "Dr. K. Suresh", department: "Data Science", campus: "KARUR" },
-    { id: "deepa.it@vsb.ac.in", name: "Prof. N. Deepa", department: "Information Technology", campus: "COIMBATORE" },
-    { id: "prakash.cse@vsb.ac.in", name: "Dr. M. Prakash", department: "Computer Science & Engineering", campus: "COIMBATORE" },
+    { id: "rajesh.mech@vsbec.in", name: "Prof. P. Rajesh", department: "Mechanical Engineering", campus: "KARUR" },
+    { id: "arulmurugan.cse@vsbec.in", name: "Dr. K. Arulmurugan", department: "Computer Science", campus: "KARUR" },
+    { id: "meenakshi.ece@vsbec.in", name: "Dr. S. Meenakshi", department: "Electronics & Communication", campus: "COIMBATORE" },
+    { id: "gayathri.it@vsbec.in", name: "Dr. N. Gayathri", department: "Information Technology", campus: "KARUR" },
+    { id: "karthik.ai@vsbec.in", name: "Prof. M. Karthik", department: "Artificial Intelligence & Data Science", campus: "KARUR" },
+    { id: "saravanan.eee@vsbec.in", name: "Dr. R. Saravanan", department: "Electrical & Electronics Engg", campus: "KARUR" },
+    { id: "anitha.bme@vsbec.in", name: "Prof. V. Anitha", department: "Biomedical Engineering", campus: "KARUR" },
+    { id: "senthil.civil@vsbec.in", name: "Dr. T. Senthil", department: "Civil Engineering", campus: "KARUR" },
+    { id: "kavitha.cyber@vsbec.in", name: "Prof. P. Kavitha", department: "Cyber Security", campus: "COIMBATORE" },
+    { id: "ramesh.robotics@vsbec.in", name: "Dr. G. Ramesh", department: "Robotics & Automation", campus: "KARUR" },
+    { id: "divya.chem@vsbec.in", name: "Prof. S. Divya", department: "Chemical Engineering", campus: "KARUR" },
+    { id: "manikandan.aero@vsbec.in", name: "Dr. A. Manikandan", department: "Aeronautical Engineering", campus: "COIMBATORE" },
+    { id: "priya.biotech@vsbec.in", name: "Prof. R. Priya", department: "Biotechnology", campus: "KARUR" },
+    { id: "suresh.ds@vsbec.in", name: "Dr. K. Suresh", department: "Data Science", campus: "KARUR" },
+    { id: "deepa.it@vsbec.in", name: "Prof. N. Deepa", department: "Information Technology", campus: "COIMBATORE" },
+    { id: "prakash.cse@vsbec.in", name: "Dr. M. Prakash", department: "Computer Science & Engineering", campus: "COIMBATORE" },
   ];
 
   const handlePerformLeadSplit = () => {
@@ -473,25 +473,25 @@ export default function ContactDirectoryModule({
         contact.status === "NEW"
           ? "Untouched"
           : contact.status === "CONTACTED"
-          ? "Interested to Study Engin..."
-          : contact.status === "IN_REVIEW"
-          ? "Not Reachable"
-          : contact.status === "ADMITTED"
-          ? "Admitted"
-          : contact.status === "REJECTED"
-          ? "Closed"
-          : contact.status || "Untouched";
+            ? "Interested to Study Engin..."
+            : contact.status === "IN_REVIEW"
+              ? "Not Reachable"
+              : contact.status === "ADMITTED"
+                ? "Admitted"
+                : contact.status === "REJECTED"
+                  ? "Closed"
+                  : contact.status || "Untouched";
 
       const badgeStyle =
         statusText === "Untouched"
           ? "bg-red-50 text-red-600 border-red-200 font-bold"
           : statusText.startsWith("Interested")
-          ? "bg-sky-50 text-sky-700 border-sky-200 font-bold"
-          : statusText === "Not Reachable"
-          ? "bg-slate-100 text-slate-600 border-slate-200 font-medium"
-          : statusText === "Admitted"
-          ? "bg-emerald-50 text-emerald-700 border-emerald-300 font-bold"
-          : "bg-slate-100 text-slate-700 border-slate-300 font-medium";
+            ? "bg-sky-50 text-sky-700 border-sky-200 font-bold"
+            : statusText === "Not Reachable"
+              ? "bg-slate-100 text-slate-600 border-slate-200 font-medium"
+              : statusText === "Admitted"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-300 font-bold"
+                : "bg-slate-100 text-slate-700 border-slate-300 font-medium";
 
       return (
         <span className={`px-2.5 py-0.5 rounded-full text-[11px] border whitespace-nowrap inline-block ${badgeStyle}`}>
@@ -575,14 +575,14 @@ export default function ContactDirectoryModule({
       currentUserRole === "ADMIN"
         ? true
         : Boolean(
-            c.assignedTo &&
-              (c.assignedTo === loggedInUsername ||
-                c.assignedTo.toLowerCase().includes(loggedInUsername.toLowerCase()) ||
-                loggedInUsername.toLowerCase().includes(c.assignedTo.toLowerCase()) ||
-                (loggedInUsername.includes("karur") && c.assignedTo.includes("karur")) ||
-                (loggedInUsername.includes("covai") && c.assignedTo.includes("covai")) ||
-                (loggedInUsername.includes("rajesh") && c.assignedTo.includes("rajesh")))
-          );
+          c.assignedTo &&
+          (c.assignedTo === loggedInUsername ||
+            c.assignedTo.toLowerCase().includes(loggedInUsername.toLowerCase()) ||
+            loggedInUsername.toLowerCase().includes(c.assignedTo.toLowerCase()) ||
+            (loggedInUsername.includes("karur") && c.assignedTo.includes("karur")) ||
+            (loggedInUsername.includes("covai") && c.assignedTo.includes("covai")) ||
+            (loggedInUsername.includes("rajesh") && c.assignedTo.includes("rajesh")))
+        );
 
     const matchesDrawerRules =
       filterRules.length === 0
@@ -1097,8 +1097,8 @@ export default function ContactDirectoryModule({
             <button
               onClick={() => setCounsellingFilter("ALL")}
               className={`px-3 py-1 rounded-full border transition-all shrink-0 ${counsellingFilter === "ALL"
-                  ? "bg-slate-800 text-white border-white/30 font-black"
-                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                ? "bg-slate-800 text-white border-white/30 font-black"
+                : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
                 }`}
             >
               All Intake
@@ -1106,8 +1106,8 @@ export default function ContactDirectoryModule({
             <button
               onClick={() => setCounsellingFilter("COUNSELLING_ONLY")}
               className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "COUNSELLING_ONLY"
-                  ? "bg-emerald-500/30 text-emerald-300 border-emerald-400/60 shadow-md font-black"
-                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                ? "bg-emerald-500/30 text-emerald-300 border-emerald-400/60 shadow-md font-black"
+                : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
                 }`}
             >
               <span>✅ Applied TNEA</span>
@@ -1115,8 +1115,8 @@ export default function ContactDirectoryModule({
             <button
               onClick={() => setCounsellingFilter("GOVT_QUOTA")}
               className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "GOVT_QUOTA"
-                  ? "bg-indigo-500/30 text-indigo-300 border-indigo-400/60 shadow-md font-black"
-                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                ? "bg-indigo-500/30 text-indigo-300 border-indigo-400/60 shadow-md font-black"
+                : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
                 }`}
             >
               <span>🏛️ 7.5% Govt Quota</span>
@@ -1124,8 +1124,8 @@ export default function ContactDirectoryModule({
             <button
               onClick={() => setCounsellingFilter("MANAGEMENT_ONLY")}
               className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "MANAGEMENT_ONLY"
-                  ? "bg-purple-500/30 text-purple-300 border-purple-400/60 shadow-md font-black"
-                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+                ? "bg-purple-500/30 text-purple-300 border-purple-400/60 shadow-md font-black"
+                : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
                 }`}
             >
               <span>💼 Management Quota</span>
@@ -1138,8 +1138,8 @@ export default function ContactDirectoryModule({
           <button
             onClick={() => setSelectedStatus("ALL")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ALL"
-                ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white border-white/40 shadow-lg shadow-sky-500/30 font-black scale-[1.03]"
-                : "bg-slate-950/80 text-slate-300 border-white/15 hover:border-white/30"
+              ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white border-white/40 shadow-lg shadow-sky-500/30 font-black scale-[1.03]"
+              : "bg-slate-950/80 text-slate-300 border-white/15 hover:border-white/30"
               }`}
           >
             <span className="text-lg">🌟</span>
@@ -1152,8 +1152,8 @@ export default function ContactDirectoryModule({
           <button
             onClick={() => setSelectedStatus("NEW")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 relative overflow-hidden ${selectedStatus === "NEW"
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-300 shadow-xl shadow-sky-500/40 ring-2 ring-sky-400/50 font-black scale-[1.03]"
-                : "bg-sky-950/50 text-sky-300 border-sky-500/40 hover:bg-sky-900/60"
+              ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-300 shadow-xl shadow-sky-500/40 ring-2 ring-sky-400/50 font-black scale-[1.03]"
+              : "bg-sky-950/50 text-sky-300 border-sky-500/40 hover:bg-sky-900/60"
               }`}
           >
             <span className="text-lg animate-pulse">🆕</span>
@@ -1166,8 +1166,8 @@ export default function ContactDirectoryModule({
           <button
             onClick={() => setSelectedStatus("CONTACTED")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "CONTACTED"
-                ? "bg-gradient-to-r from-teal-500 to-emerald-600 text-white border-teal-300 shadow-lg shadow-teal-500/30 font-black scale-[1.03]"
-                : "bg-teal-950/40 text-teal-300 border-teal-500/30 hover:bg-teal-900/50"
+              ? "bg-gradient-to-r from-teal-500 to-emerald-600 text-white border-teal-300 shadow-lg shadow-teal-500/30 font-black scale-[1.03]"
+              : "bg-teal-950/40 text-teal-300 border-teal-500/30 hover:bg-teal-900/50"
               }`}
           >
             <span className="text-lg">📞</span>
@@ -1180,8 +1180,8 @@ export default function ContactDirectoryModule({
           <button
             onClick={() => setSelectedStatus("IN_REVIEW")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "IN_REVIEW"
-                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-300 shadow-lg shadow-amber-500/30 font-black scale-[1.03]"
-                : "bg-amber-950/40 text-amber-300 border-amber-500/30 hover:bg-amber-900/50"
+              ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-300 shadow-lg shadow-amber-500/30 font-black scale-[1.03]"
+              : "bg-amber-950/40 text-amber-300 border-amber-500/30 hover:bg-amber-900/50"
               }`}
           >
             <span className="text-lg">📊</span>
@@ -1194,8 +1194,8 @@ export default function ContactDirectoryModule({
           <button
             onClick={() => setSelectedStatus("ADMITTED")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "ADMITTED"
-                ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white border-emerald-300 shadow-lg shadow-emerald-500/30 font-black scale-[1.03]"
-                : "bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50"
+              ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white border-emerald-300 shadow-lg shadow-emerald-500/30 font-black scale-[1.03]"
+              : "bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50"
               }`}
           >
             <span className="text-lg">🎓</span>
@@ -1208,8 +1208,8 @@ export default function ContactDirectoryModule({
           <button
             onClick={() => setSelectedStatus("REJECTED")}
             className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 ${selectedStatus === "REJECTED"
-                ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-rose-300 shadow-lg shadow-rose-500/30 font-black scale-[1.03]"
-                : "bg-rose-950/40 text-rose-300 border-rose-500/30 hover:bg-rose-900/50"
+              ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-rose-300 shadow-lg shadow-rose-500/30 font-black scale-[1.03]"
+              : "bg-rose-950/40 text-rose-300 border-rose-500/30 hover:bg-rose-900/50"
               }`}
           >
             <span className="text-lg">❌</span>
@@ -1344,9 +1344,8 @@ export default function ContactDirectoryModule({
                         setSearchField(field);
                         setIsSearchFieldDropdownOpen(false);
                       }}
-                      className={`px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-blue-50 transition-colors ${
-                        searchField === field ? "bg-blue-50/80 font-bold text-blue-600" : "text-slate-700 font-medium"
-                      }`}
+                      className={`px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-blue-50 transition-colors ${searchField === field ? "bg-blue-50/80 font-bold text-blue-600" : "text-slate-700 font-medium"
+                        }`}
                     >
                       <span>{field}</span>
                       <button
@@ -1354,9 +1353,8 @@ export default function ContactDirectoryModule({
                           e.stopPropagation();
                           setStarredSearchFields((prev) => ({ ...prev, [field]: !prev[field] }));
                         }}
-                        className={`text-sm hover:scale-110 transition-transform ${
-                          starredSearchFields[field] ? "text-amber-400" : "text-slate-300 hover:text-amber-400"
-                        }`}
+                        className={`text-sm hover:scale-110 transition-transform ${starredSearchFields[field] ? "text-amber-400" : "text-slate-300 hover:text-amber-400"
+                          }`}
                         title="Toggle Favorite Search Field"
                       >
                         ★
@@ -1766,11 +1764,10 @@ export default function ContactDirectoryModule({
                       <button
                         key={pNum}
                         onClick={() => setCurrentPage(pNum)}
-                        className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer ${
-                          isActive
+                        className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer ${isActive
                             ? "bg-blue-600 text-white shadow-md shadow-blue-500/40 scale-105"
                             : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
-                        }`}
+                          }`}
                       >
                         {pNum}
                       </button>
@@ -1842,14 +1839,14 @@ export default function ContactDirectoryModule({
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       {/* Stage Status Badge */}
                       <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-sm ${contact.status === "NEW"
-                          ? "bg-sky-500/20 text-sky-300 border-sky-400/50 animate-pulse"
-                          : contact.status === "CONTACTED"
-                            ? "bg-teal-500/20 text-teal-300 border-teal-400/50"
-                            : contact.status === "IN_REVIEW"
-                              ? "bg-amber-500/20 text-amber-300 border-amber-400/50"
-                              : contact.status === "ADMITTED"
-                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/50"
-                                : "bg-rose-500/20 text-rose-300 border-rose-400/50"
+                        ? "bg-sky-500/20 text-sky-300 border-sky-400/50 animate-pulse"
+                        : contact.status === "CONTACTED"
+                          ? "bg-teal-500/20 text-teal-300 border-teal-400/50"
+                          : contact.status === "IN_REVIEW"
+                            ? "bg-amber-500/20 text-amber-300 border-amber-400/50"
+                            : contact.status === "ADMITTED"
+                              ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/50"
+                              : "bg-rose-500/20 text-rose-300 border-rose-400/50"
                         }`}>
                         {contact.status === "NEW" && "🆕 New Inquiry"}
                         {contact.status === "CONTACTED" && "📞 Contacted"}
@@ -2742,11 +2739,10 @@ export default function ContactDirectoryModule({
                     setCalSelectedYear(2026);
                     setRegDateFilter("2026");
                   }}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                    calSelectedYear === 2026
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${calSelectedYear === 2026
                       ? "bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-600/40 font-black"
                       : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
-                  }`}
+                    }`}
                 >
                   📅 Year 2026
                 </button>
@@ -2755,11 +2751,10 @@ export default function ContactDirectoryModule({
                     setCalSelectedYear(2027);
                     setRegDateFilter("2027");
                   }}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                    calSelectedYear === 2027
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${calSelectedYear === 2027
                       ? "bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-600/40 font-black"
                       : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
-                  }`}
+                    }`}
                 >
                   🚀 Year 2027 (Next)
                 </button>
@@ -2768,11 +2763,10 @@ export default function ContactDirectoryModule({
                     setCalSelectedYear(2025);
                     setRegDateFilter("2025");
                   }}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                    calSelectedYear === 2025
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${calSelectedYear === 2025
                       ? "bg-amber-600 text-white border-amber-400 shadow-md shadow-amber-600/40 font-black"
                       : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
-                  }`}
+                    }`}
                 >
                   ⏪ Year 2025
                 </button>
@@ -2888,11 +2882,10 @@ export default function ContactDirectoryModule({
                           onTriggerToast(`📅 Filtered by Date: ${MONTH_NAMES[calSelectedMonth]} ${dayNum}, ${calSelectedYear}`);
                         }
                       }}
-                      className={`h-8 rounded-xl text-xs font-extrabold flex items-center justify-center transition-all cursor-pointer ${
-                        isSelectedDay
+                      className={`h-8 rounded-xl text-xs font-extrabold flex items-center justify-center transition-all cursor-pointer ${isSelectedDay
                           ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-lg shadow-sky-500/40 scale-105"
                           : "hover:bg-slate-800 text-slate-300 hover:text-white"
-                      }`}
+                        }`}
                     >
                       {dayNum}
                     </button>
@@ -3124,11 +3117,10 @@ export default function ContactDirectoryModule({
                   />
                   <button
                     onClick={() => setSelectedAuditDate("2026-08-22")}
-                    className={`px-3 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer border ${
-                      selectedAuditDate === "2026-08-22"
+                    className={`px-3 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer border ${selectedAuditDate === "2026-08-22"
                         ? "bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-600/30"
                         : "bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800"
-                    }`}
+                      }`}
                   >
                     Today (Aug 22, 2026)
                   </button>
@@ -3285,13 +3277,12 @@ export default function ContactDirectoryModule({
 
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span
-                                  className={`px-3 py-1 rounded-full text-[10px] font-black border ${
-                                    rec.studentInterestStatus === "INTERESTED"
+                                  className={`px-3 py-1 rounded-full text-[10px] font-black border ${rec.studentInterestStatus === "INTERESTED"
                                       ? "bg-emerald-950 text-emerald-300 border-emerald-800"
                                       : rec.studentInterestStatus === "ADMITTED"
-                                      ? "bg-sky-950 text-sky-300 border-sky-800"
-                                      : "bg-amber-950 text-amber-300 border-amber-800"
-                                  }`}
+                                        ? "bg-sky-950 text-sky-300 border-sky-800"
+                                        : "bg-amber-950 text-amber-300 border-amber-800"
+                                    }`}
                                 >
                                   {rec.studentInterestStatus === "INTERESTED" && "🌟 Interested to Join"}
                                   {rec.studentInterestStatus === "ADMITTED" && "🎓 Admitted / Fee Paid"}
@@ -3320,9 +3311,8 @@ export default function ContactDirectoryModule({
                                 </div>
                                 <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
                                   <div
-                                    className={`h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500 ${
-                                      isPlaying ? "w-2/3 animate-pulse" : "w-1/4"
-                                    }`}
+                                    className={`h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500 ${isPlaying ? "w-2/3 animate-pulse" : "w-1/4"
+                                      }`}
                                   />
                                 </div>
                               </div>
