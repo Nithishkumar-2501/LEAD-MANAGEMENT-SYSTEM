@@ -852,66 +852,6 @@ export default function ContactDirectoryModule({
 
   return (
     <div className="space-y-6">
-      {/* ADMIN PORTAL LEAD ALLOCATION & BATCH RANGE SPLITTING CONTROL CARD */}
-      {currentUserRole === "ADMIN" && (
-        <div className="bubble-card p-4 sm:p-5 border border-indigo-500/40 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 animate-in fade-in">
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
-                Admin Lead Allocation Control Panel
-              </span>
-              <span className="text-xs text-slate-300 font-bold">1,000 Total Database Contacts</span>
-            </div>
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <span className="text-xl">⚡</span> Total Database Leads: <span className="text-indigo-400 font-black">1,000 Contacts</span>
-            </h3>
-            <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
-              <span>Admin can split database leads into specific teacher batches (e.g. 100 contacts to Prof. P. Rajesh). Teachers exclusively view & edit their assigned batch while remaining 900 leads stay protected.</span>
-            </p>
-
-            {/* Allocated Batches Summary Chips */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
-              <div className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 flex items-center gap-1 font-bold">
-                <span>👤 P. Rajesh:</span>
-                <span className="text-emerald-400">100 Leads (#1 - #100)</span>
-              </div>
-              <div className="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-200 border border-sky-400/30 flex items-center gap-1 font-bold">
-                <span>👤 Dr. Arulmurugan:</span>
-                <span className="text-sky-400">100 Leads (#101 - #200)</span>
-              </div>
-              <div className="px-2.5 py-1 rounded-lg bg-pink-500/20 text-pink-200 border border-pink-400/30 flex items-center gap-1 font-bold">
-                <span>👤 Dr. Meenakshi:</span>
-                <span className="text-pink-400">100 Leads (#201 - #300)</span>
-              </div>
-              <div className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-400/30 flex items-center gap-1 font-bold">
-                <span>👤 Dr. Gayathri:</span>
-                <span className="text-purple-400">100 Leads (#301 - #400)</span>
-              </div>
-              <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold">
-                <span>⏳ 600 Unassigned Leads</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto shrink-0">
-            <button
-              onClick={() => setIsAdminAuditDrawerOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 border border-emerald-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
-            >
-              <Phone className="w-4 h-4 text-emerald-200" />
-              <span>📞 Daily Call Analytics & Audio Audit</span>
-            </button>
-
-            <button
-              onClick={() => setIsSplitModalOpen(true)}
-              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
-            >
-              <span className="text-base">⚡</span>
-              <span>Split Contacts to Teacher</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Teacher Quota & Strict Scoping Banner */}
       {currentUserRole === "TEACHER" && (
