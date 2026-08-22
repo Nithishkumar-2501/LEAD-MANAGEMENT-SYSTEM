@@ -303,6 +303,7 @@ export default function DashboardPage() {
           <TeacherModule
             loggedInCampus={loggedInCampus}
             currentUserRole={currentUserRole}
+            loggedInUsername={loggedInUsername}
             onTriggerToast={triggerToast}
           />
         )}

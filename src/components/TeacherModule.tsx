@@ -12,10 +12,11 @@ import SpecularButton from "@/components/SpecularButton";
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
   currentUserRole: "ADMIN" | "TEACHER";
+  loggedInUsername?: string;
   onTriggerToast: (msg: string) => void;
 }
 
-export default function TeacherModule({ loggedInCampus, currentUserRole, onTriggerToast }: TeacherModuleProps) {
+export default function TeacherModule({ loggedInCampus, currentUserRole, loggedInUsername, onTriggerToast }: TeacherModuleProps) {
   const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("ALL");
@@ -153,6 +154,34 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
   const departments = ["ALL", ...VSB_DEPARTMENTS_COURSES];
 
   const filteredTeachers = teachers.filter((t) => {
+    // If logged in as TEACHER role, strictly scope to ONLY their own faculty profile!
+    const matchesTeacherSelf =
+      currentUserRole === "ADMIN"
+        ? true
+        : Boolean(
+            loggedInUsername &&
+              (t.email.toLowerCase() === loggedInUsername.toLowerCase() ||
+                t.id.toLowerCase() === loggedInUsername.toLowerCase() ||
+                t.name.toLowerCase().includes(loggedInUsername.toLowerCase()) ||
+                loggedInUsername.toLowerCase().includes(t.name.toLowerCase()) ||
+                (loggedInUsername.includes("rajesh") && t.name.includes("Rajesh")) ||
+                (loggedInUsername.includes("arul") && t.name.includes("Arulmurugan")) ||
+                (loggedInUsername.includes("meenakshi") && t.name.includes("Meenakshi")) ||
+                (loggedInUsername.includes("gayathri") && t.name.includes("Gayathri")) ||
+                (loggedInUsername.includes("karthik") && t.name.includes("Karthik")) ||
+                (loggedInUsername.includes("saravanan") && t.name.includes("Saravanan")) ||
+                (loggedInUsername.includes("anitha") && t.name.includes("Anitha")) ||
+                (loggedInUsername.includes("senthil") && t.name.includes("Senthil")) ||
+                (loggedInUsername.includes("kavitha") && t.name.includes("Kavitha")) ||
+                (loggedInUsername.includes("ramesh") && t.name.includes("Ramesh")) ||
+                (loggedInUsername.includes("divya") && t.name.includes("Divya")) ||
+                (loggedInUsername.includes("manikandan") && t.name.includes("Manikandan")) ||
+                (loggedInUsername.includes("priya") && t.name.includes("Priya")) ||
+                (loggedInUsername.includes("suresh") && t.name.includes("Suresh")) ||
+                (loggedInUsername.includes("deepa") && t.name.includes("Deepa")) ||
+                (loggedInUsername.includes("prakash") && t.name.includes("Prakash")))
+          );
+
     const matchesSearch =
       t.name.toLowerCase().includes(search.toLowerCase()) ||
       t.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -165,11 +194,13 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, onTrigg
       selectedDept.toLowerCase().includes(t.department.toLowerCase());
 
     const matchesCampus =
-      !t.campus ||
-      t.campus === loggedInCampus ||
-      t.campus.toUpperCase().includes(loggedInCampus);
+      currentUserRole === "TEACHER"
+        ? true
+        : !t.campus ||
+          t.campus === loggedInCampus ||
+          t.campus.toUpperCase().includes(loggedInCampus);
 
-    return matchesSearch && matchesDept && matchesCampus;
+    return matchesTeacherSelf && matchesSearch && matchesDept && matchesCampus;
   });
 
   const handleAddTeacher = async (e: React.FormEvent) => {
