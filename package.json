@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
-    "prisma:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "prisma:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "antigravity": "python scripts/antigravity_gemini.py"
   },
   "dependencies": {
     "@prisma/client": "^5.10.2",
