@@ -88,36 +88,24 @@ export default function ApplicantsTable({
             <p className="text-xs text-slate-400">TNEA & Management intake candidates at V.S.B.</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             {onOpenQuickLeadModal && (
-              <SpecularButton
-                size="sm"
-                tint="#ec4899"
-                tintOpacity={0.25}
-                lineColor="#f472b6"
-                baseColor="#db2777"
-                intensity={1.5}
-                followMouse
+              <button
                 onClick={onOpenQuickLeadModal}
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs shadow-lg shadow-pink-500/40 border border-pink-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 text-white shrink-0" />
                 <span>+ Add Quick Lead</span>
-              </SpecularButton>
+              </button>
             )}
 
-            <SpecularButton
-              size="sm"
-              tint="#38bdf8"
-              tintOpacity={0.25}
-              lineColor="#38bdf8"
-              baseColor="#0284c7"
-              intensity={1.5}
-              followMouse
+            <button
               onClick={onOpenCreateModal}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-blue-700 text-white font-black text-xs shadow-lg shadow-sky-500/40 border border-sky-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 text-white shrink-0" />
               <span>New Application</span>
-            </SpecularButton>
+            </button>
 
             <input
               type="file"
@@ -142,9 +130,9 @@ export default function ApplicantsTable({
             />
             <button
               onClick={() => document.getElementById("csv-dashboard-upload")?.click()}
-              className="px-3.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600 text-purple-200 border border-purple-400/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-purple-500/40 border border-purple-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
             >
-              <Upload className="w-3.5 h-3.5" />
+              <Upload className="w-4 h-4 text-white shrink-0" />
               <span>Import CSV</span>
             </button>
 

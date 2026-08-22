@@ -904,16 +904,18 @@ export default function ContactDirectoryModule({
           />
           <button
             onClick={() => document.getElementById("csv-file-upload")?.click()}
-            className="px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100 flex items-center gap-1"
+            className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-purple-500/40 border border-purple-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
           >
-            <Upload className="w-3.5 h-3.5" /> Import CSV
+            <Upload className="w-4 h-4 text-white shrink-0" />
+            <span>Import CSV</span>
           </button>
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black flex items-center gap-1.5 shadow-md shadow-blue-600/30"
+            className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold text-xs shadow-lg shadow-pink-500/40 border border-pink-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Add Lead
+            <Plus className="w-4 h-4 text-white shrink-0" />
+            <span>+ Add Lead</span>
           </button>
         </div>
       </div>
