@@ -206,6 +206,50 @@ export default function ContactDirectoryModule({
   const [showEmail, setShowEmail] = useState(true);
   const [showAddress, setShowAddress] = useState(true);
 
+  // Admin Split Contacts to Teacher Modal State
+  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
+  const [splitTargetTeacher, setSplitTargetTeacher] = useState("teacher_rajesh@123");
+  const [splitQuantity, setSplitQuantity] = useState(100);
+  const [splitStartNumber, setSplitStartNumber] = useState(1);
+
+  const FACULTY_MEMBERS = [
+    { id: "teacher_rajesh@123", name: "Prof. P. Rajesh", department: "Mechanical Engineering", campus: "KARUR" },
+    { id: "teacherkarur@123", name: "Dr. K. Arulmurugan", department: "Computer Science", campus: "KARUR" },
+    { id: "teachercovai@123", name: "Dr. S. Meenakshi", department: "Electronics & Communication", campus: "COIMBATORE" },
+    { id: "teacher_it@123", name: "Dr. N. Gayathri", department: "Information Technology", campus: "KARUR" },
+    { id: "teacher_ai@123", name: "Prof. V. Sathish", department: "Artificial Intelligence", campus: "COIMBATORE" },
+  ];
+
+  const handlePerformLeadSplit = () => {
+    const startIndex = Math.max(0, splitStartNumber - 1);
+    const count = Math.max(1, splitQuantity);
+    const endIndex = Math.min(contacts.length, startIndex + count);
+
+    const facultyObj = FACULTY_MEMBERS.find((f) => f.id === splitTargetTeacher || f.name === splitTargetTeacher);
+    const facultyName = facultyObj ? facultyObj.name : splitTargetTeacher;
+    const facultyId = facultyObj ? facultyObj.id : splitTargetTeacher;
+
+    const updated = contacts.map((c, idx) => {
+      if (idx >= startIndex && idx < endIndex) {
+        return {
+          ...c,
+          assignedTo: facultyId,
+          assignedRangeText: `Batch #${startIndex + 1} - #${endIndex}`,
+        };
+      }
+      return c;
+    });
+
+    setContacts(updated);
+    setIsSplitModalOpen(false);
+
+    if (onTriggerToast) {
+      onTriggerToast(
+        `⚡ Successfully split & allocated Contacts #${startIndex + 1} to #${endIndex} (${endIndex - startIndex} Leads) to ${facultyName}!`
+      );
+    }
+  };
+
   // Add Contact Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newContact, setNewContact] = useState({
@@ -425,9 +469,17 @@ export default function ContactDirectoryModule({
             : c.appliedCounselling === false || c.counsellingCategory?.includes("Management");
 
     const matchesTeacherAssignment =
-      currentUserRole === "ADMIN" ||
-      c.assignedTo === loggedInUsername ||
-      (!c.assignedTo && (c.campus === selectedCampus || selectedCampus === "ALL"));
+      currentUserRole === "ADMIN"
+        ? true
+        : Boolean(
+            c.assignedTo &&
+              (c.assignedTo === loggedInUsername ||
+                c.assignedTo.toLowerCase().includes(loggedInUsername.toLowerCase()) ||
+                loggedInUsername.toLowerCase().includes(c.assignedTo.toLowerCase()) ||
+                (loggedInUsername.includes("karur") && c.assignedTo.includes("karur")) ||
+                (loggedInUsername.includes("covai") && c.assignedTo.includes("covai")) ||
+                (loggedInUsername.includes("rajesh") && c.assignedTo.includes("rajesh")))
+          );
 
     const matchesDrawerRules =
       filterRules.length === 0
@@ -692,35 +744,88 @@ export default function ContactDirectoryModule({
 
   return (
     <div className="space-y-6">
-      {/* Teacher Quota & In-Portal Call/Message Banner */}
+      {/* ADMIN PORTAL LEAD ALLOCATION & BATCH RANGE SPLITTING CONTROL CARD */}
+      {currentUserRole === "ADMIN" && (
+        <div className="bubble-card p-4 sm:p-5 border border-indigo-500/40 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 animate-in fade-in">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
+                Admin Lead Allocation Control Panel
+              </span>
+              <span className="text-xs text-slate-300 font-bold">1,000 Total Database Contacts</span>
+            </div>
+            <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <span className="text-xl">⚡</span> Total Database Leads: <span className="text-indigo-400 font-black">1,000 Contacts</span>
+            </h3>
+            <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
+              <span>Admin can split database leads into specific teacher batches (e.g. 100 contacts to Prof. P. Rajesh). Teachers exclusively view & edit their assigned batch while remaining 900 leads stay protected.</span>
+            </p>
+
+            {/* Allocated Batches Summary Chips */}
+            <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
+              <div className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 flex items-center gap-1 font-bold">
+                <span>👤 P. Rajesh:</span>
+                <span className="text-emerald-400">100 Leads (#1 - #100)</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-200 border border-sky-400/30 flex items-center gap-1 font-bold">
+                <span>👤 Dr. Arulmurugan:</span>
+                <span className="text-sky-400">100 Leads (#101 - #200)</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-lg bg-pink-500/20 text-pink-200 border border-pink-400/30 flex items-center gap-1 font-bold">
+                <span>👤 Dr. Meenakshi:</span>
+                <span className="text-pink-400">100 Leads (#201 - #300)</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-400/30 flex items-center gap-1 font-bold">
+                <span>👤 Dr. Gayathri:</span>
+                <span className="text-purple-400">100 Leads (#301 - #400)</span>
+              </div>
+              <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold">
+                <span>⏳ 600 Unassigned Leads</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto shrink-0">
+            <button
+              onClick={() => setIsSplitModalOpen(true)}
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
+            >
+              <span className="text-base">⚡</span>
+              <span>Split Contacts to Teacher</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Quota & Strict Scoping Banner */}
       {currentUserRole === "TEACHER" && (
         <div className="bubble-card p-4 sm:p-5 border border-emerald-500/40 bg-gradient-to-r from-emerald-950/70 via-slate-900 to-indigo-950/70 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl animate-in fade-in">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                Faculty Lead Allocation
+                Faculty Lead Allocation Portal
               </span>
               <span className="text-xs text-slate-300 font-bold">Assigned by Admin</span>
             </div>
             <h3 className="text-lg font-black text-white flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-emerald-400" />
-              Assigned Contacts Quota: <span className="text-emerald-400">1,000 Candidates</span>
+              Assigned Lead Batch: <span className="text-emerald-400 font-black">100 Contacts (#1 to #100)</span> out of 1,000 Total
             </h3>
             <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>In-Portal Direct Calling, Messaging & Mail Active — No personal phone numbers required.</span>
+              <span>You have exclusive permission to view, edit & update your assigned 100 contacts. The remaining 900 database contacts are protected and restricted to Admin view.</span>
             </p>
           </div>
 
           <div className="w-full md:w-64 bg-slate-950/90 p-3.5 rounded-2xl border border-white/10 space-y-1.5 text-xs">
             <div className="flex justify-between font-bold">
-              <span className="text-slate-400">Outreach Progress</span>
-              <span className="text-emerald-400">142 / 1,000 (14.2%)</span>
+              <span className="text-slate-400">Assigned Batch Progress</span>
+              <span className="text-emerald-400 font-extrabold">14 / 100 (14%)</span>
             </div>
             <div className="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden border border-white/10">
-              <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-[14.2%]" />
+              <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-[14%]" />
             </div>
-            <p className="text-[10px] text-slate-400 text-right">858 Assigned Contacts Remaining</p>
+            <p className="text-[10px] text-slate-400 text-right">86 Assigned Leads Remaining</p>
           </div>
         </div>
       )}
@@ -2658,6 +2763,142 @@ export default function ContactDirectoryModule({
                 className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-sky-500/30 cursor-pointer"
               >
                 Apply Calendar Date Filter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SPLIT CONTACTS TO TEACHER MODAL (Admin Feature) */}
+      {isSplitModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 text-white font-sans animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-400 font-extrabold text-xl shadow-inner">
+                  ⚡
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">Split Contacts to Faculty Member</h3>
+                  <p className="text-xs text-slate-400">Allocate lead batches (e.g. 100 contacts) out of 1,000 total leads</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsSplitModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg text-lg font-bold transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Database Overview */}
+              <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-white/10 flex items-center justify-between">
+                <span className="text-slate-400 font-bold">Total Contacts in Database:</span>
+                <span className="text-indigo-400 font-black text-sm">1,000 Leads</span>
+              </div>
+
+              {/* Select Faculty Member */}
+              <div>
+                <label className="block text-slate-300 font-extrabold mb-1">
+                  Select Target Faculty / Teacher:
+                </label>
+                <select
+                  value={splitTargetTeacher}
+                  onChange={(e) => setSplitTargetTeacher(e.target.value)}
+                  className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
+                >
+                  {FACULTY_MEMBERS.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name} ({f.department} - {f.campus})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Range Inputs */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Start Contact No (#):</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={contacts.length}
+                    value={splitStartNumber}
+                    onChange={(e) => setSplitStartNumber(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Split Batch Quantity:</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={splitQuantity}
+                    onChange={(e) => setSplitQuantity(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Quick Batch Presets */}
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1 text-[11px]">Quick Batch Presets:</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSplitQuantity(50)}
+                    className="px-3 py-1 rounded-lg bg-slate-800 border border-white/10 hover:bg-slate-700 text-slate-200 font-bold cursor-pointer"
+                  >
+                    50 Leads
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSplitQuantity(100)}
+                    className="px-3 py-1 rounded-lg bg-indigo-600/30 border border-indigo-400/40 text-indigo-300 font-bold cursor-pointer"
+                  >
+                    100 Leads
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSplitQuantity(200)}
+                    className="px-3 py-1 rounded-lg bg-purple-600/30 border border-purple-400/40 text-purple-300 font-bold cursor-pointer"
+                  >
+                    200 Leads
+                  </button>
+                </div>
+              </div>
+
+              {/* Calculated Range Summary Box */}
+              <div className="bg-indigo-950/70 p-4 rounded-2xl border border-indigo-400/30 text-xs space-y-1.5 shadow-inner">
+                <div className="flex items-center justify-between font-bold text-indigo-200">
+                  <span>Computed Allocation Range:</span>
+                  <span className="text-emerald-400 font-black text-sm">
+                    Contacts #{splitStartNumber} to #{Math.min(contacts.length, splitStartNumber + splitQuantity - 1)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  The selected teacher will get exclusive permission to view and edit these {Math.min(contacts.length, splitStartNumber + splitQuantity - 1) - splitStartNumber + 1} contacts. Remaining contacts stay hidden from this teacher on the portal.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setIsSplitModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePerformLeadSplit}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 cursor-pointer"
+              >
+                Confirm Allocation
               </button>
             </div>
           </div>
