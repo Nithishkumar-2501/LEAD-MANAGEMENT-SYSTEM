@@ -395,24 +395,24 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
             {/* Allocated Batches Summary Chips */}
             <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
-              <div className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 flex items-center gap-1 font-bold">
-                <span>👤 P. Rajesh:</span>
-                <span className="text-emerald-400 font-black">100 Leads (#1 - #100)</span>
+              <div className="px-3 py-1.5 rounded-xl bg-indigo-100 border border-indigo-300 flex items-center gap-1.5 font-black text-black shadow-sm">
+                <span className="text-black font-black">👤 P. Rajesh:</span>
+                <span className="text-black font-extrabold">100 Leads (#1 - #100)</span>
               </div>
-              <div className="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-200 border border-sky-400/30 flex items-center gap-1 font-bold">
-                <span>👤 Dr. Arulmurugan:</span>
-                <span className="text-sky-400 font-black">100 Leads (#101 - #200)</span>
+              <div className="px-3 py-1.5 rounded-xl bg-sky-100 border border-sky-300 flex items-center gap-1.5 font-black text-black shadow-sm">
+                <span className="text-black font-black">👤 Dr. Arulmurugan:</span>
+                <span className="text-black font-extrabold">100 Leads (#101 - #200)</span>
               </div>
-              <div className="px-2.5 py-1 rounded-lg bg-pink-500/20 text-pink-200 border border-pink-400/30 flex items-center gap-1 font-bold">
-                <span>👤 Dr. Meenakshi:</span>
-                <span className="text-pink-400 font-black">100 Leads (#201 - #300)</span>
+              <div className="px-3 py-1.5 rounded-xl bg-pink-100 border border-pink-300 flex items-center gap-1.5 font-black text-black shadow-sm">
+                <span className="text-black font-black">👤 Dr. Meenakshi:</span>
+                <span className="text-black font-extrabold">100 Leads (#201 - #300)</span>
               </div>
-              <div className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-400/30 flex items-center gap-1 font-bold">
-                <span>👤 Dr. Gayathri:</span>
-                <span className="text-purple-400 font-black">100 Leads (#301 - #400)</span>
+              <div className="px-3 py-1.5 rounded-xl bg-purple-100 border border-purple-300 flex items-center gap-1.5 font-black text-black shadow-sm">
+                <span className="text-black font-black">👤 Dr. Gayathri:</span>
+                <span className="text-black font-extrabold">100 Leads (#301 - #400)</span>
               </div>
-              <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold">
-                <span>⏳ 600 Unassigned Leads</span>
+              <div className="px-3 py-1.5 rounded-xl bg-amber-100 border border-amber-300 flex items-center gap-1.5 font-black text-black shadow-sm">
+                <span className="text-black font-black">⏳ 600 Unassigned Leads</span>
               </div>
             </div>
           </div>
