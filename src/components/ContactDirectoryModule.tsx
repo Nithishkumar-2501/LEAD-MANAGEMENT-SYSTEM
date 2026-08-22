@@ -2972,10 +2972,10 @@ export default function ContactDirectoryModule({
                 <select
                   value={splitTargetTeacher}
                   onChange={(e) => setSplitTargetTeacher(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-black dark:text-white font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
                 >
                   {FACULTY_MEMBERS.map((f) => (
-                    <option key={f.id} value={f.id}>
+                    <option key={f.id} value={f.id} className="text-black bg-white dark:bg-slate-900 dark:text-white font-black">
                       {f.name} ({f.department} - {f.campus})
                     </option>
                   ))}
@@ -3208,14 +3208,14 @@ export default function ContactDirectoryModule({
 
                         return (
                           <tr key={fac.id} className="hover:bg-slate-900/60 transition-colors">
-                            <td className="p-3 font-bold text-white flex items-center gap-2">
-                              <span className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-xs">
+                            <td className="p-3 font-extrabold text-black dark:text-white flex items-center gap-2">
+                              <span className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
                                 {fac.name.slice(0, 2)}
                               </span>
-                              <span>{fac.name}</span>
+                              <span className="text-black dark:text-white font-extrabold">{fac.name}</span>
                             </td>
-                            <td className="p-3 text-slate-400 font-medium">{fac.department}</td>
-                            <td className="p-3 font-mono font-bold text-slate-200">{facTotal} Calls</td>
+                            <td className="p-3 text-slate-800 dark:text-slate-300 font-bold">{fac.department}</td>
+                            <td className="p-3 font-mono font-bold text-black dark:text-slate-200">{facTotal} Calls</td>
                             <td className="p-3 font-bold text-emerald-400 flex items-center gap-1">
                               <span>🌟</span>
                               <span>{facInterested || (fac.name === "Prof. P. Rajesh" ? 1 : 1)} Interested</span>

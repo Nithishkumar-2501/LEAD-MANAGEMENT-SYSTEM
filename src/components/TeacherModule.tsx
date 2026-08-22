@@ -401,8 +401,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                     {tch.avatar}
                   </div>
                   <div>
-                    <h4 className="text-base font-bold text-slate-100 group-hover:text-sky-300 transition-colors">{tch.name}</h4>
-                    <p className="text-xs text-indigo-400 font-medium">{tch.department}</p>
+                    <h4 className="text-base font-black text-black dark:text-white group-hover:text-sky-400 transition-colors">{tch.name}</h4>
+                    <p className="text-xs text-indigo-500 dark:text-indigo-400 font-bold">{tch.department}</p>
                   </div>
                 </div>
 
