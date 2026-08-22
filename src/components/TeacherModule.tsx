@@ -29,6 +29,58 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [splitQuantity, setSplitQuantity] = useState(100);
   const [splitStartNumber, setSplitStartNumber] = useState(1);
 
+  // Admin Call Analytics & Audio Audit State
+  const [isAdminAuditDrawerOpen, setIsAdminAuditDrawerOpen] = useState(false);
+  const [selectedAuditDate, setSelectedAuditDate] = useState("2026-08-22");
+  const [playingAudioRecId, setPlayingAudioRecId] = useState<string | null>(null);
+
+  const [callRecordings] = useState([
+    {
+      id: "REC-101",
+      leadName: "Kavya Subramaniam",
+      leadPhone: "+91 98432 11223",
+      teacherName: "Dr. K. Arulmurugan",
+      recordingDate: "2026-08-22",
+      timestamp: "10:30 AM",
+      durationText: "03:45",
+      studentInterestStatus: "INTERESTED",
+      teacherNotes: "Candidate highly interested in B.E. Computer Science. Verified TNEA cutoff score 194.5.",
+      callTranscript: `[00:05] Dr. Arulmurugan: Hello, am I speaking with Kavya?
+[00:12] Kavya: Yes sir! Good morning. I applied for VSB Engineering College CSE department.
+[00:30] Dr. Arulmurugan: Excellent Kavya. Your TNEA cutoff score of 194.5 places you in top 5% merit batch. Our placement record for CSE is 98.4% with top package 24 LPA.
+[01:15] Kavya: That's great sir! Can I visit Karur campus this Saturday for document verification?
+[02:05] Dr. Arulmurugan: Yes absolutely. Bring your 12th marksheet, TNEA rank sheet, and community certificate. See you on Saturday!`,
+    },
+    {
+      id: "REC-102",
+      leadName: "Sanjay Kumar",
+      leadPhone: "+91 99421 88776",
+      teacherName: "Prof. P. Rajesh",
+      recordingDate: "2026-08-22",
+      timestamp: "11:15 AM",
+      durationText: "02:10",
+      studentInterestStatus: "ADMITTED",
+      teacherNotes: "Management Quota seat allocated for Mechanical Engg. Token advance paid.",
+      callTranscript: `[00:04] Prof. Rajesh: Hello Sanjay, calling regarding your Mechanical Engineering admission at VSB Karur campus.
+[00:20] Sanjay: Yes sir, my father and I finalized VSB for Mechanical. We want to confirm seat under Management quota.
+[00:55] Prof. Rajesh: Great! I have reserved your seat #MECH-042. Kindly complete online fee submission by 4 PM today.`,
+    },
+    {
+      id: "REC-103",
+      leadName: "Deepak V.",
+      leadPhone: "+91 97890 33445",
+      teacherName: "Dr. S. Meenakshi",
+      recordingDate: "2026-08-22",
+      timestamp: "02:40 PM",
+      durationText: "04:15",
+      studentInterestStatus: "REVIEWING",
+      teacherNotes: "Student reviewing ECE vs Cyber Security options. Scheduled follow-up call tomorrow.",
+      callTranscript: `[00:06] Dr. Meenakshi: Hello Deepak, Dr. Meenakshi here from VSB ECE Department.
+[00:35] Deepak: Hello Ma'am! I am confused between ECE and Cyber Security specialization.
+[01:40] Dr. Meenakshi: ECE offers core electronics plus embedded software placement, while Cyber Security focuses on network defense. Both have 100% placement track records at VSB. Take tonight to discuss with parents!`,
+    },
+  ]);
+
   // In-Portal Communication Modal State
   const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
   const [activeCommContact, setActiveCommContact] = useState<ContactTarget | null>(null);
@@ -366,6 +418,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto shrink-0">
+            <button
+              onClick={() => setIsAdminAuditDrawerOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 border border-emerald-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
+            >
+              <Phone className="w-4 h-4 text-emerald-200" />
+              <span>📞 Daily Call Analytics & Audio Audit</span>
+            </button>
+
             <button
               onClick={() => setIsSplitModalOpen(true)}
               className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
@@ -1184,6 +1244,171 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
               >
                 <span>Confirm Lead Allocation</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN DAILY CALL ANALYTICS & VOICE AUDIO RECORDINGS INSPECTOR DRAWER */}
+      {isAdminAuditDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="glass-card w-full max-w-4xl max-h-[90vh] rounded-3xl border border-emerald-500/40 p-6 flex flex-col shadow-2xl bg-slate-900 text-white overflow-hidden space-y-4">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <Phone className="w-6 h-6 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white flex items-center gap-2">
+                    <span>📞 Voice Call Recordings & Transcripts Audit</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold">
+                      LIVE AUDIT
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Listen to recorded faculty-student calls, view speech-to-text transcripts, and track lead conversion notes.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAdminAuditDrawerOpen(false)}
+                className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Controls Bar: Select Date */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-950 p-3.5 rounded-2xl border border-slate-800 shrink-0">
+              <div className="flex items-center gap-2 text-xs font-extrabold text-slate-300">
+                <span>📅 Audit Date Filter:</span>
+                <input
+                  type="date"
+                  value={selectedAuditDate}
+                  onChange={(e) => setSelectedAuditDate(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-emerald-400 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-extrabold text-slate-300">
+                <span className="text-indigo-400">Total Calls Logged Today:</span>
+                <span className="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 font-black">
+                  {callRecordings.filter((r) => r.recordingDate === selectedAuditDate).length} Voice Recordings
+                </span>
+              </div>
+            </div>
+
+            {/* Recorded Calls List & Audio Player Inspector */}
+            <div className="overflow-y-auto flex-1 space-y-3 pr-1">
+              {callRecordings.filter((r) => r.recordingDate === selectedAuditDate).length === 0 ? (
+                <div className="p-8 rounded-2xl bg-slate-950/60 border border-slate-800 text-center text-slate-400 font-medium">
+                  No call recordings logged on {selectedAuditDate}. Make an In-Portal call to record audio & view transcripts.
+                </div>
+              ) : (
+                callRecordings
+                  .filter((r) => r.recordingDate === selectedAuditDate)
+                  .map((rec) => {
+                    const isPlaying = playingAudioRecId === rec.id;
+
+                    return (
+                      <div
+                        key={rec.id}
+                        className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3 hover:border-emerald-500/50 transition-all shadow-lg"
+                      >
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-black text-sm shadow-md">
+                              {rec.leadName.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <h5 className="font-extrabold text-white text-sm flex items-center gap-2">
+                                <span>{rec.leadName}</span>
+                                <span className="text-xs text-emerald-400 font-mono font-bold">({rec.leadPhone})</span>
+                              </h5>
+                              <p className="text-[11px] text-slate-400 font-medium">
+                                Contacted by: <span className="text-indigo-300 font-bold">{rec.teacherName}</span> • {rec.timestamp}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span
+                              className={`px-3 py-1 rounded-full text-[10px] font-black border ${
+                                rec.studentInterestStatus === "INTERESTED"
+                                  ? "bg-emerald-950 text-emerald-300 border-emerald-800"
+                                  : rec.studentInterestStatus === "ADMITTED"
+                                  ? "bg-sky-950 text-sky-300 border-sky-800"
+                                  : "bg-amber-950 text-amber-300 border-amber-800"
+                              }`}
+                            >
+                              {rec.studentInterestStatus === "INTERESTED" && "🌟 Interested to Join"}
+                              {rec.studentInterestStatus === "ADMITTED" && "🎓 Admitted / Fee Paid"}
+                              {rec.studentInterestStatus === "REVIEWING" && "⏳ Reviewing Cutoff"}
+                            </span>
+
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                              ⏳ Auto-deletes in 29 days
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Simulated Audio Call Player Bar */}
+                        <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+                          <button
+                            onClick={() => setPlayingAudioRecId(isPlaying ? null : rec.id)}
+                            className="w-9 h-9 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black flex items-center justify-center shadow-md cursor-pointer transition-transform active:scale-95 shrink-0"
+                          >
+                            {isPlaying ? "⏸" : "▶"}
+                          </button>
+
+                          <div className="flex-1 space-y-1">
+                            <div className="flex justify-between text-[10px] font-mono text-slate-400 font-bold">
+                              <span>{isPlaying ? "▶ Playing Voice Recording..." : "Recorded Call Audio File"}</span>
+                              <span>{rec.durationText}</span>
+                            </div>
+                            <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                              <div
+                                className={`h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500 ${
+                                  isPlaying ? "w-2/3 animate-pulse" : "w-1/4"
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Transcript & Teacher Call Notes */}
+                        <div className="bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl space-y-1.5 text-[11px]">
+                          <p className="font-extrabold text-slate-300 flex items-center gap-1.5">
+                            <span>📝 Teacher Notes:</span>
+                            <span className="text-white font-medium">{rec.teacherNotes}</span>
+                          </p>
+                          <div className="pt-2 border-t border-slate-800 space-y-1">
+                            <p className="font-extrabold text-indigo-400 uppercase tracking-wider text-[10px]">
+                              Verbatim Conversation Call Transcript:
+                            </p>
+                            <pre className="whitespace-pre-wrap font-sans text-[11px] text-slate-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 leading-relaxed">
+                              {rec.callTranscript}
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between shrink-0">
+              <span className="text-xs text-slate-400 font-medium">
+                Admin Privilege: Voice recordings & transcripts saved per faculty call.
+              </span>
+              <button
+                onClick={() => setIsAdminAuditDrawerOpen(false)}
+                className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs cursor-pointer transition-all"
+              >
+                Close Audit Inspector
               </button>
             </div>
           </div>
