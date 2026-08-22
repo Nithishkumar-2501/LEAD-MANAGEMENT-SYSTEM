@@ -245,7 +245,7 @@ export default function DashboardPage() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
+        <main className="flex-1 p-3 sm:p-6 w-full space-y-4 sm:space-y-6">
         {/* ADMISSIONS CRM MODULE */}
         {activeTab === "ADMISSIONS" && (
           <>
