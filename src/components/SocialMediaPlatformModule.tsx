@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Share2,
   Megaphone,
@@ -58,6 +58,18 @@ export default function SocialMediaPlatformModule({
       ? "EXPO"
       : "ALL"
   );
+
+  // Sync selectedSubTab whenever activeTab prop changes (e.g. from Sidebar clicks)
+  useEffect(() => {
+    if (activeTab === "SOCIAL_ADS") setSelectedSubTab("ADS");
+    else if (activeTab === "SOCIAL_FACEBOOK") setSelectedSubTab("FACEBOOK");
+    else if (activeTab === "SOCIAL_TWITTER") setSelectedSubTab("TWITTER");
+    else if (activeTab === "SOCIAL_WHATSAPP") setSelectedSubTab("WHATSAPP");
+    else if (activeTab === "SOCIAL_EMAIL") setSelectedSubTab("EMAIL");
+    else if (activeTab === "SOCIAL_SMS") setSelectedSubTab("SMS");
+    else if (activeTab === "SOCIAL_CAMPAIGN") setSelectedSubTab("CAMPAIGN");
+    else if (activeTab === "SOCIAL_EXPO") setSelectedSubTab("EXPO");
+  }, [activeTab]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChannelFilter, setActiveChannelFilter] = useState("ALL");
