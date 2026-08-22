@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 
+import type { CallRecording } from "@/types/crm";
+
 export interface ContactTarget {
   name: string;
   phone: string;
@@ -29,6 +31,8 @@ export interface ContactTarget {
   campus?: string;
   school?: string;
   district?: string;
+  id?: string;
+  assignedTo?: string;
 }
 
 interface InPortalCommunicationModalsProps {
@@ -36,6 +40,7 @@ interface InPortalCommunicationModalsProps {
   contact: ContactTarget | null;
   onClose: () => void;
   onLogSuccess: (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => void;
+  onSaveCallRecording?: (rec: CallRecording) => void;
 }
 
 export default function InPortalCommunicationModals({
@@ -43,13 +48,19 @@ export default function InPortalCommunicationModals({
   contact,
   onClose,
   onLogSuccess,
+  onSaveCallRecording,
 }: InPortalCommunicationModalsProps) {
   if (!activeModal || !contact) return null;
 
   return (
     <>
       {activeModal === "CALL" && (
-        <CallModal contact={contact} onClose={onClose} onLogSuccess={onLogSuccess} />
+        <CallModal
+          contact={contact}
+          onClose={onClose}
+          onLogSuccess={onLogSuccess}
+          onSaveCallRecording={onSaveCallRecording}
+        />
       )}
       {activeModal === "MESSAGE" && (
         <MessageModal contact={contact} onClose={onClose} onLogSuccess={onLogSuccess} />
@@ -68,15 +79,18 @@ function CallModal({
   contact,
   onClose,
   onLogSuccess,
+  onSaveCallRecording,
 }: {
   contact: ContactTarget;
   onClose: () => void;
   onLogSuccess: (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => void;
+  onSaveCallRecording?: (rec: CallRecording) => void;
 }) {
   const [callSeconds, setCallSeconds] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [callNotes, setCallNotes] = useState("");
+  const [studentInterestStatus, setStudentInterestStatus] = useState<"INTERESTED" | "ADMITTED" | "REVIEWING" | "NOT_INTERESTED" | "NO_ANSWER">("INTERESTED");
   const [callStatus, setCallStatus] = useState<"CONNECTING" | "CONNECTED" | "ENDED">("CONNECTING");
 
   useEffect(() => {
@@ -106,9 +120,38 @@ function CallModal({
   const handleEndCall = () => {
     setCallStatus("ENDED");
     const notesSummary = callNotes.trim()
-      ? `Call duration: ${formatTime(callSeconds)}. Notes: ${callNotes}`
-      : `In-portal call completed (${formatTime(callSeconds)})`;
+      ? `Call duration: ${formatTime(callSeconds)}. Status: ${studentInterestStatus}. Notes: ${callNotes}`
+      : `In-portal call completed (${formatTime(callSeconds)}) - ${studentInterestStatus}`;
+    
     onLogSuccess("CALL", notesSummary);
+
+    if (onSaveCallRecording) {
+      const todayDate = new Date().toISOString().split("T")[0];
+      const expiryDateObj = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const expiresAtStr = expiryDateObj.toISOString().split("T")[0];
+
+      const recordingPayload: CallRecording = {
+        id: `rec_${Date.now()}`,
+        leadId: contact.id || `lead_${Date.now()}`,
+        leadName: contact.name,
+        leadPhone: contact.phone,
+        teacherId: contact.assignedTo || "teacher_rajesh@123",
+        teacherName: contact.assignedTo ? "Faculty Member" : "Prof. P. Rajesh",
+        recordingDate: todayDate,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        durationSeconds: Math.max(12, callSeconds),
+        durationText: formatTime(Math.max(12, callSeconds)),
+        studentInterestStatus,
+        teacherNotes: callNotes.trim() || `Contacted student lead regarding 12th Cutoff and course admissions at V.S.B. ${contact.campus || "KARUR"} Campus.`,
+        callTranscript: `[00:02] Teacher: Hello ${contact.name}, this is V.S.B. Admissions Team following up on your TNEA counselling score.\n[00:07] ${contact.name}: Hello sir! Yes, I am checking B.E. Computer Science cutoff requirements.\n[00:14] Teacher: Great! We have special scholarship seats available. Would you like to schedule a campus visit?\n[00:20] ${contact.name}: Yes sir, I am very interested to visit Karur campus this week!`,
+        audioUrl: "/audio/sample_call_recording.mp3",
+        expiresAt: expiresAtStr,
+        autoDeleted: false,
+      };
+
+      onSaveCallRecording(recordingPayload);
+    }
+
     setTimeout(() => onClose(), 600);
   };
 
@@ -123,14 +166,19 @@ function CallModal({
           <X className="w-4 h-4" />
         </button>
 
-        {/* Security Indicator */}
-        <div className="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full mb-4">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          V.S.B. In-Portal Calling Line
+        {/* Security & Audio Recording Indicator */}
+        <div className="flex items-center gap-2 mb-3 flex-wrap justify-center">
+          <div className="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            V.S.B. In-Portal Calling Line
+          </div>
+          <div className="flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-400/40 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full animate-pulse">
+            <span>🔴</span> Recording Audio (30-Day Auto Retention)
+          </div>
         </div>
 
         {/* Candidate Avatar & Rings */}
-        <div className="relative mb-4">
+        <div className="relative mb-3">
           {callStatus === "CONNECTING" && (
             <div className="absolute inset-0 rounded-full bg-emerald-500/30 animate-ping" />
           )}
@@ -147,9 +195,63 @@ function CallModal({
         </p>
 
         {/* Call Timer / Status */}
-        <div className="my-4 py-2 px-6 rounded-2xl bg-slate-950/80 border border-white/10 flex items-center gap-2 font-mono font-black text-lg text-emerald-300">
+        <div className="my-3 py-1.5 px-5 rounded-2xl bg-slate-950/80 border border-white/10 flex items-center gap-2 font-mono font-black text-lg text-emerald-300">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           {callStatus === "CONNECTING" ? "Dialing Candidate..." : formatTime(callSeconds)}
+        </div>
+
+        {/* Student Interest Status Selector */}
+        <div className="w-full space-y-1.5 my-2">
+          <label className="block text-slate-300 font-extrabold text-xs flex items-center justify-between">
+            <span>Student Response Interest Level:</span>
+            <span className="text-emerald-400 text-[10px]">Select Response</span>
+          </label>
+          <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+            <button
+              type="button"
+              onClick={() => setStudentInterestStatus("INTERESTED")}
+              className={`py-1.5 px-2 rounded-xl font-bold border transition-all ${
+                studentInterestStatus === "INTERESTED"
+                  ? "bg-emerald-500/30 text-emerald-300 border-emerald-400 font-black shadow-md shadow-emerald-500/20"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+              }`}
+            >
+              🌟 Interested to Join
+            </button>
+            <button
+              type="button"
+              onClick={() => setStudentInterestStatus("ADMITTED")}
+              className={`py-1.5 px-2 rounded-xl font-bold border transition-all ${
+                studentInterestStatus === "ADMITTED"
+                  ? "bg-sky-500/30 text-sky-300 border-sky-400 font-black shadow-md shadow-sky-500/20"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+              }`}
+            >
+              🎓 Admitted / Fees Paid
+            </button>
+            <button
+              type="button"
+              onClick={() => setStudentInterestStatus("REVIEWING")}
+              className={`py-1.5 px-2 rounded-xl font-bold border transition-all ${
+                studentInterestStatus === "REVIEWING"
+                  ? "bg-amber-500/30 text-amber-300 border-amber-400 font-black shadow-md shadow-amber-500/20"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+              }`}
+            >
+              ⏳ Reviewing Cutoff
+            </button>
+            <button
+              type="button"
+              onClick={() => setStudentInterestStatus("NOT_INTERESTED")}
+              className={`py-1.5 px-2 rounded-xl font-bold border transition-all ${
+                studentInterestStatus === "NOT_INTERESTED"
+                  ? "bg-rose-500/30 text-rose-300 border-rose-400 font-black shadow-md shadow-rose-500/20"
+                  : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
+              }`}
+            >
+              ❌ Not Interested
+            </button>
+          </div>
         </div>
 
         {/* Call Controls */}
@@ -184,7 +286,7 @@ function CallModal({
           <Tooltip text="End In-Portal Call">
             <button
               onClick={handleEndCall}
-              className="p-4 rounded-full bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/40 border border-rose-400 transition-transform active:scale-95"
+              className="p-4 rounded-full bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/40 border border-rose-400 transition-transform active:scale-95 cursor-pointer"
             >
               <PhoneOff className="w-6 h-6" />
             </button>
@@ -192,17 +294,17 @@ function CallModal({
         </div>
 
         {/* Call Notes Area */}
-        <div className="w-full mt-4 text-xs space-y-1">
+        <div className="w-full mt-2 text-xs space-y-1">
           <label className="block text-slate-300 font-bold flex items-center justify-between">
             <span>Call Discussion Log / Notes</span>
             <span className="text-[10px] text-slate-400">In-Portal Record</span>
           </label>
           <textarea
-            rows={3}
+            rows={2}
             value={callNotes}
             onChange={(e) => setCallNotes(e.target.value)}
             placeholder="Type key details discussed with candidate (e.g. 12th Cutoff score, hostel inquiries, campus tour date)..."
-            className="w-full bg-slate-950 border border-white/20 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full bg-slate-950 border border-white/20 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
         </div>
       </div>

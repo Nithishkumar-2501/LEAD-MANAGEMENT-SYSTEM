@@ -122,6 +122,25 @@ export interface Payment {
   createdAt: string;
 }
 
+export interface CallRecording {
+  id: string;
+  leadId: string;
+  leadName: string;
+  leadPhone: string;
+  teacherId: string;
+  teacherName: string;
+  recordingDate: string; // ISO date string e.g. "2026-08-22"
+  timestamp: string; // e.g. "10:45 AM"
+  durationSeconds: number;
+  durationText: string;
+  studentInterestStatus: "INTERESTED" | "ADMITTED" | "REVIEWING" | "NOT_INTERESTED" | "NO_ANSWER";
+  teacherNotes: string;
+  callTranscript: string;
+  audioUrl?: string;
+  expiresAt: string; // 30 days after creation: "2026-09-21"
+  autoDeleted?: boolean;
+}
+
 export interface Teacher {
   id: string;
   name: string;
