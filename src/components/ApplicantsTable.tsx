@@ -258,7 +258,7 @@ export default function ApplicantsTable({
                     </td>
 
                     {/* Marks */}
-                    <td className="py-3.5 px-4 font-black text-white hidden sm:table-cell">
+                    <td className="py-3.5 px-4 font-extrabold text-[#0f172a] dark:text-slate-100 hidden sm:table-cell text-sm">
                       {item.application.marks12th}%
                     </td>
 

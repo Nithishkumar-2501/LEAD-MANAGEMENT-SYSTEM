@@ -211,11 +211,13 @@ html.light .text-slate-800 {
   color: #0f172a !important;
 }
 
-/* STUDENT NAME HIGH-CONTRAST BLACK COLOR RULE */
+/* STUDENT NAME & 12TH MARKS HIGH-CONTRAST BLACK COLOR RULE */
 html.light td div .font-bold,
 html.light td div .font-black,
 html.light tr td .font-bold,
 html.light tr td .font-extrabold,
+html.light tr td .font-black,
+html.light tr td:nth-child(6),
 html.light .student-name {
   color: #0f172a !important;
   font-weight: 800 !important;
