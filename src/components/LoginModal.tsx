@@ -63,6 +63,28 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     const tcUser = localStorage.getItem("vsb_teacher_coimbatore_id") || "teachercovai@123";
     const tcPass = localStorage.getItem("vsb_teacher_coimbatore_pw") || "vsbteacher@1213";
 
+    const FACULTY_ACCOUNTS: Record<string, { pass: string; campus: "KARUR" | "COIMBATORE" }> = {
+      "rajesh.mech@vsb.ac.in": { pass: "rajesh@vsb2026", campus: "KARUR" },
+      "arulmurugan.cse@vsb.ac.in": { pass: "arul@vsb2026", campus: "KARUR" },
+      "meenakshi.ece@vsb.ac.in": { pass: "meenakshi@vsb2026", campus: "COIMBATORE" },
+      "gayathri.it@vsb.ac.in": { pass: "gayathri@vsb2026", campus: "KARUR" },
+      "karthik.ai@vsb.ac.in": { pass: "karthik@vsb2026", campus: "KARUR" },
+      "saravanan.eee@vsb.ac.in": { pass: "saravanan@vsb2026", campus: "KARUR" },
+      "anitha.bme@vsb.ac.in": { pass: "anitha@vsb2026", campus: "KARUR" },
+      "senthil.civil@vsb.ac.in": { pass: "senthil@vsb2026", campus: "KARUR" },
+      "kavitha.cyber@vsb.ac.in": { pass: "kavitha@vsb2026", campus: "COIMBATORE" },
+      "ramesh.robotics@vsb.ac.in": { pass: "ramesh@vsb2026", campus: "KARUR" },
+      "divya.chem@vsb.ac.in": { pass: "divya@vsb2026", campus: "KARUR" },
+      "manikandan.aero@vsb.ac.in": { pass: "mani@vsb2026", campus: "COIMBATORE" },
+      "priya.biotech@vsb.ac.in": { pass: "priya@vsb2026", campus: "KARUR" },
+      "suresh.ds@vsb.ac.in": { pass: "suresh@vsb2026", campus: "KARUR" },
+      "deepa.it@vsb.ac.in": { pass: "deepa@vsb2026", campus: "COIMBATORE" },
+      "prakash.cse@vsb.ac.in": { pass: "prakash@vsb2026", campus: "COIMBATORE" },
+      "teacherkarur@123": { pass: "vsbteacher@123", campus: "KARUR" },
+      "teachercovai@123": { pass: "vsbteacher@1213", campus: "COIMBATORE" },
+      "teacher_rajesh@123": { pass: "vsbteacher@123", campus: "KARUR" },
+    };
+
     setTimeout(() => {
       if (inputUser === karurUser && inputPass === karurPass) {
         setLoading(false);
@@ -70,17 +92,14 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       } else if (inputUser === covaiUser && inputPass === covaiPass) {
         setLoading(false);
         onLoginSuccess("COIMBATORE", "ADMIN", inputUser);
-      } else if (inputUser === tkUser && inputPass === tkPass) {
+      } else if (FACULTY_ACCOUNTS[inputUser] && FACULTY_ACCOUNTS[inputUser].pass === inputPass) {
         setLoading(false);
-        onLoginSuccess("KARUR", "TEACHER", inputUser);
-      } else if (inputUser === tcUser && inputPass === tcPass) {
-        setLoading(false);
-        onLoginSuccess("COIMBATORE", "TEACHER", inputUser);
+        onLoginSuccess(FACULTY_ACCOUNTS[inputUser].campus, "TEACHER", inputUser);
       } else {
         setLoading(false);
-        setError("Invalid credentials. Please select or enter authorized portal credentials.");
+        setError("Invalid credentials. Please enter your faculty email ID & password.");
       }
-    }, 500);
+    }, 400);
   };
 
   const autoFill = (u: string, p: string) => {

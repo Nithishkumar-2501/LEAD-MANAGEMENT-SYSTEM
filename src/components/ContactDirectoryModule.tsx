@@ -214,11 +214,22 @@ export default function ContactDirectoryModule({
   const [splitStartNumber, setSplitStartNumber] = useState(1);
 
   const FACULTY_MEMBERS = [
-    { id: "teacher_rajesh@123", name: "Prof. P. Rajesh", department: "Mechanical Engineering", campus: "KARUR" },
-    { id: "teacherkarur@123", name: "Dr. K. Arulmurugan", department: "Computer Science", campus: "KARUR" },
-    { id: "teachercovai@123", name: "Dr. S. Meenakshi", department: "Electronics & Communication", campus: "COIMBATORE" },
-    { id: "teacher_it@123", name: "Dr. N. Gayathri", department: "Information Technology", campus: "KARUR" },
-    { id: "teacher_ai@123", name: "Prof. V. Sathish", department: "Artificial Intelligence", campus: "COIMBATORE" },
+    { id: "rajesh.mech@vsb.ac.in", name: "Prof. P. Rajesh", department: "Mechanical Engineering", campus: "KARUR" },
+    { id: "arulmurugan.cse@vsb.ac.in", name: "Dr. K. Arulmurugan", department: "Computer Science", campus: "KARUR" },
+    { id: "meenakshi.ece@vsb.ac.in", name: "Dr. S. Meenakshi", department: "Electronics & Communication", campus: "COIMBATORE" },
+    { id: "gayathri.it@vsb.ac.in", name: "Dr. N. Gayathri", department: "Information Technology", campus: "KARUR" },
+    { id: "karthik.ai@vsb.ac.in", name: "Prof. M. Karthik", department: "Artificial Intelligence & Data Science", campus: "KARUR" },
+    { id: "saravanan.eee@vsb.ac.in", name: "Dr. R. Saravanan", department: "Electrical & Electronics Engg", campus: "KARUR" },
+    { id: "anitha.bme@vsb.ac.in", name: "Prof. V. Anitha", department: "Biomedical Engineering", campus: "KARUR" },
+    { id: "senthil.civil@vsb.ac.in", name: "Dr. T. Senthil", department: "Civil Engineering", campus: "KARUR" },
+    { id: "kavitha.cyber@vsb.ac.in", name: "Prof. P. Kavitha", department: "Cyber Security", campus: "COIMBATORE" },
+    { id: "ramesh.robotics@vsb.ac.in", name: "Dr. G. Ramesh", department: "Robotics & Automation", campus: "KARUR" },
+    { id: "divya.chem@vsb.ac.in", name: "Prof. S. Divya", department: "Chemical Engineering", campus: "KARUR" },
+    { id: "manikandan.aero@vsb.ac.in", name: "Dr. A. Manikandan", department: "Aeronautical Engineering", campus: "COIMBATORE" },
+    { id: "priya.biotech@vsb.ac.in", name: "Prof. R. Priya", department: "Biotechnology", campus: "KARUR" },
+    { id: "suresh.ds@vsb.ac.in", name: "Dr. K. Suresh", department: "Data Science", campus: "KARUR" },
+    { id: "deepa.it@vsb.ac.in", name: "Prof. N. Deepa", department: "Information Technology", campus: "COIMBATORE" },
+    { id: "prakash.cse@vsb.ac.in", name: "Dr. M. Prakash", department: "Computer Science & Engineering", campus: "COIMBATORE" },
   ];
 
   const handlePerformLeadSplit = () => {
