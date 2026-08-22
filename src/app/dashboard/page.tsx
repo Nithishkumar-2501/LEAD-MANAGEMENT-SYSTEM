@@ -50,31 +50,40 @@ export default function DashboardPage() {
   const [loggedInUsername, setLoggedInUsername] = useState<string>("adminkarur@123");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
+  const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(
+    MOCK_LEADS.slice(0, 28) as (Lead & { application: Application })[]
+  );
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
 
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
 
-  // Dynamic calculations based on selected campus
+  // Dynamic calculations based on 28 total database leads
+  const campusApplicants = applicants.filter((item) => {
+    if (selectedCampus !== "ALL" && item.campus !== selectedCampus) {
+      return false;
+    }
+    return true;
+  });
+
   const dynamicMetrics: SummaryMetrics = {
-    totalLeads: selectedCampus === "KARUR" ? 580 : selectedCampus === "COIMBATORE" ? 668 : 1248,
-    leadsTrend: selectedCampus === "KARUR" ? 12.5 : selectedCampus === "COIMBATORE" ? 15.8 : 14.2,
-    applicationsVerified: selectedCampus === "KARUR" ? 398 : selectedCampus === "COIMBATORE" ? 458 : 856,
-    docsVerifiedTrend: selectedCampus === "KARUR" ? 7.2 : selectedCampus === "COIMBATORE" ? 9.8 : 8.5,
-    seatsFilled: selectedCampus === "KARUR" ? 298 : selectedCampus === "COIMBATORE" ? 344 : 642,
-    seatsFilledTrend: selectedCampus === "KARUR" ? 16.2 : selectedCampus === "COIMBATORE" ? 19.4 : 18.0,
-    totalRevenue: selectedCampus === "KARUR" ? 25300000 : selectedCampus === "COIMBATORE" ? 29200000 : 54500000,
-    revenueTrend: selectedCampus === "KARUR" ? 10.5 : selectedCampus === "COIMBATORE" ? 14.1 : 12.4,
+    totalLeads: campusApplicants.length,
+    leadsTrend: 14.2,
+    applicationsVerified: campusApplicants.filter((a) => a.status === "CONTACTED" || a.status === "IN_REVIEW" || a.status === "ADMITTED").length,
+    docsVerifiedTrend: 8.5,
+    seatsFilled: campusApplicants.filter((a) => a.status === "ADMITTED").length,
+    seatsFilledTrend: 18.0,
+    totalRevenue: campusApplicants.filter((a) => a.status === "ADMITTED").length * 85000,
+    revenueTrend: 12.4,
   };
 
   const dynamicStatusCounts: LeadStatusCounts = {
-    NEW: selectedCampus === "KARUR" ? 160 : selectedCampus === "COIMBATORE" ? 180 : 340,
-    CONTACTED: selectedCampus === "KARUR" ? 192 : selectedCampus === "COIMBATORE" ? 220 : 412,
-    IN_REVIEW: selectedCampus === "KARUR" ? 98 : selectedCampus === "COIMBATORE" ? 116 : 214,
-    ADMITTED: selectedCampus === "KARUR" ? 85 : selectedCampus === "COIMBATORE" ? 95 : 180,
-    REJECTED: selectedCampus === "KARUR" ? 45 : selectedCampus === "COIMBATORE" ? 57 : 102,
+    NEW: campusApplicants.filter((a) => a.status === "NEW").length,
+    CONTACTED: campusApplicants.filter((a) => a.status === "CONTACTED").length,
+    IN_REVIEW: campusApplicants.filter((a) => a.status === "IN_REVIEW").length,
+    ADMITTED: campusApplicants.filter((a) => a.status === "ADMITTED").length,
+    REJECTED: campusApplicants.filter((a) => a.status === "REJECTED").length,
   };
 
   // Filter tasks dynamically based on campus of the associated lead
