@@ -64,6 +64,7 @@ export default function SocialMediaPlatformModule({
 
   // Mock Social Media Campaign & Lead Data
   const socialLeads = [
+    // Google & Social Ads
     {
       id: "soc_1",
       name: "S. Kausalya",
@@ -72,11 +73,39 @@ export default function SocialMediaPlatformModule({
       platform: "Google Ads",
       icon: Megaphone,
       color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      campaign: "TNEA Engineering Cutoff 2026",
+      campaign: "TNEA Engineering Cutoff Search Ad 2026",
       status: "Verified Lead",
       time: "10 mins ago",
       campus: "KARUR",
     },
+    {
+      id: "soc_1b",
+      name: "A. Vignesh",
+      email: "vignesh.gads@gmail.com",
+      phone: "+91 98432 99001",
+      platform: "Google Ads",
+      icon: Megaphone,
+      color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      campaign: "Google Display Network CSE Campaign",
+      status: "Inquired",
+      time: "18 mins ago",
+      campus: "COIMBATORE",
+    },
+    {
+      id: "soc_1c",
+      name: "M. Harish",
+      email: "harish.ytads@gmail.com",
+      phone: "+91 97891 22334",
+      platform: "Google Ads",
+      icon: Megaphone,
+      color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      campaign: "YouTube Placement Video Campaign",
+      status: "Admitted",
+      time: "32 mins ago",
+      campus: "KARUR",
+    },
+
+    // Facebook
     {
       id: "soc_2",
       name: "R. Vigneshwar",
@@ -85,11 +114,26 @@ export default function SocialMediaPlatformModule({
       platform: "Facebook",
       icon: Share2,
       color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-      campaign: "VSB Campus Virtual Tour",
+      campaign: "VSB Campus Virtual Tour FB Lead Form",
       status: "Inquired",
       time: "25 mins ago",
       campus: "COIMBATORE",
     },
+    {
+      id: "soc_2b",
+      name: "P. Swetha",
+      email: "swetha.fb2026@gmail.com",
+      phone: "+91 99431 88221",
+      platform: "Facebook",
+      icon: Share2,
+      color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
+      campaign: "Facebook Feed Cutoff Calculator Ad",
+      status: "Verified Lead",
+      time: "40 mins ago",
+      campus: "KARUR",
+    },
+
+    // WhatsApp
     {
       id: "soc_3",
       name: "M. Soundarya",
@@ -98,11 +142,26 @@ export default function SocialMediaPlatformModule({
       platform: "WhatsApp",
       icon: MessageSquare,
       color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-      campaign: "Direct WhatsApp Admission Inquiry",
+      campaign: "Direct WhatsApp Admission Chatbot",
       status: "Contacted",
       time: "42 mins ago",
       campus: "KARUR",
     },
+    {
+      id: "soc_3b",
+      name: "K. Dinesh",
+      email: "dinesh.wa2026@gmail.com",
+      phone: "+91 98941 77665",
+      platform: "WhatsApp",
+      icon: MessageSquare,
+      color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+      campaign: "WhatsApp Official Broadcast Alert",
+      status: "Admitted",
+      time: "55 mins ago",
+      campus: "COIMBATORE",
+    },
+
+    // X (Twitter)
     {
       id: "soc_4",
       name: "K. Pravin Kumar",
@@ -117,6 +176,21 @@ export default function SocialMediaPlatformModule({
       campus: "KARUR",
     },
     {
+      id: "soc_4b",
+      name: "T. Ramya",
+      email: "ramya.twitter@gmail.com",
+      phone: "+91 97511 44332",
+      platform: "X (Twitter)",
+      icon: Send,
+      color: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+      campaign: "Twitter Engineering Placement Trend",
+      status: "Inquired",
+      time: "1.5 hours ago",
+      campus: "COIMBATORE",
+    },
+
+    // E-mail
+    {
       id: "soc_5",
       name: "A. Deepa Lakshmi",
       email: "deepa.it2026@gmail.com",
@@ -129,6 +203,8 @@ export default function SocialMediaPlatformModule({
       time: "2 hours ago",
       campus: "COIMBATORE",
     },
+
+    // SMS
     {
       id: "soc_6",
       name: "T. Karthikeyan",
@@ -142,6 +218,8 @@ export default function SocialMediaPlatformModule({
       time: "3 hours ago",
       campus: "KARUR",
     },
+
+    // Campaign Hub
     {
       id: "soc_7",
       name: "P. Nithya Shree",
@@ -155,6 +233,8 @@ export default function SocialMediaPlatformModule({
       time: "5 hours ago",
       campus: "COIMBATORE",
     },
+
+    // Project Expo
     {
       id: "soc_8",
       name: "G. Naveen Raj",
@@ -171,15 +251,15 @@ export default function SocialMediaPlatformModule({
   ];
 
   const channels = [
-    { id: "ALL", label: "All Social Media", icon: Share2, count: "1,840 Leads" },
-    { id: "ADS", label: "Google & Social Ads", icon: Megaphone, count: "520 Leads" },
-    { id: "FACEBOOK", label: "Facebook", icon: Share2, count: "340 Leads" },
-    { id: "TWITTER", label: "X (Twitter)", icon: Send, count: "180 Leads" },
-    { id: "WHATSAPP", label: "WhatsApp Business", icon: MessageSquare, count: "410 Leads" },
-    { id: "EMAIL", label: "E-mail Portal", icon: Mail, count: "210 Leads" },
-    { id: "SMS", label: "SMS Gateway", icon: MessageCircle, count: "140 Leads" },
-    { id: "CAMPAIGN", label: "Campaign Hub", icon: Sparkles, count: "390 Leads" },
-    { id: "EXPO", label: "Project Expo", icon: Award, count: "250 Leads" },
+    { id: "ALL", label: "All Social Media", icon: Share2, count: "1,840 Students" },
+    { id: "ADS", label: "Google & Social Ads", icon: Megaphone, count: "520 Students" },
+    { id: "FACEBOOK", label: "Facebook", icon: Share2, count: "340 Students" },
+    { id: "TWITTER", label: "X (Twitter)", icon: Send, count: "180 Students" },
+    { id: "WHATSAPP", label: "WhatsApp Business", icon: MessageSquare, count: "410 Students" },
+    { id: "EMAIL", label: "E-mail Portal", icon: Mail, count: "210 Students" },
+    { id: "SMS", label: "SMS Gateway", icon: MessageCircle, count: "140 Students" },
+    { id: "CAMPAIGN", label: "Campaign Hub", icon: Sparkles, count: "390 Students" },
+    { id: "EXPO", label: "Project Expo", icon: Award, count: "250 Students" },
   ];
 
   const filteredLeads = socialLeads.filter((item) => {
@@ -304,8 +384,11 @@ export default function SocialMediaPlatformModule({
       <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div>
-            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-              <span>Candidate Leads from {channels.find((c) => c.id === selectedSubTab)?.label || "Social Platforms"}</span>
+            <h3 className="text-base font-extrabold text-slate-100 flex flex-wrap items-center gap-2">
+              <span>Student Candidates Registered via {channels.find((c) => c.id === selectedSubTab)?.label || "Social Platforms"}</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40 font-black">
+                {channels.find((c) => c.id === selectedSubTab)?.count || "1,840 Students"}
+              </span>
             </h3>
             <p className="text-xs text-slate-400">
               Live tracking of student leads arriving from social media ads, messaging apps, and college expos
