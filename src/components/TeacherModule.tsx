@@ -475,14 +475,16 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
               <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 relative z-10">
                 <div>
-                  <Tooltip text={`Edit ${tch.name}`} position="bottom">
-                    <button
-                      onClick={() => setEditingTeacher(tch)}
-                      className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
-                    </button>
-                  </Tooltip>
+                  {currentUserRole === "ADMIN" && (
+                    <Tooltip text={`Edit ${tch.name}`} position="bottom">
+                      <button
+                        onClick={() => setEditingTeacher(tch)}
+                        className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
+                      </button>
+                    </Tooltip>
+                  )}
                 </div>
                 <div className="flex gap-1.5">
                   <Tooltip text={`In-Portal Email ${tch.name}`} position="bottom">
