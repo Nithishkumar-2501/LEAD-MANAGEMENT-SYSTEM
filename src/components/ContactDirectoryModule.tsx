@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
-import { saveStudentToFirebase } from "@/lib/firebaseSync";
+import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -827,6 +827,9 @@ export default function ContactDirectoryModule({
     e.preventDefault();
     if (!editingContact) return;
 
+    // Real-Time Firebase Sync on edit
+    await saveStudentToFirebase(editingContact);
+
     try {
       const res = await fetch("/api/contacts", {
         method: "PUT",
@@ -846,6 +849,9 @@ export default function ContactDirectoryModule({
   // Delete Contact Handler
   const handleDeleteContact = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete contact record for ${name}?`)) return;
+
+    // Real-Time Firebase Sync on delete
+    await deleteStudentFromFirebase(id);
 
     try {
       await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
@@ -2260,6 +2266,7 @@ export default function ContactDirectoryModule({
           onClose={() => setSelectedCandidateForModal(null)}
           onActionTrigger={onActionTrigger}
           onSave={(updated) => {
+            saveStudentToFirebase(updated);
             setContacts((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
             setSelectedCandidateForModal(null);
             onTriggerToast?.(`Updated profile for candidate ${updated.name}`);

@@ -19,6 +19,7 @@ import ContactDirectoryModule from "@/components/ContactDirectoryModule";
 import AddQuickLeadModal from "@/components/AddQuickLeadModal";
 import SocialMediaPlatformModule from "@/components/SocialMediaPlatformModule";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
+import { saveStudentToFirebase } from "@/lib/firebaseSync";
 
 import {
   User,
@@ -163,7 +164,8 @@ export default function DashboardPage() {
     setSelectedApplicant(applicant);
   };
 
-  const handleUpdateApplicant = (updated: Lead & { application: Application }) => {
+  const handleUpdateApplicant = async (updated: Lead & { application: Application }) => {
+    await saveStudentToFirebase(updated);
     setApplicants((prev) =>
       prev.map((a) => (a.id === updated.id ? updated : a))
     );

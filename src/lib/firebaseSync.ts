@@ -3,15 +3,16 @@ import {
   doc,
   setDoc,
   updateDoc,
+  deleteDoc,
   getDocs,
   onSnapshot,
 } from "firebase/firestore";
-import { ref, set, update } from "firebase/database";
+import { ref, set, update, remove } from "firebase/database";
 import { signInAnonymously } from "firebase/auth";
 import { auth, db, rtdb } from "@/lib/firebase";
 import { Lead, Application } from "@/types/crm";
 
-export type StudentRecord = Lead & { application?: Application };
+export type StudentRecord = Lead & { application?: Application | null };
 
 // Ensure client is authenticated with Firebase Auth to pass Firestore/RTDB security rules
 export async function ensureFirebaseAuth() {
@@ -166,4 +167,20 @@ export function subscribeToFirebaseStudents(
   } catch (e) {
     return () => {};
   }
+}
+
+// Delete student record from Firebase Firestore & Realtime Database
+export async function deleteStudentFromFirebase(studentId: string): Promise<boolean> {
+  await ensureFirebaseAuth();
+  try {
+    const docRef = doc(db, "students", studentId);
+    await deleteDoc(docRef);
+  } catch (err) {}
+
+  try {
+    const rtdbRef = ref(rtdb, `students/${studentId}`);
+    await remove(rtdbRef);
+  } catch (err) {}
+
+  return true;
 }

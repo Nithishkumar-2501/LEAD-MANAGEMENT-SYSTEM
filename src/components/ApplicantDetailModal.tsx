@@ -21,6 +21,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { Lead, Application, LeadStatus, AppStage, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { saveStudentToFirebase } from "@/lib/firebaseSync";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -57,9 +58,12 @@ export default function ApplicantDetailModal({
 
   if (!applicant || !formData) return null;
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSave) {
+    if (formData) {
+      await saveStudentToFirebase(formData);
+    }
+    if (onSave && formData) {
       onSave(formData);
     }
     setIsEditing(false);
