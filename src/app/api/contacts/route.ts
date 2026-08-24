@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MOCK_LEADS } from "@/lib/mockData";
 import { Lead, Application } from "@/types/crm";
+import { saveStudentToFirebase } from "@/lib/firebaseSync";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,10 @@ export async function POST(request: Request) {
         },
         include: { application: true },
       });
+
+      try {
+        await saveStudentToFirebase(newLead as any);
+      } catch (fbErr) {}
 
       return NextResponse.json(newLead, { status: 201 });
     } catch (dbErr) {

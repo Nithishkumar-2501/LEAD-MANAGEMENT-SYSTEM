@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MOCK_LEADS } from "@/lib/mockData";
 import { AppStage, LeadStatus, CampusLocation } from "@/types/crm";
+import { saveStudentToFirebase } from "@/lib/firebaseSync";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +74,12 @@ export async function POST(request: Request) {
         },
       });
 
-      return NextResponse.json({ success: true, lead: { ...newLead, campus: campus as CampusLocation } }, { status: 201 });
+      const leadRecord = { ...newLead, campus: campus as CampusLocation };
+      try {
+        await saveStudentToFirebase(leadRecord as any);
+      } catch (fbErr) {}
+
+      return NextResponse.json({ success: true, lead: leadRecord }, { status: 201 });
     } catch (dbError) {
       const mockLead = {
         id: `lead_${Date.now()}`,
