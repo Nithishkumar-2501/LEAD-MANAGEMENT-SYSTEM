@@ -1,48 +1,19 @@
-// Prisma Schema for College Admission CRM
+// Prisma Schema for College Admission CRM (SQLite Local Database)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum Role {
-  ADMIN
-  COUNSELOR
-  STUDENT
-  TEACHER
-}
-
-enum LeadStatus {
-  NEW
-  CONTACTED
-  IN_REVIEW
-  ADMITTED
-  REJECTED
-}
-
-enum AppStage {
-  INQUIRY
-  SUBMITTED
-  DOCS_VERIFIED
-  OFFER_ISSUED
-  FEE_PAID
-}
-
-enum TaskType {
-  CALL
-  EMAIL
-  WHATSAPP
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
-  role      Role     @default(COUNSELOR)
+  role      String   @default("COUNSELOR")
   createdAt DateTime @default(now())
 
   // Relations
@@ -51,19 +22,19 @@ model User {
 }
 
 model Lead {
-  id             String     @id @default(uuid())
+  id             String   @id @default(uuid())
   name           String
   email          String
   phone          String
-  source         String     @default("TNEA Counselling")
+  source         String   @default("TNEA Counselling")
   courseInterest String
-  campus         String     @default("KARUR")
-  school         String?    @default("Govt Higher Secondary School")
-  district       String?    @default("Karur")
-  address        String?    @default("123 College Road, Tamil Nadu")
-  status         LeadStatus @default(NEW)
+  campus         String   @default("KARUR")
+  school         String?  @default("Govt Higher Secondary School")
+  district       String?  @default("Karur")
+  address        String?  @default("123 College Road, Tamil Nadu")
+  status         String   @default("NEW")
   counselorId    String?
-  createdAt      DateTime   @default(now())
+  createdAt      DateTime @default(now())
 
   // Relations
   counselor   User?        @relation("CounselorLeads", fields: [counselorId], references: [id])
@@ -74,7 +45,7 @@ model Lead {
 model Application {
   id            String   @id @default(uuid())
   leadId        String   @unique
-  stage         AppStage @default(INQUIRY)
+  stage         String   @default("INQUIRY")
   marks10th     Float
   marks12th     Float
   paymentStatus String   @default("PENDING")
@@ -89,7 +60,7 @@ model Task {
   counselorId String
   leadId      String
   title       String
-  type        TaskType
+  type        String   @default("CALL")
   dueDate     DateTime
   isCompleted Boolean  @default(false)
 
@@ -120,7 +91,7 @@ model Teacher {
   phone           String
   department      String
   campus          String   @default("KARUR")
-  coursesAssigned String[]
+  coursesAssigned String   @default("[]")
   experienceYears Int      @default(3)
   status          String   @default("ACTIVE")
   avatar          String   @default("VS")

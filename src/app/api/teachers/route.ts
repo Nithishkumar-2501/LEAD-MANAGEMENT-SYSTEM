@@ -20,6 +20,10 @@ export async function GET(request: Request) {
           ...t,
           campus: t.campus as CampusLocation,
           status: (t.status as "ACTIVE" | "ON_LEAVE") || "ACTIVE",
+          coursesAssigned:
+            typeof t.coursesAssigned === "string"
+              ? JSON.parse(t.coursesAssigned)
+              : t.coursesAssigned,
         }));
       } else {
         teachers = MOCK_TEACHERS;
@@ -81,6 +85,7 @@ export async function POST(request: Request) {
       };
 
       try {
+        const coursesStr = JSON.stringify(teacherData.coursesAssigned);
         const created = await prisma.teacher.upsert({
           where: { email },
           update: {
@@ -88,7 +93,7 @@ export async function POST(request: Request) {
             phone: teacherData.phone,
             department: teacherData.department,
             campus: teacherData.campus,
-            coursesAssigned: teacherData.coursesAssigned,
+            coursesAssigned: coursesStr,
             experienceYears: teacherData.experienceYears,
             status: teacherData.status,
             assignedQuota: teacherData.assignedQuota,
@@ -100,7 +105,7 @@ export async function POST(request: Request) {
             phone: teacherData.phone,
             department: teacherData.department,
             campus: teacherData.campus,
-            coursesAssigned: teacherData.coursesAssigned,
+            coursesAssigned: coursesStr,
             experienceYears: teacherData.experienceYears,
             status: teacherData.status,
             avatar: teacherData.avatar,
@@ -112,6 +117,10 @@ export async function POST(request: Request) {
           ...created,
           campus: created.campus as CampusLocation,
           status: (created.status as "ACTIVE" | "ON_LEAVE") || "ACTIVE",
+          coursesAssigned:
+            typeof created.coursesAssigned === "string"
+              ? JSON.parse(created.coursesAssigned)
+              : created.coursesAssigned,
         });
       } catch (dbErr) {
         savedTeachers.push(teacherData);
@@ -155,6 +164,10 @@ export async function PUT(request: Request) {
         ...updated,
         campus: updated.campus as CampusLocation,
         status: (updated.status as "ACTIVE" | "ON_LEAVE") || "ACTIVE",
+        coursesAssigned:
+          typeof updated.coursesAssigned === "string"
+            ? JSON.parse(updated.coursesAssigned)
+            : updated.coursesAssigned,
       });
     } catch (e) {
       return NextResponse.json(body);
