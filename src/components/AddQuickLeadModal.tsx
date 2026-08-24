@@ -4,6 +4,8 @@ import { useState } from "react";
 import { X, Mail, Phone } from "lucide-react";
 import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 
+import { saveStudentToFirebase } from "@/lib/firebaseSync";
+
 interface AddQuickLeadModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,7 +39,7 @@ export default function AddQuickLeadModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (saveAndNew: boolean = false) => {
+  const handleSubmit = async (saveAndNew: boolean = false) => {
     if (!formData.name || !formData.email) {
       alert("Please enter Name and Email Address.");
       return;
@@ -72,6 +74,9 @@ export default function AddQuickLeadModal({
         paymentStatus: "PENDING",
       },
     };
+
+    // Real-time Firebase Database update
+    await saveStudentToFirebase(newLead);
 
     onLeadAdded(newLead);
 

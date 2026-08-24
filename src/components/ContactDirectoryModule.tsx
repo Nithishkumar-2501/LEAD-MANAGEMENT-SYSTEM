@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
+import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -798,6 +799,9 @@ export default function ContactDirectoryModule({
 
       if (imported.length > 0) {
         setContacts((prev) => [...imported, ...prev]);
+
+        // Real-time Firebase Database update for each imported student
+        imported.forEach((item) => saveStudentToFirebase(item));
 
         if (onImportLeads) {
           onImportLeads(imported);

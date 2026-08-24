@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, UserPlus, Send } from "lucide-react";
 import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import SpecularButton from "@/components/SpecularButton";
+import { saveStudentToFirebase } from "@/lib/firebaseSync";
 
 interface CreateApplicationModalProps {
   isOpen: boolean;
@@ -62,6 +63,9 @@ export default function CreateApplicationModal({
       if (!res.ok || json.error) {
         throw new Error(json.error || "Failed to create application");
       }
+
+      // Real-time Firebase Database update
+      await saveStudentToFirebase(json.lead);
 
       onApplicationCreated(json.lead);
       onClose();
