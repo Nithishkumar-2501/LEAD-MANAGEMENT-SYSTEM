@@ -274,18 +274,18 @@ export default function AdminSettingsModule({
           </div>
 
           {/* Credentials Info Box */}
-          <div className="p-4 rounded-xl bg-indigo-950/40 border border-indigo-800/60 space-y-2 text-xs">
-            <h4 className="font-bold text-slate-100 flex items-center gap-1.5">
-              <Key className="w-4 h-4 text-emerald-400 animate-pulse" /> Active Account Details
+          <div className="p-4 rounded-xl bg-blue-50 dark:bg-indigo-950/40 border border-blue-200 dark:border-indigo-800/60 space-y-2 text-xs">
+            <h4 className="font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <Key className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-pulse" /> Active Account Details
             </h4>
-            <div className="grid grid-cols-2 gap-3 text-slate-300 pt-1">
+            <div className="grid grid-cols-2 gap-3 pt-1">
               <div>
-                <span className="text-slate-400 text-[10px]">CURRENT USER ID</span>
-                <p className="font-bold text-white font-mono mt-0.5">{adminUsername}</p>
+                <span className="text-slate-700 dark:text-slate-400 text-[10px] font-black uppercase">CURRENT USER ID</span>
+                <p className="font-black text-black dark:text-white text-sm font-mono mt-0.5">{adminUsername}</p>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px]">CAMPUS ACCESS</span>
-                <p className="font-bold text-sky-300 font-mono mt-0.5">{loggedInCampus}</p>
+                <span className="text-slate-700 dark:text-slate-400 text-[10px] font-black uppercase">CAMPUS ACCESS</span>
+                <p className="font-black text-sky-800 dark:text-sky-300 text-sm font-mono mt-0.5">{loggedInCampus}</p>
               </div>
             </div>
           </div>
