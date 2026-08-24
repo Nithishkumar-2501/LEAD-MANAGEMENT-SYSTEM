@@ -29,36 +29,46 @@ export default function AdminSettingsModule({
   const adminPwKey = loggedInCampus === "KARUR" ? "vsb_admin_karur_pw" : "vsb_admin_coimbatore_pw";
 
   const [adminUsername, setAdminUsername] = useState("");
+  const [newAdminUsername, setNewAdminUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    setAdminUsername(
-      localStorage.getItem(adminIdKey) || 
-      (loggedInCampus === "KARUR" ? "adminkarur@123" : "admincovai@123")
-    );
+    const initialId =
+      localStorage.getItem(adminIdKey) ||
+      (loggedInCampus === "KARUR" ? "adminkarur@123" : "admincovai@123");
+    setAdminUsername(initialId);
+    setNewAdminUsername(initialId);
   }, [loggedInCampus, adminIdKey]);
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handleCredentialsChange = (e: React.FormEvent) => {
     e.preventDefault();
-    const storedPw = localStorage.getItem(adminPwKey) || (loggedInCampus === "KARUR" ? "vsbec@123" : "vsbectc@1213");
+    const storedPw =
+      localStorage.getItem(adminPwKey) ||
+      (loggedInCampus === "KARUR" ? "vsbec@123" : "vsbectc@1213");
 
     if (currentPassword !== storedPw) {
       onTriggerToast("❌ Error: Current password does not match.");
       return;
     }
-    if (newPassword.trim() === "") {
-      onTriggerToast("❌ Error: New password cannot be empty.");
+    if (!newAdminUsername.trim()) {
+      onTriggerToast("❌ Error: Admin User ID cannot be empty.");
       return;
     }
-    if (newPassword !== confirmPassword) {
-      onTriggerToast("❌ Error: New passwords do not match.");
-      return;
+    if (newPassword) {
+      if (newPassword !== confirmPassword) {
+        onTriggerToast("❌ Error: New passwords do not match.");
+        return;
+      }
+      localStorage.setItem(adminPwKey, newPassword);
     }
 
-    localStorage.setItem(adminPwKey, newPassword);
-    onTriggerToast(`🔑 Password updated successfully for V.S.B. ${loggedInCampus === "KARUR" ? "Karur" : "Coimbatore"} Admin!`);
+    localStorage.setItem(adminIdKey, newAdminUsername.trim());
+    setAdminUsername(newAdminUsername.trim());
+    onTriggerToast(
+      `🔑 Admin User ID & Security Credentials updated successfully to "${newAdminUsername.trim()}"!`
+    );
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
@@ -270,7 +280,7 @@ export default function AdminSettingsModule({
             </h4>
             <div className="grid grid-cols-2 gap-3 text-slate-300 pt-1">
               <div>
-                <span className="text-slate-400 text-[10px]">USERNAME</span>
+                <span className="text-slate-400 text-[10px]">CURRENT USER ID</span>
                 <p className="font-bold text-white font-mono mt-0.5">{adminUsername}</p>
               </div>
               <div>
@@ -280,50 +290,66 @@ export default function AdminSettingsModule({
             </div>
           </div>
 
-          {/* Password update form */}
-          <form onSubmit={handlePasswordChange} className="space-y-4 text-xs">
+          {/* User ID & Password Update Form */}
+          <form onSubmit={handleCredentialsChange} className="space-y-4 text-xs">
             <div>
-              <label className="block text-slate-300 font-bold mb-1">Current Password</label>
+              <label className="block text-slate-300 font-bold mb-1">Admin User ID / Username</label>
+              <div className="relative">
+                <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={newAdminUsername}
+                  onChange={(e) => setNewAdminUsername(e.target.value)}
+                  placeholder="Enter new Admin User ID"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-3.5 py-2 text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">This User ID is used for portal authentication and system administration.</p>
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-bold mb-1">Current Password (Required)</label>
               <input
                 type="password"
                 required
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter current password"
+                placeholder="Enter current password to authorize changes"
                 className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            <div>
-              <label className="block text-slate-300 font-bold mb-1">New Password</label>
-              <input
-                type="password"
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">New Password (Optional)</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Leave blank to keep current"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
 
-            <div>
-              <label className="block text-slate-300 font-bold mb-1">Confirm New Password</label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
             </div>
 
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/20 transition-all text-xs"
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/20 transition-all text-xs cursor-pointer"
               >
-                <Key className="w-3.5 h-3.5" /> Update Password
+                <Key className="w-3.5 h-3.5" /> Save User ID & Password
               </button>
             </div>
           </form>
