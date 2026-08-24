@@ -7,10 +7,23 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { ref, set, update } from "firebase/database";
-import { db, rtdb } from "@/lib/firebase";
+import { signInAnonymously } from "firebase/auth";
+import { auth, db, rtdb } from "@/lib/firebase";
 import { Lead, Application } from "@/types/crm";
 
 export type StudentRecord = Lead & { application?: Application };
+
+// Ensure client is authenticated with Firebase Auth to pass Firestore/RTDB security rules
+export async function ensureFirebaseAuth() {
+  try {
+    if (!auth.currentUser) {
+      await signInAnonymously(auth);
+      console.log("✅ Signed in anonymously with Firebase Auth for database permissions");
+    }
+  } catch (err: any) {
+    console.warn("Firebase auth note:", err?.message || err);
+  }
+}
 
 // Remove undefined values recursively (Firestore rejects undefined)
 function sanitizeForFirebase(obj: any): any {
@@ -37,6 +50,9 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
     updatedAt: new Date().toISOString(),
   });
 
+  // Fulfill Firebase Auth security rules
+  await ensureFirebaseAuth();
+
   let firestoreSuccess = false;
   let rtdbSuccess = false;
 
@@ -60,6 +76,19 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
     console.error("❌ Realtime DB write error:", rtdbErr?.message || rtdbErr);
   }
 
+  // 3. Write to Backend REST API (Prisma / SQLite local database)
+  try {
+    if (typeof window !== "undefined") {
+      await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cleanPayload),
+      });
+    }
+  } catch (apiErr: any) {
+    console.warn("Backend REST API sync notice:", apiErr?.message || apiErr);
+  }
+
   return firestoreSuccess || rtdbSuccess;
 }
 
@@ -68,6 +97,8 @@ export async function updateStudentInFirebase(
   studentId: string,
   updatedFields: Partial<StudentRecord>
 ): Promise<boolean> {
+  await ensureFirebaseAuth();
+
   const cleanPayload = sanitizeForFirebase({
     ...updatedFields,
     updatedAt: new Date().toISOString(),
@@ -98,6 +129,7 @@ export async function updateStudentInFirebase(
 // Fetch all students directly from Firebase Firestore
 export async function fetchStudentsFromFirestore(): Promise<StudentRecord[]> {
   try {
+    await ensureFirebaseAuth();
     const querySnapshot = await getDocs(collection(db, "students"));
     const list: StudentRecord[] = [];
     querySnapshot.forEach((doc) => {
