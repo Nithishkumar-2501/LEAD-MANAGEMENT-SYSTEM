@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Lock, Mail, ArrowRight, AlertCircle, Sparkles, ShieldCheck, UserCheck } from "lucide-react";
 
+import { loginWithRealtimeAuth } from "@/lib/authService";
+
 interface LoginModalProps {
   onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER", username: string) => void;
 }
@@ -43,7 +45,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -56,12 +58,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     const karurPass = localStorage.getItem("vsb_admin_karur_pw") || "vsbec@123";
     const covaiUser = localStorage.getItem("vsb_admin_coimbatore_id") || "admincovai@123";
     const covaiPass = localStorage.getItem("vsb_admin_coimbatore_pw") || "vsbectc@1213";
-
-    // Teachers
-    const tkUser = localStorage.getItem("vsb_teacher_karur_id") || "teacherkarur@123";
-    const tkPass = localStorage.getItem("vsb_teacher_karur_pw") || "vsbteacher@123";
-    const tcUser = localStorage.getItem("vsb_teacher_coimbatore_id") || "teachercovai@123";
-    const tcPass = localStorage.getItem("vsb_teacher_coimbatore_pw") || "vsbteacher@1213";
 
     const FACULTY_ACCOUNTS: Record<string, { pass: string; campus: "KARUR" | "COIMBATORE" }> = {
       "rajesh.mech@vsbec.in": { pass: "rajesh@vsb2026", campus: "KARUR" },
@@ -85,21 +81,34 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       "teacher_rajesh@123": { pass: "vsbteacher@123", campus: "KARUR" },
     };
 
-    setTimeout(() => {
-      if (inputUser === karurUser && inputPass === karurPass) {
-        setLoading(false);
-        onLoginSuccess("KARUR", "ADMIN", inputUser);
-      } else if (inputUser === covaiUser && inputPass === covaiPass) {
-        setLoading(false);
-        onLoginSuccess("COIMBATORE", "ADMIN", inputUser);
-      } else if (FACULTY_ACCOUNTS[inputUser] && FACULTY_ACCOUNTS[inputUser].pass === inputPass) {
-        setLoading(false);
-        onLoginSuccess(FACULTY_ACCOUNTS[inputUser].campus, "TEACHER", inputUser);
-      } else {
-        setLoading(false);
-        setError("Invalid credentials. Please enter your faculty email ID & password.");
-      }
-    }, 400);
+    let targetCampus: "KARUR" | "COIMBATORE" | null = null;
+    let targetRole: "ADMIN" | "TEACHER" | null = null;
+
+    if (inputUser === karurUser && inputPass === karurPass) {
+      targetCampus = "KARUR";
+      targetRole = "ADMIN";
+    } else if (inputUser === covaiUser && inputPass === covaiPass) {
+      targetCampus = "COIMBATORE";
+      targetRole = "ADMIN";
+    } else if (FACULTY_ACCOUNTS[inputUser] && FACULTY_ACCOUNTS[inputUser].pass === inputPass) {
+      targetCampus = FACULTY_ACCOUNTS[inputUser].campus;
+      targetRole = "TEACHER";
+    }
+
+    if (!targetCampus || !targetRole) {
+      setLoading(false);
+      setError("Invalid credentials. Please enter your faculty email ID & password.");
+      return;
+    }
+
+    try {
+      const session = await loginWithRealtimeAuth(inputUser, inputPass, targetCampus, targetRole);
+      setLoading(false);
+      onLoginSuccess(session.campus, session.role, session.username);
+    } catch (authErr: any) {
+      setLoading(false);
+      onLoginSuccess(targetCampus, targetRole, inputUser);
+    }
   };
 
   const autoFill = (u: string, p: string) => {

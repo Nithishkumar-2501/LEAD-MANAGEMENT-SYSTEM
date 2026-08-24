@@ -18,6 +18,7 @@ import AdminSettingsModule from "@/components/AdminSettingsModule";
 import ContactDirectoryModule from "@/components/ContactDirectoryModule";
 import AddQuickLeadModal from "@/components/AddQuickLeadModal";
 import SocialMediaPlatformModule from "@/components/SocialMediaPlatformModule";
+import { logoutWithRealtimeAuth } from "@/lib/authService";
 
 import {
   User,
@@ -143,7 +144,8 @@ export default function DashboardPage() {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutWithRealtimeAuth();
     sessionStorage.removeItem("vsb_admin_auth");
     sessionStorage.removeItem("vsb_logged_in_campus");
     sessionStorage.removeItem("vsb_logged_in_role");
