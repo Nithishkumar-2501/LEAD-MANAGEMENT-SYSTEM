@@ -323,13 +323,16 @@ export default function SocialMediaPlatformModule({
           <div className="flex items-center gap-2.5">
             <SpecularButton
               size="sm"
-              tint="#6366f1"
-              tintOpacity={0.25}
-              lineColor="#818cf8"
-              baseColor="#4f46e5"
+              tint="#ffffff"
+              tintOpacity={0.95}
+              lineColor="#6366f1"
+              baseColor="#c7d2fe"
+              textColor="#000000"
               onClick={() => handleLaunchCampaign("All Omnichannel Networks")}
+              className="text-black font-black shadow-md"
             >
-              <Play className="w-4 h-4" /> <span>Launch New Campaign</span>
+              <Play className="w-4 h-4 text-black fill-black" />
+              <span className="text-black font-black">Launch New Campaign</span>
             </SpecularButton>
           </div>
         </div>
