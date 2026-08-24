@@ -768,18 +768,10 @@ export default function Sidebar({
               </div>
               {!isCollapsed && (
                 <div className="min-w-0">
-                  <p
-                    className={`text-xs font-bold truncate ${
-                      isLight ? "text-slate-900" : "text-white"
-                    }`}
-                  >
+                  <p className="text-xs font-black truncate text-black">
                     {loggedInUsername}
                   </p>
-                  <p
-                    className={`text-[10px] font-semibold truncate ${
-                      isLight ? "text-sky-600" : "text-sky-300"
-                    }`}
-                  >
+                  <p className="text-[10px] font-extrabold truncate text-indigo-700">
                     {currentUserRole === "ADMIN" ? "System Admin" : "Faculty Lead"}
                   </p>
                 </div>
