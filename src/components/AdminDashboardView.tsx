@@ -79,21 +79,21 @@ export default function AdminDashboardView({
 
       {/* TNEA Cutoff Analytics Card */}
       <div className="bubble-card p-5 space-y-4">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-sky-400" /> TNEA Cutoff Distribution Breakdown
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-sky-600 dark:text-sky-400" /> TNEA Cutoff Distribution Breakdown
           </h3>
-          <span className="text-xs text-slate-400 font-semibold">{applicants.length} Total Registered Applicants</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{applicants.length} Total Registered Applicants</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {cutoffBrackets.map((item, idx) => (
-            <div key={idx} className="p-3.5 rounded-xl bg-slate-950/80 border border-white/10 space-y-2">
+            <div key={idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">{item.label}</span>
-                <span className="text-sm font-black text-white">{item.count}</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{item.label}</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white">{item.count}</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                 <div
                   className={`h-full rounded-full ${item.color}`}
                   style={{ width: `${Math.min(100, (item.count / applicants.length) * 100)}%` }}

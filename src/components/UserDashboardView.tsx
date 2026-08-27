@@ -55,40 +55,40 @@ export default function UserDashboardView({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bubble-card p-4 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Assigned Leads</p>
-            <h4 className="text-xl font-black text-white">{assignedLeads.length} Candidates</h4>
+            <p className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase">Assigned Leads</p>
+            <h4 className="text-xl font-black text-slate-900 dark:text-white">{assignedLeads.length} Candidates</h4>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-400/30 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-400/30 flex items-center justify-center font-bold">
             <UserCheck className="w-5 h-5" />
           </div>
         </div>
 
         <div className="bubble-card p-4 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Pending Follow-ups</p>
-            <h4 className="text-xl font-black text-amber-300">{pendingTasks.length} Tasks</h4>
+            <p className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase">Pending Follow-ups</p>
+            <h4 className="text-xl font-black text-amber-600 dark:text-amber-300">{pendingTasks.length} Tasks</h4>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold">
             <Clock className="w-5 h-5" />
           </div>
         </div>
 
         <div className="bubble-card p-4 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Completed Calls</p>
-            <h4 className="text-xl font-black text-emerald-400">{completedTasks.length} Calls</h4>
+            <p className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase">Completed Calls</p>
+            <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400">{completedTasks.length} Calls</h4>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-400/30 flex items-center justify-center font-bold">
             <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
 
         <div className="bubble-card p-4 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Conversion Rate</p>
-            <h4 className="text-xl font-black text-indigo-300">42.8%</h4>
+            <p className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase">Conversion Rate</p>
+            <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-300">42.8%</h4>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-400/30 flex items-center justify-center font-bold">
             <Sparkles className="w-5 h-5" />
           </div>
         </div>
@@ -98,11 +98,11 @@ export default function UserDashboardView({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: My Assigned Student Leads Table */}
         <div className="lg:col-span-2 bubble-card p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-sky-400" /> My Priority Lead Queue
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-sky-600 dark:text-sky-400" /> My Priority Lead Queue
             </h3>
-            <span className="text-xs text-slate-400 font-semibold">Top 10 Assigned</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Top 10 Assigned</span>
           </div>
 
           <div className="space-y-2.5">
@@ -110,16 +110,16 @@ export default function UserDashboardView({
               <div
                 key={item.id}
                 onClick={() => onSelectApplicant(item)}
-                className="p-3 rounded-xl bg-slate-950/80 border border-white/10 hover:border-sky-400/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer group"
+                className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 hover:border-sky-500/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-indigo-600/30 border border-indigo-400/40 text-sky-300 font-black text-xs flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-indigo-600/20 text-indigo-700 dark:text-sky-300 font-black text-xs flex items-center justify-center shrink-0 border border-indigo-300 dark:border-indigo-400/40">
                     {item.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-sm text-white group-hover:text-sky-300 transition-colors flex items-center gap-2">
+                    <h4 className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors flex items-center gap-2">
                       {item.name}
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/10">
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10">
                         Cutoff: {item.tneaCutoff || 185}
                       </span>
                     </h4>
