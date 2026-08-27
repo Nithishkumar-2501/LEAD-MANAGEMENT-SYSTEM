@@ -30,7 +30,7 @@ export default function MioAIAssistantModal({
     {
       id: "1",
       sender: "ai",
-      text: "Hello! I'm Mio AI, your intelligent Meritto CRM assistant. How can I help you manage candidate leads, cutoff scores, or marketing analytics today?",
+      text: "Hello! I'm Mio AI, your intelligent V.S.B. Admission CRM assistant. How can I help you manage candidate leads, cutoff scores, or marketing analytics today?",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       quickActions: [
         { label: "Show untouched leads", action: "filter_untouched" },
@@ -65,7 +65,7 @@ export default function MioAIAssistantModal({
 
       if (qLower.includes("untouched")) {
         const count = leads.filter((l) => (l.status as string) === "NEW" || (l as any).subStage === "Untouched").length || 18;
-        aiResponseText = `Found ${count} untouched student leads in your Meritto directory. Would you like me to highlight them in the lead manager table?`;
+        aiResponseText = `Found ${count} untouched student leads in your V.S.B. directory. Would you like me to highlight them in the lead manager table?`;
         if (onApplyFilter) onApplyFilter("Untouched");
       } else if (qLower.includes("cutoff") || qLower.includes("180")) {
         aiResponseText = `Filtered candidates with TNEA Cutoff score above 180. There are currently 12 high-priority applicants matching this threshold.`;
@@ -75,9 +75,9 @@ export default function MioAIAssistantModal({
         if (onApplyFilter) onApplyFilter("Tamil Nadu");
       } else if (qLower.includes("summary") || qLower.includes("report")) {
         const total = leads.length || 28;
-        aiResponseText = `📊 **Mio AI Meritto Summary**:\n• Total Active Leads: ${total}\n• Untouched Rate: 64%\n• High Cutoff Candidates (>175): 14\n• Top Traffic Channel: Google & Social Ads\n• Response Time Average: 12 mins`;
+        aiResponseText = `📊 **V.S.B. CRM Summary**:\n• Total Active Leads: ${total}\n• Untouched Rate: 64%\n• High Cutoff Candidates (>175): 14\n• Top Traffic Channel: Google & Social Ads\n• Response Time Average: 12 mins`;
       } else {
-        aiResponseText = `I have analyzed your query "${query}". All system indicators reflect active sync with Karur and Coimbatore Meritto lead databases. Let me know if you need specific table filters or lead exports!`;
+        aiResponseText = `I have analyzed your query "${query}". All system indicators reflect active sync with Karur and Coimbatore lead databases. Let me know if you need specific table filters or lead exports!`;
       }
 
       const aiMsg: Message = {
@@ -108,7 +108,7 @@ export default function MioAIAssistantModal({
                   Beta
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Meritto Lead & Analytics Co-pilot</p>
+              <p className="text-xs text-slate-400">V.S.B. Lead & Analytics Co-pilot</p>
             </div>
           </div>
           <button

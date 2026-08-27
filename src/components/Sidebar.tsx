@@ -256,29 +256,38 @@ export default function Sidebar({
           isOpenMobile ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        {/* Sidebar Header / Brand Emblem */}
+        {/* Sidebar Header / Brand Emblem (V.S.B. Engineering College) */}
         <div
-          className={`p-3.5 border-b flex items-center justify-between gap-2 ${
+          className={`p-3.5 border-b flex items-center justify-between gap-2.5 ${
             isLight ? "border-slate-200 bg-slate-50/80" : "border-white/10 bg-slate-950"
           }`}
         >
-          <div className="flex items-center gap-2 min-w-0">
-            {/* Meritto Brand Emblem */}
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-black text-white text-lg tracking-tighter shadow-md shrink-0">
-              <span className="text-red-400">m</span>
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Official V.S.B. Logo Badge */}
+            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+              <img
+                src="/vsb-logo.png"
+                alt="V.S.B. Engineering College Logo"
+                className="w-full h-full object-contain rounded-full"
+              />
             </div>
 
             {!isCollapsed && (
               <div className="min-w-0">
-                <h2 className="font-black text-base tracking-tight truncate text-white flex items-center gap-1">
-                  <span className="text-sky-400">meritto</span>
-                  <span className="text-[9px] font-extrabold px-1.5 py-0.2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-md">
-                    VSB
-                  </span>
+                <h2
+                  className={`font-black text-xs sm:text-sm tracking-tight truncate uppercase leading-tight ${
+                    isLight ? "text-slate-900" : "text-white"
+                  }`}
+                >
+                  V.S.B. ENGINEERING COLLEGE
                 </h2>
-                <p className="text-[10px] font-semibold text-slate-400 truncate flex items-center gap-1">
-                  <MapPin className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
-                  <span>{loggedInCampus} CAMPUS</span>
+                <p
+                  className={`text-[9.5px] font-extrabold truncate flex items-center gap-1 mt-0.5 ${
+                    isLight ? "text-slate-600" : "text-slate-300"
+                  }`}
+                >
+                  <MapPin className="w-3 h-3 text-pink-500 shrink-0" />
+                  <span>KARUR & COIMBATORE CAMPUSES</span>
                 </p>
               </div>
             )}
