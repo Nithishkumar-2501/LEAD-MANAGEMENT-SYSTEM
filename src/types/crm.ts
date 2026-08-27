@@ -26,7 +26,18 @@ export type CampusLocation = "ALL" | "KARUR" | "COIMBATORE";
 
 export type ActiveTab =
   | "ADMISSIONS"
+  | "ADMIN_DASHBOARD"
+  | "USER_DASHBOARD"
+  | "MARKETING_DASHBOARD"
+  | "ECHO_DASHBOARD"
+  | "FORMDESK"
   | "CONTACTS"
+  | "CALENDAR_PRO"
+  | "APPLICATION_MANAGER"
+  | "MARKETING"
+  | "CAMPAIGN_MANAGER"
+  | "QUERY_MANAGER"
+  | "ECHO"
   | "STUDENTS"
   | "TEACHERS"
   | "CAMPUSES"

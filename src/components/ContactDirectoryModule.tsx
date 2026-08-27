@@ -468,7 +468,11 @@ export default function ContactDirectoryModule({
     if (col === "School Name with Place") return <span className="text-slate-700 font-medium">{contact.school || "Govt Higher Sec School"}</span>;
     if (col === "Address For communication") return <span className="text-slate-600 font-medium">{showAddress ? contact.address || "Karur, Tamil Nadu" : "•••••••••••••"}</span>;
     if (col === "Community") return <span className="font-extrabold text-blue-600">{(contact as any).community || "BC"}</span>;
-    if (col === "User Registration Date") return <span className="text-slate-600 font-medium">Aug 12, 2026</span>;
+    if (col === "User Registration Date") {
+      const d = contact.createdAt ? new Date(contact.createdAt) : new Date();
+      const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+      return <span className="text-slate-600 font-mono text-[11px] font-medium">{formattedDate}</span>;
+    }
     if (col === "Lead Stage") {
       const statusText =
         contact.status === "NEW"

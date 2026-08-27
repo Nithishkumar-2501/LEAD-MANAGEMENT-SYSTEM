@@ -26,6 +26,15 @@ import {
   Send,
   Award,
   MessageCircle,
+  Search,
+  Download,
+  Calendar,
+  FileText,
+  HelpCircle,
+  BarChart3,
+  Users,
+  MessageCircleCode,
+  FormInput,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -44,6 +53,7 @@ interface SidebarProps {
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
+  onOpenMioAI?: () => void;
 }
 
 export default function Sidebar({
@@ -60,9 +70,12 @@ export default function Sidebar({
   onThemeChange,
   isOpenMobile = false,
   onCloseMobile,
+  onOpenMioAI,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(true);
   const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(true);
+  const [menuSearchQuery, setMenuSearchQuery] = useState("");
 
   const admissionSubItems = [
     {
@@ -245,43 +258,26 @@ export default function Sidebar({
       >
         {/* Sidebar Header / Brand Emblem */}
         <div
-          className={`p-4 border-b flex items-center justify-between gap-3 ${
-            isLight ? "border-slate-200 bg-slate-50/80" : "border-white/10"
+          className={`p-3.5 border-b flex items-center justify-between gap-2 ${
+            isLight ? "border-slate-200 bg-slate-50/80" : "border-white/10 bg-slate-950"
           }`}
         >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
-              <img
-                src="/vsb-logo.png"
-                alt="V.S.B. Logo"
-                className="w-full h-full object-contain rounded-full"
-              />
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Meritto Brand Emblem */}
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-black text-white text-lg tracking-tighter shadow-md shrink-0">
+              <span className="text-red-400">m</span>
             </div>
 
             {!isCollapsed && (
               <div className="min-w-0">
-                <h2
-                  className={`font-black text-sm tracking-tight truncate flex items-center gap-1.5 ${
-                    isLight ? "text-slate-900" : "text-white"
-                  }`}
-                >
-                  <span>V.S.B. CRM</span>
-                  <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
-                      isLight
-                        ? "bg-sky-100 text-sky-700 border border-sky-300"
-                        : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
-                    }`}
-                  >
-                    v4.0
+                <h2 className="font-black text-base tracking-tight truncate text-white flex items-center gap-1">
+                  <span className="text-sky-400">meritto</span>
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-md">
+                    VSB
                   </span>
                 </h2>
-                <p
-                  className={`text-[10px] font-bold truncate flex items-center gap-1 ${
-                    isLight ? "text-slate-500" : "text-slate-400"
-                  }`}
-                >
-                  <MapPin className="w-3 h-3 text-pink-500 shrink-0" />
+                <p className="text-[10px] font-semibold text-slate-400 truncate flex items-center gap-1">
+                  <MapPin className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
                   <span>{loggedInCampus} CAMPUS</span>
                 </p>
               </div>
@@ -291,31 +287,73 @@ export default function Sidebar({
           {/* Desktop Collapse Toggle Button */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`hidden lg:flex p-1.5 rounded-xl border transition-all shadow-sm shrink-0 ${
+            className={`hidden lg:flex p-1 rounded-lg border transition-all shadow-sm shrink-0 ${
               isLight
                 ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
-                : "bg-slate-800/80 border-white/10 hover:border-sky-400/50 text-slate-300 hover:text-white"
+                : "bg-slate-900 border-white/10 hover:border-sky-400/50 text-slate-300 hover:text-white"
             }`}
             title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
           </button>
 
           {/* Mobile Close Button */}
           <button
             onClick={onCloseMobile}
-            className={`lg:hidden p-1.5 rounded-xl border ${
+            className={`lg:hidden p-1 rounded-lg border ${
               isLight
                 ? "bg-slate-100 border-slate-300 text-slate-700"
-                : "bg-slate-800/80 border-white/10 text-slate-300 hover:text-white"
+                : "bg-slate-900 border-white/10 text-slate-300 hover:text-white"
             }`}
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Navigation Items Section */}
-        <div className="flex-1 px-3 py-4 space-y-3 overflow-y-auto hide-scrollbar">
+        <div className="flex-1 px-3 py-3 space-y-3 overflow-y-auto hide-scrollbar">
+          {/* Search For Menu Input Bar */}
+          {!isCollapsed && (
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                value={menuSearchQuery}
+                onChange={(e) => setMenuSearchQuery(e.target.value)}
+                placeholder="Search For Menu"
+                className="w-full bg-slate-900/90 border border-slate-800 focus:border-indigo-500 rounded-lg pl-8 pr-2 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none shadow-inner"
+              />
+            </div>
+          )}
+
+          {/* Mio AI (Beta) Button */}
+          {isCollapsed ? (
+            <Tooltip text="Mio AI (Beta)" position="right">
+              <button
+                onClick={onOpenMioAI}
+                className="w-full flex items-center justify-center p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 hover:scale-105 transition-all border border-indigo-400/30"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+              </button>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={onOpenMioAI}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-purple-950 hover:from-indigo-900 hover:to-purple-900 border border-indigo-500/40 text-white shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-md bg-indigo-500/30 text-amber-300 border border-indigo-400/30">
+                  <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                </div>
+                <span className="font-bold text-xs">Mio AI</span>
+                <span className="text-[9px] font-extrabold px-1.5 py-0.2 bg-indigo-500/30 text-indigo-300 rounded border border-indigo-400/30">
+                  Beta
+                </span>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-indigo-300 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          )}
+
           {/* SECTION HEADLINE */}
           <div
             className={`px-2 text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
@@ -724,6 +762,17 @@ export default function Sidebar({
                 </div>
               </button>
             )
+          )}
+
+          {/* Download App Footer Link */}
+          {!isCollapsed && (
+            <button
+              onClick={() => alert("Meritto Mobile App APK download initiated for Android & iOS.")}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition-all group"
+            >
+              <Download className="w-3.5 h-3.5 text-indigo-400 group-hover:translate-y-0.5 transition-transform" />
+              <span>Download App</span>
+            </button>
           )}
 
           {/* Theme Quick Toggle */}
