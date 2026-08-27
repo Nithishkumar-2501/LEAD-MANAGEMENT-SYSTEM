@@ -19,6 +19,10 @@ import ContactDirectoryModule from "@/components/ContactDirectoryModule";
 import AddQuickLeadModal from "@/components/AddQuickLeadModal";
 import SocialMediaPlatformModule from "@/components/SocialMediaPlatformModule";
 import MioAIAssistantModal from "@/components/MioAIAssistantModal";
+import AdminDashboardView from "@/components/AdminDashboardView";
+import UserDashboardView from "@/components/UserDashboardView";
+import MarketingDashboardView from "@/components/MarketingDashboardView";
+import EchoDashboardView from "@/components/EchoDashboardView";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 
@@ -258,38 +262,58 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 p-3 sm:p-6 w-full space-y-4 sm:space-y-6">
-        {/* ADMISSIONS CRM MODULE */}
-        {activeTab === "ADMISSIONS" && (
-          <>
-            <MetricCards metrics={dynamicMetrics} />
-            <LeadFunnelChart
-              statusCounts={dynamicStatusCounts}
-              selectedStage={selectedStageFilter}
-              onSelectStage={setSelectedStageFilter}
-            />
-            <div className="flex flex-col lg:flex-row gap-6">
-              <ApplicantsTable
-                applicants={filteredApplicants}
-                searchQuery={searchQuery}
-                onSelectApplicant={handleSelectApplicant}
-                onActionTrigger={handleActionTrigger}
-                onOpenCreateModal={() => setIsCreateModalOpen(true)}
-                onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
-                onImportLeads={(newLeads) => {
-                  setApplicants((prev) => [...newLeads, ...prev]);
-                  triggerToast(`📥 Imported ${newLeads.length} student record(s) from File Manager!`);
-                  if (newLeads.length > 0) {
-                    handleSelectApplicant(newLeads[0]);
-                  }
-                }}
-              />
-              <TaskSidebar
-                tasks={filteredTasks}
-                onToggleTask={handleToggleTask}
-                onActionTrigger={handleActionTrigger}
-              />
-            </div>
-          </>
+        {/* ADMISSIONS & ADMIN DASHBOARD MODULE */}
+        {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && (
+          <AdminDashboardView
+            metrics={dynamicMetrics}
+            statusCounts={dynamicStatusCounts}
+            applicants={filteredApplicants}
+            tasks={filteredTasks}
+            searchQuery={searchQuery}
+            selectedCampus={selectedCampus}
+            selectedStageFilter={selectedStageFilter}
+            onSelectStage={setSelectedStageFilter}
+            onSelectApplicant={handleSelectApplicant}
+            onActionTrigger={handleActionTrigger}
+            onOpenCreateModal={() => setIsCreateModalOpen(true)}
+            onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
+            onToggleTask={handleToggleTask}
+            onImportLeads={(newLeads) => {
+              setApplicants((prev) => [...newLeads, ...prev]);
+              triggerToast(`📥 Imported ${newLeads.length} student record(s) from File Manager!`);
+              if (newLeads.length > 0) {
+                handleSelectApplicant(newLeads[0]);
+              }
+            }}
+          />
+        )}
+
+        {/* USER DASHBOARD MODULE */}
+        {activeTab === "USER_DASHBOARD" && (
+          <UserDashboardView
+            loggedInUsername={loggedInUsername}
+            currentUserRole={currentUserRole}
+            applicants={filteredApplicants}
+            tasks={filteredTasks}
+            selectedCampus={selectedCampus}
+            onSelectApplicant={handleSelectApplicant}
+            onActionTrigger={handleActionTrigger}
+            onToggleTask={handleToggleTask}
+          />
+        )}
+
+        {/* MARKETING DASHBOARD MODULE */}
+        {activeTab === "MARKETING_DASHBOARD" && (
+          <MarketingDashboardView
+            loggedInCampus={selectedCampus}
+            onTriggerToast={triggerToast}
+            onNavigateTab={setActiveTab}
+          />
+        )}
+
+        {/* ECHO DASHBOARD MODULE */}
+        {activeTab === "ECHO_DASHBOARD" && (
+          <EchoDashboardView onTriggerToast={triggerToast} />
         )}
 
         {/* LEAD MANAGER MODULE (MERGED CONTACT DIRECTORY & STUDENT APPLICATIONS) */}
