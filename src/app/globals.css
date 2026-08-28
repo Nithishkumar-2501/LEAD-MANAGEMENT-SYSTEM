@@ -15,32 +15,60 @@
 }
 
 body {
-  background: #f8fafc;
-  color: #0f172a;
+  background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+              radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
+              radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
+              #070a14;
+  background-attachment: fixed;
+  color: #f8fafc;
   font-family: 'Poppins', var(--font-poppins), system-ui, -apple-system, sans-serif !important;
   -webkit-font-smoothing: antialiased;
 }
 
+body.light,
+.light body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
 /* Glassy Liquid & Bubble Surfaces */
 .liquid-glass {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
+}
+
+.light .liquid-glass,
+body.light .liquid-glass {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 }
 
 .bubble-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
-  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.35);
+  border-radius: 1.25rem;
+  color: #f8fafc;
 }
 
 .bubble-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
+  border-color: rgba(14, 165, 233, 0.4);
+  box-shadow: 0 20px 45px -10px rgba(14, 165, 233, 0.25);
+  transform: translateY(-2px);
+}
+
+.light .bubble-card,
+body.light .bubble-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+  color: #0f172a;
 }
 
 /* Floating Bubble Pills */

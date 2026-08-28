@@ -297,20 +297,20 @@ export default function LeadFunnelChart({
                 <button
                   type="button"
                   onClick={handlePrevStage}
-                  className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 transition-all shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"
+                  className="px-3 py-1.5 rounded-xl bg-slate-900/90 dark:bg-slate-900/90 border border-white/15 text-white hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"
                   title="Previous Stage"
                 >
-                  <ChevronLeft className="w-4 h-4 text-sky-500" />
+                  <ChevronLeft className="w-4 h-4 text-sky-400" />
                   <span className="hidden sm:inline">Previous</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleNextStage}
-                  className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 transition-all shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"
+                  className="px-3 py-1.5 rounded-xl bg-slate-900/90 dark:bg-slate-900/90 border border-white/15 text-white hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"
                   title="Next Stage"
                 >
                   <span className="hidden sm:inline">Next</span>
-                  <ChevronRight className="w-4 h-4 text-sky-500" />
+                  <ChevronRight className="w-4 h-4 text-sky-400" />
                 </button>
               </div>
             </div>
@@ -327,23 +327,23 @@ export default function LeadFunnelChart({
                   {currentStage.desc}
                 </p>
                 <div className="pt-2">
-                  <span className="text-[11px] font-mono text-slate-900 bg-white font-bold px-2.5 py-1 rounded-lg border border-slate-200 shadow-sm">
+                  <span className="text-[11px] font-mono text-slate-200 bg-slate-950/80 font-bold px-2.5 py-1 rounded-lg border border-white/15 shadow-sm">
                     Filter Key: {currentStage.key}
                   </span>
                 </div>
               </div>
 
               {/* Center Column: Big Metrics Display */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 text-center space-y-1 backdrop-blur-xl shadow-md">
-                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+              <div className="bg-slate-950/90 border border-white/15 rounded-2xl p-4 text-center space-y-1 backdrop-blur-xl shadow-xl">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                   Total Stage Candidates
                 </span>
-                <div className="text-4xl font-black text-slate-950 tracking-tight flex items-center justify-center gap-1">
+                <div className="text-4xl font-black text-white tracking-tight flex items-center justify-center gap-1">
                   <span>{currentStage.count}</span>
-                  <span className="text-xs text-slate-700 font-bold">leads</span>
+                  <span className="text-xs text-slate-400 font-bold">leads</span>
                 </div>
                 <div className="pt-1">
-                  <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-100 ${currentStage.text}`}>
+                  <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-900/90 border border-white/10 ${currentStage.text}`}>
                     {Math.round((currentStage.count / total) * 100)}% of pipeline
                   </span>
                 </div>

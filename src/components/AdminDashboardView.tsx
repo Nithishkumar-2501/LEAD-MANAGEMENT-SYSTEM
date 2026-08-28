@@ -52,24 +52,24 @@ export default function AdminDashboardView({
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 dark:from-indigo-950 dark:via-slate-900 dark:to-purple-950 border border-indigo-500/30 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
-            <ShieldCheck className="w-6 h-6 text-indigo-600" />
+          <div className="w-11 h-11 rounded-2xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-md shrink-0">
+            <ShieldCheck className="w-6 h-6 text-sky-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-black tracking-tight text-slate-900">Admin Executive Control Dashboard</h2>
-              <span className="px-2.5 py-0.5 text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full uppercase">
+              <h2 className="text-lg font-black tracking-tight text-white">Admin Executive Control Dashboard</h2>
+              <span className="px-2.5 py-0.5 text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full uppercase">
                 System Admin
               </span>
             </div>
-            <p className="text-xs text-slate-600 font-medium">Real-time institutional oversight across Karur & Coimbatore campuses</p>
+            <p className="text-xs text-slate-300 font-medium">Real-time institutional oversight across Karur & Coimbatore campuses</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-xl text-xs font-black text-slate-900 shadow-sm shrink-0">
-          <MapPin className="w-3.5 h-3.5 text-pink-600" />
+        <div className="flex items-center gap-2 bg-slate-900/90 border border-white/15 px-3.5 py-1.5 rounded-xl text-xs font-black text-amber-300 shadow-inner shrink-0">
+          <MapPin className="w-3.5 h-3.5 text-pink-400" />
           <span>Active Scope: {selectedCampus} CAMPUS</span>
         </div>
       </div>

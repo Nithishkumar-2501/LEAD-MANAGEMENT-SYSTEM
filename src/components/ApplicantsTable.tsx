@@ -194,7 +194,7 @@ export default function ApplicantsTable({
                             .join("")}
                         </div>
                         <div>
-                          <div className="font-extrabold text-[#0f172a] dark:text-slate-100 group-hover:text-blue-600 transition-colors text-sm">
+                          <div className="font-extrabold text-slate-100 dark:text-slate-100 group-hover:text-blue-400 transition-colors text-sm">
                             {item.name}
                           </div>
                           <div className="text-[11px] text-slate-400">

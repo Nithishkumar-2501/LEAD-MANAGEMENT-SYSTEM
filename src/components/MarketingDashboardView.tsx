@@ -29,18 +29,18 @@ export default function MarketingDashboardView({
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border border-purple-500/30 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 shadow-sm shrink-0">
-            <Megaphone className="w-6 h-6 text-purple-600" />
+          <div className="w-11 h-11 rounded-2xl bg-purple-600/30 border border-purple-400/40 flex items-center justify-center text-purple-300 shadow-md shrink-0">
+            <Megaphone className="w-6 h-6 text-purple-400" />
           </div>
           <div>
-            <h2 className="text-lg font-black tracking-tight text-slate-900">Omnichannel Marketing Campaign Dashboard</h2>
-            <p className="text-xs text-slate-600 font-medium">Real-time candidate lead acquisition across 8 digital & field campaign channels</p>
+            <h2 className="text-lg font-black tracking-tight text-white">Omnichannel Marketing Campaign Dashboard</h2>
+            <p className="text-xs text-slate-300 font-medium">Real-time candidate lead acquisition across 8 digital & field campaign channels</p>
           </div>
         </div>
 
-        <div className="px-3.5 py-1.5 rounded-xl bg-purple-50 border border-purple-200 text-xs font-black text-purple-800 shadow-sm">
+        <div className="px-3.5 py-1.5 rounded-xl bg-purple-500/20 border border-purple-400/40 text-xs font-black text-purple-300 shadow-inner">
           Total Marketing Inquiries: 2,440 Candidates
         </div>
       </div>
