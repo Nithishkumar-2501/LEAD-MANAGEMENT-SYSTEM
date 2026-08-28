@@ -71,8 +71,6 @@ export default function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(true);
-  const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(true);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
 
   const dashboardSubItems = [
@@ -172,8 +170,6 @@ export default function Sidebar({
     if (onCloseMobile) onCloseMobile();
   };
 
-  const [isSocialPlatformOpen, setIsSocialPlatformOpen] = useState(true);
-
   const socialPlatformSubItems = [
     {
       id: "SOCIAL_ADS" as ActiveTab,
@@ -249,12 +245,47 @@ export default function Sidebar({
     },
   ];
 
+  const isDashboardActive = dashboardSubItems.some((item) => item.id === activeTab);
+  const isSocialActive = socialPlatformSubItems.some((item) => item.id === activeTab);
+  const isAdmissionActive = filteredSubItems.some((item) => item.id === activeTab) || (!isDashboardActive && !isSocialActive);
+
+  const [isDashboardOpen, setIsDashboardOpen] = useState(isDashboardActive);
+  const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(isAdmissionActive);
+  const [isSocialPlatformOpen, setIsSocialPlatformOpen] = useState(isSocialActive);
+
+  const toggleDashboardMenu = () => {
+    if (isCollapsed) {
+      setIsCollapsed(false);
+      setIsDashboardOpen(true);
+      setIsAdmissionCrmOpen(false);
+      setIsSocialPlatformOpen(false);
+    } else {
+      setIsDashboardOpen((prev) => {
+        const next = !prev;
+        if (next) {
+          setIsAdmissionCrmOpen(false);
+          setIsSocialPlatformOpen(false);
+        }
+        return next;
+      });
+    }
+  };
+
   const toggleAdmissionMenu = () => {
     if (isCollapsed) {
       setIsCollapsed(false);
       setIsAdmissionCrmOpen(true);
+      setIsDashboardOpen(false);
+      setIsSocialPlatformOpen(false);
     } else {
-      setIsAdmissionCrmOpen(!isAdmissionCrmOpen);
+      setIsAdmissionCrmOpen((prev) => {
+        const next = !prev;
+        if (next) {
+          setIsDashboardOpen(false);
+          setIsSocialPlatformOpen(false);
+        }
+        return next;
+      });
     }
   };
 
@@ -262,8 +293,17 @@ export default function Sidebar({
     if (isCollapsed) {
       setIsCollapsed(false);
       setIsSocialPlatformOpen(true);
+      setIsDashboardOpen(false);
+      setIsAdmissionCrmOpen(false);
     } else {
-      setIsSocialPlatformOpen(!isSocialPlatformOpen);
+      setIsSocialPlatformOpen((prev) => {
+        const next = !prev;
+        if (next) {
+          setIsDashboardOpen(false);
+          setIsAdmissionCrmOpen(false);
+        }
+        return next;
+      });
     }
   };
 
@@ -387,7 +427,7 @@ export default function Sidebar({
             {isCollapsed ? (
               <Tooltip text="Dashboard" position="right">
                 <button
-                  onClick={() => setIsDashboardOpen(!isDashboardOpen)}
+                  onClick={toggleDashboardMenu}
                   className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
                     dashboardSubItems.some((item) => item.id === activeTab)
                       ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
@@ -410,7 +450,7 @@ export default function Sidebar({
                     ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
                     : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
                 }`}
-                onClick={() => setIsDashboardOpen(!isDashboardOpen)}
+                onClick={toggleDashboardMenu}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
