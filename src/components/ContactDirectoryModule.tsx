@@ -901,10 +901,10 @@ export default function ContactDirectoryModule({
       )}
 
       {/* MERITTO LEAD MANAGER TOP HEADER BAR (Matching Image 2 Reference) */}
-      <div className="bg-[#ffffff] text-slate-800 p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs font-sans">
+      <div className="bg-slate-900/90 dark:bg-slate-900/90 text-white p-3.5 sm:p-4 rounded-2xl shadow-xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs font-sans">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-blue-600" />
+          <h2 className="text-base font-black text-white tracking-tight flex items-center gap-2">
+            <UserCheck className="w-5 h-5 text-sky-400" />
             Lead Manager
           </h2>
 
@@ -1174,7 +1174,7 @@ export default function ContactDirectoryModule({
       </div>
 
       {/* MERITTO LEAD MANAGER QUICK FILTER PILLS & FIELD SEARCH BAR (MATCHING SCREENSHOT) */}
-      <div className="bg-[#ffffff] border border-slate-200 rounded-2xl p-3 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800">
+      <div className="bg-slate-900/90 dark:bg-slate-900/90 border border-white/10 rounded-2xl p-3 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-200">
         {/* Left: Quick Filter Pills */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* User Registration Date */}
@@ -1424,12 +1424,12 @@ export default function ContactDirectoryModule({
       {/* MAIN CONTENT VIEW: LEAD MANAGER TABLE (Image 2) OR CARDS GRID (Image 1) */}
       {directoryViewMode === "TABLE" ? (
         /* MERITTO LEAD MANAGER DATA TABLE (Exact Image 2 Implementation) */
-        <div className="bg-[#ffffff] text-slate-800 rounded-2xl border border-slate-200 shadow-xl overflow-hidden font-sans">
+        <div className="bg-slate-900/90 dark:bg-slate-900/90 text-white rounded-2xl border border-white/10 shadow-xl overflow-hidden font-sans">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase text-[11px] tracking-wider">
+              <thead className="bg-slate-950/80 text-sky-300 font-bold border-b border-white/10 uppercase text-[11px] tracking-wider">
                 {/* Row 1: Header Titles with Sort & Interactive Filter Icon Popovers */}
-                <tr className="bg-slate-100/90 text-slate-700 font-extrabold border-b border-slate-200">
+                <tr className="bg-slate-950/90 text-slate-200 font-extrabold border-b border-white/10">
                   <th className="p-3 w-10 text-center">
                     <input
                       type="checkbox"
