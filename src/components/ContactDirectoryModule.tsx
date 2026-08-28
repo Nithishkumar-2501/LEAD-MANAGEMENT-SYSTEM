@@ -1179,11 +1179,11 @@ export default function ContactDirectoryModule({
         <div className="flex flex-wrap items-center gap-2.5">
           {/* User Registration Date */}
           <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">User Registration Date:</span>
+            <span className="text-[11px] font-semibold text-slate-400 hidden xl:inline">User Registration Date:</span>
             <select
               value={regDateFilter}
               onChange={(e) => setRegDateFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
+              className="bg-slate-900 border border-white/15 rounded-full px-3.5 py-1.5 text-xs text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here 📅</option>
               <optgroup label="Quick Filters">
@@ -1201,7 +1201,7 @@ export default function ContactDirectoryModule({
 
           {/* Lead Stage */}
           <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">Lead Stage:</span>
+            <span className="text-[11px] font-semibold text-slate-400 hidden xl:inline">Lead Stage:</span>
             <select
               value={leadStageFilter}
               onChange={(e) => {
@@ -1211,7 +1211,7 @@ export default function ContactDirectoryModule({
                   onTriggerToast(`Filtered leads by Lead Stage: ${val}`);
                 }
               }}
-              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
+              className="bg-slate-900 border border-white/15 rounded-full px-3.5 py-1.5 text-xs text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Untouched">Untouched</option>
@@ -1224,11 +1224,11 @@ export default function ContactDirectoryModule({
 
           {/* Lead Owner / Teams */}
           <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">Lead Owner / Teams:</span>
+            <span className="text-[11px] font-semibold text-slate-400 hidden xl:inline">Lead Owner / Teams:</span>
             <select
               value={leadOwnerFilter}
               onChange={(e) => setLeadOwnerFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
+              className="bg-slate-900 border border-white/15 rounded-full px-3.5 py-1.5 text-xs text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Admin Karur">Admin Karur</option>
@@ -1239,11 +1239,11 @@ export default function ContactDirectoryModule({
 
           {/* Campaign Source */}
           <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">Campaign Source:</span>
+            <span className="text-[11px] font-semibold text-slate-400 hidden xl:inline">Campaign Source:</span>
             <select
               value={campaignSourceFilter}
               onChange={(e) => setCampaignSourceFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
+              className="bg-slate-900 border border-white/15 rounded-full px-3.5 py-1.5 text-xs text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Organic">Organic Search</option>
@@ -1254,11 +1254,11 @@ export default function ContactDirectoryModule({
 
           {/* Traffic Channel */}
           <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 hidden xl:inline">Traffic Channel:</span>
+            <span className="text-[11px] font-semibold text-slate-400 hidden xl:inline">Traffic Channel:</span>
             <select
               value={trafficChannelFilter}
               onChange={(e) => setTrafficChannelFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-full px-3.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm"
+              className="bg-slate-900 border border-white/15 rounded-full px-3.5 py-1.5 text-xs text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Direct Intake">Direct Intake</option>
@@ -1266,7 +1266,7 @@ export default function ContactDirectoryModule({
             </select>
           </div>
 
-          <button className="px-3 py-1.5 rounded-full bg-slate-100 border border-slate-300 text-slate-600 font-semibold hover:bg-slate-200 transition-colors">
+          <button className="px-3 py-1.5 rounded-full bg-slate-900 border border-white/15 text-slate-300 font-semibold hover:bg-slate-800 hover:text-white transition-colors">
             +2 more
           </button>
         </div>
@@ -1274,13 +1274,13 @@ export default function ContactDirectoryModule({
         {/* Right: Quick Search Dropdown & Field Search Input (Matching Meritto Screenshot) */}
         <div className="flex items-center gap-2 ml-auto shrink-0">
           {/* Combined Field Selector + Search Input Bar */}
-          <div className="relative flex items-center bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+          <div className="relative flex items-center bg-slate-900 border border-white/15 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-sky-500 transition-all">
             {/* Field Dropdown Selector Button */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsSearchFieldDropdownOpen(!isSearchFieldDropdownOpen)}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-700 border-r border-slate-300 flex items-center gap-1.5 hover:bg-slate-100 rounded-l-lg transition-colors"
+                className="px-3 py-1.5 text-xs font-semibold text-white border-r border-white/15 flex items-center gap-1.5 hover:bg-slate-800 rounded-l-lg transition-colors"
               >
                 <span>{searchField}</span>
                 <span className="text-[10px] text-slate-400">∧</span>
@@ -1288,7 +1288,7 @@ export default function ContactDirectoryModule({
 
               {/* Popover Dropdown for Field Selection (Matching Screenshot) */}
               {isSearchFieldDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 py-1.5 text-xs font-sans text-slate-800 animate-in fade-in zoom-in-95">
+                <div className="absolute top-full left-0 mt-1 w-44 bg-slate-900 border border-white/15 rounded-xl shadow-2xl z-50 py-1.5 text-xs font-sans text-white animate-in fade-in zoom-in-95">
                   {(["Email", "Mobile", "Name", "User Id", "Lead Id"] as const).map((field) => (
                     <div
                       key={field}
@@ -1296,21 +1296,10 @@ export default function ContactDirectoryModule({
                         setSearchField(field);
                         setIsSearchFieldDropdownOpen(false);
                       }}
-                      className={`px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-blue-50 transition-colors ${searchField === field ? "bg-blue-50/80 font-bold text-blue-600" : "text-slate-700 font-medium"
+                      className={`px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-slate-800 transition-colors ${searchField === field ? "bg-sky-950/80 font-bold text-sky-400" : "text-slate-200 font-medium"
                         }`}
                     >
                       <span>{field}</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setStarredSearchFields((prev) => ({ ...prev, [field]: !prev[field] }));
-                        }}
-                        className={`text-sm hover:scale-110 transition-transform ${starredSearchFields[field] ? "text-amber-400" : "text-slate-300 hover:text-amber-400"
-                          }`}
-                        title="Toggle Favorite Search Field"
-                      >
-                        ★
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -1324,7 +1313,7 @@ export default function ContactDirectoryModule({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={`Search by ${searchField}`}
-                className="w-full bg-transparent text-xs font-medium text-slate-800 placeholder-slate-400 pl-3 pr-8 py-1.5 focus:outline-none"
+                className="w-full bg-transparent text-xs font-medium text-white placeholder-slate-400 pl-3 pr-8 py-1.5 focus:outline-none"
               />
               <div className="absolute right-2 flex items-center gap-1 text-slate-400">
                 {searchQuery && (
@@ -1489,7 +1478,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
                           >
                             <option value="ALL">All Cities</option>
                             {TAMIL_NADU_DISTRICTS.map((d) => (
@@ -1509,7 +1498,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
                           >
                             <option value="ALL">All Stages</option>
                             <option value="NEW">NEW</option>
@@ -1529,7 +1518,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
                           >
                             <option value="ALL">All Campuses</option>
                             <option value="KARUR">KARUR</option>
@@ -1546,7 +1535,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
                           >
                             <option value="ALL">All States</option>
                             <option value="Tamil Nadu">Tamil Nadu</option>
@@ -1562,7 +1551,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
                           >
                             <option value="ALL">All</option>
                             <option value="OC">OC</option>
@@ -1582,7 +1571,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
                           >
                             <option value="ALL">All</option>
                             <option value="Male">Male</option>
@@ -1601,7 +1590,7 @@ export default function ContactDirectoryModule({
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
                             placeholder="Filter..."
-                            className="w-full bg-white border border-slate-300 rounded-md pl-2 pr-5 py-1 text-[11px] text-slate-800 placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            className="w-full bg-slate-900 border border-white/15 rounded-md pl-2 pr-5 py-1 text-[11px] text-white placeholder-slate-400 focus:ring-1 focus:ring-sky-500 focus:outline-none"
                           />
                           {filterVal && (
                             <button
@@ -1623,12 +1612,12 @@ export default function ContactDirectoryModule({
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-white/10 bg-slate-950/80 text-slate-200">
                 {paginatedContacts.map((contact) => (
                   <tr
                     key={contact.id}
                     onClick={() => handleCandidateClick(contact)}
-                    className="hover:bg-blue-50/60 transition-colors group cursor-pointer"
+                    className="hover:bg-slate-800/80 transition-colors group cursor-pointer"
                   >
                     {/* Select Checkbox */}
                     <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
@@ -1642,7 +1631,7 @@ export default function ContactDirectoryModule({
                             setSelectedRows(selectedRows.filter((id) => id !== contact.id));
                           }
                         }}
-                        className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                        className="w-4 h-4 rounded text-sky-500 border-white/20 focus:ring-sky-500 cursor-pointer"
                       />
                     </td>
 
@@ -1650,7 +1639,7 @@ export default function ContactDirectoryModule({
                     {selectedColumns.map((col) => (
                       <td
                         key={col}
-                        className={`p-3 ${col === "Registered Name" ? "font-bold text-blue-600 hover:underline" : ""
+                        className={`p-3 ${col === "Registered Name" ? "font-bold text-sky-400 hover:underline" : ""
                           }`}
                       >
                         {renderCellContent(contact, col)}
@@ -1663,16 +1652,16 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* TABLE FOOTER CONTROLS BAR WITH FULL PAGINATION */}
-          <div className="bg-slate-50 border-t border-slate-200 p-3.5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-700 font-sans shadow-inner">
+          <div className="bg-slate-950/90 border-t border-white/10 p-3.5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-300 font-sans shadow-inner">
             {/* Left: Classic View & Record Range Indicator */}
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => setDirectoryViewMode("GRID")}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-white/15 bg-slate-900 hover:bg-slate-800 text-white font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
               >
                 <span>Classic View</span>
               </button>
-              <span className="font-extrabold text-slate-800 bg-slate-200/80 px-3 py-1.5 rounded-lg border border-slate-300">
+              <span className="font-extrabold text-white bg-slate-900 px-3 py-1.5 rounded-lg border border-white/15">
                 Showing {sortedAndFilteredContacts.length > 0 ? dirStartIndex + 1 : 0} - {dirEndIndex} of {sortedAndFilteredContacts.length} Leads
               </span>
             </div>
@@ -1682,7 +1671,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === 1}
                 onClick={() => setCurrentPage(1)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-700 cursor-pointer shadow-sm"
+                className="px-2.5 py-1.5 rounded-lg border border-white/15 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-white cursor-pointer shadow-sm"
                 title="First Page"
               >
                 ⏮ First
@@ -1691,7 +1680,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === 1}
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-700 cursor-pointer shadow-sm"
+                className="px-3 py-1.5 rounded-lg border border-white/15 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-white cursor-pointer shadow-sm"
               >
                 ◀ Prev
               </button>
@@ -1717,8 +1706,8 @@ export default function ContactDirectoryModule({
                         key={pNum}
                         onClick={() => setCurrentPage(pNum)}
                         className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer ${isActive
-                            ? "bg-blue-600 text-white shadow-md shadow-blue-500/40 scale-105"
-                            : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
+                            ? "bg-sky-500 text-white shadow-md shadow-sky-500/40 scale-105"
+                            : "bg-slate-900 border border-white/15 text-slate-200 hover:bg-slate-800"
                           }`}
                       >
                         {pNum}
@@ -1731,7 +1720,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-700 cursor-pointer shadow-sm"
+                className="px-3 py-1.5 rounded-lg border border-white/15 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-white cursor-pointer shadow-sm"
               >
                 Next ▶
               </button>
@@ -1739,7 +1728,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => setCurrentPage(totalPages)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-700 cursor-pointer shadow-sm"
+                className="px-2.5 py-1.5 rounded-lg border border-white/15 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-white cursor-pointer shadow-sm"
                 title="Last Page"
               >
                 Last ⏭
@@ -1747,7 +1736,7 @@ export default function ContactDirectoryModule({
             </div>
 
             {/* Right: Show Rows Selector */}
-            <div className="flex items-center gap-2 font-extrabold text-slate-800">
+            <div className="flex items-center gap-2 font-extrabold text-white">
               <span>Show Rows:</span>
               <select
                 value={rowsPerPage}
@@ -1755,7 +1744,7 @@ export default function ContactDirectoryModule({
                   setRowsPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 font-black focus:outline-none cursor-pointer shadow-sm"
+                className="bg-slate-900 border border-white/15 rounded-lg px-3 py-1.5 text-white font-black focus:outline-none cursor-pointer shadow-sm"
               >
                 <option value={10}>10 rows</option>
                 <option value={25}>25 rows</option>
