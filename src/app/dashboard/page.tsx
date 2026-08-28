@@ -18,7 +18,6 @@ import AdminSettingsModule from "@/components/AdminSettingsModule";
 import ContactDirectoryModule from "@/components/ContactDirectoryModule";
 import AddQuickLeadModal from "@/components/AddQuickLeadModal";
 import SocialMediaPlatformModule from "@/components/SocialMediaPlatformModule";
-import MioAIAssistantModal from "@/components/MioAIAssistantModal";
 import AdminDashboardView from "@/components/AdminDashboardView";
 import UserDashboardView from "@/components/UserDashboardView";
 import MarketingDashboardView from "@/components/MarketingDashboardView";
@@ -63,7 +62,6 @@ export default function DashboardPage() {
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
-  const [isMioAIOpen, setIsMioAIOpen] = useState(false);
 
   // Dynamic calculations based on selected campus
   const activeCampusLeads = applicants.filter((item) => selectedCampus === "ALL" || item.campus === selectedCampus);
@@ -235,7 +233,6 @@ export default function DashboardPage() {
         onThemeChange={handleThemeChange}
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
-        onOpenMioAI={() => setIsMioAIOpen(true)}
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}
@@ -256,7 +253,6 @@ export default function DashboardPage() {
           theme={theme}
           onThemeChange={handleThemeChange}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-          onOpenMioAI={() => setIsMioAIOpen(true)}
           onOpenAddLeadModal={() => setIsQuickLeadModalOpen(true)}
         />
 
@@ -388,16 +384,6 @@ export default function DashboardPage() {
         isOpen={isQuickLeadModalOpen}
         onClose={() => setIsQuickLeadModalOpen(false)}
         onLeadAdded={handleCreateApplication}
-      />
-
-      <MioAIAssistantModal
-        isOpen={isMioAIOpen}
-        onClose={() => setIsMioAIOpen(false)}
-        leads={applicants}
-        onApplyFilter={(filterText) => {
-          setSearchQuery(filterText);
-          setActiveTab("CONTACTS");
-        }}
       />
 
       {selectedApplicant && (

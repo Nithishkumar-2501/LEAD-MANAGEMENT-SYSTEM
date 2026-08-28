@@ -53,7 +53,6 @@ interface SidebarProps {
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
-  onOpenMioAI?: () => void;
 }
 
 export default function Sidebar({
@@ -70,7 +69,6 @@ export default function Sidebar({
   onThemeChange,
   isOpenMobile = false,
   onCloseMobile,
-  onOpenMioAI,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(true);
@@ -372,34 +370,6 @@ export default function Sidebar({
                 className="w-full bg-slate-900/90 border border-slate-800 focus:border-indigo-500 rounded-lg pl-8 pr-2 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none shadow-inner"
               />
             </div>
-          )}
-
-          {/* Mio AI (Beta) Button */}
-          {isCollapsed ? (
-            <Tooltip text="Mio AI (Beta)" position="right">
-              <button
-                onClick={onOpenMioAI}
-                className="w-full flex items-center justify-center p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 hover:scale-105 transition-all border border-indigo-400/30"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-              </button>
-            </Tooltip>
-          ) : (
-            <button
-              onClick={onOpenMioAI}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-purple-950 hover:from-indigo-900 hover:to-purple-900 border border-indigo-500/40 text-white shadow-md transition-all group"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-1 rounded-md bg-indigo-500/30 text-amber-300 border border-indigo-400/30">
-                  <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                </div>
-                <span className="font-bold text-xs">Mio AI</span>
-                <span className="text-[9px] font-extrabold px-1.5 py-0.2 bg-indigo-500/30 text-indigo-300 rounded border border-indigo-400/30">
-                  Beta
-                </span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-indigo-300 group-hover:translate-x-0.5 transition-transform" />
-            </button>
           )}
 
           {/* SECTION HEADLINE */}

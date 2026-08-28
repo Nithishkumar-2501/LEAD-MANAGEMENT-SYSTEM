@@ -39,7 +39,6 @@ interface HeaderProps {
   theme?: "LIGHT" | "DARK";
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
   onToggleMobileSidebar?: () => void;
-  onOpenMioAI?: () => void;
   onOpenAddLeadModal?: () => void;
 }
 
@@ -58,7 +57,6 @@ export default function Header({
   theme = "DARK",
   onThemeChange,
   onToggleMobileSidebar,
-  onOpenMioAI,
   onOpenAddLeadModal,
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
