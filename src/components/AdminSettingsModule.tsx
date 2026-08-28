@@ -34,7 +34,7 @@ interface SystemAccount {
   id: string;
   username: string;
   password: string;
-  role: "ADMIN" | "COUNSELOR" | "FACULTY" | "STUDENT";
+  role: "ADMIN" | "COUNSELOR" | "FACULTY";
   campus: "KARUR" | "COIMBATORE" | "ALL";
   isLoggedIn: boolean;
   lastActive: string;
@@ -120,24 +120,6 @@ export default function AdminSettingsModule({
         isLoggedIn: false,
         lastActive: "Yesterday at 04:30 PM",
       },
-      {
-        id: "acc_6",
-        username: "revathy@gmail.com",
-        password: "student123",
-        role: "STUDENT",
-        campus: "KARUR",
-        isLoggedIn: false,
-        lastActive: "12/08/2026 05:10 PM",
-      },
-      {
-        id: "acc_7",
-        username: "gunal@gmail.com",
-        password: "student123",
-        role: "STUDENT",
-        campus: "KARUR",
-        isLoggedIn: false,
-        lastActive: "12/08/2026 05:10 PM",
-      },
     ];
   });
 
@@ -148,7 +130,7 @@ export default function AdminSettingsModule({
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
   const [newAccUsername, setNewAccUsername] = useState("");
   const [newAccPassword, setNewAccPassword] = useState("");
-  const [newAccRole, setNewAccRole] = useState<"ADMIN" | "COUNSELOR" | "FACULTY" | "STUDENT">("COUNSELOR");
+  const [newAccRole, setNewAccRole] = useState<"ADMIN" | "COUNSELOR" | "FACULTY">("COUNSELOR");
   const [newAccCampus, setNewAccCampus] = useState<"KARUR" | "COIMBATORE" | "ALL">("KARUR");
 
   // Sync Accounts to LocalStorage
@@ -556,7 +538,6 @@ export default function AdminSettingsModule({
                     <option value="ADMIN">System Admin</option>
                     <option value="COUNSELOR">Counselor</option>
                     <option value="FACULTY">Faculty</option>
-                    <option value="STUDENT">Student Candidate</option>
                   </select>
                 </div>
 

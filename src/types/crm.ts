@@ -1,4 +1,4 @@
-export type Role = "ADMIN" | "COUNSELOR" | "STUDENT" | "TEACHER";
+export type Role = "ADMIN" | "COUNSELOR" | "TEACHER";
 
 export const VSB_DEPARTMENTS_COURSES = [
   "B.Tech Artificial Intelligence and Data Science",
