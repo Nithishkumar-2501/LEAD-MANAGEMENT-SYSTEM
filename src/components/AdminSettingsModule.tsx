@@ -377,48 +377,48 @@ export default function AdminSettingsModule({
           {/* Active Admins Count Badge */}
           <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">Logged-In Admins</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span className="text-[11px] font-black text-black dark:text-emerald-400 uppercase tracking-wider block">Logged-In Admins</span>
+              <span className="text-xl font-black text-black dark:text-white flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping inline-block"></span>
                 {loggedInAdminsCount} Active Admins
               </span>
             </div>
-            <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400 opacity-80" />
+            <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400 opacity-90" />
           </div>
 
           {/* Total Active Sessions */}
           <div className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-500/30 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold text-sky-700 dark:text-sky-400 uppercase tracking-wider block">Total Active Sessions</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white">{totalLoggedInUsersCount} Users Logged In</span>
+              <span className="text-[11px] font-black text-black dark:text-sky-400 uppercase tracking-wider block">Total Active Sessions</span>
+              <span className="text-xl font-black text-black dark:text-white">{totalLoggedInUsersCount} Users Logged In</span>
             </div>
-            <Users className="w-7 h-7 text-sky-600 dark:text-sky-400 opacity-80" />
+            <Users className="w-7 h-7 text-sky-600 dark:text-sky-400 opacity-90" />
           </div>
 
           {/* Registered Accounts */}
           <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider block">Total Managed Accounts</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white">{accounts.length} Accounts</span>
+              <span className="text-[11px] font-black text-black dark:text-indigo-400 uppercase tracking-wider block">Total Managed Accounts</span>
+              <span className="text-xl font-black text-black dark:text-white">{accounts.length} Accounts</span>
             </div>
-            <Key className="w-7 h-7 text-indigo-600 dark:text-indigo-400 opacity-80" />
+            <Key className="w-7 h-7 text-indigo-600 dark:text-indigo-400 opacity-90" />
           </div>
         </div>
 
         {/* Login Credentials Table */}
         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
-          <table className="w-full text-left text-xs text-slate-800 dark:text-slate-200">
-            <thead className="bg-slate-100 dark:bg-slate-950 text-blue-600 dark:text-sky-300 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-white/10">
+          <table className="w-full text-left text-xs text-black dark:text-slate-200 font-extrabold">
+            <thead className="bg-slate-100 dark:bg-slate-950 text-black dark:text-sky-300 font-black uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-white/10">
               <tr>
-                <th className="py-3 px-4">Role</th>
-                <th className="py-3 px-4">Login ID / Username</th>
-                <th className="py-3 px-4">Password</th>
-                <th className="py-3 px-4 hidden sm:table-cell">Campus</th>
-                <th className="py-3 px-4">Login Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4 text-black dark:text-sky-300 font-black">Role</th>
+                <th className="py-3 px-4 text-black dark:text-sky-300 font-black">Login ID / Username</th>
+                <th className="py-3 px-4 text-black dark:text-sky-300 font-black">Password</th>
+                <th className="py-3 px-4 hidden sm:table-cell text-black dark:text-sky-300 font-black">Campus</th>
+                <th className="py-3 px-4 text-black dark:text-sky-300 font-black">Login Status</th>
+                <th className="py-3 px-4 text-right text-black dark:text-sky-300 font-black">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-white/10 bg-white dark:bg-slate-900/90 text-slate-800 dark:text-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-white/10 bg-white dark:bg-slate-900/90 text-black dark:text-slate-200 font-bold">
               {accounts.map((acc) => {
                 const isPasswordVisible = visiblePasswords[acc.id] || false;
                 return (
@@ -427,31 +427,31 @@ export default function AdminSettingsModule({
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
                           acc.role === "ADMIN"
-                            ? "bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-500/40"
+                            ? "bg-purple-100 dark:bg-purple-500/20 text-black dark:text-purple-300 border-purple-300 dark:border-purple-500/40"
                             : acc.role === "COUNSELOR"
-                            ? "bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-500/40"
-                            : "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40"
+                            ? "bg-sky-100 dark:bg-sky-500/20 text-black dark:text-sky-300 border-sky-300 dark:border-sky-500/40"
+                            : "bg-amber-100 dark:bg-amber-500/20 text-black dark:text-amber-300 border-amber-300 dark:border-amber-500/40"
                         }`}
                       >
                         {acc.role}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-mono font-black text-slate-900 dark:text-white text-xs">{acc.username}</td>
+                    <td className="py-3 px-4 font-mono font-black text-black dark:text-white text-xs">{acc.username}</td>
                     <td className="py-3 px-4 font-mono">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-indigo-700 dark:text-amber-300">
+                        <span className="font-black text-black dark:text-amber-300">
                           {isPasswordVisible ? acc.password : "••••••••••••"}
                         </span>
                         <button
                           onClick={() => togglePasswordVisibility(acc.id)}
-                          className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 rounded transition-colors"
+                          className="text-slate-700 dark:text-slate-400 hover:text-black dark:hover:text-white p-1 rounded transition-colors"
                           title={isPasswordVisible ? "Hide Password" : "Show Password"}
                         >
-                          {isPasswordVisible ? <EyeOff className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                          {isPasswordVisible ? <EyeOff className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
                         </button>
                       </div>
                     </td>
-                    <td className="py-3 px-4 hidden sm:table-cell font-bold text-slate-800 dark:text-slate-300">{acc.campus}</td>
+                    <td className="py-3 px-4 hidden sm:table-cell font-black text-black dark:text-slate-300">{acc.campus}</td>
                     <td className="py-3 px-4">
                       {acc.isLoggedIn ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-400/40">
@@ -662,18 +662,18 @@ export default function AdminSettingsModule({
           </div>
 
           {/* Credentials Info Box */}
-          <div className="p-4 rounded-xl bg-slate-900 border border-indigo-500/30 space-y-2 text-xs">
-            <h4 className="font-black text-white flex items-center gap-1.5">
-              <Key className="w-4 h-4 text-emerald-400 animate-pulse" /> Active Account Details
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-indigo-500/30 space-y-2 text-xs">
+            <h4 className="font-black text-black dark:text-white flex items-center gap-1.5">
+              <Key className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-pulse" /> Active Account Details
             </h4>
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div>
-                <span className="text-slate-400 text-[10px] font-black uppercase">CURRENT USER ID</span>
-                <p className="font-black text-white text-sm font-mono mt-0.5">{adminUsername}</p>
+                <span className="text-black dark:text-slate-400 text-[10px] font-black uppercase">CURRENT USER ID</span>
+                <p className="font-black text-black dark:text-white text-sm font-mono mt-0.5">{adminUsername}</p>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] font-black uppercase">CAMPUS ACCESS</span>
-                <p className="font-black text-sky-300 text-sm font-mono mt-0.5">{loggedInCampus}</p>
+                <span className="text-black dark:text-slate-400 text-[10px] font-black uppercase">CAMPUS ACCESS</span>
+                <p className="font-black text-blue-600 dark:text-sky-300 text-sm font-mono mt-0.5">{loggedInCampus}</p>
               </div>
             </div>
           </div>

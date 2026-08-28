@@ -218,54 +218,49 @@ html.light textarea::placeholder {
   font-weight: 500 !important;
 }
 
-/* FORCE PURE BLACK HIGH-CONTRAST TEXT IN LIGHT MODE */
+/* FORCE PURE SOLID BLACK HIGH-CONTRAST TEXT IN LIGHT MODE */
 html.light header h1,
 html.light header h1 span,
 html.light header p,
 html.light header p span,
 html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
+html.light p, html.light span, html.light td, html.light th, html.light div, html.light label, html.light font,
 html.light .text-black,
 html.light .text-slate-900,
-html.light .text-slate-800 {
-  color: #0f172a !important;
+html.light .text-slate-800,
+html.light .text-slate-700,
+html.light .text-slate-600,
+html.light .text-slate-500,
+html.light .text-slate-400,
+html.light .text-slate-300,
+html.light .text-slate-200,
+html.light .text-slate-100 {
+  color: #000000 !important;
 }
 
-/* STUDENT NAME & 12TH MARKS HIGH-CONTRAST BLACK COLOR RULE */
+/* STUDENT NAME & CREDENTIALS HIGH-CONTRAST SOLID BLACK COLOR RULE */
 html.light td div .font-bold,
 html.light td div .font-black,
+html.light tr td,
+html.light tr td span,
 html.light tr td .font-bold,
 html.light tr td .font-extrabold,
 html.light tr td .font-black,
-html.light tr td:nth-child(6),
+html.light tr th,
+html.light tr th span,
 html.light .student-name {
-  color: #0f172a !important;
+  color: #000000 !important;
   font-weight: 800 !important;
 }
 
-/* Pure White Text Preservation for Dark Cards & Filled Buttons in Light Mode */
+/* Pure White Text Preservation ONLY for Solid Filled Color Buttons in Light Mode */
 html.light button.bg-blue-600,
 html.light button.bg-indigo-600,
 html.light button.bg-emerald-600,
-html.light .glossy-btn {
+html.light button.bg-rose-600,
+html.light .glossy-btn,
+html.light button[type="submit"] {
   color: #ffffff !important;
-}
-
-/* Slate Text Contrast on Light Surfaces */
-html.light .text-slate-100,
-html.light .text-slate-200 {
-  color: #0f172a !important;
-}
-
-html.light .text-slate-300 {
-  color: #1e293b !important;
-}
-
-html.light .text-slate-400 {
-  color: #334155 !important;
-}
-
-html.light .text-slate-500 {
-  color: #475569 !important;
 }
 
 /* Vibrant High-Contrast Accents in Light Mode */
