@@ -1,13 +1,43 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShieldCheck, Key, Lock, UserCheck, Bell, Server, CheckCircle2, Save, Sparkles, Sun, Moon, Palette } from "lucide-react";
+import {
+  ShieldCheck,
+  Key,
+  Lock,
+  UserCheck,
+  Bell,
+  Server,
+  CheckCircle2,
+  Save,
+  Sparkles,
+  Sun,
+  Moon,
+  Palette,
+  Eye,
+  EyeOff,
+  Trash2,
+  Plus,
+  Users,
+  AlertCircle,
+  X
+} from "lucide-react";
 
 interface AdminSettingsModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
   onTriggerToast: (msg: string) => void;
   theme?: "LIGHT" | "DARK";
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
+}
+
+interface SystemAccount {
+  id: string;
+  username: string;
+  password: string;
+  role: "ADMIN" | "COUNSELOR" | "FACULTY" | "STUDENT";
+  campus: "KARUR" | "COIMBATORE" | "ALL";
+  isLoggedIn: boolean;
+  lastActive: string;
 }
 
 export default function AdminSettingsModule({
@@ -33,6 +63,98 @@ export default function AdminSettingsModule({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // System Accounts List with Password & Login Status
+  const [accounts, setAccounts] = useState<SystemAccount[]>(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("vsb_system_accounts") : null;
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // fallback
+      }
+    }
+    return [
+      {
+        id: "acc_1",
+        username: "adminkarur@123",
+        password: "vsbec@123",
+        role: "ADMIN",
+        campus: "KARUR",
+        isLoggedIn: true,
+        lastActive: "Active Now (Current Session)",
+      },
+      {
+        id: "acc_2",
+        username: "admincovai@123",
+        password: "vsbectc@1213",
+        role: "ADMIN",
+        campus: "COIMBATORE",
+        isLoggedIn: true,
+        lastActive: "Active Now (Coimbatore Session)",
+      },
+      {
+        id: "acc_3",
+        username: "usercounselor@123",
+        password: "user123",
+        role: "COUNSELOR",
+        campus: "KARUR",
+        isLoggedIn: true,
+        lastActive: "Active Now (Desk #4)",
+      },
+      {
+        id: "acc_4",
+        username: "teacherkarur@123",
+        password: "teacher123",
+        role: "FACULTY",
+        campus: "KARUR",
+        isLoggedIn: false,
+        lastActive: "Today at 09:45 AM",
+      },
+      {
+        id: "acc_5",
+        username: "teachercovai@123",
+        password: "teacher123",
+        role: "FACULTY",
+        campus: "COIMBATORE",
+        isLoggedIn: false,
+        lastActive: "Yesterday at 04:30 PM",
+      },
+      {
+        id: "acc_6",
+        username: "revathy@gmail.com",
+        password: "student123",
+        role: "STUDENT",
+        campus: "KARUR",
+        isLoggedIn: false,
+        lastActive: "12/08/2026 05:10 PM",
+      },
+      {
+        id: "acc_7",
+        username: "gunal@gmail.com",
+        password: "student123",
+        role: "STUDENT",
+        campus: "KARUR",
+        isLoggedIn: false,
+        lastActive: "12/08/2026 05:10 PM",
+      },
+    ];
+  });
+
+  // Password Visibility Toggle State per Account
+  const [visiblePasswords, setVisiblePasswords] = useState<{ [id: string]: boolean }>({});
+
+  // Add Account Modal State
+  const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
+  const [newAccUsername, setNewAccUsername] = useState("");
+  const [newAccPassword, setNewAccPassword] = useState("");
+  const [newAccRole, setNewAccRole] = useState<"ADMIN" | "COUNSELOR" | "FACULTY" | "STUDENT">("COUNSELOR");
+  const [newAccCampus, setNewAccCampus] = useState<"KARUR" | "COIMBATORE" | "ALL">("KARUR");
+
+  // Sync Accounts to LocalStorage
+  useEffect(() => {
+    localStorage.setItem("vsb_system_accounts", JSON.stringify(accounts));
+  }, [accounts]);
 
   useEffect(() => {
     const initialId =
@@ -66,6 +188,24 @@ export default function AdminSettingsModule({
 
     localStorage.setItem(adminIdKey, newAdminUsername.trim());
     setAdminUsername(newAdminUsername.trim());
+
+    // Also update accounts list
+    setAccounts((prev) =>
+      prev.map((acc) => {
+        if (
+          (loggedInCampus === "KARUR" && acc.username.includes("karur")) ||
+          (loggedInCampus === "COIMBATORE" && acc.username.includes("covai"))
+        ) {
+          return {
+            ...acc,
+            username: newAdminUsername.trim(),
+            password: newPassword || acc.password,
+          };
+        }
+        return acc;
+      })
+    );
+
     onTriggerToast(
       `🔑 Admin User ID & Security Credentials updated successfully to "${newAdminUsername.trim()}"!`
     );
@@ -78,6 +218,48 @@ export default function AdminSettingsModule({
     e.preventDefault();
     onTriggerToast("V.S.B. Admin Portal Configuration Saved Successfully!");
   };
+
+  // Toggle Password Visibility
+  const togglePasswordVisibility = (id: string) => {
+    setVisiblePasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Delete User ID & Password Account
+  const handleDeleteAccount = (id: string, username: string) => {
+    if (accounts.length <= 1) {
+      onTriggerToast("❌ Cannot delete the last remaining system account.");
+      return;
+    }
+    setAccounts((prev) => prev.filter((acc) => acc.id !== id));
+    onTriggerToast(`🗑️ User Account "${username}" and credentials permanently deleted.`);
+  };
+
+  // Add New System Account
+  const handleAddAccountSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAccUsername.trim() || !newAccPassword.trim()) {
+      onTriggerToast("❌ Username and Password are required.");
+      return;
+    }
+    const newAcc: SystemAccount = {
+      id: `acc_${Date.now()}`,
+      username: newAccUsername.trim(),
+      password: newAccPassword.trim(),
+      role: newAccRole,
+      campus: newAccCampus,
+      isLoggedIn: false,
+      lastActive: "Created Just Now",
+    };
+    setAccounts((prev) => [newAcc, ...prev]);
+    onTriggerToast(`✅ Added new ${newAccRole} account "${newAccUsername.trim()}"!`);
+    setNewAccUsername("");
+    setNewAccPassword("");
+    setIsAddAccountModalOpen(false);
+  };
+
+  // Logged In Admins Count
+  const loggedInAdminsCount = accounts.filter((a) => a.role === "ADMIN" && a.isLoggedIn).length;
+  const totalLoggedInUsersCount = accounts.filter((a) => a.isLoggedIn).length;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -96,7 +278,7 @@ export default function AdminSettingsModule({
               Admin Settings Console
             </h2>
             <p className="text-xs text-slate-300 font-medium">
-              Manage portal configuration and security credentials for V.S.B. campuses.
+              Manage portal configuration, view all login IDs & passwords, track active admin sessions, and manage access.
             </p>
           </div>
 
@@ -185,6 +367,233 @@ export default function AdminSettingsModule({
         </div>
       </div>
 
+      {/* USER ID & PASSWORD CREDENTIALS MANAGEMENT CONSOLE (NEW FEATURE) */}
+      <div className="bubble-card p-5 sm:p-6 border border-emerald-500/30 space-y-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-emerald-400" />
+              <h3 className="text-base font-black text-white tracking-tight">
+                All Application Login IDs & Passwords Management
+              </h3>
+            </div>
+            <p className="text-xs text-slate-300 font-medium mt-0.5">
+              Inspect user credentials, monitor active logged-in admins, reveal passwords, and delete accounts.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsAddAccountModalOpen(true)}
+            className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 transition-all transform hover:scale-105 cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" /> Add System Account
+          </button>
+        </div>
+
+        {/* Active Admins & Login Status Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Active Admins Count Badge */}
+          <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Logged-In Admins</span>
+              <span className="text-xl font-black text-white flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping inline-block"></span>
+                {loggedInAdminsCount} Active Admins
+              </span>
+            </div>
+            <ShieldCheck className="w-7 h-7 text-emerald-400 opacity-80" />
+          </div>
+
+          {/* Total Active Sessions */}
+          <div className="p-3.5 rounded-2xl bg-sky-950/40 border border-sky-500/30 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider block">Total Active Sessions</span>
+              <span className="text-xl font-black text-white">{totalLoggedInUsersCount} Users Logged In</span>
+            </div>
+            <Users className="w-7 h-7 text-sky-400 opacity-80" />
+          </div>
+
+          {/* Registered Accounts */}
+          <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Total Managed Accounts</span>
+              <span className="text-xl font-black text-white">{accounts.length} Accounts</span>
+            </div>
+            <Key className="w-7 h-7 text-indigo-400 opacity-80" />
+          </div>
+        </div>
+
+        {/* Login Credentials Table */}
+        <div className="overflow-x-auto rounded-xl border border-white/10">
+          <table className="w-full text-left text-xs text-slate-200">
+            <thead className="bg-slate-950 text-sky-300 font-extrabold uppercase text-[10px] tracking-wider border-b border-white/10">
+              <tr>
+                <th className="py-3 px-4">Role</th>
+                <th className="py-3 px-4">Login ID / Username</th>
+                <th className="py-3 px-4">Password</th>
+                <th className="py-3 px-4 hidden sm:table-cell">Campus</th>
+                <th className="py-3 px-4">Login Status</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10 bg-slate-900/90">
+              {accounts.map((acc) => {
+                const isPasswordVisible = visiblePasswords[acc.id] || false;
+                return (
+                  <tr key={acc.id} className="hover:bg-slate-800/80 transition-colors">
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                          acc.role === "ADMIN"
+                            ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
+                            : acc.role === "COUNSELOR"
+                            ? "bg-sky-500/20 text-sky-300 border-sky-500/40"
+                            : acc.role === "FACULTY"
+                            ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                            : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                        }`}
+                      >
+                        {acc.role}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-mono font-bold text-white">{acc.username}</td>
+                    <td className="py-3 px-4 font-mono">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-amber-300">
+                          {isPasswordVisible ? acc.password : "••••••••••••"}
+                        </span>
+                        <button
+                          onClick={() => togglePasswordVisibility(acc.id)}
+                          className="text-slate-400 hover:text-white p-1 rounded transition-colors"
+                          title={isPasswordVisible ? "Hide Password" : "Show Password"}
+                        >
+                          {isPasswordVisible ? <EyeOff className="w-3.5 h-3.5 text-rose-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-400" />}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 hidden sm:table-cell font-semibold text-slate-300">{acc.campus}</td>
+                    <td className="py-3 px-4">
+                      {acc.isLoggedIn ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                          🟢 Logged In
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                          ⚪ Offline ({acc.lastActive})
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        onClick={() => handleDeleteAccount(acc.id, acc.username)}
+                        className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-bold transition-all flex items-center gap-1 ml-auto cursor-pointer"
+                        title="Delete User ID & Password Account"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ADD SYSTEM ACCOUNT MODAL */}
+      {isAddAccountModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in">
+          <div className="bg-slate-950 border border-white/20 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl relative">
+            <button
+              onClick={() => setIsAddAccountModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-full bg-slate-900 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-base font-black text-white flex items-center gap-2">
+              <Plus className="w-5 h-5 text-emerald-400" />
+              Add New User / Admin Account
+            </h3>
+            <p className="text-xs text-slate-300">
+              Create a new login ID and password for portal authentication.
+            </p>
+
+            <form onSubmit={handleAddAccountSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">User ID / Username *</label>
+                <input
+                  type="text"
+                  required
+                  value={newAccUsername}
+                  onChange={(e) => setNewAccUsername(e.target.value)}
+                  placeholder="e.g. counselor_sales@123"
+                  className="w-full bg-slate-900 border border-white/15 rounded-xl px-3.5 py-2 text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Password *</label>
+                <input
+                  type="text"
+                  required
+                  value={newAccPassword}
+                  onChange={(e) => setNewAccPassword(e.target.value)}
+                  placeholder="e.g. pass1234"
+                  className="w-full bg-slate-900 border border-white/15 rounded-xl px-3.5 py-2 text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Account Role</label>
+                  <select
+                    value={newAccRole}
+                    onChange={(e) => setNewAccRole(e.target.value as any)}
+                    className="w-full bg-slate-900 border border-white/15 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  >
+                    <option value="ADMIN">System Admin</option>
+                    <option value="COUNSELOR">Counselor</option>
+                    <option value="FACULTY">Faculty</option>
+                    <option value="STUDENT">Student Candidate</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Campus Access</label>
+                  <select
+                    value={newAccCampus}
+                    onChange={(e) => setNewAccCampus(e.target.value as any)}
+                    className="w-full bg-slate-900 border border-white/15 rounded-xl px-3 py-2 text-white font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="KARUR">KARUR</option>
+                    <option value="COIMBATORE">COIMBATORE</option>
+                    <option value="ALL">ALL CAMPUSES</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddAccountModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" /> Save Account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Side: General Portal configuration */}
         <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-6">
@@ -257,7 +666,7 @@ export default function AdminSettingsModule({
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-600/20 transition-all text-xs"
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-600/20 transition-all text-xs cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5" /> Save Configuration
               </button>
@@ -274,18 +683,18 @@ export default function AdminSettingsModule({
           </div>
 
           {/* Credentials Info Box */}
-          <div className="p-4 rounded-xl bg-blue-50 dark:bg-indigo-950/40 border border-blue-200 dark:border-indigo-800/60 space-y-2 text-xs">
-            <h4 className="font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-              <Key className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-pulse" /> Active Account Details
+          <div className="p-4 rounded-xl bg-slate-900 border border-indigo-500/30 space-y-2 text-xs">
+            <h4 className="font-black text-white flex items-center gap-1.5">
+              <Key className="w-4 h-4 text-emerald-400 animate-pulse" /> Active Account Details
             </h4>
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div>
-                <span className="text-slate-700 dark:text-slate-400 text-[10px] font-black uppercase">CURRENT USER ID</span>
-                <p className="font-black text-black dark:text-white text-sm font-mono mt-0.5">{adminUsername}</p>
+                <span className="text-slate-400 text-[10px] font-black uppercase">CURRENT USER ID</span>
+                <p className="font-black text-white text-sm font-mono mt-0.5">{adminUsername}</p>
               </div>
               <div>
-                <span className="text-slate-700 dark:text-slate-400 text-[10px] font-black uppercase">CAMPUS ACCESS</span>
-                <p className="font-black text-sky-800 dark:text-sky-300 text-sm font-mono mt-0.5">{loggedInCampus}</p>
+                <span className="text-slate-400 text-[10px] font-black uppercase">CAMPUS ACCESS</span>
+                <p className="font-black text-sky-300 text-sm font-mono mt-0.5">{loggedInCampus}</p>
               </div>
             </div>
           </div>
