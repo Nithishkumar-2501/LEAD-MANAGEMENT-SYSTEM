@@ -409,7 +409,7 @@ export default function ContactDirectoryModule({
       return (
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="font-extrabold text-[#0f172a] dark:text-blue-600 text-sm hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
+            <span className="font-extrabold text-sky-300 hover:text-sky-200 text-sm hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
               {contact.name}
             </span>
           </div>
@@ -418,7 +418,7 @@ export default function ContactDirectoryModule({
               e.stopPropagation();
               handleCandidateClick(contact);
             }}
-            className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-80 group-hover:opacity-100"
+            className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 opacity-80 group-hover:opacity-100"
             title="View Lead Details"
           >
             ⋮
@@ -427,11 +427,11 @@ export default function ContactDirectoryModule({
       );
     }
     if (col === "Registered Email") {
-      return <span className="font-mono text-[11px] text-slate-600">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
+      return <span className="font-mono text-[11px] text-slate-200 font-medium">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
     }
     if (col === "Registered Mobile") {
       return (
-        <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-700">
+        <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-200">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -443,7 +443,7 @@ export default function ContactDirectoryModule({
                 campus: contact.campus,
               });
             }}
-            className="p-1 rounded bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
+            className="p-1 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-500/30 transition-all"
             title={`WhatsApp Chat with ${contact.name}`}
           >
             💬
@@ -452,26 +452,26 @@ export default function ContactDirectoryModule({
         </div>
       );
     }
-    if (col === "Registered Country") return <span className="font-semibold text-slate-700">India</span>;
-    if (col === "State") return <span className="font-semibold text-slate-700">Tamil Nadu</span>;
-    if (col === "City") return <span className="font-semibold text-slate-700">{contact.district || "Karur"}</span>;
-    if (col === "Campus") return <span className="font-bold text-sky-700">{contact.campus} CAMPUS</span>;
-    if (col === "Course") return <span className="font-bold text-indigo-700">{contact.courseInterest || "B.E. Computer Science"}</span>;
-    if (col === "Specialization") return <span className="text-slate-600">TNEA Engineering</span>;
-    if (col === "Utm Keyword") return <span className="font-mono text-[11px] text-slate-500">tnea_admissions_2026</span>;
-    if (col === "Gender") return <span className="text-slate-700 font-semibold">{(contact as any).gender || "Male"}</span>;
-    if (col === "Father's Name") return <span className="text-slate-700">{(contact as any).fatherName || "K. Ramachandran"}</span>;
-    if (col === "Mother's Name") return <span className="text-slate-700">{(contact as any).motherName || "R. Priya"}</span>;
-    if (col === "Blood Group") return <span className="font-bold text-rose-600">{(contact as any).bloodGroup || "O+"}</span>;
-    if (col === "Physically Disabled") return <span className="text-slate-700">{(contact as any).physicallyDisabled ? "Yes" : "No"}</span>;
-    if (col === "SSLC Mark") return <span className="font-bold text-emerald-600">{(contact as any).marks10th || 85}%</span>;
-    if (col === "School Name with Place") return <span className="text-slate-700 font-medium">{contact.school || "Govt Higher Sec School"}</span>;
-    if (col === "Address For communication") return <span className="text-slate-600 font-medium">{showAddress ? contact.address || "Karur, Tamil Nadu" : "•••••••••••••"}</span>;
-    if (col === "Community") return <span className="font-extrabold text-blue-600">{(contact as any).community || "BC"}</span>;
+    if (col === "Registered Country") return <span className="font-semibold text-slate-200">India</span>;
+    if (col === "State") return <span className="font-semibold text-slate-200">Tamil Nadu</span>;
+    if (col === "City") return <span className="font-semibold text-slate-200">{contact.district || "Karur"}</span>;
+    if (col === "Campus") return <span className="font-bold text-sky-300">{contact.campus} CAMPUS</span>;
+    if (col === "Course") return <span className="font-bold text-indigo-300">{contact.courseInterest || "B.E. Computer Science"}</span>;
+    if (col === "Specialization") return <span className="text-slate-300">TNEA Engineering</span>;
+    if (col === "Utm Keyword") return <span className="font-mono text-[11px] text-slate-400">tnea_admissions_2026</span>;
+    if (col === "Gender") return <span className="text-slate-200 font-semibold">{(contact as any).gender || "Male"}</span>;
+    if (col === "Father's Name") return <span className="text-slate-200">{(contact as any).fatherName || "K. Ramachandran"}</span>;
+    if (col === "Mother's Name") return <span className="text-slate-200">{(contact as any).motherName || "R. Priya"}</span>;
+    if (col === "Blood Group") return <span className="font-bold text-rose-400">{(contact as any).bloodGroup || "O+"}</span>;
+    if (col === "Physically Disabled") return <span className="text-slate-200">{(contact as any).physicallyDisabled ? "Yes" : "No"}</span>;
+    if (col === "SSLC Mark") return <span className="font-bold text-emerald-400">{(contact as any).marks10th || 85}%</span>;
+    if (col === "School Name with Place") return <span className="text-slate-200 font-medium">{contact.school || "Govt Higher Sec School"}</span>;
+    if (col === "Address For communication") return <span className="text-slate-300 font-medium">{showAddress ? contact.address || "Karur, Tamil Nadu" : "•••••••••••••"}</span>;
+    if (col === "Community") return <span className="font-extrabold text-sky-400">{(contact as any).community || "BC"}</span>;
     if (col === "User Registration Date") {
       const d = contact.createdAt ? new Date(contact.createdAt) : new Date();
       const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
-      return <span className="text-slate-600 font-mono text-[11px] font-medium">{formattedDate}</span>;
+      return <span className="text-slate-200 font-mono text-[11px] font-medium">{formattedDate}</span>;
     }
     if (col === "Lead Stage") {
       const statusText =
@@ -489,22 +489,22 @@ export default function ContactDirectoryModule({
 
       const badgeStyle =
         statusText === "Untouched"
-          ? "bg-red-50 text-red-600 border-red-200 font-bold"
+          ? "bg-rose-500/20 text-rose-300 border-rose-500/40 font-extrabold shadow-sm"
           : statusText.startsWith("Interested")
-            ? "bg-sky-50 text-sky-700 border-sky-200 font-bold"
+            ? "bg-sky-500/20 text-sky-300 border-sky-500/40 font-extrabold shadow-sm"
             : statusText === "Not Reachable"
-              ? "bg-slate-100 text-slate-600 border-slate-200 font-medium"
+              ? "bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold shadow-sm"
               : statusText === "Admitted"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-300 font-bold"
-                : "bg-slate-100 text-slate-700 border-slate-300 font-medium";
+                ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/40 font-extrabold shadow-sm"
+                : "bg-slate-800 text-slate-300 border-slate-700 font-bold shadow-sm";
 
       return (
-        <span className={`px-2.5 py-0.5 rounded-full text-[11px] border whitespace-nowrap inline-block ${badgeStyle}`}>
+        <span className={`px-3 py-1 rounded-full text-[11px] border whitespace-nowrap inline-block ${badgeStyle}`}>
           {statusText}
         </span>
       );
     }
-    return <span className="text-slate-600">N/A</span>;
+    return <span className="text-slate-400">N/A</span>;
   };
 
   // Dynamic Side Drawer Rule Evaluator (Image 1 Filter leads by)
