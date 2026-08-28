@@ -350,16 +350,16 @@ export default function AdminSettingsModule({
       </div>
 
       {/* USER ID & PASSWORD CREDENTIALS MANAGEMENT CONSOLE (NEW FEATURE) */}
-      <div className="bubble-card p-5 sm:p-6 border border-emerald-500/30 space-y-5">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-3">
+      <div className="bubble-card p-5 sm:p-6 border border-emerald-500/30 dark:border-emerald-500/30 space-y-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-base font-black text-white tracking-tight">
+              <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
                 All Application Login IDs & Passwords Management
               </h3>
             </div>
-            <p className="text-xs text-slate-300 font-medium mt-0.5">
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">
               Inspect user credentials, monitor active logged-in admins, reveal passwords, and delete accounts.
             </p>
           </div>
@@ -375,40 +375,40 @@ export default function AdminSettingsModule({
         {/* Active Admins & Login Status Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Active Admins Count Badge */}
-          <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Logged-In Admins</span>
-              <span className="text-xl font-black text-white flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping inline-block"></span>
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">Logged-In Admins</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping inline-block"></span>
                 {loggedInAdminsCount} Active Admins
               </span>
             </div>
-            <ShieldCheck className="w-7 h-7 text-emerald-400 opacity-80" />
+            <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400 opacity-80" />
           </div>
 
           {/* Total Active Sessions */}
-          <div className="p-3.5 rounded-2xl bg-sky-950/40 border border-sky-500/30 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-500/30 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider block">Total Active Sessions</span>
-              <span className="text-xl font-black text-white">{totalLoggedInUsersCount} Users Logged In</span>
+              <span className="text-[10px] font-bold text-sky-700 dark:text-sky-400 uppercase tracking-wider block">Total Active Sessions</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white">{totalLoggedInUsersCount} Users Logged In</span>
             </div>
-            <Users className="w-7 h-7 text-sky-400 opacity-80" />
+            <Users className="w-7 h-7 text-sky-600 dark:text-sky-400 opacity-80" />
           </div>
 
           {/* Registered Accounts */}
-          <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Total Managed Accounts</span>
-              <span className="text-xl font-black text-white">{accounts.length} Accounts</span>
+              <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider block">Total Managed Accounts</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white">{accounts.length} Accounts</span>
             </div>
-            <Key className="w-7 h-7 text-indigo-400 opacity-80" />
+            <Key className="w-7 h-7 text-indigo-600 dark:text-indigo-400 opacity-80" />
           </div>
         </div>
 
         {/* Login Credentials Table */}
-        <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full text-left text-xs text-slate-200">
-            <thead className="bg-slate-950 text-sky-300 font-extrabold uppercase text-[10px] tracking-wider border-b border-white/10">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
+          <table className="w-full text-left text-xs text-slate-800 dark:text-slate-200">
+            <thead className="bg-slate-100 dark:bg-slate-950 text-blue-600 dark:text-sky-300 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-white/10">
               <tr>
                 <th className="py-3 px-4">Role</th>
                 <th className="py-3 px-4">Login ID / Username</th>
@@ -418,50 +418,48 @@ export default function AdminSettingsModule({
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10 bg-slate-900/90">
+            <tbody className="divide-y divide-slate-200 dark:divide-white/10 bg-white dark:bg-slate-900/90 text-slate-800 dark:text-slate-200">
               {accounts.map((acc) => {
                 const isPasswordVisible = visiblePasswords[acc.id] || false;
                 return (
-                  <tr key={acc.id} className="hover:bg-slate-800/80 transition-colors">
+                  <tr key={acc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors">
                     <td className="py-3 px-4">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
                           acc.role === "ADMIN"
-                            ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
+                            ? "bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-500/40"
                             : acc.role === "COUNSELOR"
-                            ? "bg-sky-500/20 text-sky-300 border-sky-500/40"
-                            : acc.role === "FACULTY"
-                            ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                            : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                            ? "bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-500/40"
+                            : "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40"
                         }`}
                       >
                         {acc.role}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-mono font-bold text-white">{acc.username}</td>
+                    <td className="py-3 px-4 font-mono font-black text-slate-900 dark:text-white text-xs">{acc.username}</td>
                     <td className="py-3 px-4 font-mono">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-amber-300">
+                        <span className="font-bold text-indigo-700 dark:text-amber-300">
                           {isPasswordVisible ? acc.password : "••••••••••••"}
                         </span>
                         <button
                           onClick={() => togglePasswordVisibility(acc.id)}
-                          className="text-slate-400 hover:text-white p-1 rounded transition-colors"
+                          className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 rounded transition-colors"
                           title={isPasswordVisible ? "Hide Password" : "Show Password"}
                         >
-                          {isPasswordVisible ? <EyeOff className="w-3.5 h-3.5 text-rose-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-400" />}
+                          {isPasswordVisible ? <EyeOff className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
                         </button>
                       </div>
                     </td>
-                    <td className="py-3 px-4 hidden sm:table-cell font-semibold text-slate-300">{acc.campus}</td>
+                    <td className="py-3 px-4 hidden sm:table-cell font-bold text-slate-800 dark:text-slate-300">{acc.campus}</td>
                     <td className="py-3 px-4">
                       {acc.isLoggedIn ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-400/40">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping"></span>
                           🟢 Logged In
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-400 border border-slate-300 dark:border-slate-700">
                           ⚪ Offline ({acc.lastActive})
                         </span>
                       )}
@@ -469,7 +467,7 @@ export default function AdminSettingsModule({
                     <td className="py-3 px-4 text-right">
                       <button
                         onClick={() => handleDeleteAccount(acc.id, acc.username)}
-                        className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-bold transition-all flex items-center gap-1 ml-auto cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-500/20 hover:bg-rose-600 text-rose-700 dark:text-rose-300 hover:text-white border border-rose-300 dark:border-rose-500/40 text-xs font-bold transition-all flex items-center gap-1 ml-auto cursor-pointer"
                         title="Delete User ID & Password Account"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Delete
