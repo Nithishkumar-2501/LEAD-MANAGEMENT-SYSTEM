@@ -30,18 +30,18 @@ export default function EchoDashboardView({ onTriggerToast }: EchoDashboardViewP
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 border border-emerald-500/30 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-gradient-to-r dark:from-emerald-950 dark:via-slate-900 dark:to-teal-950 border border-slate-200 dark:border-emerald-500/30 text-slate-900 dark:text-white shadow-md dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-600/30 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-md shrink-0">
-            <MessageSquare className="w-6 h-6 text-emerald-400" />
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-600/30 border border-emerald-200 dark:border-emerald-400/40 flex items-center justify-center text-emerald-600 dark:text-emerald-300 shadow-sm shrink-0">
+            <MessageSquare className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h2 className="text-lg font-black tracking-tight text-white">Echo WhatsApp Live Chat & Voice Call Dashboard</h2>
-            <p className="text-xs text-slate-300 font-medium">Automated WhatsApp chatbot analytics & 30-day voice call audio transcription inspector</p>
+            <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Echo WhatsApp Live Chat & Voice Call Dashboard</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">Automated WhatsApp chatbot analytics & 30-day voice call audio transcription inspector</p>
           </div>
         </div>
 
-        <div className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-xs font-black text-emerald-300 shadow-inner">
+        <div className="px-3.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-400/40 text-xs font-black text-emerald-800 dark:text-emerald-300 shadow-sm">
           🟢 Chatbot Status: Online & Auto-replying
         </div>
       </div>

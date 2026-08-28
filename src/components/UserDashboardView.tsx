@@ -33,19 +33,19 @@ export default function UserDashboardView({
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-sky-950 via-slate-900 to-indigo-950 border border-sky-500/30 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-gradient-to-r dark:from-sky-950 dark:via-slate-900 dark:to-indigo-950 border border-slate-200 dark:border-sky-500/30 text-slate-900 dark:text-white shadow-md dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-sky-600/30 border border-sky-400/40 flex items-center justify-center text-sky-300 shadow-md shrink-0">
-            <UserCheck className="w-6 h-6 text-sky-400" />
+          <div className="w-11 h-11 rounded-2xl bg-sky-50 dark:bg-sky-600/30 border border-sky-200 dark:border-sky-400/40 flex items-center justify-center text-sky-600 dark:text-sky-300 shadow-sm shrink-0">
+            <UserCheck className="w-6 h-6 text-sky-600 dark:text-sky-400" />
           </div>
           <div>
-            <h2 className="text-lg font-black tracking-tight text-white">Counselor Personal Workspace</h2>
-            <p className="text-xs text-slate-300 font-medium">Logged in as <span className="font-extrabold text-sky-300">{loggedInUsername}</span> • Active follow-up lead quota</p>
+            <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Counselor Personal Workspace</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">Logged in as <span className="font-extrabold text-sky-700 dark:text-sky-300">{loggedInUsername}</span> • Active follow-up lead quota</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-white/15 text-xs font-black text-emerald-300 shadow-inner">
+          <div className="px-3.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-slate-900/90 border border-emerald-200 dark:border-white/15 text-xs font-black text-emerald-800 dark:text-emerald-300 shadow-sm">
             Assigned Range: Contacts #1 to #100
           </div>
         </div>
