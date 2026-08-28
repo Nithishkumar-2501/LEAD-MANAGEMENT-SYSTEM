@@ -1436,7 +1436,7 @@ export default function ContactDirectoryModule({
                   {selectedColumns.map((col) => {
                     const isSortedThisCol = sortColumn === col;
                     return (
-                      <th key={col} className="p-3 font-semibold text-slate-600 whitespace-nowrap">
+                      <th key={col} className="p-3 font-extrabold text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap">
                         <span
                           onClick={() => {
                             if (sortColumn === col) {
@@ -1450,11 +1450,11 @@ export default function ContactDirectoryModule({
                               setSortDirection("asc");
                             }
                           }}
-                          className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors select-none"
+                          className="flex items-center gap-1 cursor-pointer hover:text-white transition-colors select-none"
                           title={`Click to sort by ${col}`}
                         >
                           <span>{col}</span>
-                          <span className={`text-[10px] ${isSortedThisCol ? "text-blue-600 font-extrabold" : "text-slate-400"}`}>
+                          <span className={`text-[10px] ${isSortedThisCol ? "text-sky-300 font-extrabold" : "text-slate-400"}`}>
                             {isSortedThisCol ? (sortDirection === "asc" ? "▲" : "▼") : "↑↓"}
                           </span>
                         </span>
@@ -1464,9 +1464,9 @@ export default function ContactDirectoryModule({
                 </tr>
 
                 {/* Row 2: Sub-Header Filter Bar Row (Direct Inline Filter Options under Column Headers) */}
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-normal normal-case">
-                  <td className="p-2 text-center text-[10px] font-bold text-slate-400">
-                    <Filter className="w-3.5 h-3.5 mx-auto text-blue-500" />
+                <tr className="bg-slate-950/90 border-b border-white/10 text-slate-200 font-normal normal-case">
+                  <td className="p-2 text-center text-[10px] font-bold text-sky-400">
+                    <Filter className="w-3.5 h-3.5 mx-auto text-sky-400" />
                   </td>
                   {selectedColumns.map((col) => {
                     const filterVal = columnFilters[col] || "";
