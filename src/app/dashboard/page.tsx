@@ -23,7 +23,13 @@ import UserDashboardView from "@/components/UserDashboardView";
 import MarketingDashboardView from "@/components/MarketingDashboardView";
 import EchoDashboardView from "@/components/EchoDashboardView";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
-import { saveStudentToFirebase } from "@/lib/firebaseSync";
+import {
+  saveStudentToFirebase,
+  fetchStudentsFromFirestore,
+  fetchStudentsFromRTDB,
+  subscribeToFirebaseStudents,
+  StudentRecord,
+} from "@/lib/firebaseSync";
 
 import {
   User,
@@ -62,6 +68,84 @@ export default function DashboardPage() {
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
+
+  // Load and subscribe to Firebase permanent leads
+  useEffect(() => {
+    // 1. Initial load from local storage cache if available
+    try {
+      const cached = localStorage.getItem("vsb_firebase_leads_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setApplicants(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn("Local storage cache load notice:", e);
+    }
+
+    // Helper function to merge Firebase leads with current state/mocks
+    const applyFirebaseLeads = (fbLeads: StudentRecord[]) => {
+      if (!fbLeads || fbLeads.length === 0) return;
+
+      setApplicants((prev) => {
+        const map = new Map<string, Lead & { application: Application }>();
+
+        // Fill initial mock / current leads
+        prev.forEach((item) => map.set(item.id, item));
+
+        // Merge / Overwrite with Firebase permanent records
+        fbLeads.forEach((fb) => {
+          if (fb.id) {
+            const existing = map.get(fb.id);
+            const defaultApp: Application = {
+              id: `app_${fb.id}`,
+              leadId: fb.id,
+              stage: "INQUIRY",
+              marks10th: 85,
+              marks12th: 88,
+              paymentStatus: "PENDING",
+            };
+            const app = (fb.application || existing?.application || defaultApp) as Application;
+
+            map.set(fb.id, {
+              ...existing,
+              ...fb,
+              application: app,
+            } as Lead & { application: Application });
+          }
+        });
+
+        const merged = Array.from(map.values());
+        try {
+          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
+        } catch (err) {}
+        return merged;
+      });
+    };
+
+    // 2. Fetch directly from Firebase Firestore & Realtime DB
+    fetchStudentsFromFirestore().then((list) => {
+      if (list && list.length > 0) {
+        applyFirebaseLeads(list);
+      } else {
+        fetchStudentsFromRTDB().then((rtdbList) => {
+          if (rtdbList && rtdbList.length > 0) {
+            applyFirebaseLeads(rtdbList);
+          }
+        });
+      }
+    });
+
+    // 3. Realtime Firestore Observer Listener
+    const unsubscribe = subscribeToFirebaseStudents((liveList) => {
+      applyFirebaseLeads(liveList);
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [isAuthenticated]);
 
   // Dynamic calculations based on selected campus
   const activeCampusLeads = applicants.filter((item) => selectedCampus === "ALL" || item.campus === selectedCampus);
@@ -170,9 +254,13 @@ export default function DashboardPage() {
 
   const handleUpdateApplicant = async (updated: Lead & { application: Application }) => {
     await saveStudentToFirebase(updated);
-    setApplicants((prev) =>
-      prev.map((a) => (a.id === updated.id ? updated : a))
-    );
+    setApplicants((prev) => {
+      const newList = prev.map((a) => (a.id === updated.id ? updated : a));
+      try {
+        localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(newList));
+      } catch (err) {}
+      return newList;
+    });
     triggerToast(`Updated profile for ${updated.name}`);
     setSelectedApplicant(null);
   };
@@ -188,10 +276,18 @@ export default function DashboardPage() {
     triggerToast("Task status updated.");
   };
 
-  const handleCreateApplication = (newApp: Lead & { application: Application }) => {
-    setApplicants((prev) => [newApp, ...prev]);
+  const handleCreateApplication = async (newApp: Lead & { application: Application }) => {
+    await saveStudentToFirebase(newApp);
+    setApplicants((prev) => {
+      const newList = [newApp, ...prev.filter((a) => a.id !== newApp.id)];
+      try {
+        localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(newList));
+      } catch (err) {}
+      return newList;
+    });
     setIsCreateModalOpen(false);
-    triggerToast(`Created new application for ${newApp.name}`);
+    setIsQuickLeadModalOpen(false);
+    triggerToast(`Created new lead for ${newApp.name}`);
   };
 
   if (!isAuthenticated) {
@@ -378,12 +474,14 @@ export default function DashboardPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onApplicationCreated={handleCreateApplication}
+        existingLeads={applicants}
       />
 
       <AddQuickLeadModal
         isOpen={isQuickLeadModalOpen}
         onClose={() => setIsQuickLeadModalOpen(false)}
         onLeadAdded={handleCreateApplication}
+        existingLeads={applicants}
       />
 
       {selectedApplicant && (
@@ -393,6 +491,7 @@ export default function DashboardPage() {
           onClose={() => setSelectedApplicant(null)}
           onActionTrigger={handleActionTrigger}
           onSave={handleUpdateApplicant}
+          existingLeads={applicants}
         />
       )}
       </div>

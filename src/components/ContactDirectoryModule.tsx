@@ -5,6 +5,7 @@ import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES,
 import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
+import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -801,24 +802,40 @@ export default function ContactDirectoryModule({
 
       const imported = parseCSVToLeads(text, selectedCampus, loggedInUsername);
 
-      if (imported.length > 0) {
-        setContacts((prev) => [...imported, ...prev]);
+      const validImported: (Lead & { application?: Application | null })[] = [];
+      let rejectedCount = 0;
+      const currentList = [...contacts];
+
+      imported.forEach((item) => {
+        const err = validateLeadPhoneNumber(item.phone, currentList as Lead[]);
+        if (!err) {
+          validImported.push(item);
+          currentList.push(item as any);
+        } else {
+          rejectedCount++;
+        }
+      });
+
+      if (validImported.length > 0) {
+        setContacts((prev) => [...(validImported as any), ...prev]);
 
         // Real-time Firebase Database update for each imported student
-        imported.forEach((item) => saveStudentToFirebase(item));
+        validImported.forEach((item) => saveStudentToFirebase(item as any));
 
         if (onImportLeads) {
-          onImportLeads(imported);
+          onImportLeads(validImported as any);
         }
 
         if (onTriggerToast) {
-          onTriggerToast(
-            `📥 Successfully imported ${imported.length} student contact(s) from File Manager!`
-          );
+          let msg = `📥 Imported ${validImported.length} student contact(s)!`;
+          if (rejectedCount > 0) {
+            msg += ` (${rejectedCount} rejected due to invalid/duplicate mobile numbers)`;
+          }
+          onTriggerToast(msg);
         }
       } else {
         if (onTriggerToast) {
-          onTriggerToast("⚠️ No valid candidate details found in the CSV file.");
+          onTriggerToast("⚠️ All contacts in CSV were rejected (invalid or duplicate 10-digit mobile numbers).");
         }
       }
     };
@@ -830,6 +847,13 @@ export default function ContactDirectoryModule({
   const handleUpdateContact = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingContact) return;
+
+    const phoneErr = validateLeadPhoneNumber(editingContact.phone, contacts as Lead[], editingContact.id);
+    if (phoneErr) {
+      if (onTriggerToast) onTriggerToast(`❌ ${phoneErr}`);
+      alert(phoneErr);
+      return;
+    }
 
     // Real-Time Firebase Sync on edit
     await saveStudentToFirebase(editingContact);

@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { Lead, Application, LeadStatus, AppStage } from "@/types/crm";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
+import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -46,6 +47,7 @@ interface ApplicantDetailModalProps {
   onClose: () => void;
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
   onSave?: (updated: Lead & { application: Application }) => void;
+  existingLeads?: Lead[];
 }
 
 export default function ApplicantDetailModal({
@@ -54,6 +56,7 @@ export default function ApplicantDetailModal({
   onClose,
   onActionTrigger,
   onSave,
+  existingLeads = [],
 }: ApplicantDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(applicant);
@@ -93,6 +96,11 @@ export default function ApplicantDetailModal({
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData) {
+      const phoneErr = validateLeadPhoneNumber(formData.phone, existingLeads, formData.id);
+      if (phoneErr) {
+        alert(phoneErr);
+        return;
+      }
       await saveStudentToFirebase(formData);
     }
     if (onSave && formData) {

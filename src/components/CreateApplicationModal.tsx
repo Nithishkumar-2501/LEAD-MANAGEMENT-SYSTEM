@@ -5,17 +5,20 @@ import { X, UserPlus, Send } from "lucide-react";
 import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import SpecularButton from "@/components/SpecularButton";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
+import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 
 interface CreateApplicationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onApplicationCreated: (newLead: Lead & { application: Application }) => void;
+  existingLeads?: Lead[];
 }
 
 export default function CreateApplicationModal({
   isOpen,
   onClose,
   onApplicationCreated,
+  existingLeads = [],
 }: CreateApplicationModalProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -44,8 +47,15 @@ export default function CreateApplicationModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     if (!formData.name || !formData.email) {
       setError("Please provide applicant name and email address.");
+      return;
+    }
+
+    const phoneErr = validateLeadPhoneNumber(formData.phone, existingLeads);
+    if (phoneErr) {
+      setError(phoneErr);
       return;
     }
 

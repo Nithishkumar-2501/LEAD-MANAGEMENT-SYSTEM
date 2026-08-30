@@ -1,24 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { X, Mail, Phone } from "lucide-react";
+import { X, Mail, Phone, AlertCircle } from "lucide-react";
 import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
-
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
+import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 
 interface AddQuickLeadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLeadAdded: (newLead: Lead & { application: Application }) => void;
+  existingLeads?: Lead[];
 }
 
 export default function AddQuickLeadModal({
   isOpen,
   onClose,
   onLeadAdded,
+  existingLeads = [],
 }: AddQuickLeadModalProps) {
   const [activeTab, setActiveTab] = useState<"LEAD" | "ADDITIONAL" | "FACEBOOK">("LEAD");
   const [uploadVia, setUploadVia] = useState<"EMAIL" | "MOBILE">("EMAIL");
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     formInterested: VSB_DEPARTMENTS_COURSES[0],
@@ -40,16 +43,25 @@ export default function AddQuickLeadModal({
   if (!isOpen) return null;
 
   const handleSubmit = async (saveAndNew: boolean = false) => {
+    setError(null);
     if (!formData.name || !formData.email) {
-      alert("Please enter Name and Email Address.");
+      setError("Please enter Name and Email Address.");
       return;
     }
+
+    const phoneErr = validateLeadPhoneNumber(formData.phone, existingLeads);
+    if (phoneErr) {
+      setError(phoneErr);
+      return;
+    }
+
+    const rawPhoneDigits = extractRaw10Digits(formData.phone);
 
     const newLead: Lead & { application: Application } = {
       id: `lead_quick_${Date.now()}`,
       name: formData.name,
       email: formData.email,
-      phone: formData.phone ? `+91-${formData.phone}` : "+91-9629693794",
+      phone: `+91-${rawPhoneDigits}`,
       fatherName: formData.fatherName,
       motherName: formData.motherName,
       bloodGroup: formData.bloodGroup,
@@ -97,6 +109,7 @@ export default function AddQuickLeadModal({
         state: "Tamil Nadu",
         city: "Salem",
       });
+      setError(null);
     } else {
       onClose();
     }
@@ -116,6 +129,14 @@ export default function AddQuickLeadModal({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Validation Error Banner */}
+          {error && (
+            <div className="mx-4 mt-3 p-3 rounded-lg bg-rose-500/20 border border-rose-500/50 text-rose-200 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <span>{error}</span>
+            </div>
+          )}
 
           {/* Sub-tabs */}
           <div className="flex border-b border-white/10 bg-slate-900/90 text-xs font-bold">

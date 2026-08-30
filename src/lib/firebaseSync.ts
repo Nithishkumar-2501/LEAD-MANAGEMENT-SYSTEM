@@ -7,7 +7,7 @@ import {
   getDocs,
   onSnapshot,
 } from "firebase/firestore";
-import { ref, set, update, remove } from "firebase/database";
+import { ref, set, update, remove, get, child } from "firebase/database";
 import { signInAnonymously } from "firebase/auth";
 import { auth, db, rtdb } from "@/lib/firebase";
 import { Lead, Application } from "@/types/crm";
@@ -77,6 +77,22 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
     console.error("❌ Realtime DB write error:", rtdbErr?.message || rtdbErr);
   }
 
+  // Update local storage cache
+  try {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("vsb_firebase_leads_cache");
+      let currentList: any[] = cached ? JSON.parse(cached) : [];
+      if (!Array.isArray(currentList)) currentList = [];
+      const idx = currentList.findIndex((item: any) => item.id === studentId);
+      if (idx >= 0) {
+        currentList[idx] = { ...currentList[idx], ...cleanPayload };
+      } else {
+        currentList.unshift(cleanPayload);
+      }
+      localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(currentList));
+    }
+  } catch (err) {}
+
   // 3. Write to Backend REST API (Prisma / SQLite local database)
   try {
     if (typeof window !== "undefined") {
@@ -143,30 +159,54 @@ export async function fetchStudentsFromFirestore(): Promise<StudentRecord[]> {
   }
 }
 
+// Fetch all students directly from Firebase Realtime Database
+export async function fetchStudentsFromRTDB(): Promise<StudentRecord[]> {
+  try {
+    await ensureFirebaseAuth();
+    const rtdbRef = ref(rtdb);
+    const snapshot = await get(child(rtdbRef, "students"));
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      if (typeof data === "object" && data !== null) {
+        return Object.values(data) as StudentRecord[];
+      }
+    }
+    return [];
+  } catch (err: any) {
+    console.warn("Error fetching students from Realtime DB:", err);
+    return [];
+  }
+}
+
 // Real-Time Observer Listener for Firebase Students
 export function subscribeToFirebaseStudents(
   callback: (students: StudentRecord[]) => void
-) {
-  try {
-    const studentsCol = collection(db, "students");
-    return onSnapshot(
-      studentsCol,
-      (snapshot) => {
-        const liveList: StudentRecord[] = [];
-        snapshot.forEach((doc) => {
-          liveList.push(doc.data() as StudentRecord);
-        });
-        if (liveList.length > 0) {
+): () => void {
+  let unsubscribe: (() => void) | null = null;
+  ensureFirebaseAuth().then(() => {
+    try {
+      const studentsCol = collection(db, "students");
+      unsubscribe = onSnapshot(
+        studentsCol,
+        (snapshot) => {
+          const liveList: StudentRecord[] = [];
+          snapshot.forEach((doc) => {
+            liveList.push(doc.data() as StudentRecord);
+          });
           callback(liveList);
+        },
+        (error) => {
+          console.warn("Real-time snapshot observer notice:", error.message);
         }
-      },
-      (error) => {
-        console.warn("Real-time snapshot observer notice:", error.message);
-      }
-    );
-  } catch (e) {
-    return () => {};
-  }
+      );
+    } catch (e) {
+      console.warn("Snapshot setup error:", e);
+    }
+  });
+
+  return () => {
+    if (unsubscribe) unsubscribe();
+  };
 }
 
 // Delete student record from Firebase Firestore & Realtime Database
@@ -182,5 +222,20 @@ export async function deleteStudentFromFirebase(studentId: string): Promise<bool
     await remove(rtdbRef);
   } catch (err) {}
 
+  // Remove from localStorage cache
+  try {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("vsb_firebase_leads_cache");
+      if (cached) {
+        const list = JSON.parse(cached);
+        if (Array.isArray(list)) {
+          const filtered = list.filter((item: any) => item.id !== studentId);
+          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
+        }
+      }
+    }
+  } catch (e) {}
+
   return true;
 }
+

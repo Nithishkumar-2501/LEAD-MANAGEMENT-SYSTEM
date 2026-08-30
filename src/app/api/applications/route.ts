@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { MOCK_LEADS } from "@/lib/mockData";
 import { AppStage, LeadStatus, CampusLocation } from "@/types/crm";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
+import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,11 @@ export async function POST(request: Request) {
         { error: "Name, email, and course interest are required fields." },
         { status: 400 }
       );
+    }
+
+    const phoneErr = validateLeadPhoneNumber(phone, MOCK_LEADS as any);
+    if (phoneErr) {
+      return NextResponse.json({ error: phoneErr }, { status: 400 });
     }
 
     let status: LeadStatus = "NEW";
