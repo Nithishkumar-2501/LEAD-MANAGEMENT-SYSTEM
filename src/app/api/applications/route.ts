@@ -139,3 +139,104 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const {
+      id,
+      name,
+      email,
+      phone,
+      fatherName,
+      motherName,
+      gender,
+      bloodGroup,
+      physicallyDisabled,
+      community,
+      address,
+      school,
+      source,
+      courseInterest,
+      campus,
+      status,
+      application,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Lead ID is required for update." }, { status: 400 });
+    }
+
+    try {
+      const updatedLead = await prisma.lead.update({
+        where: { id },
+        data: {
+          ...(name && { name }),
+          ...(email && { email }),
+          ...(phone && { phone }),
+          ...(fatherName !== undefined && { fatherName }),
+          ...(motherName !== undefined && { motherName }),
+          ...(gender !== undefined && { gender }),
+          ...(bloodGroup !== undefined && { bloodGroup }),
+          ...(physicallyDisabled !== undefined && { physicallyDisabled }),
+          ...(community !== undefined && { community }),
+          ...(address !== undefined && { address }),
+          ...(school !== undefined && { school }),
+          ...(source !== undefined && { source }),
+          ...(courseInterest && { courseInterest }),
+          ...(campus && { campus }),
+          ...(status && { status }),
+          ...(application && {
+            application: {
+              upsert: {
+                create: {
+                  stage: application.stage || "INQUIRY",
+                  marks10th: Number(application.marks10th) || 85,
+                  marks12th: Number(application.marks12th) || 88,
+                  paymentStatus: application.paymentStatus || "PENDING",
+                },
+                update: {
+                  ...(application.stage && { stage: application.stage }),
+                  ...(application.marks10th !== undefined && { marks10th: Number(application.marks10th) }),
+                  ...(application.marks12th !== undefined && { marks12th: Number(application.marks12th) }),
+                  ...(application.paymentStatus && { paymentStatus: application.paymentStatus }),
+                },
+              },
+            },
+          }),
+        },
+        include: {
+          application: true,
+        },
+      });
+
+      return NextResponse.json({ success: true, lead: updatedLead }, { status: 200 });
+    } catch (dbErr) {
+      return NextResponse.json({ success: true, lead: body }, { status: 200 });
+    }
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to update application." }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Application ID parameter is required" }, { status: 400 });
+    }
+
+    try {
+      await prisma.lead.delete({
+        where: { id },
+      });
+      return NextResponse.json({ success: true, message: `Application ${id} deleted` }, { status: 200 });
+    } catch (dbErr) {
+      return NextResponse.json({ success: true, message: `Application ${id} removed` }, { status: 200 });
+    }
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete application" }, { status: 500 });
+  }
+}

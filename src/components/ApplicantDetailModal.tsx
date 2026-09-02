@@ -101,7 +101,14 @@ export default function ApplicantDetailModal({
         alert(phoneErr);
         return;
       }
-      await saveStudentToFirebase(formData);
+      try {
+        await fetch("/api/applications", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+      } catch (e) {}
+      saveStudentToFirebase(formData);
     }
     if (onSave && formData) {
       onSave(formData);

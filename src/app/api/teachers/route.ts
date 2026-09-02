@@ -153,7 +153,11 @@ export async function PUT(request: Request) {
           phone,
           department,
           campus,
-          coursesAssigned,
+          coursesAssigned: Array.isArray(coursesAssigned)
+            ? JSON.stringify(coursesAssigned)
+            : typeof coursesAssigned === "string"
+            ? coursesAssigned
+            : "[]",
           experienceYears: Number(experienceYears) || 3,
           status,
           assignedQuota: Number(assignedQuota) || 1000,

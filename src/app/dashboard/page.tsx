@@ -279,10 +279,19 @@ export default function DashboardPage() {
     triggerToast(`Initiated ${type} outreach for candidate: ${leadName}`);
   };
 
-  const handleToggleTask = (taskId: string) => {
+  const handleToggleTask = async (taskId: string) => {
+    const targetTask = tasks.find((t) => t.id === taskId);
+    const nextCompleted = targetTask ? !targetTask.isCompleted : true;
     setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t))
+      prev.map((t) => (t.id === taskId ? { ...t, isCompleted: nextCompleted } : t))
     );
+    try {
+      await fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId, isCompleted: nextCompleted }),
+      });
+    } catch (e) {}
     triggerToast("Task status updated.");
   };
 
