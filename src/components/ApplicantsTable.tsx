@@ -346,15 +346,15 @@ export default function ApplicantsTable({
           <button
             disabled={safeCurrentPage === 1}
             onClick={() => setCurrentPage(1)}
-            className="px-2 py-1 rounded-lg border border-white/20 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
             title="First Page"
           >
-            ⏮
+            ⏮ First
           </button>
           <button
             disabled={safeCurrentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            className="px-2.5 py-1 rounded-lg border border-white/20 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
           >
             ◀ Prev
           </button>
@@ -378,10 +378,10 @@ export default function ApplicantsTable({
                   <button
                     key={pNum}
                     onClick={() => setCurrentPage(pNum)}
-                    className={`w-7 h-7 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                    className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer shadow-sm ${
                       isActive
-                        ? "bg-sky-500 text-white shadow-md shadow-sky-500/40 scale-105"
-                        : "bg-slate-900 border border-white/20 text-slate-300 hover:bg-slate-800"
+                        ? "bg-sky-500 text-slate-950 font-black ring-2 ring-sky-300 scale-105"
+                        : "bg-slate-100 dark:bg-slate-800 border border-slate-400 dark:border-white/30 text-slate-950 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700"
                     }`}
                   >
                     {pNum}
@@ -394,17 +394,17 @@ export default function ApplicantsTable({
           <button
             disabled={safeCurrentPage === totalPages}
             onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-            className="px-2.5 py-1 rounded-lg border border-white/20 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
           >
             Next ▶
           </button>
           <button
             disabled={safeCurrentPage === totalPages}
             onClick={() => setCurrentPage(totalPages)}
-            className="px-2 py-1 rounded-lg border border-white/20 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-extrabold text-slate-200 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
             title="Last Page"
           >
-            ⏭
+            Last ⏭
           </button>
         </div>
 
