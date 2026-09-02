@@ -21,7 +21,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { User, ActiveTab, CampusLocation } from "@/types/crm";
+import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
 
 interface HeaderProps {
@@ -40,6 +40,8 @@ interface HeaderProps {
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
   onToggleMobileSidebar?: () => void;
   onOpenAddLeadModal?: () => void;
+  applicants?: (Lead & { application: Application })[];
+  onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
 }
 
 export default function Header({
@@ -58,10 +60,46 @@ export default function Header({
   onThemeChange,
   onToggleMobileSidebar,
   onOpenAddLeadModal,
+  applicants = [],
+  onSelectApplicant,
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(true);
+
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const searchResults =
+    trimmedQuery.length > 0 && applicants
+      ? applicants
+          .filter((item) => {
+            return (
+              item.name.toLowerCase().includes(trimmedQuery) ||
+              item.email.toLowerCase().includes(trimmedQuery) ||
+              item.phone.toLowerCase().includes(trimmedQuery) ||
+              (item.courseInterest && item.courseInterest.toLowerCase().includes(trimmedQuery)) ||
+              (item.campus && item.campus.toLowerCase().includes(trimmedQuery)) ||
+              (item.school && item.school.toLowerCase().includes(trimmedQuery)) ||
+              (item.district && item.district.toLowerCase().includes(trimmedQuery)) ||
+              (item.application?.stage && item.application.stage.toLowerCase().includes(trimmedQuery)) ||
+              (item.status && item.status.toLowerCase().includes(trimmedQuery))
+            );
+          })
+          .slice(0, 6)
+      : [];
+
+  const handleResultClick = (applicant: Lead & { application: Application }) => {
+    if (onSelectApplicant) {
+      onSelectApplicant(applicant);
+    }
+    setShowSearchResults(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchResults.length > 0) {
+      handleResultClick(searchResults[0]);
+    }
+  };
   const [notifications, setNotifications] = useState([
     { id: 1, text: "New TNEA Application registered for VSB Karur CSE", time: "5m ago", read: false },
     { id: 2, text: "Fee payment of ₹95,000 verified for VSB Coimbatore", time: "45m ago", read: false },
@@ -181,15 +219,78 @@ export default function Header({
           </div>
 
           {/* Search bar — desktop */}
-          <div className="relative hidden lg:block w-48">
+          <div className="relative hidden lg:block w-64">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search portal..."
+              onChange={(e) => {
+                onSearchChange(e.target.value);
+                setShowSearchResults(true);
+              }}
+              onFocus={() => setShowSearchResults(true)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search candidate applications..."
               className="w-full bg-slate-100 dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 rounded-full pl-9 pr-3.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50 backdrop-blur-xl font-bold"
             />
+
+            {/* Dropdown Search Results Overlay */}
+            {trimmedQuery.length > 0 && showSearchResults && (
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-slate-950/95 border border-sky-500/40 p-3 shadow-2xl z-50 backdrop-blur-2xl text-xs space-y-2 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between px-2 pb-1.5 border-b border-slate-800">
+                  <span className="text-[11px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-sky-400" /> Search Applications ({searchResults.length})
+                  </span>
+                  <button
+                    onClick={() => setShowSearchResults(false)}
+                    className="p-1 rounded text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {searchResults.length > 0 ? (
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 hide-scrollbar">
+                    {searchResults.map((applicant) => (
+                      <div
+                        key={applicant.id}
+                        onClick={() => handleResultClick(applicant)}
+                        className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-sky-950/70 border border-slate-800 hover:border-sky-500/40 transition-all cursor-pointer flex items-center justify-between group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shrink-0 shadow-md">
+                            {applicant.name.slice(0, 1).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 space-y-0.5">
+                            <div className="font-bold text-white group-hover:text-sky-300 transition-colors truncate">
+                              {applicant.name}
+                            </div>
+                            <div className="text-[11px] text-slate-400 truncate flex items-center gap-1.5">
+                              <span>{applicant.phone}</span>
+                              <span>•</span>
+                              <span className="text-sky-400 font-semibold">{applicant.campus}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-950 text-sky-300 border border-sky-800">
+                            {applicant.application?.stage || applicant.status || "INQUIRY"}
+                          </span>
+                          <span className="text-[10px] text-sky-400 group-hover:underline font-bold flex items-center gap-0.5">
+                            Open App →
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-slate-400 text-xs">
+                    No candidate applications matching &quot;{searchQuery}&quot;.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Search icon — mobile/tablet */}
@@ -290,18 +391,81 @@ export default function Header({
 
       {/* Mobile Search Bar — expands below header when toggled */}
       {mobileSearchOpen && (
-        <div className="lg:hidden">
+        <div className="lg:hidden relative">
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-400" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search portal..."
+              onChange={(e) => {
+                onSearchChange(e.target.value);
+                setShowSearchResults(true);
+              }}
+              onFocus={() => setShowSearchResults(true)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search candidate applications..."
               autoFocus
-              className="w-full bg-slate-900/70 border border-white/20 rounded-full pl-9 pr-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400/50 backdrop-blur-xl"
+              className="w-full bg-slate-900/70 border border-white/20 rounded-full pl-9 pr-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400/50 backdrop-blur-xl font-bold"
             />
           </div>
+
+          {/* Mobile Dropdown Search Results Overlay */}
+          {trimmedQuery.length > 0 && showSearchResults && (
+            <div className="mt-2 w-full rounded-2xl bg-slate-950/95 border border-sky-500/40 p-3 shadow-2xl z-50 backdrop-blur-2xl text-xs space-y-2">
+              <div className="flex items-center justify-between px-2 pb-1.5 border-b border-slate-800">
+                <span className="text-[11px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-sky-400" /> Search Applications ({searchResults.length})
+                </span>
+                <button
+                  onClick={() => setShowSearchResults(false)}
+                  className="p-1 rounded text-slate-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {searchResults.length > 0 ? (
+                <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1 hide-scrollbar">
+                  {searchResults.map((applicant) => (
+                    <div
+                      key={applicant.id}
+                      onClick={() => handleResultClick(applicant)}
+                      className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-sky-950/70 border border-slate-800 hover:border-sky-500/40 transition-all cursor-pointer flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shrink-0 shadow-md">
+                          {applicant.name.slice(0, 1).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="font-bold text-white group-hover:text-sky-300 transition-colors truncate">
+                            {applicant.name}
+                          </div>
+                          <div className="text-[11px] text-slate-400 truncate flex items-center gap-1.5">
+                            <span>{applicant.phone}</span>
+                            <span>•</span>
+                            <span className="text-sky-400 font-semibold">{applicant.campus}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-950 text-sky-300 border border-sky-800">
+                          {applicant.application?.stage || applicant.status || "INQUIRY"}
+                        </span>
+                        <span className="text-[10px] text-sky-400 font-bold flex items-center gap-0.5">
+                          Open App →
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-3 text-center text-slate-400 text-xs">
+                  No candidate applications matching &quot;{searchQuery}&quot;.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

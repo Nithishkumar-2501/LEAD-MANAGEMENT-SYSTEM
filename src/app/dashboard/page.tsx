@@ -360,6 +360,8 @@ export default function DashboardPage() {
           onThemeChange={handleThemeChange}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
           onOpenAddLeadModal={() => setIsQuickLeadModalOpen(true)}
+          applicants={applicants}
+          onSelectApplicant={handleSelectApplicant}
         />
 
         {/* Main Content Area */}
