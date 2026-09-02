@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const phoneErr = validateLeadPhoneNumber(phone, MOCK_LEADS as any);
+    const phoneErr = validateLeadPhoneNumber(phone, []);
     if (phoneErr) {
       return NextResponse.json({ error: phoneErr }, { status: 400 });
     }

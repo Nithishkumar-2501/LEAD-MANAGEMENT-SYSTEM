@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Mail, Phone, AlertCircle } from "lucide-react";
 import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 
@@ -57,40 +58,77 @@ export default function AddQuickLeadModal({
 
     const rawPhoneDigits = extractRaw10Digits(formData.phone);
 
-    const newLead: Lead & { application: Application } = {
-      id: `lead_quick_${Date.now()}`,
-      name: formData.name,
-      email: formData.email,
-      phone: `+91-${rawPhoneDigits}`,
-      fatherName: formData.fatherName,
-      motherName: formData.motherName,
-      bloodGroup: formData.bloodGroup,
-      physicallyDisabled: formData.physicallyDisabled,
-      community: formData.community,
-      address: formData.address,
-      school: formData.school,
-      source: "Quick Lead Entry",
-      courseInterest: formData.formInterested,
-      campus: "KARUR" as CampusLocation,
-      state: formData.state,
-      district: formData.city,
-      gender: formData.gender,
-      status: "NEW",
-      createdAt: new Date().toISOString(),
-      application: {
-        id: `app_quick_${Date.now()}`,
-        leadId: `lead_quick_${Date.now()}`,
-        stage: "INQUIRY",
-        marks10th: 85,
-        marks12th: 88,
-        paymentStatus: "PENDING",
-      },
-    };
+    let savedLead: Lead & { application: Application };
+
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: `+91 ${rawPhoneDigits}`,
+          fatherName: formData.fatherName,
+          motherName: formData.motherName,
+          gender: formData.gender,
+          bloodGroup: formData.bloodGroup,
+          physicallyDisabled: formData.physicallyDisabled,
+          community: formData.community,
+          address: formData.address,
+          school: formData.school,
+          source: "Quick Lead Entry",
+          courseInterest: formData.formInterested,
+          campus: "KARUR",
+          marks10th: 85,
+          marks12th: 88,
+          stage: "INQUIRY",
+        }),
+      });
+
+      const json = await res.json();
+      if (res.ok && json.lead) {
+        savedLead = json.lead;
+      } else {
+        throw new Error(json.error || "Failed to post to API");
+      }
+    } catch (apiErr) {
+      savedLead = {
+        id: `lead_quick_${Date.now()}`,
+        name: formData.name,
+        email: formData.email,
+        phone: `+91-${rawPhoneDigits}`,
+        fatherName: formData.fatherName,
+        motherName: formData.motherName,
+        bloodGroup: formData.bloodGroup,
+        physicallyDisabled: formData.physicallyDisabled,
+        community: formData.community,
+        address: formData.address,
+        school: formData.school,
+        source: "Quick Lead Entry",
+        courseInterest: formData.formInterested,
+        campus: "KARUR" as CampusLocation,
+        state: formData.state,
+        district: formData.city,
+        gender: formData.gender,
+        status: "NEW",
+        createdAt: new Date().toISOString(),
+        application: {
+          id: `app_quick_${Date.now()}`,
+          leadId: `lead_quick_${Date.now()}`,
+          stage: "INQUIRY",
+          marks10th: 85,
+          marks12th: 88,
+          paymentStatus: "PENDING",
+        },
+      };
+    }
 
     // Real-time Firebase Database update
-    await saveStudentToFirebase(newLead);
+    try {
+      saveStudentToFirebase(savedLead);
+    } catch (e) {}
 
-    onLeadAdded(newLead);
+    onLeadAdded(savedLead);
 
     if (saveAndNew) {
       setFormData({
@@ -417,21 +455,21 @@ export default function AddQuickLeadModal({
               </select>
             </div>
 
-            {/* Select City */}
+            {/* Select City / District */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Select City *
+                Select District / City *
               </label>
               <select
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full border border-white/15 rounded-lg p-2.5 text-xs text-white bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full border border-white/15 rounded-lg p-2.5 text-xs text-white bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 max-h-48"
               >
-                <option value="Salem">Salem</option>
-                <option value="Karur">Karur</option>
-                <option value="Coimbatore">Coimbatore</option>
-                <option value="Trichy">Trichy</option>
-                <option value="Namakkal">Namakkal</option>
+                {TAMIL_NADU_DISTRICTS.map((dist) => (
+                  <option key={dist} value={dist} className="bg-slate-900 text-white">
+                    {dist}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

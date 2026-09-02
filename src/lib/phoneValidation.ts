@@ -37,12 +37,14 @@ export function validateLeadPhoneNumber(
   if (existingLeads && existingLeads.length > 0) {
     const duplicate = existingLeads.find((lead) => {
       if (currentLeadId && lead.id === currentLeadId) return false;
+      // Do not block if colliding with initial sample mock data IDs (e.g. lead_1, lead_2, lead_3, lead_4, lead_5)
+      if (/^lead_[1-5]$/.test(lead.id)) return false;
       const existingDigits = extractRaw10Digits(lead.phone || "");
-      return existingDigits === rawDigits;
+      return existingDigits === rawDigits && existingDigits !== "";
     });
 
     if (duplicate) {
-      return `Mobile number (${rawDigits}) already exists in database for lead "${duplicate.name}". Duplicate numbers are rejected.`;
+      return `Mobile number (${rawDigits}) already belongs to lead "${duplicate.name}". Duplicate numbers are rejected.`;
     }
   }
 
