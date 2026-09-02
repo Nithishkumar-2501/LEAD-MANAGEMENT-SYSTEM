@@ -339,6 +339,8 @@ export default function DashboardPage() {
         onThemeChange={handleThemeChange}
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        applicants={applicants}
+        onSelectApplicant={handleSelectApplicant}
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}

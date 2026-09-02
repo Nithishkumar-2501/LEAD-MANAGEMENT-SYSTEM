@@ -36,7 +36,7 @@ import {
   MessageCircleCode,
   FormInput,
 } from "lucide-react";
-import { User, ActiveTab, CampusLocation } from "@/types/crm";
+import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
 
 interface SidebarProps {
@@ -53,6 +53,8 @@ interface SidebarProps {
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
+  applicants?: (Lead & { application: Application })[];
+  onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
 }
 
 export default function Sidebar({
@@ -69,9 +71,36 @@ export default function Sidebar({
   onThemeChange,
   isOpenMobile = false,
   onCloseMobile,
+  applicants = [],
+  onSelectApplicant,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
+
+  const trimmedQuery = menuSearchQuery.trim().toLowerCase();
+  const matchingApplicants =
+    trimmedQuery.length > 0 && applicants
+      ? applicants
+          .filter(
+            (app) =>
+              app.name.toLowerCase().includes(trimmedQuery) ||
+              app.email.toLowerCase().includes(trimmedQuery) ||
+              app.phone.toLowerCase().includes(trimmedQuery) ||
+              (app.courseInterest && app.courseInterest.toLowerCase().includes(trimmedQuery)) ||
+              (app.campus && app.campus.toLowerCase().includes(trimmedQuery)) ||
+              (app.district && app.district.toLowerCase().includes(trimmedQuery)) ||
+              (app.school && app.school.toLowerCase().includes(trimmedQuery))
+          )
+          .slice(0, 5)
+      : [];
+
+  const handleSelectApplication = (applicant: Lead & { application: Application }) => {
+    if (onSelectApplicant) {
+      onSelectApplicant(applicant);
+    }
+    setMenuSearchQuery("");
+    if (onCloseMobile) onCloseMobile();
+  };
 
   const dashboardSubItems = [
     {
@@ -398,17 +427,68 @@ export default function Sidebar({
 
         {/* Navigation Items Section */}
         <div className="flex-1 px-3 py-3 space-y-3 overflow-y-auto hide-scrollbar">
-          {/* Search For Menu Input Bar */}
+          {/* Search For Menu & Applications Input Bar */}
           {!isCollapsed && (
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-              <input
-                type="text"
-                value={menuSearchQuery}
-                onChange={(e) => setMenuSearchQuery(e.target.value)}
-                placeholder="Search For Menu"
-                className="w-full bg-slate-900/90 border border-slate-800 focus:border-indigo-500 rounded-lg pl-8 pr-2 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none shadow-inner"
-              />
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                <input
+                  type="text"
+                  value={menuSearchQuery}
+                  onChange={(e) => setMenuSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && matchingApplicants.length > 0) {
+                      handleSelectApplication(matchingApplicants[0]);
+                    }
+                  }}
+                  placeholder="Search Menu or Application..."
+                  className="w-full bg-slate-900/90 border border-slate-800 focus:border-indigo-500 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none shadow-inner"
+                />
+                {menuSearchQuery && (
+                  <button
+                    onClick={() => setMenuSearchQuery("")}
+                    className="absolute right-2 top-2 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* CANDIDATE APPLICATIONS SEARCH RESULTS */}
+              {trimmedQuery.length > 0 && (
+                <div className="space-y-1.5 p-2 rounded-xl bg-slate-900/90 border border-sky-500/40 shadow-xl animate-in fade-in duration-150">
+                  <div className="text-[10px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center justify-between px-1">
+                    <span>Matching Applications ({matchingApplicants.length})</span>
+                  </div>
+                  {matchingApplicants.length > 0 ? (
+                    <div className="space-y-1">
+                      {matchingApplicants.map((app) => (
+                        <div
+                          key={app.id}
+                          onClick={() => handleSelectApplication(app)}
+                          className="p-2 rounded-lg bg-slate-950/90 hover:bg-sky-950/90 border border-slate-800 hover:border-sky-500/50 cursor-pointer transition-all flex items-center justify-between group"
+                        >
+                          <div className="min-w-0 pr-1">
+                            <div className="font-extrabold text-xs text-white group-hover:text-sky-300 truncate">
+                              {app.name}
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate font-mono">
+                              {app.phone} • {app.campus}
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-800 shrink-0">
+                            View App →
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-slate-400 py-1 text-center font-medium">
+                      No applications found
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
