@@ -269,7 +269,7 @@ export default function ApplicantDetailModal({
                         ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 rounded-lg font-bold shadow-sm"
                         : isPassed
                         ? "bg-emerald-950/30 text-emerald-400/80 rounded-lg"
-                        : "bg-slate-900/60 text-slate-400 rounded-lg border border-slate-800/80"
+                        : "bg-slate-900 text-slate-100 font-extrabold rounded-lg border border-slate-700 hover:text-white hover:bg-slate-800 shadow-sm"
                     }`}
                   >
                     {isActive && (
@@ -679,11 +679,10 @@ export default function ApplicantDetailModal({
                           </span>
                         </div>
                         <p className="text-slate-200 text-xs leading-relaxed font-sans pr-12">
-                          <strong className="text-slate-100 font-bold">
-                            {formData.name.toLowerCase()}
+                          <strong className="text-white font-bold">
+                            {formData.name}
                           </strong>{" "}
-                          registered via lead origin:Chat, registration channel: through Publisher:
-                          WhatsApp with Campaign Name: whatsapp/api/reply with mobile verified .
+                          registered via lead origin: WhatsApp with mobile verified.
                         </p>
                       </div>
                     </div>
@@ -695,34 +694,43 @@ export default function ApplicantDetailModal({
               {activeMainTab === "LEAD_DETAILS" && (
                 <div className="bg-[#0f172a] text-slate-100 rounded-xl border border-slate-800 p-5 space-y-4 shadow-xl">
                   {/* Sub Tabs */}
-                  <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-                    {[
-                      { id: "LEAD_DETAILS", label: "Lead Details ✎" },
-                      { id: "ADDITIONAL", label: "Additional Details" },
-                      { id: "FACEBOOK", label: "Facebook Details" },
-                    ].map((sub) => (
-                      <button
-                        key={sub.id}
-                        type="button"
-                        onClick={() => setActiveSubTab(sub.id as any)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          activeSubTab === sub.id
-                            ? "bg-indigo-600 text-white shadow-sm"
-                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-                        }`}
-                      >
-                        {sub.label}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      {[
+                        { id: "LEAD_DETAILS", label: "Lead Details ✎" },
+                        { id: "ADDITIONAL", label: "Additional Details" },
+                        { id: "FACEBOOK", label: "Facebook Details" },
+                      ].map((sub) => (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => setActiveSubTab(sub.id as any)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            activeSubTab === sub.id
+                              ? "bg-indigo-600 text-white shadow-md border border-indigo-400"
+                              : "text-slate-200 font-bold hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800"
+                          }`}
+                        >
+                          {sub.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs transition-all flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      {isEditing ? "View Details" : "Edit Profile"}
+                    </button>
                   </div>
 
                   {isEditing ? (
                     <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-300 font-bold mb-1">
-                            Student Full Name
-                          </label>
+                          <label className="block text-slate-200 font-bold mb-1">Student Full Name</label>
                           <input
                             type="text"
                             required
@@ -732,9 +740,7 @@ export default function ApplicantDetailModal({
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-300 font-bold mb-1">
-                            Mobile Number
-                          </label>
+                          <label className="block text-slate-200 font-bold mb-1">Mobile Number</label>
                           <input
                             type="text"
                             required
@@ -745,9 +751,9 @@ export default function ApplicantDetailModal({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-300 font-bold mb-1">Email</label>
+                          <label className="block text-slate-200 font-bold mb-1">Email Address</label>
                           <input
                             type="email"
                             value={formData.email}
@@ -756,13 +762,112 @@ export default function ApplicantDetailModal({
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-300 font-bold mb-1">Course</label>
+                          <label className="block text-slate-200 font-bold mb-1">Father&apos;s Name</label>
                           <input
                             type="text"
-                            value={formData.courseInterest}
-                            onChange={(e) =>
-                              setFormData({ ...formData, courseInterest: e.target.value })
-                            }
+                            value={formData.fatherName || ""}
+                            onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-slate-200 font-bold mb-1">Mother&apos;s Name</label>
+                          <input
+                            type="text"
+                            value={formData.motherName || ""}
+                            onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-200 font-bold mb-1">Gender</label>
+                          <select
+                            value={formData.gender || "Male"}
+                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                          >
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-slate-200 font-bold mb-1">Blood Group</label>
+                          <select
+                            value={formData.bloodGroup || "O+"}
+                            onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                          >
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-slate-200 font-bold mb-1">Community</label>
+                          <select
+                            value={formData.community || "BC"}
+                            onChange={(e) => setFormData({ ...formData, community: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                          >
+                            <option value="BC">BC</option>
+                            <option value="BCM">BCM</option>
+                            <option value="MBC">MBC</option>
+                            <option value="SC">SC</option>
+                            <option value="SCA">SCA</option>
+                            <option value="ST">ST</option>
+                            <option value="OC">OC</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-slate-200 font-bold mb-1">Target Campus</label>
+                          <select
+                            value={formData.campus || "KARUR"}
+                            onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                          >
+                            <option value="KARUR">V.S.B. Karur Campus</option>
+                            <option value="COIMBATORE">V.S.B. Coimbatore Campus</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-slate-200 font-bold mb-1">Course Interest</label>
+                          <input
+                            type="text"
+                            value={formData.courseInterest || ""}
+                            onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-slate-200 font-bold mb-1">School Name</label>
+                          <input
+                            type="text"
+                            value={formData.school || ""}
+                            onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-200 font-bold mb-1">District / City</label>
+                          <input
+                            type="text"
+                            value={formData.district || ""}
+                            onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                             className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
                           />
                         </div>
@@ -772,44 +877,141 @@ export default function ApplicantDetailModal({
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 font-bold"
+                          className="px-4 py-2 rounded-lg bg-slate-800 text-slate-200 font-bold"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="px-5 py-2 rounded-lg bg-emerald-600 text-white font-bold"
+                          className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold shadow-md"
                         >
                           Save Changes
                         </button>
                       </div>
                     </form>
                   ) : (
-                    <div className="space-y-3 text-xs text-slate-300">
-                      <div className="grid grid-cols-12 border-b border-slate-800/80 py-2">
-                        <span className="col-span-5 font-semibold text-slate-400">Student Name</span>
-                        <span className="col-span-7 font-bold text-white">: {formData.name}</span>
-                      </div>
-                      <div className="grid grid-cols-12 border-b border-slate-800/80 py-2">
-                        <span className="col-span-5 font-semibold text-slate-400">
-                          Mobile Number
-                        </span>
-                        <span className="col-span-7 font-bold text-sky-400 font-mono">
-                          : {formData.phone}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-12 border-b border-slate-800/80 py-2">
-                        <span className="col-span-5 font-semibold text-slate-400">Email</span>
-                        <span className="col-span-7 font-bold text-slate-300">
-                          : {formData.email || "NA"}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-12 border-b border-slate-800/80 py-2">
-                        <span className="col-span-5 font-semibold text-slate-400">Course</span>
-                        <span className="col-span-7 font-bold text-white">
-                          : {formData.courseInterest || "B.Tech Computer Science"}
-                        </span>
-                      </div>
+                    <div>
+                      {/* SUBTAB 1: LEAD DETAILS */}
+                      {activeSubTab === "LEAD_DETAILS" && (
+                        <div className="space-y-2 text-xs">
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Student Name</span>
+                            <span className="col-span-7 font-black text-white text-sm">: {formData.name}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Mobile Number</span>
+                            <span className="col-span-7 font-bold text-sky-400 font-mono text-xs">: {formData.phone}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Email Address</span>
+                            <span className="col-span-7 font-bold text-slate-100">: {formData.email || "NA"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Father&apos;s Name</span>
+                            <span className="col-span-7 font-bold text-white">: {formData.fatherName || "M. Natarajan"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Mother&apos;s Name</span>
+                            <span className="col-span-7 font-bold text-white">: {formData.motherName || "N. Lakshmi"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Gender</span>
+                            <span className="col-span-7 font-bold text-slate-100">: {formData.gender || "Male"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Blood Group</span>
+                            <span className="col-span-7 font-bold text-rose-400 font-mono">: {formData.bloodGroup || "O+"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Physically Disabled</span>
+                            <span className="col-span-7 font-bold text-slate-100">: {formData.physicallyDisabled ? "Yes" : "No"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Community Category</span>
+                            <span className="col-span-7 font-bold text-amber-400">: {formData.community || "BC"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Target V.S.B. Campus</span>
+                            <span className="col-span-7 font-extrabold text-sky-300">: {formData.campus || "KARUR"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Degree Program / Course</span>
+                            <span className="col-span-7 font-extrabold text-white">: {formData.courseInterest || "B.E. Computer Science & Engineering"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Application Stage</span>
+                            <span className="col-span-7 font-bold text-emerald-400">: {formData.application?.stage || formData.status || "INQUIRY"}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SUBTAB 2: ADDITIONAL DETAILS */}
+                      {activeSubTab === "ADDITIONAL" && (
+                        <div className="space-y-2 text-xs">
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">10th SSLC Marks (%)</span>
+                            <span className="col-span-7 font-bold text-emerald-400 font-mono">: {formData.application?.marks10th || 88}%</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">12th HSC Cutoff Marks (%)</span>
+                            <span className="col-span-7 font-bold text-emerald-300 font-mono">: {formData.application?.marks12th || 91.5}%</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Previous School Name</span>
+                            <span className="col-span-7 font-bold text-white">: {formData.school || "V.S.B. Higher Secondary School"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Lead Acquisition Source</span>
+                            <span className="col-span-7 font-bold text-sky-400">: {formData.source || "TNEA Single Window Counselling"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Fee Payment Status</span>
+                            <span className="col-span-7 font-extrabold text-emerald-400">: {formData.application?.paymentStatus || "PENDING"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">State</span>
+                            <span className="col-span-7 font-bold text-white">: {formData.state || "Tamil Nadu"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">District / City</span>
+                            <span className="col-span-7 font-bold text-sky-300">: {formData.district || "Karur"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Residential Address</span>
+                            <span className="col-span-7 font-bold text-slate-200">: {formData.address || "124, College Road, Karur, Tamil Nadu - 639111"}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Alternate Contact Phone</span>
+                            <span className="col-span-7 font-bold text-sky-400 font-mono">: {formData.alternatePhone || "+91 94433 11220"}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SUBTAB 3: FACEBOOK DETAILS */}
+                      {activeSubTab === "FACEBOOK" && (
+                        <div className="space-y-2 text-xs">
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Facebook Lead ID</span>
+                            <span className="col-span-7 font-mono font-bold text-sky-400">: fb_lead_987412{formData.id.slice(-4)}</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Ad Campaign Name</span>
+                            <span className="col-span-7 font-bold text-white">: VSB_Admissions_2026_TN_Engineering</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Adset Target Group</span>
+                            <span className="col-span-7 font-bold text-slate-200">: TN_Higher_Secondary_Aspirants_Direct</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Lead Form Name</span>
+                            <span className="col-span-7 font-bold text-emerald-400">: Direct_Admission_Form_2026</span>
+                          </div>
+                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
+                            <span className="col-span-5 font-extrabold text-slate-300">Lead Generation Platform</span>
+                            <span className="col-span-7 font-bold text-sky-400">: Meta Ads (Facebook & Instagram)</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
