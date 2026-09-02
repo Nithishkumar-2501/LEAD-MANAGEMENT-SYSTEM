@@ -43,7 +43,23 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, courseInterest, campus, school, district, address } = body;
+    const {
+      name,
+      email,
+      phone,
+      fatherName,
+      motherName,
+      gender,
+      bloodGroup,
+      physicallyDisabled,
+      community,
+      courseInterest,
+      campus,
+      school,
+      district,
+      state,
+      address,
+    } = body;
 
     if (!name || !phone) {
       return NextResponse.json(
@@ -63,10 +79,17 @@ export async function POST(request: Request) {
           name,
           email: email || `${name.toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
           phone,
+          fatherName: fatherName || null,
+          motherName: motherName || null,
+          gender: gender || "Male",
+          bloodGroup: bloodGroup || "O+",
+          physicallyDisabled: physicallyDisabled || "No",
+          community: community || "BC",
           courseInterest: courseInterest || "B.E. Computer Science",
           campus: campus || "KARUR",
           school: school || "Govt Higher Secondary School",
           district: district || "Karur",
+          state: state || "Tamil Nadu",
           address: address || "Tamil Nadu",
           source: "Direct Contact Entry",
           status: "NEW",
@@ -94,10 +117,17 @@ export async function POST(request: Request) {
         name,
         email: email || `${name.toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
         phone,
+        fatherName: fatherName || "",
+        motherName: motherName || "",
+        gender: gender || "Male",
+        bloodGroup: bloodGroup || "O+",
+        physicallyDisabled: physicallyDisabled || "No",
+        community: community || "BC",
         courseInterest: courseInterest || "B.E. Computer Science",
         campus: campus || "KARUR",
         school: school || "Govt Higher Secondary School",
         district: district || "Karur",
+        state: state || "Tamil Nadu",
         address: address || "Tamil Nadu",
         source: "Direct Contact Entry",
         status: "NEW",
@@ -123,7 +153,24 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, name, email, phone, courseInterest, campus, school, district, address } = body;
+    const {
+      id,
+      name,
+      email,
+      phone,
+      fatherName,
+      motherName,
+      gender,
+      bloodGroup,
+      physicallyDisabled,
+      community,
+      courseInterest,
+      campus,
+      school,
+      district,
+      state,
+      address,
+    } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Contact ID is required for editing" }, { status: 400 });
@@ -136,10 +183,17 @@ export async function PUT(request: Request) {
           name,
           email,
           phone,
+          fatherName,
+          motherName,
+          gender,
+          bloodGroup,
+          physicallyDisabled,
+          community,
           courseInterest,
           campus,
           school,
           district,
+          state,
           address,
         },
         include: { application: true },
@@ -152,10 +206,17 @@ export async function PUT(request: Request) {
         name,
         email,
         phone,
+        fatherName,
+        motherName,
+        gender,
+        bloodGroup,
+        physicallyDisabled,
+        community,
         courseInterest,
         campus,
         school,
         district,
+        state,
         address,
         source: "Direct Contact Entry",
         status: "NEW",

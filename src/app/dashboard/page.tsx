@@ -124,7 +124,17 @@ export default function DashboardPage() {
       });
     };
 
-    // 2. Fetch directly from Firebase Firestore & Realtime DB
+    // 2. Fetch directly from Prisma Database API (/api/applications)
+    fetch("/api/applications")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
+          applyFirebaseLeads(data.leads);
+        }
+      })
+      .catch((err) => console.warn("Prisma API load notice:", err));
+
+    // 3. Fetch directly from Firebase Firestore & Realtime DB
     fetchStudentsFromFirestore().then((list) => {
       if (list && list.length > 0) {
         applyFirebaseLeads(list);
@@ -137,7 +147,7 @@ export default function DashboardPage() {
       }
     });
 
-    // 3. Realtime Firestore Observer Listener
+    // 4. Realtime Firestore Observer Listener
     const unsubscribe = subscribeToFirebaseStudents((liveList) => {
       applyFirebaseLeads(liveList);
     });

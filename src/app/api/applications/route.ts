@@ -9,20 +9,17 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const applications = await prisma.application.findMany({
+    const leads = await prisma.lead.findMany({
       include: {
-        lead: true,
-        payments: true,
+        application: true,
       },
       orderBy: {
-        lead: {
-          createdAt: "desc",
-        },
+        createdAt: "desc",
       },
     });
-    return NextResponse.json({ applications }, { status: 200 });
+    return NextResponse.json({ leads }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ applications: MOCK_LEADS.map(l => l.application) }, { status: 200 });
+    return NextResponse.json({ leads: MOCK_LEADS }, { status: 200 });
   }
 }
 
@@ -33,6 +30,14 @@ export async function POST(request: Request) {
       name,
       email,
       phone,
+      fatherName,
+      motherName,
+      gender,
+      bloodGroup,
+      physicallyDisabled,
+      community,
+      address,
+      school,
       source,
       courseInterest,
       campus = "KARUR",
@@ -63,14 +68,23 @@ export async function POST(request: Request) {
           name,
           email,
           phone: phone || "+91 98765 43210",
-          source: source || "Official VSB Portal",
+          fatherName: fatherName || null,
+          motherName: motherName || null,
+          gender: gender || "Male",
+          bloodGroup: bloodGroup || "O+",
+          physicallyDisabled: physicallyDisabled || "No",
+          community: community || "BC",
+          address: address || null,
+          school: school || null,
+          source: source || "TNEA Counselling",
           courseInterest,
+          campus: campus || "KARUR",
           status,
           application: {
             create: {
               stage: stage as AppStage,
-              marks10th: Number(marks10th) || 80,
-              marks12th: Number(marks12th) || 82,
+              marks10th: Number(marks10th) || 85,
+              marks12th: Number(marks12th) || 88,
               paymentStatus: stage === "FEE_PAID" ? "COMPLETED" : "PENDING",
             },
           },
@@ -87,12 +101,21 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ success: true, lead: leadRecord }, { status: 201 });
     } catch (dbError) {
+      console.error("Prisma lead save error:", dbError);
       const mockLead = {
         id: `lead_${Date.now()}`,
         name,
         email,
         phone: phone || "+91 98765 43210",
-        source: source || "Official VSB Portal",
+        fatherName: fatherName || "",
+        motherName: motherName || "",
+        gender: gender || "Male",
+        bloodGroup: bloodGroup || "O+",
+        physicallyDisabled: physicallyDisabled || "No",
+        community: community || "BC",
+        address: address || "",
+        school: school || "",
+        source: source || "TNEA Counselling",
         courseInterest,
         campus: (campus || "KARUR") as CampusLocation,
         status,
@@ -102,13 +125,13 @@ export async function POST(request: Request) {
           id: `app_${Date.now()}`,
           leadId: `lead_${Date.now()}`,
           stage: stage as AppStage,
-          marks10th: Number(marks10th) || 80,
-          marks12th: Number(marks12th) || 82,
+          marks10th: Number(marks10th) || 85,
+          marks12th: Number(marks12th) || 88,
           paymentStatus: stage === "FEE_PAID" ? "COMPLETED" : "PENDING",
         },
       };
 
-      MOCK_LEADS.unshift(mockLead);
+      MOCK_LEADS.unshift(mockLead as any);
 
       return NextResponse.json({ success: true, lead: mockLead }, { status: 201 });
     }

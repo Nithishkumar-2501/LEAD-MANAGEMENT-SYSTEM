@@ -22,19 +22,27 @@ model User {
 }
 
 model Lead {
-  id             String   @id @default(uuid())
-  name           String
-  email          String
-  phone          String
-  source         String   @default("TNEA Counselling")
-  courseInterest String
-  campus         String   @default("KARUR")
-  school         String?  @default("Govt Higher Secondary School")
-  district       String?  @default("Karur")
-  address        String?  @default("123 College Road, Tamil Nadu")
-  status         String   @default("NEW")
-  counselorId    String?
-  createdAt      DateTime @default(now())
+  id                 String   @id @default(uuid())
+  name               String
+  email              String
+  phone              String
+  alternatePhone     String?
+  fatherName         String?
+  motherName         String?
+  gender             String?  @default("Male")
+  bloodGroup         String?  @default("O+")
+  physicallyDisabled String?  @default("No")
+  community          String?  @default("BC")
+  source             String   @default("TNEA Counselling")
+  courseInterest     String
+  campus             String   @default("KARUR")
+  school             String?  @default("Govt Higher Secondary School")
+  district           String?  @default("Karur")
+  state              String?  @default("Tamil Nadu")
+  address            String?  @default("123 College Road, Tamil Nadu")
+  status             String   @default("NEW")
+  counselorId        String?
+  createdAt          DateTime @default(now())
 
   // Relations
   counselor   User?        @relation("CounselorLeads", fields: [counselorId], references: [id])
