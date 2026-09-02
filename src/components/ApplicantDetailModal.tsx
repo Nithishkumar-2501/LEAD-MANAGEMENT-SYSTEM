@@ -176,15 +176,15 @@ export default function ApplicantDetailModal({
   const currentStageIdx = 1;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-[#0b1329] w-full max-w-6xl rounded-2xl border border-slate-800 shadow-2xl overflow-hidden text-slate-100 flex flex-col max-h-[96vh] my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-white w-full max-w-6xl rounded-2xl border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col max-h-[96vh] my-auto">
         {/* Top Header / Breadcrumb Bar */}
-        <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between bg-[#0f172a] shrink-0">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
-            <span className="text-slate-300 font-bold">Lead Details</span>
-            <span className="text-slate-500">&gt;</span>
+        <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
+          <div className="flex items-center gap-2 text-xs font-black text-slate-950">
+            <span className="text-slate-950 font-black">Lead Details</span>
+            <span className="text-slate-400">&gt;</span>
             <button
-              className="p-1 rounded-md bg-slate-800 border border-slate-700 text-sky-400 hover:text-white transition-colors"
+              className="p-1 rounded-md bg-white border border-slate-300 text-sky-600 hover:bg-slate-100 transition-colors shadow-sm"
               title="Filter Lead Views"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -194,23 +194,23 @@ export default function ApplicantDetailModal({
           <div className="flex items-center gap-3">
             <button
               onClick={() => onActionTrigger("CALL", formData.name)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm"
             >
-              <Plus className="w-3.5 h-3.5 text-sky-400" /> Add Event
+              <Plus className="w-3.5 h-3.5 text-sky-600" /> Add Event
             </button>
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-black transition-all shadow-sm ${
                 isEditing
-                  ? "bg-amber-950/80 text-amber-300 border-amber-500/50"
-                  : "bg-slate-800 hover:bg-slate-700 border-slate-700 text-sky-400 hover:text-white"
+                  ? "bg-amber-100 text-amber-900 border-amber-300"
+                  : "bg-white hover:bg-slate-100 border-slate-300 text-slate-900"
               }`}
             >
               <Edit3 className="w-3.5 h-3.5" /> {isEditing ? "Viewing Mode" : "Edit Details"}
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-950 hover:bg-slate-200 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -218,20 +218,20 @@ export default function ApplicantDetailModal({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
-          {/* Mio AI Coach Section (Banner Card from Screenshot) */}
-          <div className="bg-gradient-to-r from-[#1e1b4b]/90 via-[#2e1065]/70 to-[#0f172a] rounded-xl border border-indigo-500/30 p-3 px-4 flex items-center justify-between shadow-md">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 bg-slate-100/70">
+          {/* Mio AI Coach Section (Banner Card) */}
+          <div className="bg-indigo-50/90 rounded-xl border border-indigo-200 p-3 px-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-white shadow-md">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold text-purple-300 tracking-wide">
+                  <span className="text-xs font-black text-indigo-950 tracking-wide">
                     Mio AI Coach
                   </span>
-                  <span className="text-slate-400 text-xs">|</span>
-                  <span className="text-xs text-slate-300 font-medium">
+                  <span className="text-indigo-400 text-xs">|</span>
+                  <span className="text-xs text-indigo-900 font-bold">
                     {aiSummary || "Summary will appear here once generated."}
                   </span>
                 </div>
@@ -241,7 +241,7 @@ export default function ApplicantDetailModal({
             <button
               onClick={generateAiSummary}
               disabled={isGeneratingAi}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shrink-0 ml-4"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md shrink-0 ml-4"
             >
               {isGeneratingAi ? (
                 <>
@@ -255,25 +255,25 @@ export default function ApplicantDetailModal({
             </button>
           </div>
 
-          {/* Chevron Stage Tracker Progress Ribbon (Exact layout from NoPaperForms) */}
+          {/* Chevron Stage Tracker Progress Ribbon */}
           <div className="overflow-x-auto pb-1 hide-scrollbar">
-            <div className="flex items-center gap-1 min-w-[700px] bg-[#0f172a] p-1.5 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-1 min-w-[700px] bg-white p-1.5 rounded-xl border border-slate-300 shadow-sm">
               {stageSteps.map((step, idx) => {
                 const isActive = idx === currentStageIdx; // Verified stage active
                 const isPassed = idx < currentStageIdx;
                 return (
                   <div
                     key={step.key}
-                    className={`flex-1 text-center py-2 px-2 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 relative ${
+                    className={`flex-1 text-center py-2 px-2 text-xs font-black transition-all flex items-center justify-center gap-1.5 relative ${
                       isActive
-                        ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 rounded-lg font-bold shadow-sm"
+                        ? "bg-emerald-600 text-white border border-emerald-700 rounded-lg font-black shadow-sm"
                         : isPassed
-                        ? "bg-emerald-950/30 text-emerald-400/80 rounded-lg"
-                        : "bg-slate-900 text-slate-100 font-extrabold rounded-lg border border-slate-700 hover:text-white hover:bg-slate-800 shadow-sm"
+                        ? "bg-emerald-100 text-emerald-900 rounded-lg border border-emerald-300 font-black"
+                        : "bg-slate-100 text-slate-950 font-black rounded-lg border border-slate-300 hover:bg-slate-200 shadow-sm"
                     }`}
                   >
                     {isActive && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
                     )}
                     <span className="truncate">{step.label}</span>
                   </div>
@@ -287,23 +287,23 @@ export default function ApplicantDetailModal({
             {/* LEFT PROFILE SIDEBAR (4 cols) */}
             <div className="lg:col-span-4 space-y-4">
               {/* Profile Card */}
-              <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-4 space-y-4 shadow-lg relative overflow-hidden">
+              <div className="bg-white rounded-xl border border-slate-300 p-4 space-y-4 shadow-sm relative overflow-hidden text-slate-950">
                 {/* Avatar & Name */}
                 <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md ring-2 ring-white/10 shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-md ring-2 ring-sky-200 shrink-0">
                     {formData.name.slice(0, 1).toUpperCase()}
                   </div>
 
                   <div className="space-y-1 min-w-0">
-                    <h3 className="text-sm font-extrabold text-white tracking-tight truncate">
-                      {formData.name.toUpperCase()}
+                    <h3 className="text-sm font-black text-slate-950 tracking-tight truncate uppercase">
+                      {formData.name}
                     </h3>
-                    <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+                    <div className="flex items-center gap-1 text-[11px] text-slate-700 font-extrabold">
                       <span>Lead Stage:</span>
-                      <span className="font-bold text-sky-400 flex items-center gap-1">
+                      <span className="font-black text-sky-700 flex items-center gap-1">
                         {formData.status === "NEW" ? "Untouched" : formData.status}
                         <Edit3
-                          className="w-3 h-3 cursor-pointer text-slate-400 hover:text-white inline"
+                          className="w-3 h-3 cursor-pointer text-slate-500 hover:text-slate-900 inline"
                           onClick={() => setIsEditing(true)}
                         />
                       </span>
@@ -312,11 +312,11 @@ export default function ApplicantDetailModal({
                 </div>
 
                 {/* Email & Phone Contact Rows with Verification Icons */}
-                <div className="space-y-2 text-xs border-t border-slate-800/80 pt-3">
-                  <div className="flex items-center justify-between text-slate-300">
+                <div className="space-y-2 text-xs border-t border-slate-200 pt-3">
+                  <div className="flex items-center justify-between text-slate-900">
                     <span className="flex items-center gap-2 truncate">
-                      <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <strong className="text-slate-300 font-normal truncate">
+                      <Mail className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                      <strong className="text-slate-950 font-black truncate">
                         {formData.email && formData.email !== "student@example.com"
                           ? formData.email
                           : "NA"}
@@ -324,22 +324,22 @@ export default function ApplicantDetailModal({
                     </span>
                     <span
                       title="Unverified"
-                      className="text-rose-400 flex items-center justify-center w-4 h-4 rounded-full bg-rose-950/50 text-[10px] font-bold shrink-0"
+                      className="text-rose-600 flex items-center justify-center w-4 h-4 rounded-full bg-rose-100 text-[10px] font-black shrink-0 border border-rose-300"
                     >
                       ✕
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-slate-300">
+                  <div className="flex items-center justify-between text-slate-900">
                     <span className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <strong className="text-slate-300 font-medium">
+                      <Phone className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                      <strong className="text-slate-950 font-black font-mono">
                         {formData.phone || "+91-6380270912"}
                       </strong>
                     </span>
                     <span
                       title="Verified"
-                      className="text-emerald-400 flex items-center justify-center w-4 h-4 rounded-full bg-emerald-950/50 text-[10px] font-bold shrink-0"
+                      className="text-emerald-600 flex items-center justify-center w-4 h-4 rounded-full bg-emerald-100 text-[10px] font-black shrink-0 border border-emerald-300"
                     >
                       ✓
                     </span>
@@ -347,61 +347,61 @@ export default function ApplicantDetailModal({
                 </div>
 
                 {/* Quick 5 Action Buttons Bar */}
-                <div className="grid grid-cols-5 gap-1.5 border-t border-slate-800/80 pt-3">
+                <div className="grid grid-cols-5 gap-1.5 border-t border-slate-200 pt-3">
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm"
                     title="Share / Transfer Lead"
                   >
                     <Share2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => onActionTrigger("CALL", formData.name)}
-                    className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm"
                     title="Call Candidate"
                   >
                     <Phone className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setActiveMainTab("NOTES")}
-                    className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm"
                     title="Add Note"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => onActionTrigger("EMAIL", formData.name)}
-                    className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm"
                     title="Send Email"
                   >
                     <Mail className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => onActionTrigger("WHATSAPP", formData.name)}
-                    className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-teal-700 flex items-center justify-center transition-all shadow-sm"
                     title="WhatsApp Outreach"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-teal-400" />
+                    <MessageSquare className="w-3.5 h-3.5 text-teal-600" />
                   </button>
                 </div>
 
-                {/* Lead Strength & Lead Score Stats Widgets (Matching Screenshot) */}
-                <div className="grid grid-cols-2 gap-2.5 border-t border-slate-800/80 pt-3">
-                  <div className="bg-slate-900/90 rounded-lg p-2.5 border border-slate-800 text-center">
-                    <div className="w-6 h-6 rounded-full border-2 border-sky-400 flex items-center justify-center mx-auto mb-1">
-                      <RefreshCw className="w-3 h-3 text-sky-400" />
+                {/* Lead Strength & Lead Score Stats Widgets */}
+                <div className="grid grid-cols-2 gap-2.5 border-t border-slate-200 pt-3">
+                  <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-300 text-center">
+                    <div className="w-6 h-6 rounded-full border-2 border-sky-600 flex items-center justify-center mx-auto mb-1">
+                      <RefreshCw className="w-3 h-3 text-sky-600" />
                     </div>
-                    <span className="text-[10px] text-slate-400 font-medium uppercase block">
+                    <span className="text-[10px] text-slate-900 font-black uppercase block">
                       Lead Strength
                     </span>
                   </div>
 
-                  <div className="bg-slate-900/90 rounded-lg p-2.5 border border-slate-800 text-center relative overflow-hidden">
-                    <div className="text-lg font-black text-white flex items-center justify-center gap-1">
+                  <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-300 text-center relative overflow-hidden">
+                    <div className="text-lg font-black text-slate-950 flex items-center justify-center gap-1">
                       <span>{formData.leadScore || 10}</span>
-                      <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+                      <ArrowUpRight className="w-4 h-4 text-emerald-600" />
                     </div>
-                    <span className="text-[10px] text-slate-400 font-medium uppercase block">
+                    <span className="text-[10px] text-slate-900 font-black uppercase block">
                       Lead Score
                     </span>
                   </div>
@@ -409,51 +409,51 @@ export default function ApplicantDetailModal({
               </div>
 
               {/* Assignment Details Accordion Card */}
-              <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-4 space-y-2 shadow-md">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-200 border-b border-slate-800 pb-2">
+              <div className="bg-white rounded-xl border border-slate-300 p-4 space-y-2 shadow-sm text-slate-950">
+                <div className="flex items-center justify-between text-xs font-black text-slate-950 border-b border-slate-200 pb-2">
                   <span>Assignment Details</span>
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                  <ChevronDown className="w-4 h-4 text-slate-600" />
                 </div>
                 <div className="space-y-2 text-xs pt-1">
                   <div>
-                    <span className="text-slate-400 text-[11px] block font-medium">
+                    <span className="text-slate-700 text-[11px] block font-extrabold">
                       Assigned Owner
                     </span>
-                    <span className="font-semibold text-slate-200 block">
+                    <span className="font-black text-slate-950 block">
                       {formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 text-[11px] block font-medium">Lead Source</span>
-                    <span className="font-semibold text-slate-200 block">
-                      {formData.source || "Other Campaigns: Whatsapp"}
+                    <span className="text-slate-700 text-[11px] block font-extrabold">Lead Source</span>
+                    <span className="font-black text-slate-950 block">
+                      {formData.source || "Organic"}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Important Dates Accordion Card */}
-              <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-4 space-y-2 shadow-md">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-200 border-b border-slate-800 pb-2">
+              <div className="bg-white rounded-xl border border-slate-300 p-4 space-y-2 shadow-sm text-slate-950">
+                <div className="flex items-center justify-between text-xs font-black text-slate-950 border-b border-slate-200 pb-2">
                   <span>Important Dates</span>
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                  <ChevronDown className="w-4 h-4 text-slate-600" />
                 </div>
                 <div className="space-y-2 text-xs pt-1">
                   <div>
-                    <span className="text-slate-400 text-[11px] block font-medium">
+                    <span className="text-slate-700 text-[11px] block font-extrabold">
                       Upcoming Followup
                     </span>
-                    <span className="font-semibold text-slate-400">NA</span>
+                    <span className="font-black text-slate-950 block">NA</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 text-[11px] block font-medium">Last Active</span>
-                    <span className="font-semibold text-slate-200 block">25 Aug 2026 06:30 PM</span>
+                    <span className="text-slate-700 text-[11px] block font-extrabold">Last Active</span>
+                    <span className="font-black text-slate-950 block">25 Aug 2026 06:30 PM</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 text-[11px] block font-medium">Lead Added On</span>
+                    <span className="text-slate-700 text-[11px] block font-extrabold">Lead Added On</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-200">25 Aug 2026 06:25 PM</span>
-                      <span className="bg-sky-950 text-sky-400 border border-sky-800/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                      <span className="font-black text-slate-950">25 Aug 2026 06:25 PM</span>
+                      <span className="bg-sky-100 text-sky-800 border border-sky-300 px-1.5 py-0.5 rounded text-[10px] font-black">
                         0d
                       </span>
                     </div>
@@ -462,18 +462,18 @@ export default function ApplicantDetailModal({
               </div>
 
               {/* Engagement Stats Card */}
-              <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-4 space-y-2 shadow-md">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-200">
+              <div className="bg-white rounded-xl border border-slate-300 p-4 space-y-2 shadow-sm text-slate-950">
+                <div className="flex items-center justify-between text-xs font-black text-slate-950">
                   <span>Engagement Stats</span>
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                  <ChevronDown className="w-4 h-4 text-slate-600" />
                 </div>
               </div>
             </div>
 
             {/* RIGHT MAIN DETAILS TAB AREA (8 cols) */}
             <div className="lg:col-span-8 space-y-4">
-              {/* Main Navigation Tabs (Matching exact order in Screenshot) */}
-              <div className="flex items-center gap-1 border-b border-slate-800 overflow-x-auto pb-0.5 hide-scrollbar">
+              {/* Main Navigation Tabs */}
+              <div className="flex items-center gap-1.5 border-b border-slate-300 overflow-x-auto pb-1 hide-scrollbar">
                 {[
                   { id: "LEAD_DETAILS", label: "Lead Details", icon: User },
                   { id: "TIMELINE", label: "Timeline", icon: Clock },
@@ -488,10 +488,10 @@ export default function ApplicantDetailModal({
                     <button
                       key={tab.id}
                       onClick={() => setActiveMainTab(tab.id as any)}
-                      className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold whitespace-nowrap transition-all border-b-2 ${
+                      className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-black whitespace-nowrap transition-all rounded-t-lg border ${
                         activeMainTab === tab.id
-                          ? "border-sky-400 text-sky-300 bg-sky-950/20"
-                          : "border-transparent text-slate-400 hover:text-slate-200"
+                          ? "bg-sky-600 text-white border-sky-600 shadow-md"
+                          : "bg-white text-slate-950 hover:bg-slate-100 border-slate-300"
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -501,188 +501,133 @@ export default function ApplicantDetailModal({
                 })}
               </div>
 
-              {/* TAB 1: COMMUNICATION LOGS (MATCHING IMAGE 1 SCREENSHOT EXACTLY) */}
+              {/* TAB 1: COMMUNICATION LOGS */}
               {activeMainTab === "COMMUNICATION" && (
-                <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-5 space-y-6 shadow-xl text-xs">
-                  {/* Email Summary Grid */}
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-slate-300 text-xs">Email Summary</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-emerald-500 text-center">
-                        <div className="text-base font-extrabold text-white">0</div>
-                        <div className="text-[11px] text-slate-400 font-medium">Email Sent</div>
-                      </div>
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-purple-500 text-center">
-                        <div className="text-base font-extrabold text-white">0%</div>
-                        <div className="text-[11px] text-slate-400 font-medium">Open Rate</div>
-                      </div>
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-amber-500 text-center">
-                        <div className="text-base font-extrabold text-white">0%</div>
-                        <div className="text-[11px] text-slate-400 font-medium">Click Rate</div>
-                      </div>
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-rose-500 text-center">
-                        <div className="text-base font-extrabold text-white">0</div>
-                        <div className="text-[11px] text-slate-400 font-medium">Email Bounced</div>
-                      </div>
-                    </div>
+                <div className="bg-white rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm text-slate-950">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <h4 className="font-black text-sm text-slate-950 flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-sky-600" /> Communication Activity History
+                    </h4>
+                    <span className="text-xs text-sky-700 font-black bg-sky-100 px-2.5 py-1 rounded-full border border-sky-300">
+                      Total Logs: 4
+                    </span>
                   </div>
 
-                  {/* SMS Summary Grid */}
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-slate-300 text-xs">SMS Summary</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-emerald-500 text-center">
-                        <div className="text-base font-extrabold text-white">0</div>
-                        <div className="text-[11px] text-slate-400 font-medium">SMS Sent</div>
-                      </div>
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-purple-500 text-center">
-                        <div className="text-base font-extrabold text-white">0</div>
-                        <div className="text-[11px] text-slate-400 font-medium">SMS Delivered</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Whatsapp Summary Grid */}
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-slate-300 text-xs">Whatsapp Summary</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-emerald-500 text-center">
-                        <div className="text-base font-extrabold text-white">1</div>
-                        <div className="text-[11px] text-slate-400 font-medium">Whatsapp Sent</div>
-                      </div>
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-purple-500 text-center">
-                        <div className="text-base font-extrabold text-white">0</div>
-                        <div className="text-[11px] text-slate-400 font-medium">
-                          Whatsapp Delivered
-                        </div>
-                      </div>
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-amber-500 text-center">
-                        <div className="text-base font-extrabold text-white">0</div>
-                        <div className="text-[11px] text-slate-400 font-medium">Click Rate</div>
-                      </div>
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-rose-500 text-center">
-                        <div className="text-base font-extrabold text-white">0</div>
-                        <div className="text-[11px] text-slate-400 font-medium">
-                          Unsubscribe Rate
-                        </div>
-                      </div>
-                      <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800 border-b-2 border-b-emerald-500 text-center">
-                        <div className="text-base font-extrabold text-white">0</div>
-                        <div className="text-[11px] text-slate-400 font-medium">Auto Reply</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Communication Log Section with Date Filter */}
-                  <div className="space-y-3 border-t border-slate-800 pt-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-slate-300 text-xs">Communication Log</h4>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="date"
-                          value={commLogDateFilter}
-                          onChange={(e) => setCommLogDateFilter(e.target.value)}
-                          className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-300 text-xs"
-                        />
-                        <span className="text-slate-400 text-xs">Select Date</span>
-                      </div>
-                    </div>
-
-                    {/* Log Entry Item */}
-                    <div className="bg-slate-900/90 rounded-xl border border-slate-800 p-3.5 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-teal-950 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold">
-                            <MessageSquare className="w-3.5 h-3.5" />
+                  <div className="space-y-3">
+                    {[
+                      {
+                        type: "OUTGOING_CALL",
+                        title: "Outgoing Follow-up Call to Candidate",
+                        time: "Today at 02:45 PM",
+                        desc: "Counselor discussed TNEA Single Window Counselling options for CSE & ECE branches. Candidate confirmed attending direct campus visit.",
+                        status: "CONNECTED",
+                      },
+                      {
+                        type: "WHATSAPP",
+                        title: "WhatsApp Prospectus & Fee Structure Sent",
+                        time: "Yesterday at 11:15 AM",
+                        desc: "Sent PDF brochure for V.S.B. Karur Engineering College & hostel fee details via official WhatsApp API channel.",
+                        status: "DELIVERED",
+                      },
+                      {
+                        type: "EMAIL",
+                        title: "Admission Confirmation & Verification Email",
+                        time: "24 Aug 2026, 05:30 PM",
+                        desc: "Sent 10th/12th certificate verification checklist & scholarship guidelines.",
+                        status: "OPENED",
+                      },
+                      {
+                        type: "SMS",
+                        title: "SMS Alert — Application Submitted",
+                        time: "24 Aug 2026, 05:25 PM",
+                        desc: "Automated SMS notification dispatched for online registration.",
+                        status: "SENT",
+                      },
+                    ].map((log, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3.5 rounded-xl bg-slate-50 border border-slate-300 hover:border-sky-400 transition-all space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-black text-slate-950 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-sky-600" />
+                            {log.title}
                           </span>
-                          <span className="font-bold text-white">WhatsApp Outreach Message</span>
-                          <span className="bg-teal-950 text-teal-300 border border-teal-800 px-2 py-0.5 rounded text-[10px]">
-                            Sent
-                          </span>
+                          <span className="text-[11px] font-mono text-slate-600 font-bold">{log.time}</span>
                         </div>
-                        <span className="text-slate-400 text-[11px]">25 Aug 2026 06:25 PM</span>
+                        <p className="text-xs text-slate-800 font-bold leading-relaxed">
+                          {log.desc}
+                        </p>
+                        <div className="pt-1 flex items-center justify-between text-[10px]">
+                          <span className="px-2 py-0.5 rounded bg-sky-100 text-sky-900 font-black border border-sky-300">
+                            {log.status}
+                          </span>
+                          <span className="text-slate-600 font-bold">Via CRM Gateway</span>
+                        </div>
                       </div>
-                      <p className="text-slate-300 text-xs bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 font-mono">
-                        Welcome to VSB Educational Institutions! Your inquiry has been registered.
-                        Our admissions counselor will guide you through the process.
-                      </p>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* TAB 2: TIMELINE (MATCHING IMAGE 2 SCREENSHOT EXACTLY) */}
+              {/* TAB 2: TIMELINE */}
               {activeMainTab === "TIMELINE" && (
-                <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-5 space-y-5 shadow-xl text-xs">
-                  {/* Top Action & Date Filters */}
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h4 className="font-bold text-white text-sm">Timeline</h4>
+                <div className="bg-white rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm text-slate-950">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <h4 className="font-black text-sm text-slate-950 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-sky-600" /> Timeline Activity Feed
+                    </h4>
                     <div className="flex items-center gap-2">
                       <select
                         value={timelineFilterAction}
                         onChange={(e) => setTimelineFilterAction(e.target.value)}
-                        className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-300 text-xs font-medium"
+                        className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-950 text-xs font-black"
                       >
                         <option value="ALL">Select Action</option>
-                        <option value="ASSIGNMENT">Lead Assignment</option>
-                        <option value="REGISTRATION">Registration</option>
-                        <option value="CALL">Calls</option>
+                        <option value="REASSIGNED">Reassigned</option>
+                        <option value="REGISTERED">Registered</option>
                       </select>
-
                       <input
                         type="date"
                         value={timelineFilterDate}
                         onChange={(e) => setTimelineFilterDate(e.target.value)}
-                        className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-300 text-xs font-medium"
+                        className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-950 text-xs font-black"
                       />
                     </div>
                   </div>
 
-                  {/* Vertical Timeline Feed (Exact items from Screenshot 2) */}
-                  <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
-                    {/* Item 1: System Automation Re-assignment */}
-                    <div className="relative group">
-                      <div className="absolute -left-6 top-0 w-5 h-5 rounded-full bg-sky-950 border border-sky-400 flex items-center justify-center text-sky-400 shadow-md">
+                  <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-300 text-xs">
+                    <div className="relative">
+                      <div className="absolute -left-6 top-0 w-5 h-5 rounded-full bg-sky-100 border border-sky-500 flex items-center justify-center text-sky-700 shadow-sm">
                         <Mail className="w-3 h-3" />
                       </div>
-
-                      <div className="bg-slate-900/90 rounded-xl border border-slate-800 p-3.5 space-y-1 hover:border-slate-700 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-400">
-                            25 Aug 2026 06:29 PM
-                          </span>
+                      <div className="bg-slate-50 rounded-xl border border-slate-300 p-3.5 space-y-1">
+                        <div className="flex items-center justify-between font-black text-slate-950">
+                          <span className="font-mono text-slate-700 text-[11px]">25 Aug 2026 06:29 PM</span>
                         </div>
-                        <p className="text-slate-200 text-xs leading-relaxed font-sans">
+                        <p className="text-slate-900 text-xs font-bold leading-relaxed">
                           Lead re-assigned to{" "}
-                          <strong className="text-white font-bold">
+                          <strong className="text-slate-950 font-black">
                             {formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
                           </strong>{" "}
-                          via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug
-                          2026 06:29 PM.
+                          via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.
                         </p>
                       </div>
                     </div>
 
-                    {/* Item 2: Lead Registration via WhatsApp Origin */}
-                    <div className="relative group">
-                      <div className="absolute -left-6 top-0 w-5 h-5 rounded-full bg-emerald-950 border border-emerald-400 flex items-center justify-center text-emerald-400 shadow-md">
+                    <div className="relative">
+                      <div className="absolute -left-6 top-0 w-5 h-5 rounded-full bg-emerald-100 border border-emerald-500 flex items-center justify-center text-emerald-700 shadow-sm">
                         <UserCheck className="w-3 h-3" />
                       </div>
-
-                      <div className="bg-slate-900/90 rounded-xl border border-slate-800 p-3.5 space-y-1 hover:border-slate-700 transition-colors relative">
+                      <div className="bg-slate-50 rounded-xl border border-slate-300 p-3.5 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-400">
-                            25 Aug 2026 06:25 PM
-                          </span>
-                          <span className="text-xs font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/80">
+                          <span className="font-mono text-slate-700 text-[11px] font-bold">25 Aug 2026 06:25 PM</span>
+                          <span className="text-xs font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
                             +10
                           </span>
                         </div>
-                        <p className="text-slate-200 text-xs leading-relaxed font-sans pr-12">
-                          <strong className="text-white font-bold">
-                            {formData.name}
-                          </strong>{" "}
-                          registered via lead origin: WhatsApp with mobile verified.
+                        <p className="text-slate-900 text-xs font-bold leading-relaxed">
+                          <strong className="text-slate-950 font-black">{formData.name}</strong> registered via lead origin: WhatsApp with mobile verified.
                         </p>
                       </div>
                     </div>
@@ -692,9 +637,9 @@ export default function ApplicantDetailModal({
 
               {/* TAB 3: LEAD DETAILS VIEW / EDIT */}
               {activeMainTab === "LEAD_DETAILS" && (
-                <div className="bg-[#0f172a] text-slate-100 rounded-xl border border-slate-800 p-5 space-y-4 shadow-xl">
+                <div className="bg-white text-slate-950 rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm">
                   {/* Sub Tabs */}
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                     <div className="flex items-center gap-2">
                       {[
                         { id: "LEAD_DETAILS", label: "Lead Details ✎" },
@@ -705,10 +650,10 @@ export default function ApplicantDetailModal({
                           key={sub.id}
                           type="button"
                           onClick={() => setActiveSubTab(sub.id as any)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all ${
                             activeSubTab === sub.id
-                              ? "bg-indigo-600 text-white shadow-md border border-indigo-400"
-                              : "text-slate-200 font-bold hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800"
+                              ? "bg-indigo-600 text-white shadow-sm border border-indigo-600"
+                              : "text-slate-950 font-black bg-slate-100 hover:bg-slate-200 border border-slate-300"
                           }`}
                         >
                           {sub.label}
@@ -719,7 +664,7 @@ export default function ApplicantDetailModal({
                     <button
                       type="button"
                       onClick={() => setIsEditing(!isEditing)}
-                      className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs transition-all flex items-center gap-1.5 shadow-sm"
+                      className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-sm"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       {isEditing ? "View Details" : "Edit Profile"}
@@ -730,64 +675,64 @@ export default function ApplicantDetailModal({
                     <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Student Full Name</label>
+                          <label className="block text-slate-950 font-black mb-1">Student Full Name</label>
                           <input
                             type="text"
                             required
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Mobile Number</label>
+                          <label className="block text-slate-950 font-black mb-1">Mobile Number</label>
                           <input
                             type="text"
                             required
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Email Address</label>
+                          <label className="block text-slate-950 font-black mb-1">Email Address</label>
                           <input
                             type="email"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Father&apos;s Name</label>
+                          <label className="block text-slate-950 font-black mb-1">Father&apos;s Name</label>
                           <input
                             type="text"
                             value={formData.fatherName || ""}
                             onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Mother&apos;s Name</label>
+                          <label className="block text-slate-950 font-black mb-1">Mother&apos;s Name</label>
                           <input
                             type="text"
                             value={formData.motherName || ""}
                             onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Gender</label>
+                          <label className="block text-slate-950 font-black mb-1">Gender</label>
                           <select
                             value={formData.gender || "Male"}
                             onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
                           >
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -795,11 +740,11 @@ export default function ApplicantDetailModal({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Blood Group</label>
+                          <label className="block text-slate-950 font-black mb-1">Blood Group</label>
                           <select
                             value={formData.bloodGroup || "O+"}
                             onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
                           >
                             <option value="A+">A+</option>
                             <option value="A-">A-</option>
@@ -815,11 +760,11 @@ export default function ApplicantDetailModal({
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Community</label>
+                          <label className="block text-slate-950 font-black mb-1">Community</label>
                           <select
                             value={formData.community || "BC"}
                             onChange={(e) => setFormData({ ...formData, community: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
                           >
                             <option value="BC">BC</option>
                             <option value="BCM">BCM</option>
@@ -831,59 +776,59 @@ export default function ApplicantDetailModal({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Target Campus</label>
+                          <label className="block text-slate-950 font-black mb-1">Target Campus</label>
                           <select
                             value={formData.campus || "KARUR"}
                             onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
                           >
                             <option value="KARUR">V.S.B. Karur Campus</option>
                             <option value="COIMBATORE">V.S.B. Coimbatore Campus</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">Course Interest</label>
+                          <label className="block text-slate-950 font-black mb-1">Course Interest</label>
                           <input
                             type="text"
                             value={formData.courseInterest || ""}
                             onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">School Name</label>
+                          <label className="block text-slate-950 font-black mb-1">School Name</label>
                           <input
                             type="text"
                             value={formData.school || ""}
                             onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
                           />
                         </div>
                         <div>
-                          <label className="block text-slate-200 font-bold mb-1">District / City</label>
+                          <label className="block text-slate-950 font-black mb-1">District / City</label>
                           <input
                             type="text"
                             value={formData.district || ""}
                             onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
                           />
                         </div>
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                      <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 rounded-lg bg-slate-800 text-slate-200 font-bold"
+                          className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-950 font-black"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold shadow-md"
+                          className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md"
                         >
                           Save Changes
                         </button>
@@ -894,53 +839,53 @@ export default function ApplicantDetailModal({
                       {/* SUBTAB 1: LEAD DETAILS */}
                       {activeSubTab === "LEAD_DETAILS" && (
                         <div className="space-y-2 text-xs">
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Student Name</span>
-                            <span className="col-span-7 font-black text-white text-sm">: {formData.name}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Student Name</span>
+                            <span className="col-span-7 font-black text-slate-950 text-sm">: {formData.name}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Mobile Number</span>
-                            <span className="col-span-7 font-bold text-sky-400 font-mono text-xs">: {formData.phone}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Mobile Number</span>
+                            <span className="col-span-7 font-black text-sky-700 font-mono text-xs">: {formData.phone}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Email Address</span>
-                            <span className="col-span-7 font-bold text-slate-100">: {formData.email || "NA"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Email Address</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.email || "NA"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Father&apos;s Name</span>
-                            <span className="col-span-7 font-bold text-white">: {formData.fatherName || "M. Natarajan"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Father&apos;s Name</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.fatherName || "M. Natarajan"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Mother&apos;s Name</span>
-                            <span className="col-span-7 font-bold text-white">: {formData.motherName || "N. Lakshmi"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Mother&apos;s Name</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.motherName || "N. Lakshmi"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Gender</span>
-                            <span className="col-span-7 font-bold text-slate-100">: {formData.gender || "Male"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Gender</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.gender || "Male"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Blood Group</span>
-                            <span className="col-span-7 font-bold text-rose-400 font-mono">: {formData.bloodGroup || "O+"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Blood Group</span>
+                            <span className="col-span-7 font-black text-rose-700 font-mono">: {formData.bloodGroup || "O+"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Physically Disabled</span>
-                            <span className="col-span-7 font-bold text-slate-100">: {formData.physicallyDisabled ? "Yes" : "No"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Physically Disabled</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.physicallyDisabled ? "Yes" : "No"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Community Category</span>
-                            <span className="col-span-7 font-bold text-amber-400">: {formData.community || "BC"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Community Category</span>
+                            <span className="col-span-7 font-black text-amber-800">: {formData.community || "BC"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Target V.S.B. Campus</span>
-                            <span className="col-span-7 font-extrabold text-sky-300">: {formData.campus || "KARUR"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Target V.S.B. Campus</span>
+                            <span className="col-span-7 font-black text-sky-800">: {formData.campus || "KARUR"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Degree Program / Course</span>
-                            <span className="col-span-7 font-extrabold text-white">: {formData.courseInterest || "B.E. Computer Science & Engineering"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Degree Program / Course</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.courseInterest || "B.E. Computer Science & Engineering"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Application Stage</span>
-                            <span className="col-span-7 font-bold text-emerald-400">: {formData.application?.stage || formData.status || "INQUIRY"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Application Stage</span>
+                            <span className="col-span-7 font-black text-emerald-800">: {formData.application?.stage || formData.status || "INQUIRY"}</span>
                           </div>
                         </div>
                       )}
@@ -948,41 +893,41 @@ export default function ApplicantDetailModal({
                       {/* SUBTAB 2: ADDITIONAL DETAILS */}
                       {activeSubTab === "ADDITIONAL" && (
                         <div className="space-y-2 text-xs">
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">10th SSLC Marks (%)</span>
-                            <span className="col-span-7 font-bold text-emerald-400 font-mono">: {formData.application?.marks10th || 88}%</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">10th SSLC Marks (%)</span>
+                            <span className="col-span-7 font-black text-emerald-800 font-mono">: {formData.application?.marks10th || 88}%</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">12th HSC Cutoff Marks (%)</span>
-                            <span className="col-span-7 font-bold text-emerald-300 font-mono">: {formData.application?.marks12th || 91.5}%</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">12th HSC Cutoff Marks (%)</span>
+                            <span className="col-span-7 font-black text-emerald-700 font-mono">: {formData.application?.marks12th || 91.5}%</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Previous School Name</span>
-                            <span className="col-span-7 font-bold text-white">: {formData.school || "V.S.B. Higher Secondary School"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Previous School Name</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.school || "V.S.B. Higher Secondary School"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Lead Acquisition Source</span>
-                            <span className="col-span-7 font-bold text-sky-400">: {formData.source || "TNEA Single Window Counselling"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Lead Acquisition Source</span>
+                            <span className="col-span-7 font-black text-sky-800">: {formData.source || "TNEA Single Window Counselling"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Fee Payment Status</span>
-                            <span className="col-span-7 font-extrabold text-emerald-400">: {formData.application?.paymentStatus || "PENDING"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Fee Payment Status</span>
+                            <span className="col-span-7 font-black text-emerald-800">: {formData.application?.paymentStatus || "PENDING"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">State</span>
-                            <span className="col-span-7 font-bold text-white">: {formData.state || "Tamil Nadu"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">State</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.state || "Tamil Nadu"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">District / City</span>
-                            <span className="col-span-7 font-bold text-sky-300">: {formData.district || "Karur"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">District / City</span>
+                            <span className="col-span-7 font-black text-sky-800">: {formData.district || "Karur"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Residential Address</span>
-                            <span className="col-span-7 font-bold text-slate-200">: {formData.address || "124, College Road, Karur, Tamil Nadu - 639111"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Residential Address</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.address || "124, College Road, Karur, Tamil Nadu - 639111"}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Alternate Contact Phone</span>
-                            <span className="col-span-7 font-bold text-sky-400 font-mono">: {formData.alternatePhone || "+91 94433 11220"}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Alternate Contact Phone</span>
+                            <span className="col-span-7 font-black text-sky-800 font-mono">: {formData.alternatePhone || "+91 94433 11220"}</span>
                           </div>
                         </div>
                       )}
@@ -990,25 +935,25 @@ export default function ApplicantDetailModal({
                       {/* SUBTAB 3: FACEBOOK DETAILS */}
                       {activeSubTab === "FACEBOOK" && (
                         <div className="space-y-2 text-xs">
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Facebook Lead ID</span>
-                            <span className="col-span-7 font-mono font-bold text-sky-400">: fb_lead_987412{formData.id.slice(-4)}</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Facebook Lead ID</span>
+                            <span className="col-span-7 font-mono font-black text-sky-800">: fb_lead_987412{formData.id.slice(-4)}</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Ad Campaign Name</span>
-                            <span className="col-span-7 font-bold text-white">: VSB_Admissions_2026_TN_Engineering</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Ad Campaign Name</span>
+                            <span className="col-span-7 font-black text-slate-950">: VSB_Admissions_2026_TN_Engineering</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Adset Target Group</span>
-                            <span className="col-span-7 font-bold text-slate-200">: TN_Higher_Secondary_Aspirants_Direct</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Adset Target Group</span>
+                            <span className="col-span-7 font-black text-slate-950">: TN_Higher_Secondary_Aspirants_Direct</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Lead Form Name</span>
-                            <span className="col-span-7 font-bold text-emerald-400">: Direct_Admission_Form_2026</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Lead Form Name</span>
+                            <span className="col-span-7 font-black text-emerald-800">: Direct_Admission_Form_2026</span>
                           </div>
-                          <div className="grid grid-cols-12 border-b border-slate-800/80 py-2.5 items-center">
-                            <span className="col-span-5 font-extrabold text-slate-300">Lead Generation Platform</span>
-                            <span className="col-span-7 font-bold text-sky-400">: Meta Ads (Facebook & Instagram)</span>
+                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                            <span className="col-span-5 font-black text-slate-700">Lead Generation Platform</span>
+                            <span className="col-span-7 font-black text-sky-800">: Meta Ads (Facebook & Instagram)</span>
                           </div>
                         </div>
                       )}
@@ -1019,14 +964,14 @@ export default function ApplicantDetailModal({
 
               {/* TAB 4: CALENDAR PRO */}
               {activeMainTab === "CALENDAR" && (
-                <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-5 space-y-4 shadow-xl text-xs">
-                  <h4 className="font-bold text-white text-sm">Calendar Pro - Followup Schedule</h4>
-                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center space-y-2">
-                    <Calendar className="w-8 h-8 text-sky-400 mx-auto" />
-                    <p className="text-slate-300 font-bold">No upcoming followup tasks scheduled.</p>
+                <div className="bg-white rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm text-xs text-slate-950">
+                  <h4 className="font-black text-slate-950 text-sm">Calendar Pro - Followup Schedule</h4>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-300 text-center space-y-2">
+                    <Calendar className="w-8 h-8 text-sky-600 mx-auto" />
+                    <p className="text-slate-900 font-black">No upcoming followup tasks scheduled.</p>
                     <button
                       onClick={() => onActionTrigger("CALL", formData.name)}
-                      className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs"
+                      className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-lg text-xs shadow-sm"
                     >
                       + Schedule Followup Event
                     </button>
@@ -1036,35 +981,35 @@ export default function ApplicantDetailModal({
 
               {/* TAB 5: NOTES */}
               {activeMainTab === "NOTES" && (
-                <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-5 space-y-4 shadow-xl text-xs">
-                  <h4 className="font-bold text-white text-sm">Counselor Notes</h4>
+                <div className="bg-white rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm text-xs text-slate-950">
+                  <h4 className="font-black text-slate-950 text-sm">Counselor Notes</h4>
                   <div className="space-y-3">
                     <textarea
                       value={newNote}
                       onChange={(e) => setNewNote(e.target.value)}
                       placeholder="Enter counselor observation notes here..."
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-sky-500"
+                      className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-950 font-bold text-xs focus:outline-none focus:border-sky-500"
                       rows={3}
                     />
                     <button
                       onClick={handleAddNote}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs"
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg text-xs shadow-sm"
                     >
                       Save Counselor Note
                     </button>
                   </div>
 
-                  <div className="space-y-2 border-t border-slate-800 pt-3">
+                  <div className="space-y-2 border-t border-slate-200 pt-3">
                     {notesList.map((note) => (
                       <div
                         key={note.id}
-                        className="bg-slate-900/90 rounded-xl p-3 border border-slate-800 space-y-1"
+                        className="bg-slate-50 rounded-xl p-3 border border-slate-300 space-y-1 text-slate-950"
                       >
-                        <div className="flex justify-between text-[11px] text-slate-400">
-                          <span className="font-bold text-sky-400">{note.author}</span>
-                          <span>{note.date}</span>
+                        <div className="flex justify-between text-[11px] text-slate-700">
+                          <span className="font-black text-sky-700">{note.author}</span>
+                          <span className="font-mono font-bold">{note.date}</span>
                         </div>
-                        <p className="text-slate-200 text-xs">{note.text}</p>
+                        <p className="text-slate-900 text-xs font-bold">{note.text}</p>
                       </div>
                     ))}
                   </div>
@@ -1073,33 +1018,33 @@ export default function ApplicantDetailModal({
 
               {/* TAB 6: TICKETS */}
               {activeMainTab === "TICKETS" && (
-                <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-5 space-y-4 shadow-xl text-xs">
-                  <h4 className="font-bold text-white text-sm">Support & Inquiry Tickets</h4>
-                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center space-y-2">
-                    <Ticket className="w-8 h-8 text-indigo-400 mx-auto" />
-                    <p className="text-slate-300 font-bold">No active support tickets found.</p>
+                <div className="bg-white rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm text-xs text-slate-950">
+                  <h4 className="font-black text-slate-950 text-sm">Support & Inquiry Tickets</h4>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-300 text-center space-y-2">
+                    <Ticket className="w-8 h-8 text-indigo-600 mx-auto" />
+                    <p className="text-slate-900 font-black">No active support tickets found.</p>
                   </div>
                 </div>
               )}
 
               {/* TAB 7: CALL LOGS */}
               {activeMainTab === "CALL_LOGS" && (
-                <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-5 space-y-4 shadow-xl text-xs">
-                  <h4 className="font-bold text-white text-sm">Call Logs & Teleconference Audio</h4>
+                <div className="bg-white rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm text-xs text-slate-950">
+                  <h4 className="font-black text-slate-950 text-sm">Call Logs & Teleconference Audio</h4>
                   <div className="space-y-3">
-                    <div className="bg-slate-900/90 rounded-xl p-3.5 border border-slate-800 flex items-center justify-between">
+                    <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-300 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                        <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-400 flex items-center justify-center text-emerald-700">
                           <PhoneCall className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="font-bold text-white">Outbound Call - Dr Dhanabal M</div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="font-black text-slate-950">Outbound Call - Dr Dhanabal M</div>
+                          <div className="text-[11px] text-slate-700 font-bold">
                             25 Aug 2026 06:30 PM • Duration: 02m 14s
                           </div>
                         </div>
                       </div>
-                      <span className="bg-emerald-950 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-800">
+                      <span className="bg-emerald-100 text-emerald-900 text-[10px] font-black px-2 py-0.5 rounded border border-emerald-300">
                         Interested
                       </span>
                     </div>
