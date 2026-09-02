@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VSB Lead Management System</string>
+    <string name="title_activity_main">VSB Lead Management System</string>
+    <string name="package_name">com.vsb.leadmanagement</string>
+    <string name="custom_url_scheme">com.vsb.leadmanagement</string>
+</resources>

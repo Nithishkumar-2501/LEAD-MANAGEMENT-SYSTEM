@@ -1,0 +1,9 @@
+{
+  "appId": "com.vsb.leadmanagement",
+  "appName": "VSB Lead Management System",
+  "webDir": "out",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
