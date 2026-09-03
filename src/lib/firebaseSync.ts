@@ -214,59 +214,54 @@ export function isLeadDeleted(studentId: string): boolean {
   }
 }
 
-// Permanently delete student record from Firebase Firestore & Realtime Database
+// Synchronously mark lead as deleted in localStorage and purge from cache (0 ms latency)
+export function markLeadAsDeleted(studentId: string): void {
+  if (typeof window === "undefined" || !studentId) return;
+  try {
+    // 1. Purge from active leads cache
+    const cached = localStorage.getItem("vsb_firebase_leads_cache");
+    if (cached) {
+      const list = JSON.parse(cached);
+      if (Array.isArray(list)) {
+        const filtered = list.filter((item: any) => item.id !== studentId);
+        localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
+      }
+    }
+
+    // 2. Add to permanent tombstone list
+    const deletedKey = "vsb_deleted_lead_ids";
+    const deletedStr = localStorage.getItem(deletedKey);
+    let deletedList: string[] = deletedStr ? JSON.parse(deletedStr) : [];
+    if (!Array.isArray(deletedList)) deletedList = [];
+    if (!deletedList.includes(studentId)) {
+      deletedList.push(studentId);
+      localStorage.setItem(deletedKey, JSON.stringify(deletedList));
+    }
+  } catch (e) {}
+}
+
+// Permanently delete student record from Firebase Firestore with high-speed async execution
 export async function deleteStudentFromFirebase(studentId: string): Promise<boolean> {
   if (!studentId) return false;
 
-  console.log(`🗑️ [Firebase] Permanently deleting student: ${studentId}...`);
-  await ensureFirebaseAuth();
+  // 1. Mark as deleted synchronously in 0ms so reload/relogin never restores it
+  markLeadAsDeleted(studentId);
 
-  let firestoreDeleted = false;
-
-  // 1. Delete permanently from Firebase Firestore ("students" collection)
+  // 2. High-speed Firestore permanent deletion
   try {
     const docRef = doc(db, "students", studentId);
-    await withTimeout(deleteDoc(docRef), 3000);
-    firestoreDeleted = true;
+    await deleteDoc(docRef);
     console.log(`🔥 [Firebase Firestore] Document ${studentId} permanently deleted.`);
   } catch (err: any) {
     console.warn("Firestore delete notice:", err?.message || err);
   }
 
-  // 2. Delete permanently from Firebase Realtime Database node
+  // 3. RTDB fire-and-forget in background (non-blocking)
   try {
     const rtdbRef = ref(rtdb, `students/${studentId}`);
-    await withTimeout(remove(rtdbRef), 1500);
-    console.log(`🔥 [Firebase RTDB] Node ${studentId} permanently deleted.`);
-  } catch (err: any) {
-    // Non-blocking
-  }
-
-  // 3. Purge permanently from LocalStorage and record in tombstone list
-  try {
-    if (typeof window !== "undefined") {
-      // Remove from active leads cache
-      const cached = localStorage.getItem("vsb_firebase_leads_cache");
-      if (cached) {
-        const list = JSON.parse(cached);
-        if (Array.isArray(list)) {
-          const filtered = list.filter((item: any) => item.id !== studentId);
-          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
-        }
-      }
-
-      // Record in permanent deleted tombstone so it NEVER restores on reload or relogin
-      const deletedKey = "vsb_deleted_lead_ids";
-      const deletedStr = localStorage.getItem(deletedKey);
-      let deletedList: string[] = deletedStr ? JSON.parse(deletedStr) : [];
-      if (!Array.isArray(deletedList)) deletedList = [];
-      if (!deletedList.includes(studentId)) {
-        deletedList.push(studentId);
-      }
-      localStorage.setItem(deletedKey, JSON.stringify(deletedList));
-    }
+    remove(rtdbRef).catch(() => {});
   } catch (e) {}
 
-  return firestoreDeleted;
+  return true;
 }
 

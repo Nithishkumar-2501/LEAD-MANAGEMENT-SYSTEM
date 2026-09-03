@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
-import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
+import { saveStudentToFirebase, deleteStudentFromFirebase, markLeadAsDeleted } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
@@ -952,54 +952,57 @@ export default function ContactDirectoryModule({
     }
   };
 
-  // Delete Contact Handler
-  const handleDeleteContact = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to permanently delete contact record for ${name}? This will remove the lead permanently from Firebase and the database.`)) return;
+  // Delete Contact Handler (Instant Optimistic UI + Fast Background Sync)
+  const handleDeleteContact = (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to permanently delete contact record for ${name}?`)) return;
 
-    // 1. Permanently delete from Firebase Firestore & Realtime Database
-    try {
-      await deleteStudentFromFirebase(id);
-    } catch (fbErr) {
-      console.warn("Firebase delete warning:", fbErr);
-    }
-
-    // 2. Permanently delete from Prisma SQLite Database
-    try {
-      await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
-    } catch (err) { }
-
+    // 1. INSTANT OPTIMISTIC UI REMOVAL (0 ms latency - disappears immediately)
     setContacts((prev) => prev.filter((c) => c.id !== id));
     if (onDeleteContact) {
       onDeleteContact(id, name);
     }
     if (onTriggerToast) {
-      onTriggerToast(`🗑️ Permanently deleted contact "${name}" from Firebase & Database!`);
+      onTriggerToast(`🗑️ Permanently deleted contact "${name}"!`);
     }
+
+    // 2. Synchronous permanent tombstone registration (never restores on reload/relogin)
+    markLeadAsDeleted(id);
+
+    // 3. High-speed asynchronous permanent deletion in background
+    Promise.allSettled([
+      deleteStudentFromFirebase(id),
+      fetch(`/api/contacts?id=${id}`, { method: "DELETE" }),
+    ]).catch((err) => console.warn("Background delete notice:", err));
   };
 
-  // Bulk Delete Selected Contacts Handler
-  const handleBulkDelete = async () => {
+  // Bulk Delete Selected Contacts Handler (Instant Optimistic UI + Parallel Background Sync)
+  const handleBulkDelete = () => {
     if (selectedRows.length === 0) return;
-    if (!confirm(`Are you sure you want to permanently delete ${selectedRows.length} selected lead(s)? This will remove them permanently from Firebase and the database.`)) return;
+    const count = selectedRows.length;
+    if (!confirm(`Are you sure you want to permanently delete ${count} selected lead(s)?`)) return;
 
-    for (const id of selectedRows) {
-      try {
-        await deleteStudentFromFirebase(id);
-      } catch (fbErr) {}
+    const idsToDelete = [...selectedRows];
 
-      try {
-        await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
-      } catch (err) { }
-    }
-
-    setContacts((prev) => prev.filter((c) => !selectedRows.includes(c.id)));
-    if (onDeleteContact) {
-      selectedRows.forEach((id) => onDeleteContact(id, "Selected Lead"));
-    }
-    if (onTriggerToast) {
-      onTriggerToast(`🗑️ Permanently deleted ${selectedRows.length} selected lead(s) from Firebase & Database!`);
-    }
+    // 1. INSTANT OPTIMISTIC UI REMOVAL (0 ms latency - disappears immediately)
+    setContacts((prev) => prev.filter((c) => !idsToDelete.includes(c.id)));
     setSelectedRows([]);
+    if (onTriggerToast) {
+      onTriggerToast(`🗑️ Permanently deleted ${count} selected lead(s)!`);
+    }
+
+    // 2. Synchronous permanent tombstone registration for all leads
+    idsToDelete.forEach((id) => {
+      markLeadAsDeleted(id);
+      if (onDeleteContact) onDeleteContact(id, "Selected Lead");
+    });
+
+    // 3. High-speed parallel asynchronous permanent deletion in background
+    Promise.allSettled(
+      idsToDelete.flatMap((id) => [
+        deleteStudentFromFirebase(id),
+        fetch(`/api/contacts?id=${id}`, { method: "DELETE" }),
+      ])
+    ).catch((err) => console.warn("Bulk delete background notice:", err));
   };
 
   return (

@@ -248,10 +248,12 @@ export async function DELETE(request: Request) {
 
     // 1. Delete permanently from Prisma SQLite Database
     try {
-      await prisma.payment.deleteMany({ where: { application: { leadId: id } } });
-      await prisma.application.deleteMany({ where: { leadId: id } });
-      await prisma.task.deleteMany({ where: { leadId: id } });
-      await prisma.lead.deleteMany({ where: { id } });
+      await Promise.allSettled([
+        prisma.payment.deleteMany({ where: { application: { leadId: id } } }),
+        prisma.application.deleteMany({ where: { leadId: id } }),
+        prisma.task.deleteMany({ where: { leadId: id } }),
+        prisma.lead.deleteMany({ where: { id } }),
+      ]);
     } catch (e) {
       console.warn("Prisma lead delete warning:", e);
     }

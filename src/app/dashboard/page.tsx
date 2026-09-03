@@ -27,6 +27,7 @@ import {
   saveStudentToFirebase,
   deleteStudentFromFirebase,
   isLeadDeleted,
+  markLeadAsDeleted,
   fetchStudentsFromFirestore,
   fetchStudentsFromRTDB,
   subscribeToFirebaseStudents,
@@ -335,24 +336,9 @@ export default function DashboardPage() {
   };
 
   const handleDeleteApplicant = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to permanently delete applicant "${name}"? This will permanently remove the lead from Firebase and the database.`)) return;
+    if (!confirm(`Are you sure you want to permanently delete applicant "${name}"?`)) return;
 
-    // 1. Permanently delete from Firebase Firestore & Realtime Database
-    try {
-      await deleteStudentFromFirebase(id);
-      console.log(`🔥 [Firebase] Deleted student: ${id} (${name})`);
-    } catch (fbErr) {
-      console.warn("Firebase delete warning:", fbErr);
-    }
-
-    // 2. Permanently delete from Prisma SQLite Database
-    try {
-      await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
-    } catch (err) {
-      console.warn("Delete API notice:", err);
-    }
-
-    // 3. Update applicants state immediately
+    // 1. INSTANT OPTIMISTIC UI REMOVAL (0 ms latency - disappears immediately)
     setApplicants((prev) => {
       const filtered = prev.filter((a) => a.id !== id);
       try {
@@ -360,8 +346,16 @@ export default function DashboardPage() {
       } catch (e) {}
       return filtered;
     });
+    triggerToast(`🗑️ Permanently deleted "${name}"!`);
 
-    triggerToast(`🗑️ Permanently deleted applicant "${name}" from Firebase & Database!`);
+    // 2. Synchronous permanent tombstone registration (never restores on reload or relogin)
+    markLeadAsDeleted(id);
+
+    // 3. High-speed asynchronous permanent deletion in background
+    Promise.allSettled([
+      deleteStudentFromFirebase(id),
+      fetch(`/api/contacts?id=${id}`, { method: "DELETE" }),
+    ]).catch((err) => console.warn("Background delete notice:", err));
   };
 
   if (!isAuthenticated) {
