@@ -849,43 +849,43 @@ export default function ApplicantDetailModal({
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Email Address</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.email || "NA"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.email || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Father&apos;s Name</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.fatherName || "M. Natarajan"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.fatherName || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Mother&apos;s Name</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.motherName || "N. Lakshmi"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.motherName || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Gender</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.gender || "Male"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.gender || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Blood Group</span>
-                            <span className="col-span-7 font-black text-rose-700 font-mono">: {formData.bloodGroup || "O+"}</span>
+                            <span className="col-span-7 font-black text-rose-700 font-mono">: {formData.bloodGroup || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Physically Disabled</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.physicallyDisabled ? "Yes" : "No"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.physicallyDisabled || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Community Category</span>
-                            <span className="col-span-7 font-black text-amber-800">: {formData.community || "BC"}</span>
+                            <span className="col-span-7 font-black text-amber-800">: {formData.community || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Target V.S.B. Campus</span>
-                            <span className="col-span-7 font-black text-sky-800">: {formData.campus || "KARUR"}</span>
+                            <span className="col-span-7 font-black text-sky-800">: {formData.campus ? `${formData.campus} CAMPUS` : ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Degree Program / Course</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.courseInterest || "B.E. Computer Science & Engineering"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.courseInterest || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Application Stage</span>
-                            <span className="col-span-7 font-black text-emerald-800">: {formData.application?.stage || formData.status || "INQUIRY"}</span>
+                            <span className="col-span-7 font-black text-emerald-800">: {formData.application?.stage || formData.status || ""}</span>
                           </div>
                         </div>
                       )}
@@ -895,39 +895,39 @@ export default function ApplicantDetailModal({
                         <div className="space-y-2 text-xs">
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">10th SSLC Marks (%)</span>
-                            <span className="col-span-7 font-black text-emerald-800 font-mono">: {formData.application?.marks10th || 88}%</span>
+                            <span className="col-span-7 font-black text-emerald-800 font-mono">: {formData.application?.marks10th ? `${formData.application.marks10th}%` : ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">12th HSC Cutoff Marks (%)</span>
-                            <span className="col-span-7 font-black text-emerald-700 font-mono">: {formData.application?.marks12th || 91.5}%</span>
+                            <span className="col-span-7 font-black text-emerald-700 font-mono">: {formData.application?.marks12th ? `${formData.application.marks12th}%` : ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Previous School Name</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.school || "V.S.B. Higher Secondary School"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.school || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Lead Acquisition Source</span>
-                            <span className="col-span-7 font-black text-sky-800">: {formData.source || "TNEA Single Window Counselling"}</span>
+                            <span className="col-span-7 font-black text-sky-800">: {formData.source || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Fee Payment Status</span>
-                            <span className="col-span-7 font-black text-emerald-800">: {formData.application?.paymentStatus || "PENDING"}</span>
+                            <span className="col-span-7 font-black text-emerald-800">: {formData.application?.paymentStatus || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">State</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.state || "Tamil Nadu"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.state || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">District / City</span>
-                            <span className="col-span-7 font-black text-sky-800">: {formData.district || "Karur"}</span>
+                            <span className="col-span-7 font-black text-sky-800">: {formData.district || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Residential Address</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.address || "124, College Road, Karur, Tamil Nadu - 639111"}</span>
+                            <span className="col-span-7 font-black text-slate-950">: {formData.address || ""}</span>
                           </div>
                           <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                             <span className="col-span-5 font-black text-slate-700">Alternate Contact Phone</span>
-                            <span className="col-span-7 font-black text-sky-800 font-mono">: {formData.alternatePhone || "+91 94433 11220"}</span>
+                            <span className="col-span-7 font-black text-sky-800 font-mono">: {formData.alternatePhone || ""}</span>
                           </div>
                         </div>
                       )}

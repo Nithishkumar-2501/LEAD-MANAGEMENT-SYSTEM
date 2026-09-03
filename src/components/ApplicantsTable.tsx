@@ -239,16 +239,14 @@ export default function ApplicantsTable({
                     {/* TNEA Cutoff & Counselling Cell */}
                     <td className="py-3.5 px-4 hidden md:table-cell">
                       <div className="space-y-0.5">
-                        <div className="font-extrabold text-sky-300 font-mono text-[11px]">
-                          Cutoff: {item.tneaCutoff || 188.5} / 200
-                        </div>
-                        {item.appliedCounselling !== false ? (
+                        {item.tneaCutoff && (
+                          <div className="font-extrabold text-sky-300 font-mono text-[11px]">
+                            Cutoff: {item.tneaCutoff} / 200
+                          </div>
+                        )}
+                        {item.counsellingAppNo && (
                           <span className="inline-block text-[9.5px] font-extrabold text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">
-                            ✅ TNEA ({item.counsellingAppNo || "TNEA2026-61201"})
-                          </span>
-                        ) : (
-                          <span className="inline-block text-[9.5px] font-bold text-amber-300 bg-amber-950 px-2 py-0.5 rounded-md border border-amber-800">
-                            ⏳ Management Quota
+                            ✅ TNEA ({item.counsellingAppNo})
                           </span>
                         )}
                       </div>
@@ -256,7 +254,7 @@ export default function ApplicantsTable({
 
                     {/* Marks */}
                     <td className="py-3.5 px-4 font-extrabold text-slate-100 dark:text-slate-100 hidden sm:table-cell text-sm">
-                      {item.application.marks12th}%
+                      {item.application?.marks12th ? `${item.application.marks12th}%` : ""}
                     </td>
 
                     {/* Actions */}

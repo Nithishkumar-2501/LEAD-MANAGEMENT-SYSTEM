@@ -141,8 +141,8 @@ export default function DashboardPage() {
               id: `app_${fb.id}`,
               leadId: fb.id,
               stage: "INQUIRY",
-              marks10th: 85,
-              marks12th: 88,
+              marks10th: (fb as any).marks10th || existing?.application?.marks10th || 0,
+              marks12th: (fb as any).marks12th || existing?.application?.marks12th || 0,
               paymentStatus: "PENDING",
             };
             const app = (fb.application || existing?.application || defaultApp) as Application;

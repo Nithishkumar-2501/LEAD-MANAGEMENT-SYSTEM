@@ -60,29 +60,29 @@ export function parseCSVToLeads(
       return fallback;
     };
 
-    const name = getVal(nameIdx, 0, `Candidate ${i}`);
-    const phone = getVal(phoneIdx, 1, "+91 98765 43210");
-    const email = getVal(emailIdx, 2, `${name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@gmail.com`);
-    const school = getVal(schoolIdx, 3, "Govt Higher Secondary School");
-    const district = getVal(districtIdx, 4, selectedCampus === "KARUR" ? "Karur" : "Coimbatore");
-    const address = getVal(addressIdx, 5, "Tamil Nadu");
-    const courseInterest = getVal(courseIdx, 6, "B.E. Computer Science and Engineering");
-    const marks10Str = getVal(marks10Idx, 7, "85");
-    const marks12Str = getVal(marks12Idx, 8, "88");
-    const cutoffStr = getVal(cutoffIdx, 9, "185.5");
-    const fatherName = getVal(fatherIdx, 10, "Parent / Guardian");
+    const name = getVal(nameIdx, 0, "");
+    const phone = getVal(phoneIdx, 1, "");
+    const email = getVal(emailIdx, 2, "");
+    const school = getVal(schoolIdx, 3, "");
+    const district = getVal(districtIdx, 4, "");
+    const address = getVal(addressIdx, 5, "");
+    const courseInterest = getVal(courseIdx, 6, "");
+    const marks10Str = getVal(marks10Idx, 7, "");
+    const marks12Str = getVal(marks12Idx, 8, "");
+    const cutoffStr = getVal(cutoffIdx, 9, "");
+    const fatherName = getVal(fatherIdx, 10, "");
     const motherName = getVal(motherIdx, 11, "");
-    const gender = getVal(genderIdx, 12, "Male");
-    const community = getVal(communityIdx, 13, "BC");
-    const campusVal = getVal(campusIdx, 14, selectedCampus);
+    const gender = getVal(genderIdx, 12, "");
+    const community = getVal(communityIdx, 13, "");
+    const campusVal = getVal(campusIdx, 14, selectedCampus === "ALL" ? "KARUR" : selectedCampus);
     const statusVal = getVal(statusIdx, 15, "NEW");
 
     const leadId = `lead_csv_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`;
     const appId = `app_csv_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`;
 
-    const parsed10 = parseFloat(marks10Str) || 85;
-    const parsed12 = parseFloat(marks12Str) || 88;
-    const parsedCutoff = parseFloat(cutoffStr) || 185.5;
+    const parsed10 = marks10Str ? (parseFloat(marks10Str) || 0) : 0;
+    const parsed12 = marks12Str ? (parseFloat(marks12Str) || 0) : 0;
+    const parsedCutoff = cutoffStr ? (parseFloat(cutoffStr) || undefined) : undefined;
 
     const importedLead: Lead & { application: Application } = {
       id: leadId,
@@ -98,7 +98,7 @@ export function parseCSVToLeads(
         : selectedCampus) as CampusLocation,
       school,
       district,
-      state: "Tamil Nadu",
+      state: "",
       address,
       status: (statusVal.toUpperCase() as LeadStatus) || "NEW",
       fatherName,
@@ -106,11 +106,11 @@ export function parseCSVToLeads(
       gender,
       community,
       tneaCutoff: parsedCutoff,
-      leadScore: Math.min(100, Math.round(parsedCutoff / 2)),
-      assignedTo: loggedInUsername || "adminkarur@123",
-      appliedCounselling: true,
-      counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
-      counsellingCategory: "TNEA General Counselling",
+      leadScore: parsedCutoff ? Math.min(100, Math.round(parsedCutoff / 2)) : 0,
+      assignedTo: loggedInUsername || "",
+      appliedCounselling: false,
+      counsellingAppNo: "",
+      counsellingCategory: "",
       createdAt: new Date().toISOString(),
       application: {
         id: appId,

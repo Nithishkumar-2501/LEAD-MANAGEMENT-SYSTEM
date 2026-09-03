@@ -85,31 +85,33 @@ export default function ContactDirectoryModule({
     if (col === "Registered Name") return c.name || "";
     if (col === "Registered Email") return c.email || "";
     if (col === "Registered Mobile") return c.phone || "";
-    if (col === "Registered Country") return "India";
-    if (col === "State") return "Tamil Nadu";
-    if (col === "City") return c.district || "Karur";
+    if (col === "Registered Country") return (c as any).country || "";
+    if (col === "State") return c.state || "";
+    if (col === "City") return c.district || "";
     if (col === "Campus") return c.campus || "";
-    if (col === "Course") return c.courseInterest || "B.E. Computer Science";
-    if (col === "Specialization") return "TNEA Engineering";
-    if (col === "Utm Keyword") return "tnea_admissions_2026";
-    if (col === "Gender") return (c as any).gender || "Male";
-    if (col === "Father's Name") return (c as any).fatherName || "K. Ramachandran";
-    if (col === "Mother's Name") return (c as any).motherName || "R. Priya";
-    if (col === "Blood Group") return (c as any).bloodGroup || "O+";
-    if (col === "Physically Disabled") return (c as any).physicallyDisabled ? "Yes" : "No";
-    if (col === "SSLC Mark") return String((c as any).marks10th || 85);
-    if (col === "School Name with Place") return c.school || "Govt Higher Sec School";
-    if (col === "Address For communication") return c.address || "Karur, Tamil Nadu";
-    if (col === "Community") return (c as any).community || "BC";
-    if (col === "User Registration Date") return "Aug 12, 2026";
+    if (col === "Course") return c.courseInterest || "";
+    if (col === "Specialization") return (c as any).specialization || "";
+    if (col === "Utm Keyword") return (c as any).utmKeyword || "";
+    if (col === "Gender") return (c as any).gender || "";
+    if (col === "Father's Name") return (c as any).fatherName || "";
+    if (col === "Mother's Name") return (c as any).motherName || "";
+    if (col === "Blood Group") return (c as any).bloodGroup || "";
+    if (col === "Physically Disabled") return (c as any).physicallyDisabled || "";
+    if (col === "SSLC Mark") return (c as any).marks10th ? String((c as any).marks10th) : "";
+    if (col === "School Name with Place") return c.school || "";
+    if (col === "Address For communication") return c.address || "";
+    if (col === "Community") return (c as any).community || "";
+    if (col === "User Registration Date") {
+      if (!c.createdAt) return "";
+      const d = new Date(c.createdAt);
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    }
     if (col === "Lead Stage") return c.status || "";
     return "";
   };
 
   // Candidate Profile Modal State (Image 2)
   const [selectedCandidateForModal, setSelectedCandidateForModal] = useState<(Lead & { application: Application }) | null>(null);
-
-
 
   const getFullCandidateWithApp = (contact: Lead & { application?: Application | null }): (Lead & { application: Application }) => {
     return {
@@ -118,8 +120,8 @@ export default function ContactDirectoryModule({
         id: `app_${contact.id}`,
         leadId: contact.id,
         stage: (contact.status === "ADMITTED" ? "FEE_PAID" : contact.status === "CONTACTED" ? "SUBMITTED" : "INQUIRY"),
-        marks10th: 85,
-        marks12th: 88,
+        marks10th: (contact as any).marks10th || 0,
+        marks12th: (contact as any).marks12th || 0,
         paymentStatus: contact.status === "ADMITTED" ? "COMPLETED" : "PENDING",
       },
     };
@@ -366,14 +368,14 @@ export default function ContactDirectoryModule({
     phone: "",
     email: "",
     school: "",
-    district: "Karur",
+    district: "",
     address: "",
     campus: "KARUR" as CampusLocation,
     courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
-    appliedCounselling: true,
-    counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
-    tneaCutoff: 185.0,
-    counsellingCategory: "TNEA General Counselling",
+    appliedCounselling: false,
+    counsellingAppNo: "",
+    tneaCutoff: undefined as number | undefined,
+    counsellingCategory: "",
   });
 
   // Edit Contact Modal State
@@ -457,28 +459,30 @@ export default function ContactDirectoryModule({
         </div>
       );
     }
-    if (col === "Registered Country") return <span className="font-semibold text-slate-800 dark:text-slate-200">India</span>;
-    if (col === "State") return <span className="font-semibold text-slate-800 dark:text-slate-200">Tamil Nadu</span>;
-    if (col === "City") return <span className="font-semibold text-slate-800 dark:text-slate-200">{contact.district || "Karur"}</span>;
-    if (col === "Campus") return <span className="font-bold text-sky-700 dark:text-sky-300">{contact.campus} CAMPUS</span>;
-    if (col === "Course") return <span className="font-bold text-indigo-700 dark:text-indigo-300">{contact.courseInterest || "B.E. Computer Science"}</span>;
-    if (col === "Specialization") return <span className="text-slate-700 dark:text-slate-300">TNEA Engineering</span>;
-    if (col === "Utm Keyword") return <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">tnea_admissions_2026</span>;
-    if (col === "Gender") return <span className="text-slate-800 dark:text-slate-200 font-semibold">{(contact as any).gender || "Male"}</span>;
-    if (col === "Father's Name") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).fatherName || "K. Ramachandran"}</span>;
-    if (col === "Mother's Name") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).motherName || "R. Priya"}</span>;
-    if (col === "Blood Group") return <span className="font-bold text-rose-600 dark:text-rose-400">{(contact as any).bloodGroup || "O+"}</span>;
-    if (col === "Physically Disabled") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).physicallyDisabled ? "Yes" : "No"}</span>;
-    if (col === "SSLC Mark") return <span className="font-bold text-emerald-600 dark:text-emerald-400">{(contact as any).marks10th || 85}%</span>;
-    if (col === "School Name with Place") return <span className="text-slate-800 dark:text-slate-200 font-medium">{contact.school || "Govt Higher Sec School"}</span>;
-    if (col === "Address For communication") return <span className="text-slate-700 dark:text-slate-300 font-medium">{showAddress ? contact.address || "Karur, Tamil Nadu" : "•••••••••••••"}</span>;
-    if (col === "Community") return <span className="font-extrabold text-blue-600 dark:text-sky-400">{(contact as any).community || "BC"}</span>;
+    if (col === "Registered Country") return <span className="font-semibold text-slate-800 dark:text-slate-200">{(contact as any).country || ""}</span>;
+    if (col === "State") return <span className="font-semibold text-slate-800 dark:text-slate-200">{contact.state || ""}</span>;
+    if (col === "City") return <span className="font-semibold text-slate-800 dark:text-slate-200">{contact.district || ""}</span>;
+    if (col === "Campus") return contact.campus ? <span className="font-bold text-sky-700 dark:text-sky-300">{contact.campus} CAMPUS</span> : <span></span>;
+    if (col === "Course") return <span className="font-bold text-indigo-700 dark:text-indigo-300">{contact.courseInterest || ""}</span>;
+    if (col === "Specialization") return <span className="text-slate-700 dark:text-slate-300">{(contact as any).specialization || ""}</span>;
+    if (col === "Utm Keyword") return <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{(contact as any).utmKeyword || ""}</span>;
+    if (col === "Gender") return <span className="text-slate-800 dark:text-slate-200 font-semibold">{(contact as any).gender || ""}</span>;
+    if (col === "Father's Name") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).fatherName || ""}</span>;
+    if (col === "Mother's Name") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).motherName || ""}</span>;
+    if (col === "Blood Group") return <span className="font-bold text-rose-600 dark:text-rose-400">{(contact as any).bloodGroup || ""}</span>;
+    if (col === "Physically Disabled") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).physicallyDisabled || ""}</span>;
+    if (col === "SSLC Mark") return (contact as any).marks10th ? <span className="font-bold text-emerald-600 dark:text-emerald-400">{(contact as any).marks10th}%</span> : <span></span>;
+    if (col === "School Name with Place") return <span className="text-slate-800 dark:text-slate-200 font-medium">{contact.school || ""}</span>;
+    if (col === "Address For communication") return <span className="text-slate-700 dark:text-slate-300 font-medium">{showAddress ? (contact.address || "") : (contact.address ? "•••••••••••••" : "")}</span>;
+    if (col === "Community") return <span className="font-extrabold text-blue-600 dark:text-sky-400">{(contact as any).community || ""}</span>;
     if (col === "User Registration Date") {
-      const d = contact.createdAt ? new Date(contact.createdAt) : new Date();
+      if (!contact.createdAt) return <span></span>;
+      const d = new Date(contact.createdAt);
       const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
       return <span className="text-slate-800 dark:text-slate-200 font-mono text-[11px] font-medium">{formattedDate}</span>;
     }
     if (col === "Lead Stage") {
+      if (!contact.status) return <span></span>;
       const statusText =
         contact.status === "NEW"
           ? "Untouched"
@@ -490,7 +494,7 @@ export default function ContactDirectoryModule({
                 ? "Admitted"
                 : contact.status === "REJECTED"
                   ? "Closed"
-                  : contact.status || "Untouched";
+                  : contact.status || "";
 
       const badgeStyle =
         statusText === "Untouched"
@@ -509,7 +513,7 @@ export default function ContactDirectoryModule({
         </span>
       );
     }
-    return <span className="text-slate-400">N/A</span>;
+    return <span></span>;
   };
 
   // Dynamic Side Drawer Rule Evaluator (Image 1 Filter leads by)
@@ -778,9 +782,10 @@ export default function ContactDirectoryModule({
       name: newContact.name.trim(),
       phone: cleanPhone,
       email: cleanEmail,
-      district: newContact.district || "Karur",
-      state: "Tamil Nadu",
-      school: newContact.school.trim() || "Govt Higher Secondary School",
+      district: newContact.district || "",
+      state: "",
+      school: newContact.school.trim() || "",
+      address: newContact.address.trim() || "",
     };
 
     let createdLead: any = null;
@@ -812,18 +817,18 @@ export default function ContactDirectoryModule({
         source: "Direct Contact Entry",
         courseInterest: payload.courseInterest,
         campus: payload.campus,
-        school: payload.school,
-        district: payload.district,
-        state: "Tamil Nadu",
-        address: payload.address || "Tamil Nadu",
+        school: payload.school || "",
+        district: payload.district || "",
+        state: "",
+        address: payload.address || "",
         status: "NEW",
         createdAt: new Date().toISOString(),
         application: {
           id: `app_${Date.now()}`,
           leadId: `lead_${Date.now()}`,
           stage: "INQUIRY",
-          marks10th: 85.0,
-          marks12th: 88.0,
+          marks10th: 0,
+          marks12th: 0,
           paymentStatus: "PENDING",
         },
       };
@@ -853,14 +858,14 @@ export default function ContactDirectoryModule({
       phone: "",
       email: "",
       school: "",
-      district: "Karur",
+      district: "",
       address: "",
       campus: "KARUR",
       courseInterest: "B.E. Computer Science",
-      appliedCounselling: true,
-      counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
-      tneaCutoff: 185.0,
-      counsellingCategory: "TNEA General Counselling",
+      appliedCounselling: false,
+      counsellingAppNo: "",
+      tneaCutoff: undefined as any,
+      counsellingCategory: "",
     });
 
     if (onTriggerToast) {
@@ -2003,43 +2008,51 @@ export default function ContactDirectoryModule({
                     </div>
 
                     {/* School */}
-                    <div className="flex items-center gap-2 pt-1 border-t border-white/10">
-                      <School className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span className="font-medium text-amber-200 truncate">{contact.school || "Govt HSS"}</span>
-                    </div>
+                    {contact.school && (
+                      <div className="flex items-center gap-2 pt-1 border-t border-white/10">
+                        <School className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="font-medium text-amber-200 truncate">{contact.school}</span>
+                      </div>
+                    )}
 
                     {/* District */}
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-pink-400 shrink-0" />
-                      <span className="font-bold text-pink-300">{contact.district || "Karur"} District</span>
-                    </div>
+                    {contact.district && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                        <span className="font-bold text-pink-300">{contact.district} District</span>
+                      </div>
+                    )}
 
                     {/* TNEA Counselling Details Box */}
-                    <div className="pt-2 border-t border-white/10 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <GraduationCap className="w-3 h-3 text-sky-400" /> TNEA Counselling:
-                        </span>
-                        {contact.appliedCounselling !== false ? (
-                          <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                            ✅ Applied ({contact.counsellingAppNo || "TNEA2026-61201"})
+                    {(contact.counsellingAppNo || contact.tneaCutoff) && (
+                      <div className="pt-2 border-t border-white/10 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                            <GraduationCap className="w-3 h-3 text-sky-400" /> TNEA Counselling:
                           </span>
-                        ) : (
-                          <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
-                            ⏳ Direct Management Intake
-                          </span>
+                          {contact.counsellingAppNo ? (
+                            <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                              ✅ Applied ({contact.counsellingAppNo})
+                            </span>
+                          ) : (
+                            <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                              ⏳ Direct Intake
+                            </span>
+                          )}
+                        </div>
+
+                        {contact.tneaCutoff && (
+                          <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
+                            <span className="text-slate-300">
+                              Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff} / 200</strong>
+                            </span>
+                            <span className="text-indigo-300 text-[10px]">
+                              {contact.counsellingCategory || ""}
+                            </span>
+                          </div>
                         )}
                       </div>
-
-                      <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
-                        <span className="text-slate-300">
-                          Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff || 188.5} / 200</strong>
-                        </span>
-                        <span className="text-indigo-300 text-[10px]">
-                          {contact.counsellingCategory || "TNEA General"}
-                        </span>
-                      </div>
-                    </div>
+                    )}
 
                     {/* Admin Teacher Assignment Dropdown */}
                     {currentUserRole === "ADMIN" && (

@@ -35,8 +35,8 @@ export default function CreateApplicationModal({
     courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
     campus: "KARUR" as CampusLocation,
     source: "TNEA Counselling",
-    marks10th: 85,
-    marks12th: 88,
+    marks10th: 0,
+    marks12th: 0,
     stage: "INQUIRY" as AppStage,
   });
 

@@ -37,8 +37,8 @@ export default function AddQuickLeadModal({
     community: "BC",
     address: "",
     school: "",
-    state: "Tamil Nadu",
-    city: "Salem",
+    state: "",
+    city: "",
   });
 
   if (!isOpen) return null;
@@ -118,8 +118,8 @@ export default function AddQuickLeadModal({
           id: `app_quick_${Date.now()}`,
           leadId: `lead_quick_${Date.now()}`,
           stage: "INQUIRY",
-          marks10th: 85,
-          marks12th: 88,
+          marks10th: 0,
+          marks12th: 0,
           paymentStatus: "PENDING",
         },
       };
@@ -149,8 +149,8 @@ export default function AddQuickLeadModal({
         community: "BC",
         address: "",
         school: "",
-        state: "Tamil Nadu",
-        city: "Salem",
+        state: "",
+        city: "",
       });
       setError(null);
     } else {
