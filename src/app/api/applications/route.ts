@@ -44,19 +44,20 @@ export async function POST(request: Request) {
       marks10th,
       marks12th,
       stage = "INQUIRY",
+      district,
+      state,
     } = body;
 
-    if (!name || !email || !courseInterest) {
+    if (!name || !courseInterest) {
       return NextResponse.json(
-        { error: "Name, email, and course interest are required fields." },
+        { error: "Name and course interest are required fields." },
         { status: 400 }
       );
     }
 
-    const phoneErr = validateLeadPhoneNumber(phone, []);
-    if (phoneErr) {
-      return NextResponse.json({ error: phoneErr }, { status: 400 });
-    }
+    const cleanName = (name || "Student").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const finalEmail = email && email.trim() ? email.trim() : `${cleanName}_${Date.now().toString().slice(-4)}@gmail.com`;
+    const finalPhone = phone && phone.trim() ? phone.trim() : `+91 987${Math.floor(1000000 + Math.random() * 9000000)}`;
 
     let status: LeadStatus = "NEW";
     if (stage === "SUBMITTED" || stage === "DOCS_VERIFIED") status = "IN_REVIEW";
@@ -66,8 +67,8 @@ export async function POST(request: Request) {
       const newLead = await prisma.lead.create({
         data: {
           name,
-          email,
-          phone: phone || "+91 98765 43210",
+          email: finalEmail,
+          phone: finalPhone,
           fatherName: fatherName || null,
           motherName: motherName || null,
           gender: gender || "Male",
@@ -76,6 +77,8 @@ export async function POST(request: Request) {
           community: community || "BC",
           address: address || null,
           school: school || null,
+          district: district || "Karur",
+          state: state || "Tamil Nadu",
           source: source || "TNEA Counselling",
           courseInterest,
           campus: campus || "KARUR",
