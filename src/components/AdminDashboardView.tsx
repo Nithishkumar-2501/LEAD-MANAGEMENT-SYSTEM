@@ -23,6 +23,7 @@ interface AdminDashboardViewProps {
   onOpenQuickLeadModal: () => void;
   onToggleTask: (taskId: string) => void;
   onImportLeads: (newLeads: (Lead & { application: Application })[]) => void;
+  onDeleteApplicant?: (id: string, name: string) => void;
 }
 
 export default function AdminDashboardView({
@@ -40,6 +41,7 @@ export default function AdminDashboardView({
   onOpenQuickLeadModal,
   onToggleTask,
   onImportLeads,
+  onDeleteApplicant,
 }: AdminDashboardViewProps) {
   // Cutoff Score Range Aggregation
   const cutoffBrackets = [
@@ -121,6 +123,7 @@ export default function AdminDashboardView({
           onOpenCreateModal={onOpenCreateModal}
           onOpenQuickLeadModal={onOpenQuickLeadModal}
           onImportLeads={onImportLeads}
+          onDeleteApplicant={onDeleteApplicant}
         />
         <TaskSidebar
           tasks={tasks}

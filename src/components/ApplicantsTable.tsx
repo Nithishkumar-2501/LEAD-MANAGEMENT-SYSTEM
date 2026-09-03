@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
-import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, Upload } from "lucide-react";
+import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, Upload, Trash2 } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import { parseCSVToLeads } from "@/lib/csvParser";
@@ -17,6 +17,7 @@ interface ApplicantsTableProps {
   onOpenCreateModal: () => void;
   onOpenQuickLeadModal?: () => void;
   onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
+  onDeleteApplicant?: (id: string, name: string) => void;
 }
 
 export default function ApplicantsTable({
@@ -27,6 +28,7 @@ export default function ApplicantsTable({
   onOpenCreateModal,
   onOpenQuickLeadModal,
   onImportLeads,
+  onDeleteApplicant,
 }: ApplicantsTableProps) {
   const [selectedStage, setSelectedStage] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
@@ -315,6 +317,21 @@ export default function ApplicantsTable({
                             className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-teal-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
+                        <Tooltip text={`Delete ${item.name}`}>
+                          <button
+                            onClick={() => {
+                              if (onDeleteApplicant) {
+                                onDeleteApplicant(item.id, item.name);
+                              } else if (confirm(`Are you sure you want to delete ${item.name}?`)) {
+                                fetch(`/api/contacts?id=${item.id}`, { method: "DELETE" });
+                              }
+                            }}
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-rose-600 hover:text-white text-rose-400 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-rose-600/40 cursor-pointer"
+                            title={`Delete ${item.name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
                       </div>

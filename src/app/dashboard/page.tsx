@@ -320,6 +320,26 @@ export default function DashboardPage() {
     triggerToast(`Created new lead for ${newApp.name}`);
   };
 
+  const handleDeleteApplicant = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete applicant "${name}"?`)) return;
+
+    try {
+      await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Delete API notice:", err);
+    }
+
+    setApplicants((prev) => {
+      const filtered = prev.filter((a) => a.id !== id);
+      try {
+        localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
+      } catch (e) {}
+      return filtered;
+    });
+
+    triggerToast(`🗑️ Deleted applicant "${name}" successfully!`);
+  };
+
   if (!isAuthenticated) {
     return <LoginModal onLoginSuccess={handleLoginSuccess} />;
   }
@@ -411,6 +431,7 @@ export default function DashboardPage() {
                 handleSelectApplicant(newLeads[0]);
               }
             }}
+            onDeleteApplicant={handleDeleteApplicant}
           />
         )}
 
@@ -458,6 +479,7 @@ export default function DashboardPage() {
                 handleSelectApplicant(newLeads[0]);
               }
             }}
+            onDeleteContact={handleDeleteApplicant}
           />
         )}
 

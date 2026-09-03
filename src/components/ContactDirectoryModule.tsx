@@ -42,6 +42,7 @@ interface ContactDirectoryModuleProps {
   onTriggerToast?: (msg: string) => void;
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
   onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
+  onDeleteContact?: (id: string, name: string) => void;
 }
 
 export default function ContactDirectoryModule({
@@ -53,6 +54,7 @@ export default function ContactDirectoryModule({
   onTriggerToast,
   onSelectApplicant,
   onImportLeads,
+  onDeleteContact,
 }: ContactDirectoryModuleProps) {
   const [contacts, setContacts] = useState(initialContacts);
 
@@ -950,15 +952,42 @@ export default function ContactDirectoryModule({
     }
   };
 
-  // Delete Contact Handler (retains student details permanently in Firebase)
+  // Delete Contact Handler
   const handleDeleteContact = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete contact record for ${name}? (Record will be archived in Firebase)`)) return;
+    if (!confirm(`Are you sure you want to delete contact record for ${name}?`)) return;
 
     try {
       await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
     } catch (err) { }
 
-    setContacts(contacts.filter((c) => c.id !== id));
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+    if (onDeleteContact) {
+      onDeleteContact(id, name);
+    }
+    if (onTriggerToast) {
+      onTriggerToast(`🗑️ Deleted contact "${name}"`);
+    }
+  };
+
+  // Bulk Delete Selected Contacts Handler
+  const handleBulkDelete = async () => {
+    if (selectedRows.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedRows.length} selected lead(s)?`)) return;
+
+    for (const id of selectedRows) {
+      try {
+        await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
+      } catch (err) { }
+    }
+
+    setContacts((prev) => prev.filter((c) => !selectedRows.includes(c.id)));
+    if (onDeleteContact) {
+      selectedRows.forEach((id) => onDeleteContact(id, "Selected Lead"));
+    }
+    if (onTriggerToast) {
+      onTriggerToast(`🗑️ Successfully deleted ${selectedRows.length} selected lead(s)!`);
+    }
+    setSelectedRows([]);
   };
 
   return (
@@ -1061,6 +1090,16 @@ export default function ContactDirectoryModule({
               🎴 Cards View
             </button>
           </div>
+
+          {selectedRows.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/40 border border-rose-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer animate-in fade-in"
+            >
+              <Trash2 className="w-4 h-4 text-white shrink-0" />
+              <span>Delete Selected ({selectedRows.length})</span>
+            </button>
+          )}
 
           <input
             type="file"
@@ -1558,6 +1597,9 @@ export default function ContactDirectoryModule({
                       </th>
                     );
                   })}
+                  <th className="p-3 font-extrabold text-blue-600 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap text-center w-28">
+                    Actions
+                  </th>
                 </tr>
 
                 {/* Row 2: Sub-Header Filter Bar Row (Direct Inline Filter Options under Column Headers) */}
@@ -1706,6 +1748,9 @@ export default function ContactDirectoryModule({
                       </td>
                     );
                   })}
+                  <td className="p-1.5 text-center text-[10px] text-slate-400 font-bold">
+                    -
+                  </td>
                 </tr>
               </thead>
 
@@ -1742,6 +1787,30 @@ export default function ContactDirectoryModule({
                         {renderCellContent(contact, col)}
                       </td>
                     ))}
+
+                    {/* Actions Column with Delete Icon (Image 2) */}
+                    <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Tooltip text={`Delete ${contact.name}`} position="left">
+                          <button
+                            onClick={() => handleDeleteContact(contact.id, contact.name)}
+                            className="p-1.5 rounded-full bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            title={`Delete ${contact.name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
+                        <Tooltip text={`Edit ${contact.name}`} position="left">
+                          <button
+                            onClick={() => setEditingContact(contact)}
+                            className="p-1.5 rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            title={`Edit ${contact.name}`}
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
