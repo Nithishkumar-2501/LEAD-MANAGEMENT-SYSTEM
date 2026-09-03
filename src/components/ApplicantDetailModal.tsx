@@ -40,6 +40,7 @@ import {
 import { Lead, Application, LeadStatus, AppStage } from "@/types/crm";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
+import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -174,6 +175,7 @@ export default function ApplicantDetailModal({
 
   // Stage 1 (Verified) active by default as shown in the provided images
   const currentStageIdx = 1;
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
@@ -191,7 +193,14 @@ export default function ApplicantDetailModal({
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => setIsEmailModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 text-xs font-black text-indigo-700 transition-all shadow-sm cursor-pointer"
+              title={`Send Official Admission Email to ${formData.email || formData.name}`}
+            >
+              <Mail className="w-3.5 h-3.5 text-indigo-600" /> Send Email
+            </button>
             <button
               onClick={() => onActionTrigger("CALL", formData.name)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm"
@@ -1055,6 +1064,34 @@ export default function ApplicantDetailModal({
           </div>
         </div>
       </div>
+
+      {/* In-Portal Resend Admission Email Modal */}
+      {isEmailModalOpen && (
+        <InPortalCommunicationModals
+          activeModal="EMAIL"
+          contact={{
+            id: formData.id,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            courseInterest: formData.courseInterest,
+            campus: formData.campus,
+            school: formData.school,
+            district: formData.district,
+            state: formData.state,
+            tneaCutoff: formData.tneaCutoff,
+            counsellingAppNo: formData.counsellingAppNo,
+            marks10th: formData.application?.marks10th,
+            marks12th: formData.application?.marks12th,
+            stage: formData.application?.stage,
+            status: formData.status,
+          }}
+          onClose={() => setIsEmailModalOpen(false)}
+          onLogSuccess={(type, details) => {
+            onActionTrigger("EMAIL", `${formData.name}: ${details}`);
+          }}
+        />
+      )}
     </div>
   );
 }

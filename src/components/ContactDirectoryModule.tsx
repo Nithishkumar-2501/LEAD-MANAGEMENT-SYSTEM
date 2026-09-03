@@ -1811,13 +1811,31 @@ export default function ContactDirectoryModule({
                     {/* Actions Column with Delete Icon (Image 2) */}
                     <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1.5">
-                        <Tooltip text={`Delete ${contact.name}`} position="left">
+                        <Tooltip text={`Send Official Email to ${contact.name}`} position="left">
                           <button
-                            onClick={() => handleDeleteContact(contact.id, contact.name)}
-                            className="p-1.5 rounded-full bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
-                            title={`Delete ${contact.name}`}
+                            onClick={() =>
+                              handleOpenCommModal("EMAIL", {
+                                id: contact.id,
+                                name: contact.name,
+                                email: contact.email,
+                                phone: contact.phone,
+                                courseInterest: contact.courseInterest,
+                                campus: contact.campus,
+                                school: contact.school || undefined,
+                                district: contact.district || undefined,
+                                state: contact.state || undefined,
+                                tneaCutoff: contact.tneaCutoff,
+                                counsellingAppNo: contact.counsellingAppNo,
+                                marks10th: (contact as any).marks10th || contact.application?.marks10th,
+                                marks12th: (contact as any).marks12th || contact.application?.marks12th,
+                                stage: contact.application?.stage,
+                                status: contact.status,
+                              })
+                            }
+                            className="p-1.5 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            title={`Send Email to ${contact.name}`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Mail className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
                         <Tooltip text={`Edit ${contact.name}`} position="left">
@@ -1827,6 +1845,15 @@ export default function ContactDirectoryModule({
                             title={`Edit ${contact.name}`}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
+                        <Tooltip text={`Delete ${contact.name}`} position="left">
+                          <button
+                            onClick={() => handleDeleteContact(contact.id, contact.name)}
+                            className="p-1.5 rounded-full bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            title={`Delete ${contact.name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
                       </div>
@@ -2098,6 +2125,7 @@ export default function ContactDirectoryModule({
                     <Tooltip text={`In-Portal Email ${contact.name}`} position="bottom">
                       <button
                         onClick={() => handleOpenCommModal("EMAIL", {
+                          id: contact.id,
                           name: contact.name,
                           phone: contact.phone,
                           email: contact.email,
@@ -2105,6 +2133,13 @@ export default function ContactDirectoryModule({
                           campus: contact.campus,
                           school: contact.school || undefined,
                           district: contact.district || undefined,
+                          state: contact.state || undefined,
+                          tneaCutoff: contact.tneaCutoff,
+                          counsellingAppNo: contact.counsellingAppNo,
+                          marks10th: (contact as any).marks10th || contact.application?.marks10th,
+                          marks12th: (contact as any).marks12th || contact.application?.marks12th,
+                          stage: contact.application?.stage,
+                          status: contact.status,
                         })}
                         className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
                       >

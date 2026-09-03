@@ -288,6 +288,7 @@ export default function ApplicantsTable({
                         <Tooltip text={`In-Portal Email ${item.name}`}>
                           <button
                             onClick={() => handleOpenCommModal("EMAIL", {
+                              id: item.id,
                               name: item.name,
                               phone: item.phone,
                               email: item.email,
@@ -295,6 +296,13 @@ export default function ApplicantsTable({
                               campus: item.campus,
                               school: item.school || undefined,
                               district: item.district || undefined,
+                              state: item.state || undefined,
+                              tneaCutoff: item.tneaCutoff,
+                              counsellingAppNo: item.counsellingAppNo,
+                              marks10th: item.application?.marks10th,
+                              marks12th: item.application?.marks12th,
+                              stage: item.application?.stage,
+                              status: item.status,
                             })}
                             className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-indigo-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
                           >

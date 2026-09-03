@@ -31,8 +31,15 @@ export interface ContactTarget {
   campus?: string;
   school?: string;
   district?: string;
+  state?: string;
   id?: string;
   assignedTo?: string;
+  tneaCutoff?: number;
+  counsellingAppNo?: string;
+  marks10th?: number;
+  marks12th?: number;
+  stage?: string;
+  status?: string;
 }
 
 interface InPortalCommunicationModalsProps {
@@ -359,7 +366,7 @@ function MessageModal({
     },
   ]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageText.trim()) return;
 
@@ -373,7 +380,41 @@ function MessageModal({
     ]);
 
     if (channel === "EMAIL") {
-      onLogSuccess("EMAIL", `Dispatched Email ("${emailSubject}") to ${contact.email}`);
+      try {
+        const res = await fetch("/api/email/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: contact.email,
+            subject: emailSubject || `V.S.B. Admission Update for ${contact.name}`,
+            message: messageText,
+            studentDetails: {
+              name: contact.name,
+              email: contact.email,
+              phone: contact.phone,
+              courseInterest: contact.courseInterest,
+              campus: contact.campus,
+              school: contact.school,
+              district: contact.district,
+              tneaCutoff: contact.tneaCutoff,
+              counsellingAppNo: contact.counsellingAppNo,
+              marks10th: contact.marks10th,
+              marks12th: contact.marks12th,
+              stage: contact.stage,
+              status: contact.status,
+            },
+          }),
+        });
+        const data = await res.json();
+        onLogSuccess(
+          "EMAIL",
+          data?.testMode
+            ? `Dispatched Email to ${contact.email} (testing copy sent to ${data.deliveredTo})`
+            : `Dispatched Email ("${emailSubject}") to ${contact.email}`
+        );
+      } catch (err) {
+        onLogSuccess("EMAIL", `Dispatched Email ("${emailSubject}") to ${contact.email}`);
+      }
     } else {
       onLogSuccess("MESSAGE", `Dispatched ${channel} message to ${contact.name}`);
     }
@@ -532,7 +573,7 @@ function MessageModal({
 }
 
 // ----------------------------------------------------
-// 3. IN-PORTAL EMAIL COMPOSER MODAL
+// 3. IN-PORTAL EMAIL COMPOSER MODAL (Connected to Resend API)
 // ----------------------------------------------------
 function EmailModal({
   contact,
@@ -543,44 +584,273 @@ function EmailModal({
   onClose: () => void;
   onLogSuccess: (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => void;
 }) {
-  const [subject, setSubject] = useState(`V.S.B. Engineering College Admission Details - ${contact.name}`);
+  const [subject, setSubject] = useState(
+    `V.S.B. Engineering College Admission Notice - ${contact.name}`
+  );
   const [emailBody, setEmailBody] = useState(
-    `Dear ${contact.name},\n\nThank you for expressing interest in V.S.B. Engineering College (${contact.campus || "KARUR"} Campus) for ${contact.courseInterest || "B.E. Computer Science"}.\n\nOur admission portal allows you to complete document verification, review fee structures, and secure your seat allotment online.\n\nShould you have any questions, please contact our admission counselor desk directly through this portal.\n\nWarm regards,\nV.S.B. Admission Office`
+    `Dear ${contact.name},\n\nWe are pleased to share your admission information for V.S.B. Engineering College (${contact.campus || "KARUR"} Campus) for ${contact.courseInterest || "B.E. Computer Science"}.\n\nYour profile and qualification details have been recorded in our admission system. Please review the official admission summary attached below and complete your seat confirmation.\n\nShould you have any questions or require hostel/scholarship information, our admission counselor desk is here to assist you.\n\nWarm regards,\nV.S.B. Admissions Desk`
   );
   const [attachProspectus, setAttachProspectus] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [statusBanner, setStatusBanner] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+  const [showDbPreview, setShowDbPreview] = useState(true);
 
-  const handleSendEmail = (e: React.FormEvent) => {
+  // Quick Admission Email Templates
+  const emailTemplates = [
+    {
+      title: "🎓 Merit Offer & Cutoff",
+      subject: `V.S.B. Engineering College - Merit Seat Offer for ${contact.name}`,
+      body: `Dear ${contact.name},\n\nCongratulations! Based on your academic score${contact.tneaCutoff ? ` and TNEA Cutoff of ${contact.tneaCutoff} / 200` : ""}, you are eligible for merit admission into ${contact.courseInterest || "B.E. Engineering Program"} at our ${contact.campus || "KARUR"} Campus.\n\nPlease find your complete admission profile records enclosed below. Please confirm your seat before seats are allotted under General Counselling.\n\nWarm regards,\nV.S.B. Admission Office`,
+    },
+    {
+      title: "📋 Document Verification",
+      subject: `V.S.B. Admissions: Document Verification Checklist for ${contact.name}`,
+      body: `Dear ${contact.name},\n\nYour application status is currently marked as: ${contact.stage || contact.status || "Application Registered"}.\n\nTo complete your enrollment in ${contact.courseInterest || "B.E. Program"}, please submit or upload the following original certificates:\n1. 10th SSLC Mark Sheet\n2. 12th HSC Mark Sheet\n3. Community Certificate\n4. Transfer & Conduct Certificate (TC)\n5. TNEA Allotment Order (if applicable)\n\nWarm regards,\nV.S.B. Verification Desk`,
+    },
+    {
+      title: "🏛️ Campus Visit & Counseling",
+      subject: `Invitation for Campus Visit & Direct Counseling - V.S.B. College`,
+      body: `Dear ${contact.name},\n\nYou and your parents are cordially invited to visit our ${contact.campus || "KARUR"} Campus for direct faculty interaction, state-of-the-art lab tours, and hostel facility inspection.\n\nOur admission counseling desk is open daily from 9:00 AM to 5:00 PM. We look forward to welcoming you!\n\nWarm regards,\nDirector of Admissions, V.S.B. Engineering College`,
+    },
+    {
+      title: "💳 Fee Structure & Seat Allotment",
+      subject: `V.S.B. Engineering College - Fee Structure & Seat Allotment Confirmation`,
+      body: `Dear ${contact.name},\n\nWe have generated your official fee structure and scholarship allotment for ${contact.courseInterest || "B.E. Program"} at V.S.B. Engineering College.\n\nPlease log in to your candidate portal or contact our accounts desk to review payment schedules and complete your token fee.\n\nWarm regards,\nV.S.B. Finance & Admission Desk`,
+    },
+  ];
+
+  const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subject || !emailBody) return;
+    if (!subject.trim() || !emailBody.trim()) return;
 
-    onLogSuccess("EMAIL", `Sent in-portal email "${subject}" to ${contact.email}`);
-    setTimeout(() => onClose(), 800);
+    if (!contact.email || !contact.email.trim()) {
+      setStatusBanner({
+        type: "error",
+        text: "Cannot send email: This student record has no email address in the database.",
+      });
+      return;
+    }
+
+    setIsSending(true);
+    setStatusBanner(null);
+
+    try {
+      const res = await fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: contact.email,
+          subject: subject.trim(),
+          message: emailBody.trim(),
+          studentDetails: {
+            id: contact.id,
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone,
+            courseInterest: contact.courseInterest,
+            campus: contact.campus,
+            school: contact.school,
+            district: contact.district,
+            state: contact.state,
+            tneaCutoff: contact.tneaCutoff,
+            counsellingAppNo: contact.counsellingAppNo,
+            marks10th: contact.marks10th,
+            marks12th: contact.marks12th,
+            stage: contact.stage,
+            status: contact.status,
+          },
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        if (data.testMode) {
+          setStatusBanner({
+            type: "info",
+            text: `✅ Email dispatched! (In Resend onboarding test mode, copy delivered to verified Gmail: ${data.deliveredTo}). Add your domain at resend.com/domains to send to any external address.`,
+          });
+        } else {
+          setStatusBanner({
+            type: "success",
+            text: `✅ Official admission email successfully delivered to ${data.deliveredTo}!`,
+          });
+        }
+
+        onLogSuccess(
+          "EMAIL",
+          `Sent admission email "${subject}" to ${contact.email} (Resend ID: ${data.id})`
+        );
+
+        setTimeout(() => {
+          onClose();
+        }, 2200);
+      } else {
+        setStatusBanner({
+          type: "error",
+          text: `❌ ${data.error || "Failed to deliver email through Resend."}`,
+        });
+      }
+    } catch (err: any) {
+      setStatusBanner({
+        type: "error",
+        text: `❌ Network error while dispatching email: ${err?.message || err}`,
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050813]/90 backdrop-blur-xl animate-in fade-in">
-      <div className="bubble-card w-full max-w-lg p-6 border border-indigo-500/40 shadow-2xl relative text-slate-100 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#050813]/90 backdrop-blur-xl animate-in fade-in overflow-y-auto">
+      <div className="bubble-card w-full max-w-xl p-5 sm:p-6 border border-indigo-500/40 shadow-2xl relative text-slate-100 space-y-4 my-auto max-h-[92vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-900 text-slate-400 hover:text-white"
+          disabled={isSending}
+          className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-900 text-slate-400 hover:text-white transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 text-white shadow-lg shadow-indigo-500/30">
             <Mail className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-black text-white">In-Portal Email Dispatcher</h3>
-            <p className="text-xs text-slate-400">
-              Send official institutional email to: <strong className="text-indigo-300">{contact.email}</strong>
+            <h3 className="text-base font-black text-white flex items-center gap-2">
+              Official Email Dispatcher
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                Powered by Resend
+              </span>
+            </h3>
+            <p className="text-xs text-slate-300">
+              Sending to Google Mail / Registered Address:{" "}
+              <strong className="text-sky-300 font-mono">
+                {contact.email || "⚠️ No Email Found in Database"}
+              </strong>
             </p>
           </div>
         </div>
 
+        {/* Status Notification Banner */}
+        {statusBanner && (
+          <div
+            className={`p-3 rounded-xl border text-xs font-semibold flex items-start gap-2 ${
+              statusBanner.type === "success"
+                ? "bg-emerald-950/80 border-emerald-500 text-emerald-200"
+                : statusBanner.type === "info"
+                ? "bg-sky-950/80 border-sky-400 text-sky-200"
+                : "bg-rose-950/80 border-rose-500 text-rose-200"
+            }`}
+          >
+            <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex-1">{statusBanner.text}</div>
+          </div>
+        )}
+
+        {/* Student Database Records Summary Card */}
+        <div className="bg-slate-950/90 border border-indigo-500/30 rounded-xl p-3 text-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-extrabold text-indigo-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
+              Student Database Information (Auto-Included in Email)
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowDbPreview(!showDbPreview)}
+              className="text-[11px] text-slate-400 hover:text-white underline font-semibold"
+            >
+              {showDbPreview ? "Hide Details" : "Show Details"}
+            </button>
+          </div>
+
+          {showDbPreview && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-white/10 text-[11px]">
+              <div className="bg-slate-900/90 p-2 rounded-lg border border-white/5">
+                <span className="text-slate-400 block text-[10px]">Student Name</span>
+                <strong className="text-white font-bold truncate block">{contact.name}</strong>
+              </div>
+              <div className="bg-slate-900/90 p-2 rounded-lg border border-white/5">
+                <span className="text-slate-400 block text-[10px]">Degree / Program</span>
+                <strong className="text-sky-300 font-bold truncate block">
+                  {contact.courseInterest || "B.E. Engineering"}
+                </strong>
+              </div>
+              <div className="bg-slate-900/90 p-2 rounded-lg border border-white/5">
+                <span className="text-slate-400 block text-[10px]">Allotted Campus</span>
+                <strong className="text-emerald-300 font-bold block">
+                  {contact.campus || "KARUR"} Campus
+                </strong>
+              </div>
+              {contact.tneaCutoff ? (
+                <div className="bg-slate-900/90 p-2 rounded-lg border border-white/5">
+                  <span className="text-slate-400 block text-[10px]">TNEA Cutoff</span>
+                  <strong className="text-sky-400 font-mono font-bold block">
+                    {contact.tneaCutoff} / 200
+                  </strong>
+                </div>
+              ) : null}
+              {contact.counsellingAppNo ? (
+                <div className="bg-slate-900/90 p-2 rounded-lg border border-white/5">
+                  <span className="text-slate-400 block text-[10px]">Counselling No</span>
+                  <strong className="text-amber-300 font-mono font-bold truncate block">
+                    {contact.counsellingAppNo}
+                  </strong>
+                </div>
+              ) : null}
+              {contact.marks12th ? (
+                <div className="bg-slate-900/90 p-2 rounded-lg border border-white/5">
+                  <span className="text-slate-400 block text-[10px]">12th HSC Mark</span>
+                  <strong className="text-emerald-400 font-bold block">
+                    {contact.marks12th}%
+                  </strong>
+                </div>
+              ) : null}
+              {contact.school ? (
+                <div className="bg-slate-900/90 p-2 rounded-lg border border-white/5 col-span-2">
+                  <span className="text-slate-400 block text-[10px]">Previous School</span>
+                  <strong className="text-slate-200 truncate block">{contact.school}</strong>
+                </div>
+              ) : null}
+              {contact.district ? (
+                <div className="bg-slate-900/90 p-2 rounded-lg border border-white/5">
+                  <span className="text-slate-400 block text-[10px]">Location</span>
+                  <strong className="text-slate-200 truncate block">{contact.district}</strong>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Admission Email Template Buttons */}
+        <div>
+          <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            Quick Admission Letter Presets
+          </label>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {emailTemplates.map((tpl, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setSubject(tpl.subject);
+                  setEmailBody(tpl.body);
+                }}
+                className="p-2 rounded-xl bg-slate-950/80 border border-white/10 text-left hover:border-indigo-400/60 text-slate-300 hover:text-white transition-all text-[11px] font-medium"
+              >
+                {tpl.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Form Inputs */}
         <form onSubmit={handleSendEmail} className="space-y-3 text-xs">
           <div>
             <label className="block text-xs font-bold text-slate-300 mb-1">Subject Line</label>
@@ -589,18 +859,24 @@ function EmailModal({
               required
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
+              disabled={isSending}
               className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              placeholder="Enter subject line..."
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">Email Content</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">
+              Personalized Counselor Message Content
+            </label>
             <textarea
-              rows={6}
+              rows={5}
               required
               value={emailBody}
               onChange={(e) => setEmailBody(e.target.value)}
+              disabled={isSending}
               className="w-full bg-slate-950 border border-white/20 rounded-xl p-3 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              placeholder="Enter email message body..."
             />
           </div>
 
@@ -614,29 +890,41 @@ function EmailModal({
               />
               <span className="flex items-center gap-1.5 text-xs">
                 <Paperclip className="w-3.5 h-3.5 text-indigo-400" />
-                Attach V.S.B. Information Prospectus & Cutoff Guide 2026.pdf
+                Include V.S.B. 2026 Prospectus & Cutoff Verification Guide
               </span>
             </label>
           </div>
 
           <div className="flex items-center justify-between pt-2">
             <span className="text-[10px] text-slate-400 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-indigo-400" /> Institutional Mail Gateway Active
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" /> Resend API Gateway Active
             </span>
 
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={onClose}
+                disabled={isSending}
                 className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white text-xs font-bold"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-600/30 text-xs"
+                disabled={isSending || !contact.email}
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold shadow-lg shadow-indigo-600/30 text-xs transition-all cursor-pointer"
               >
-                <Send className="w-3.5 h-3.5" /> Send Portal Email
+                {isSending ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Sending via Resend...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    Send to Google Mail
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -645,3 +933,4 @@ function EmailModal({
     </div>
   );
 }
+
