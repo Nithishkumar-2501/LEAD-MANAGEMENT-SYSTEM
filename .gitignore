@@ -28,3 +28,12 @@ next-env.d.ts
 # prisma
 /prisma/*.db
 /prisma/*.db-journal
+
+# IDE & Android
+.idea/
+.gradle/
+*.iml
+android/.idea/
+android/.gradle/
+android/app/build/
+android/build/
