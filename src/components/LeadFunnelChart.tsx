@@ -26,16 +26,16 @@ export default function LeadFunnelChart({
   const [viewMode, setViewMode] = useState<"SINGLE" | "ALL" | "SEGREGATION">("SINGLE");
 
   const segregationData = [
-    { label: "Closed", count: 56456, color: "bg-blue-600" },
+    { label: "Closed", count: 56456 + statusCounts.REJECTED, color: "bg-blue-600" },
     { label: "Interested to Study Engineering", count: 22755, color: "bg-amber-500" },
-    { label: "Admitted in VSB", count: 2197, color: "bg-green-600" },
+    { label: "Admitted in VSB", count: 2197 + statusCounts.ADMITTED, color: "bg-green-600" },
     { label: "Not Reachable", count: 69083, color: "bg-pink-600" },
-    { label: "Untouched", count: 34035, color: "bg-blue-500" },
+    { label: "Untouched", count: 34035 + statusCounts.NEW, color: "bg-blue-500" },
     { label: "Not Interested in Engineering", count: 14027, color: "bg-amber-500" },
     { label: "Walkin", count: 3384, color: "bg-green-600" },
     { label: "After NEET", count: 1954, color: "bg-pink-600" },
-    { label: "Not Decided", count: 26911, color: "bg-blue-600" },
-    { label: "Counseling applied", count: 3216, color: "bg-amber-500" },
+    { label: "Not Decided", count: 26911 + statusCounts.IN_REVIEW, color: "bg-blue-600" },
+    { label: "Counseling applied", count: 3216 + statusCounts.CONTACTED, color: "bg-amber-500" },
     { label: "Partially Interested in Engineering", count: 3256, color: "bg-green-600" },
     { label: "Interested to Join VSB", count: 362, color: "bg-pink-600" },
     { label: "Test Lead", count: 58, color: "bg-blue-500" },
