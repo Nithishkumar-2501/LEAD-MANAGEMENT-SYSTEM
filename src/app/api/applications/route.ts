@@ -38,26 +38,27 @@ export async function POST(request: Request) {
       community,
       address,
       school,
+      district,
+      state,
       source,
       courseInterest,
       campus = "KARUR",
       marks10th,
       marks12th,
       stage = "INQUIRY",
-      district,
-      state,
     } = body;
 
-    if (!name || !courseInterest) {
+    if (!name || !email || !courseInterest) {
       return NextResponse.json(
-        { error: "Name and course interest are required fields." },
+        { error: "Name, email, and course interest are required fields." },
         { status: 400 }
       );
     }
 
-    const cleanName = (name || "Student").toLowerCase().replace(/[^a-z0-9]/g, "");
-    const finalEmail = email && email.trim() ? email.trim() : `${cleanName}_${Date.now().toString().slice(-4)}@gmail.com`;
-    const finalPhone = phone && phone.trim() ? phone.trim() : `+91 987${Math.floor(1000000 + Math.random() * 9000000)}`;
+    const phoneErr = validateLeadPhoneNumber(phone, []);
+    if (phoneErr) {
+      return NextResponse.json({ error: phoneErr }, { status: 400 });
+    }
 
     let status: LeadStatus = "NEW";
     if (stage === "SUBMITTED" || stage === "DOCS_VERIFIED") status = "IN_REVIEW";
@@ -67,8 +68,8 @@ export async function POST(request: Request) {
       const newLead = await prisma.lead.create({
         data: {
           name,
-          email: finalEmail,
-          phone: finalPhone,
+          email,
+          phone: phone || "+91 98765 43210",
           fatherName: fatherName || null,
           motherName: motherName || null,
           gender: gender || "Male",

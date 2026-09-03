@@ -62,16 +62,16 @@ export default function DashboardPage() {
   const [loggedInUsername, setLoggedInUsername] = useState<string>("adminkarur@123");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>(MOCK_LEADS as (Lead & { application: Application })[]);
+  const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>([]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
 
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
 
-  // Load and subscribe to Firebase permanent leads
+  // Load leads from Prisma Database on mount — database is the single source of truth
   useEffect(() => {
-    // 1. Initial load from local storage cache if available
+    // 1. Show cached leads instantly while the API loads
     try {
       const cached = localStorage.getItem("vsb_firebase_leads_cache");
       if (cached) {
@@ -84,17 +84,36 @@ export default function DashboardPage() {
       console.warn("Local storage cache load notice:", e);
     }
 
-    // Helper function to merge Firebase leads with current state/mocks
+    // 2. Fetch from Prisma Database API — this is the PERMANENT source of truth
+    fetch("/api/applications")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
+          // Database has leads — use ONLY database data (no mock mixing)
+          const dbLeads = data.leads as (Lead & { application: Application })[];
+          setApplicants(dbLeads);
+          try {
+            localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(dbLeads));
+          } catch (err) {}
+        } else {
+          // Database is empty — fall back to MOCK data for first-time setup
+          setApplicants(MOCK_LEADS as (Lead & { application: Application })[]);
+        }
+      })
+      .catch((err) => {
+        console.warn("Prisma API load notice:", err);
+        // API call failed — fall back to mocks
+        setApplicants(MOCK_LEADS as (Lead & { application: Application })[]);
+      });
+
+    // 3. Also subscribe to Firebase for real-time sync if available
     const applyFirebaseLeads = (fbLeads: StudentRecord[]) => {
       if (!fbLeads || fbLeads.length === 0) return;
 
       setApplicants((prev) => {
         const map = new Map<string, Lead & { application: Application }>();
-
-        // Fill initial mock / current leads
         prev.forEach((item) => map.set(item.id, item));
 
-        // Merge / Overwrite with Firebase permanent records
         fbLeads.forEach((fb) => {
           if (fb.id) {
             const existing = map.get(fb.id);
@@ -107,7 +126,6 @@ export default function DashboardPage() {
               paymentStatus: "PENDING",
             };
             const app = (fb.application || existing?.application || defaultApp) as Application;
-
             map.set(fb.id, {
               ...existing,
               ...fb,
@@ -124,17 +142,6 @@ export default function DashboardPage() {
       });
     };
 
-    // 2. Fetch directly from Prisma Database API (/api/applications)
-    fetch("/api/applications")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
-          applyFirebaseLeads(data.leads);
-        }
-      })
-      .catch((err) => console.warn("Prisma API load notice:", err));
-
-    // 3. Fetch directly from Firebase Firestore & Realtime DB
     fetchStudentsFromFirestore().then((list) => {
       if (list && list.length > 0) {
         applyFirebaseLeads(list);
@@ -147,7 +154,6 @@ export default function DashboardPage() {
       }
     });
 
-    // 4. Realtime Firestore Observer Listener
     const unsubscribe = subscribeToFirebaseStudents((liveList) => {
       applyFirebaseLeads(liveList);
     });

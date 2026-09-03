@@ -45,33 +45,18 @@ export default function AddQuickLeadModal({
 
   const handleSubmit = async (saveAndNew: boolean = false) => {
     setError(null);
-    if (!formData.name.trim()) {
-      setError("Please enter Student Name.");
+    if (!formData.name || !formData.email) {
+      setError("Please enter Name and Email Address.");
       return;
     }
 
-    if (uploadVia === "EMAIL" && !formData.email.trim()) {
-      setError("Please enter Email Address.");
+    const phoneErr = validateLeadPhoneNumber(formData.phone, existingLeads);
+    if (phoneErr) {
+      setError(phoneErr);
       return;
-    }
-
-    if (uploadVia === "MOBILE" && !formData.phone.trim()) {
-      setError("Please enter Mobile Number.");
-      return;
-    }
-
-    if (formData.phone.trim()) {
-      const phoneErr = validateLeadPhoneNumber(formData.phone, existingLeads);
-      if (phoneErr) {
-        setError(phoneErr);
-        return;
-      }
     }
 
     const rawPhoneDigits = extractRaw10Digits(formData.phone);
-    const cleanName = formData.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const finalEmail = formData.email.trim() || `${cleanName}_${Date.now().toString().slice(-4)}@gmail.com`;
-    const finalPhone = rawPhoneDigits ? `+91 ${rawPhoneDigits}` : `+91 987${Math.floor(1000000 + Math.random() * 9000000)}`;
 
     let savedLead: Lead & { application: Application };
 
@@ -80,9 +65,9 @@ export default function AddQuickLeadModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: formData.name.trim(),
-          email: finalEmail,
-          phone: finalPhone,
+          name: formData.name,
+          email: formData.email,
+          phone: `+91 ${rawPhoneDigits}`,
           fatherName: formData.fatherName,
           motherName: formData.motherName,
           gender: formData.gender,
