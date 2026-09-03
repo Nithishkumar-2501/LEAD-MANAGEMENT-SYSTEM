@@ -954,8 +954,16 @@ export default function ContactDirectoryModule({
 
   // Delete Contact Handler
   const handleDeleteContact = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete contact record for ${name}?`)) return;
+    if (!confirm(`Are you sure you want to permanently delete contact record for ${name}? This will remove the lead permanently from Firebase and the database.`)) return;
 
+    // 1. Permanently delete from Firebase Firestore & Realtime Database
+    try {
+      await deleteStudentFromFirebase(id);
+    } catch (fbErr) {
+      console.warn("Firebase delete warning:", fbErr);
+    }
+
+    // 2. Permanently delete from Prisma SQLite Database
     try {
       await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
     } catch (err) { }
@@ -965,16 +973,20 @@ export default function ContactDirectoryModule({
       onDeleteContact(id, name);
     }
     if (onTriggerToast) {
-      onTriggerToast(`🗑️ Deleted contact "${name}"`);
+      onTriggerToast(`🗑️ Permanently deleted contact "${name}" from Firebase & Database!`);
     }
   };
 
   // Bulk Delete Selected Contacts Handler
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0) return;
-    if (!confirm(`Are you sure you want to delete ${selectedRows.length} selected lead(s)?`)) return;
+    if (!confirm(`Are you sure you want to permanently delete ${selectedRows.length} selected lead(s)? This will remove them permanently from Firebase and the database.`)) return;
 
     for (const id of selectedRows) {
+      try {
+        await deleteStudentFromFirebase(id);
+      } catch (fbErr) {}
+
       try {
         await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
       } catch (err) { }
@@ -985,7 +997,7 @@ export default function ContactDirectoryModule({
       selectedRows.forEach((id) => onDeleteContact(id, "Selected Lead"));
     }
     if (onTriggerToast) {
-      onTriggerToast(`🗑️ Successfully deleted ${selectedRows.length} selected lead(s)!`);
+      onTriggerToast(`🗑️ Permanently deleted ${selectedRows.length} selected lead(s) from Firebase & Database!`);
     }
     setSelectedRows([]);
   };

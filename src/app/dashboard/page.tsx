@@ -25,6 +25,8 @@ import EchoDashboardView from "@/components/EchoDashboardView";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import {
   saveStudentToFirebase,
+  deleteStudentFromFirebase,
+  isLeadDeleted,
   fetchStudentsFromFirestore,
   fetchStudentsFromRTDB,
   subscribeToFirebaseStudents,
@@ -71,13 +73,14 @@ export default function DashboardPage() {
 
   // Load leads from Prisma Database on mount — database is the single source of truth
   useEffect(() => {
-    // 1. Show cached leads instantly while the API loads
+    // 1. Show cached leads instantly while the API loads (excluding deleted leads)
     try {
       const cached = localStorage.getItem("vsb_firebase_leads_cache");
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setApplicants(parsed);
+          const validCached = parsed.filter((item) => !isLeadDeleted(item.id));
+          setApplicants(validCached);
         }
       }
     } catch (e) {
@@ -89,10 +92,12 @@ export default function DashboardPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
-          const dbLeads = data.leads as (Lead & { application: Application })[];
+          const dbLeads = (data.leads as (Lead & { application: Application })[]).filter(
+            (l) => !isLeadDeleted(l.id)
+          );
           setApplicants((prev) => {
             const map = new Map<string, Lead & { application: Application }>();
-            prev.forEach((item) => map.set(item.id, item));
+            prev.filter((p) => !isLeadDeleted(p.id)).forEach((item) => map.set(item.id, item));
             dbLeads.forEach((item) => map.set(item.id, item));
             const merged = Array.from(map.values());
             try {
@@ -102,24 +107,33 @@ export default function DashboardPage() {
           });
         } else {
           // Fall back to cached or mock data if database is empty
-          setApplicants((prev) => (prev.length > 0 ? prev : (MOCK_LEADS as (Lead & { application: Application })[])));
+          setApplicants((prev) => {
+            const valid = prev.filter((p) => !isLeadDeleted(p.id));
+            return valid.length > 0
+              ? valid
+              : (MOCK_LEADS as (Lead & { application: Application })[]).filter(
+                  (m) => !isLeadDeleted(m.id)
+                );
+          });
         }
       })
       .catch((err) => {
         console.warn("Prisma API load notice:", err);
-        // API call failed — fall back to mocks
-        setApplicants(MOCK_LEADS as (Lead & { application: Application })[]);
+        setApplicants((prev) => prev.filter((p) => !isLeadDeleted(p.id)));
       });
 
     // 3. Also subscribe to Firebase for real-time sync if available
     const applyFirebaseLeads = (fbLeads: StudentRecord[]) => {
-      if (!fbLeads || fbLeads.length === 0) return;
+      if (!fbLeads) return;
+
+      const activeFbLeads = fbLeads.filter((fb) => fb.id && !isLeadDeleted(fb.id));
 
       setApplicants((prev) => {
         const map = new Map<string, Lead & { application: Application }>();
-        prev.forEach((item) => map.set(item.id, item));
+        // Only keep existing leads that are NOT deleted
+        prev.filter((p) => !isLeadDeleted(p.id)).forEach((item) => map.set(item.id, item));
 
-        fbLeads.forEach((fb) => {
+        activeFbLeads.forEach((fb) => {
           if (fb.id) {
             const existing = map.get(fb.id);
             const defaultApp: Application = {
@@ -321,14 +335,24 @@ export default function DashboardPage() {
   };
 
   const handleDeleteApplicant = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete applicant "${name}"?`)) return;
+    if (!confirm(`Are you sure you want to permanently delete applicant "${name}"? This will permanently remove the lead from Firebase and the database.`)) return;
 
+    // 1. Permanently delete from Firebase Firestore & Realtime Database
+    try {
+      await deleteStudentFromFirebase(id);
+      console.log(`🔥 [Firebase] Deleted student: ${id} (${name})`);
+    } catch (fbErr) {
+      console.warn("Firebase delete warning:", fbErr);
+    }
+
+    // 2. Permanently delete from Prisma SQLite Database
     try {
       await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });
     } catch (err) {
       console.warn("Delete API notice:", err);
     }
 
+    // 3. Update applicants state immediately
     setApplicants((prev) => {
       const filtered = prev.filter((a) => a.id !== id);
       try {
@@ -337,7 +361,7 @@ export default function DashboardPage() {
       return filtered;
     });
 
-    triggerToast(`🗑️ Deleted applicant "${name}" successfully!`);
+    triggerToast(`🗑️ Permanently deleted applicant "${name}" from Firebase & Database!`);
   };
 
   if (!isAuthenticated) {

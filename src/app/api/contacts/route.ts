@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MOCK_LEADS } from "@/lib/mockData";
 import { Lead, Application } from "@/types/crm";
-import { saveStudentToFirebase } from "@/lib/firebaseSync";
+import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 
 export const dynamic = "force-dynamic";
@@ -246,13 +246,24 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Contact ID is required" }, { status: 400 });
     }
 
+    // 1. Delete permanently from Prisma SQLite Database
     try {
-      await prisma.lead.delete({ where: { id } });
+      await prisma.payment.deleteMany({ where: { application: { leadId: id } } });
+      await prisma.application.deleteMany({ where: { leadId: id } });
+      await prisma.task.deleteMany({ where: { leadId: id } });
+      await prisma.lead.deleteMany({ where: { id } });
     } catch (e) {
-      // Mock fallback ignore
+      console.warn("Prisma lead delete warning:", e);
     }
 
-    return NextResponse.json({ success: true, message: `Contact ${id} deleted successfully` });
+    // 2. Delete permanently from Firebase Firestore & Realtime Database
+    try {
+      await deleteStudentFromFirebase(id);
+    } catch (fbErr) {
+      console.warn("Firebase delete error:", fbErr);
+    }
+
+    return NextResponse.json({ success: true, message: `Contact ${id} deleted permanently from Database and Firebase` });
   } catch (error) {
     return NextResponse.json({ error: "Failed to delete contact" }, { status: 500 });
   }

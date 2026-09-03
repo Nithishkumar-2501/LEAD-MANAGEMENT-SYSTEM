@@ -184,7 +184,9 @@ export function subscribeToFirebaseStudents(
           snapshot.forEach((doc) => {
             liveList.push(doc.data() as StudentRecord);
           });
-          callback(liveList);
+          // Exclude any tombstoned deleted leads
+          const filteredLive = liveList.filter((s) => !isLeadDeleted(s.id));
+          callback(filteredLive);
         },
         (error) => {
           console.warn("Real-time snapshot observer notice:", error.message);
@@ -200,10 +202,71 @@ export function subscribeToFirebaseStudents(
   };
 }
 
-// Safeguard: Retain student records permanently in Firebase (NEVER delete from Firestore or RTDB)
+// Check if a lead has been permanently deleted
+export function isLeadDeleted(studentId: string): boolean {
+  if (typeof window === "undefined" || !studentId) return false;
+  try {
+    const deletedStr = localStorage.getItem("vsb_deleted_lead_ids");
+    const list = deletedStr ? JSON.parse(deletedStr) : [];
+    return Array.isArray(list) && list.includes(studentId);
+  } catch {
+    return false;
+  }
+}
+
+// Permanently delete student record from Firebase Firestore & Realtime Database
 export async function deleteStudentFromFirebase(studentId: string): Promise<boolean> {
-  console.log(`🔒 Data Preservation: Student ${studentId} is retained permanently in Firebase and will not be deleted.`);
-  // Do NOT call deleteDoc(docRef) or remove(rtdbRef) — records stay in Firebase forever!
-  return true;
+  if (!studentId) return false;
+
+  console.log(`🗑️ [Firebase] Permanently deleting student: ${studentId}...`);
+  await ensureFirebaseAuth();
+
+  let firestoreDeleted = false;
+
+  // 1. Delete permanently from Firebase Firestore ("students" collection)
+  try {
+    const docRef = doc(db, "students", studentId);
+    await withTimeout(deleteDoc(docRef), 3000);
+    firestoreDeleted = true;
+    console.log(`🔥 [Firebase Firestore] Document ${studentId} permanently deleted.`);
+  } catch (err: any) {
+    console.warn("Firestore delete notice:", err?.message || err);
+  }
+
+  // 2. Delete permanently from Firebase Realtime Database node
+  try {
+    const rtdbRef = ref(rtdb, `students/${studentId}`);
+    await withTimeout(remove(rtdbRef), 1500);
+    console.log(`🔥 [Firebase RTDB] Node ${studentId} permanently deleted.`);
+  } catch (err: any) {
+    // Non-blocking
+  }
+
+  // 3. Purge permanently from LocalStorage and record in tombstone list
+  try {
+    if (typeof window !== "undefined") {
+      // Remove from active leads cache
+      const cached = localStorage.getItem("vsb_firebase_leads_cache");
+      if (cached) {
+        const list = JSON.parse(cached);
+        if (Array.isArray(list)) {
+          const filtered = list.filter((item: any) => item.id !== studentId);
+          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
+        }
+      }
+
+      // Record in permanent deleted tombstone so it NEVER restores on reload or relogin
+      const deletedKey = "vsb_deleted_lead_ids";
+      const deletedStr = localStorage.getItem(deletedKey);
+      let deletedList: string[] = deletedStr ? JSON.parse(deletedStr) : [];
+      if (!Array.isArray(deletedList)) deletedList = [];
+      if (!deletedList.includes(studentId)) {
+        deletedList.push(studentId);
+      }
+      localStorage.setItem(deletedKey, JSON.stringify(deletedList));
+    }
+  } catch (e) {}
+
+  return firestoreDeleted;
 }
 
