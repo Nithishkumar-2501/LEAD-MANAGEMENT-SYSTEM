@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   Search,
   Bell,
@@ -147,9 +148,11 @@ export default function Header({
 
           {/* Official V.S.B. Engineering College Logo Emblem */}
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-amber-400/80 shadow-lg shadow-amber-500/30 bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
-            <img
+            <Image
               src="/vsb-logo.png"
               alt="V.S.B. Engineering College Official Logo"
+              width={48}
+              height={48}
               className="w-full h-full object-contain rounded-full"
             />
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   GraduationCap,
   UserCheck,
@@ -371,9 +372,11 @@ export default function Sidebar({
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Official V.S.B. Logo Badge */}
             <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
-              <img
+              <Image
                 src="/vsb-logo.png"
                 alt="V.S.B. Engineering College Logo"
+                width={36}
+                height={36}
                 className="w-full h-full object-contain rounded-full"
               />
             </div>

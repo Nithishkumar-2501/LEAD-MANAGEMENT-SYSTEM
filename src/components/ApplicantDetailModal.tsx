@@ -87,6 +87,7 @@ export default function ApplicantDetailModal({
   const [timelineFilterAction, setTimelineFilterAction] = useState("ALL");
   const [timelineFilterDate, setTimelineFilterDate] = useState("");
   const [commLogDateFilter, setCommLogDateFilter] = useState("");
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   useEffect(() => {
     setFormData(applicant);
@@ -175,7 +176,6 @@ export default function ApplicantDetailModal({
 
   // Stage 1 (Verified) active by default as shown in the provided images
   const currentStageIdx = 1;
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">

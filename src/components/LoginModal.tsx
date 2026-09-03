@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Lock, Mail, ArrowRight, AlertCircle, Sparkles, ShieldCheck, UserCheck } from "lucide-react";
 
 import { loginWithRealtimeAuth } from "@/lib/authService";
@@ -127,9 +128,11 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         <div className="text-center mb-5">
           {/* Official V.S.B. Engineering College Logo Emblem */}
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-amber-400 shadow-xl shadow-amber-500/30 bg-white mx-auto mb-3 p-0.5 transform hover:scale-105 transition-transform">
-            <img
+            <Image
               src="/vsb-logo.png"
               alt="V.S.B. Engineering College Official Logo"
+              width={80}
+              height={80}
               className="w-full h-full object-contain rounded-full"
             />
           </div>
