@@ -89,15 +89,20 @@ export default function DashboardPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
-          // Database has leads — use ONLY database data (no mock mixing)
           const dbLeads = data.leads as (Lead & { application: Application })[];
-          setApplicants(dbLeads);
-          try {
-            localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(dbLeads));
-          } catch (err) {}
+          setApplicants((prev) => {
+            const map = new Map<string, Lead & { application: Application }>();
+            prev.forEach((item) => map.set(item.id, item));
+            dbLeads.forEach((item) => map.set(item.id, item));
+            const merged = Array.from(map.values());
+            try {
+              localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
+            } catch (err) {}
+            return merged;
+          });
         } else {
-          // Database is empty — fall back to MOCK data for first-time setup
-          setApplicants(MOCK_LEADS as (Lead & { application: Application })[]);
+          // Fall back to cached or mock data if database is empty
+          setApplicants((prev) => (prev.length > 0 ? prev : (MOCK_LEADS as (Lead & { application: Application })[])));
         }
       })
       .catch((err) => {

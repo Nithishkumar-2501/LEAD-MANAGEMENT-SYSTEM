@@ -753,7 +753,20 @@ export default function ContactDirectoryModule({
       });
 
       const data = await res.json();
-      setContacts([data, ...contacts]);
+
+      // Real-Time Firebase Sync: Save directly to Firebase (Firestore & RTDB)
+      try {
+        await saveStudentToFirebase(data);
+        console.log(`🔥 Saved student ${data.name} to Firebase permanently`);
+      } catch (fbErr) {
+        console.error("Firebase sync note:", fbErr);
+      }
+
+      setContacts((prev) => [data, ...prev]);
+      if (onImportLeads) {
+        onImportLeads([data]);
+      }
+
       setIsAddModalOpen(false);
       setNewContact({
         name: "",
@@ -769,6 +782,7 @@ export default function ContactDirectoryModule({
         tneaCutoff: 185.0,
         counsellingCategory: "TNEA General Counselling",
       });
+      if (onTriggerToast) onTriggerToast(`🔥 Saved student ${data.name} to Firebase!`);
     } catch (err) {
       // Local fallback insert
       const fallback: Lead = {
@@ -785,8 +799,17 @@ export default function ContactDirectoryModule({
         status: "NEW",
         createdAt: new Date().toISOString(),
       };
-      setContacts([fallback, ...contacts]);
+
+      try {
+        await saveStudentToFirebase(fallback);
+      } catch (fbErr) {}
+
+      setContacts((prev) => [fallback, ...prev]);
+      if (onImportLeads) {
+        onImportLeads([fallback as any]);
+      }
       setIsAddModalOpen(false);
+      if (onTriggerToast) onTriggerToast(`🔥 Saved student ${fallback.name} to Firebase!`);
     }
   };
 
@@ -874,12 +897,9 @@ export default function ContactDirectoryModule({
     }
   };
 
-  // Delete Contact Handler
+  // Delete Contact Handler (retains student details permanently in Firebase)
   const handleDeleteContact = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete contact record for ${name}?`)) return;
-
-    // Real-Time Firebase Sync on delete
-    await deleteStudentFromFirebase(id);
+    if (!confirm(`Are you sure you want to delete contact record for ${name}? (Record will be archived in Firebase)`)) return;
 
     try {
       await fetch(`/api/contacts?id=${id}`, { method: "DELETE" });

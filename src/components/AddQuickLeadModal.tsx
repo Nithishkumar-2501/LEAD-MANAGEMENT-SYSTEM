@@ -127,8 +127,11 @@ export default function AddQuickLeadModal({
 
     // Real-time Firebase Database update
     try {
-      saveStudentToFirebase(savedLead);
-    } catch (e) {}
+      await saveStudentToFirebase(savedLead);
+      console.log(`🔥 Successfully saved lead ${savedLead.name} to Firebase`);
+    } catch (e) {
+      console.error("Firebase save error in modal:", e);
+    }
 
     onLeadAdded(savedLead);
 

@@ -209,33 +209,10 @@ export function subscribeToFirebaseStudents(
   };
 }
 
-// Delete student record from Firebase Firestore & Realtime Database
+// Safeguard: Retain student records permanently in Firebase (NEVER delete from Firestore or RTDB)
 export async function deleteStudentFromFirebase(studentId: string): Promise<boolean> {
-  await ensureFirebaseAuth();
-  try {
-    const docRef = doc(db, "students", studentId);
-    await deleteDoc(docRef);
-  } catch (err) {}
-
-  try {
-    const rtdbRef = ref(rtdb, `students/${studentId}`);
-    await remove(rtdbRef);
-  } catch (err) {}
-
-  // Remove from localStorage cache
-  try {
-    if (typeof window !== "undefined") {
-      const cached = localStorage.getItem("vsb_firebase_leads_cache");
-      if (cached) {
-        const list = JSON.parse(cached);
-        if (Array.isArray(list)) {
-          const filtered = list.filter((item: any) => item.id !== studentId);
-          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
-        }
-      }
-    }
-  } catch (e) {}
-
+  console.log(`🔒 Data Preservation: Student ${studentId} is retained permanently in Firebase and will not be deleted.`);
+  // Do NOT call deleteDoc(docRef) or remove(rtdbRef) — records stay in Firebase forever!
   return true;
 }
 
