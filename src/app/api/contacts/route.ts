@@ -145,8 +145,9 @@ export async function POST(request: Request) {
 
       return NextResponse.json(mockNewContact, { status: 201 });
     }
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to create contact record" }, { status: 500 });
+  } catch (error: any) {
+    console.error("POST /api/contacts root error:", error);
+    return NextResponse.json({ error: error?.message || "Failed to create contact record" }, { status: 500 });
   }
 }
 

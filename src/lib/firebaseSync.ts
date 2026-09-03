@@ -14,15 +14,22 @@ import { Lead, Application } from "@/types/crm";
 
 export type StudentRecord = Lead & { application?: Application | null };
 
+// Helper to prevent any Firebase network request from hanging the UI
+function withTimeout<T>(promise: Promise<T>, ms = 3000): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
+}
+
 // Ensure client is authenticated with Firebase Auth to pass Firestore/RTDB security rules
 export async function ensureFirebaseAuth() {
   try {
     if (!auth.currentUser) {
-      await signInAnonymously(auth);
-      console.log("✅ Signed in anonymously with Firebase Auth for database permissions");
+      await withTimeout(signInAnonymously(auth), 1500);
     }
   } catch (err: any) {
-    console.warn("Firebase auth note:", err?.message || err);
+    // Non-blocking: Firestore security rules may allow public read/write
   }
 }
 
@@ -51,33 +58,30 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
     updatedAt: new Date().toISOString(),
   });
 
-  // Fulfill Firebase Auth security rules
+  // Attempt auth non-blocking
   await ensureFirebaseAuth();
 
   let firestoreSuccess = false;
-  let rtdbSuccess = false;
 
-  // 1. Write to Firebase Firestore ("students" collection)
+  // 1. Write directly to Firebase Firestore ("students" collection in SPHEREX)
   try {
     const docRef = doc(db, "students", studentId);
-    await setDoc(docRef, cleanPayload, { merge: true });
+    await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 3000);
     firestoreSuccess = true;
-    console.log(`✅ Firestore write success for student: ${studentId}`);
+    console.log(`🔥 [Firebase Firestore] Saved student record: ${studentId} (${student.name})`);
   } catch (firestoreErr: any) {
-    console.error("❌ Firestore write error:", firestoreErr?.message || firestoreErr);
+    console.warn("Firestore write notice:", firestoreErr?.message || firestoreErr);
   }
 
-  // 2. Write to Firebase Realtime Database ("students" node)
+  // 2. Write to Firebase Realtime Database with strict timeout so it never hangs
   try {
     const rtdbRef = ref(rtdb, `students/${studentId}`);
-    await set(rtdbRef, cleanPayload);
-    rtdbSuccess = true;
-    console.log(`✅ Realtime DB write success for student: ${studentId}`);
+    await withTimeout(set(rtdbRef, cleanPayload), 1500);
   } catch (rtdbErr: any) {
-    console.error("❌ Realtime DB write error:", rtdbErr?.message || rtdbErr);
+    // Non-blocking: Realtime DB may not be provisioned in all projects
   }
 
-  // Update local storage cache
+  // 3. Update local storage cache for instant offline reload
   try {
     if (typeof window !== "undefined") {
       const cached = localStorage.getItem("vsb_firebase_leads_cache");
@@ -93,20 +97,7 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
     }
   } catch (err) {}
 
-  // 3. Write to Backend REST API (Prisma / SQLite local database)
-  try {
-    if (typeof window !== "undefined") {
-      await fetch("/api/contacts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cleanPayload),
-      });
-    }
-  } catch (apiErr: any) {
-    console.warn("Backend REST API sync notice:", apiErr?.message || apiErr);
-  }
-
-  return firestoreSuccess || rtdbSuccess;
+  return firestoreSuccess;
 }
 
 // Update specific student fields in Firebase

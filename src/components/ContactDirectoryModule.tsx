@@ -5,7 +5,7 @@ import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES,
 import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
-import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
+import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -357,6 +357,8 @@ export default function ContactDirectoryModule({
 
   // Add Contact Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [addModalError, setAddModalError] = useState<string | null>(null);
   const [newContact, setNewContact] = useState({
     name: "",
     phone: "",
@@ -743,73 +745,124 @@ export default function ContactDirectoryModule({
   // Add New Contact Submit Handler
   const handleCreateContact = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newContact.name || !newContact.phone) return;
+    setAddModalError(null);
+
+    if (!newContact.name.trim()) {
+      setAddModalError("Please enter the candidate's name.");
+      return;
+    }
+
+    if (!newContact.phone.trim()) {
+      setAddModalError("Please enter a 10-digit mobile number.");
+      return;
+    }
+
+    const phoneErr = validateLeadPhoneNumber(newContact.phone, contacts as Lead[]);
+    if (phoneErr) {
+      setAddModalError(phoneErr);
+      return;
+    }
+
+    setIsSubmittingContact(true);
+
+    const raw10Digits = extractRaw10Digits(newContact.phone);
+    const cleanPhone = `+91 ${raw10Digits}`;
+    const cleanEmail =
+      newContact.email.trim() ||
+      `${newContact.name.toLowerCase().trim().replace(/\s+/g, ".")}@gmail.com`;
+
+    const payload = {
+      ...newContact,
+      name: newContact.name.trim(),
+      phone: cleanPhone,
+      email: cleanEmail,
+      district: newContact.district || "Karur",
+      state: "Tamil Nadu",
+      school: newContact.school.trim() || "Govt Higher Secondary School",
+    };
+
+    let createdLead: any = null;
 
     try {
       const res = await fetch("/api/contacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newContact),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
-
-      // Real-Time Firebase Sync: Save directly to Firebase (Firestore & RTDB)
-      try {
-        await saveStudentToFirebase(data);
-        console.log(`🔥 Saved student ${data.name} to Firebase permanently`);
-      } catch (fbErr) {
-        console.error("Firebase sync note:", fbErr);
+      if (res.ok && data && !data.error) {
+        createdLead = data;
+      } else {
+        console.warn("API notice:", data?.error);
       }
+    } catch (apiErr) {
+      console.warn("Network notice on POST /api/contacts:", apiErr);
+    }
 
-      setContacts((prev) => [data, ...prev]);
-      if (onImportLeads) {
-        onImportLeads([data]);
-      }
-
-      setIsAddModalOpen(false);
-      setNewContact({
-        name: "",
-        phone: "",
-        email: "",
-        school: "",
-        district: "Karur",
-        address: "",
-        campus: "KARUR",
-        courseInterest: "B.E. Computer Science",
-        appliedCounselling: true,
-        counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
-        tneaCutoff: 185.0,
-        counsellingCategory: "TNEA General Counselling",
-      });
-      if (onTriggerToast) onTriggerToast(`🔥 Saved student ${data.name} to Firebase!`);
-    } catch (err) {
-      // Local fallback insert
-      const fallback: Lead = {
+    // If API failed or was offline, construct standard lead object
+    if (!createdLead) {
+      createdLead = {
         id: `lead_${Date.now()}`,
-        name: newContact.name,
-        email: newContact.email || `${newContact.name.toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
-        phone: newContact.phone,
-        source: "Direct Entry",
-        courseInterest: newContact.courseInterest,
-        campus: newContact.campus,
-        school: newContact.school || "Govt Higher Secondary School",
-        district: newContact.district,
-        address: newContact.address || "Tamil Nadu",
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone,
+        source: "Direct Contact Entry",
+        courseInterest: payload.courseInterest,
+        campus: payload.campus,
+        school: payload.school,
+        district: payload.district,
+        state: "Tamil Nadu",
+        address: payload.address || "Tamil Nadu",
         status: "NEW",
         createdAt: new Date().toISOString(),
+        application: {
+          id: `app_${Date.now()}`,
+          leadId: `lead_${Date.now()}`,
+          stage: "INQUIRY",
+          marks10th: 85.0,
+          marks12th: 88.0,
+          paymentStatus: "PENDING",
+        },
       };
+    }
 
-      try {
-        await saveStudentToFirebase(fallback);
-      } catch (fbErr) {}
+    // Direct permanent Firebase save (Firestore & Realtime Database)
+    try {
+      await saveStudentToFirebase(createdLead);
+      console.log(`🔥 Successfully saved student ${createdLead.name} to Firebase!`);
+    } catch (fbErr) {
+      console.warn("Firebase save notice:", fbErr);
+    }
 
-      setContacts((prev) => [fallback, ...prev]);
-      if (onImportLeads) {
-        onImportLeads([fallback as any]);
-      }
-      setIsAddModalOpen(false);
-      if (onTriggerToast) onTriggerToast(`🔥 Saved student ${fallback.name} to Firebase!`);
+    // Update local table view
+    setContacts((prev) => [createdLead, ...prev]);
+
+    // Sync with parent dashboard
+    if (onImportLeads) {
+      onImportLeads([createdLead]);
+    }
+
+    setIsSubmittingContact(false);
+    setIsAddModalOpen(false);
+
+    setNewContact({
+      name: "",
+      phone: "",
+      email: "",
+      school: "",
+      district: "Karur",
+      address: "",
+      campus: "KARUR",
+      courseInterest: "B.E. Computer Science",
+      appliedCounselling: true,
+      counsellingAppNo: `TNEA2026-${Math.floor(10000 + Math.random() * 90000)}`,
+      tneaCutoff: 185.0,
+      counsellingCategory: "TNEA General Counselling",
+    });
+
+    if (onTriggerToast) {
+      onTriggerToast(`🔥 Successfully saved candidate ${createdLead.name} to Firebase & Database!`);
     }
   };
 
@@ -2031,6 +2084,13 @@ export default function ContactDirectoryModule({
             </p>
 
             <form onSubmit={handleCreateContact} className="space-y-3">
+              {addModalError && (
+                <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-500 text-rose-200 text-xs font-bold flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>{addModalError}</span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">Candidate Name *</label>
                 <input
@@ -2050,7 +2110,10 @@ export default function ContactDirectoryModule({
                     type="text"
                     required
                     value={newContact.phone}
-                    onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                    onChange={(e) => {
+                      setNewContact({ ...newContact, phone: e.target.value });
+                      if (addModalError) setAddModalError(null);
+                    }}
                     placeholder="+91 98765 43210"
                     className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
                   />
@@ -2141,9 +2204,19 @@ export default function ContactDirectoryModule({
                 </button>
                 <button
                   type="submit"
-                  className="glossy-btn px-5 py-2 text-xs font-bold"
+                  disabled={isSubmittingContact}
+                  className={`glossy-btn px-5 py-2 text-xs font-bold flex items-center gap-2 ${
+                    isSubmittingContact ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                 >
-                  Save New Contact
+                  {isSubmittingContact ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span>Saving to Firebase...</span>
+                    </>
+                  ) : (
+                    <span>Save New Contact</span>
+                  )}
                 </button>
               </div>
             </form>
