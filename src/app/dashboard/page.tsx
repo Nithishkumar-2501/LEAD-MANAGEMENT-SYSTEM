@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import MetricCards from "@/components/MetricCards";
@@ -72,6 +72,70 @@ export default function DashboardPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
 
+  // Reusable Firebase and Database sync helper
+  const applyFirebaseLeads = useCallback((fbLeads: StudentRecord[]) => {
+    if (!fbLeads) return;
+
+    const activeFbLeads = fbLeads.filter((fb) => fb.id && !isLeadDeleted(fb.id));
+
+    setApplicants((prev) => {
+      const map = new Map<string, Lead & { application: Application }>();
+      // Only keep existing leads that are NOT deleted
+      prev.filter((p) => !isLeadDeleted(p.id)).forEach((item) => map.set(item.id, item));
+
+      activeFbLeads.forEach((fb) => {
+        if (fb.id) {
+          const existing = map.get(fb.id);
+          const defaultApp: Application = {
+            id: `app_${fb.id}`,
+            leadId: fb.id,
+            stage: "INQUIRY",
+            marks10th: (fb as any).marks10th || existing?.application?.marks10th || 0,
+            marks12th: (fb as any).marks12th || existing?.application?.marks12th || 0,
+            paymentStatus: "PENDING",
+          };
+          const app = (fb.application || existing?.application || defaultApp) as Application;
+          map.set(fb.id, {
+            ...existing,
+            ...fb,
+            application: app,
+          } as Lead & { application: Application });
+        }
+      });
+
+      const merged = Array.from(map.values());
+      try {
+        localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
+      } catch (err) {}
+      return merged;
+    });
+  }, []);
+
+  const handleReloadLeads = useCallback(async () => {
+    try {
+      const res = await fetch("/api/applications");
+      const data = await res.json();
+      if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
+        const dbLeads = (data.leads as (Lead & { application: Application })[]).filter(
+          (l) => !isLeadDeleted(l.id)
+        );
+        const map = new Map<string, Lead & { application: Application }>();
+        dbLeads.forEach((item) => map.set(item.id, item));
+        const merged = Array.from(map.values());
+        setApplicants(merged);
+        try {
+          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
+        } catch (err) {}
+      }
+      const list = await fetchStudentsFromFirestore();
+      if (list && list.length > 0) {
+        applyFirebaseLeads(list);
+      }
+    } catch (err) {
+      console.warn("Reload notice:", err);
+    }
+  }, [applyFirebaseLeads]);
+
   // Load leads from Prisma Database on mount — database is the single source of truth
   useEffect(() => {
     // 1. Show cached leads instantly while the API loads (excluding deleted leads)
@@ -123,45 +187,6 @@ export default function DashboardPage() {
         setApplicants((prev) => prev.filter((p) => !isLeadDeleted(p.id)));
       });
 
-    // 3. Also subscribe to Firebase for real-time sync if available
-    const applyFirebaseLeads = (fbLeads: StudentRecord[]) => {
-      if (!fbLeads) return;
-
-      const activeFbLeads = fbLeads.filter((fb) => fb.id && !isLeadDeleted(fb.id));
-
-      setApplicants((prev) => {
-        const map = new Map<string, Lead & { application: Application }>();
-        // Only keep existing leads that are NOT deleted
-        prev.filter((p) => !isLeadDeleted(p.id)).forEach((item) => map.set(item.id, item));
-
-        activeFbLeads.forEach((fb) => {
-          if (fb.id) {
-            const existing = map.get(fb.id);
-            const defaultApp: Application = {
-              id: `app_${fb.id}`,
-              leadId: fb.id,
-              stage: "INQUIRY",
-              marks10th: (fb as any).marks10th || existing?.application?.marks10th || 0,
-              marks12th: (fb as any).marks12th || existing?.application?.marks12th || 0,
-              paymentStatus: "PENDING",
-            };
-            const app = (fb.application || existing?.application || defaultApp) as Application;
-            map.set(fb.id, {
-              ...existing,
-              ...fb,
-              application: app,
-            } as Lead & { application: Application });
-          }
-        });
-
-        const merged = Array.from(map.values());
-        try {
-          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
-        } catch (err) {}
-        return merged;
-      });
-    };
-
     fetchStudentsFromFirestore().then((list) => {
       if (list && list.length > 0) {
         applyFirebaseLeads(list);
@@ -181,7 +206,7 @@ export default function DashboardPage() {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, applyFirebaseLeads]);
 
   // Dynamic calculations based on selected campus
   const activeCampusLeads = applicants.filter((item) => selectedCampus === "ALL" || item.campus === selectedCampus);
@@ -498,6 +523,7 @@ export default function DashboardPage() {
               }
             }}
             onDeleteContact={handleDeleteApplicant}
+            onReloadLeads={handleReloadLeads}
           />
         )}
 

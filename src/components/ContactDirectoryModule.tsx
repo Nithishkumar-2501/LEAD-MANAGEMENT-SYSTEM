@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
-import { saveStudentToFirebase, deleteStudentFromFirebase, markLeadAsDeleted } from "@/lib/firebaseSync";
+import { saveStudentToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
@@ -31,6 +31,8 @@ import {
   ShieldCheck,
   GraduationCap,
   Calendar,
+  RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
@@ -43,6 +45,8 @@ interface ContactDirectoryModuleProps {
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
   onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
   onDeleteContact?: (id: string, name: string) => void;
+  isReloading?: boolean;
+  onReloadLeads?: () => Promise<void> | void;
 }
 
 export default function ContactDirectoryModule({
@@ -55,12 +59,53 @@ export default function ContactDirectoryModule({
   onSelectApplicant,
   onImportLeads,
   onDeleteContact,
+  isReloading: externalIsReloading,
+  onReloadLeads,
 }: ContactDirectoryModuleProps) {
   const [contacts, setContacts] = useState(initialContacts);
+  const [internalIsReloading, setInternalIsReloading] = useState(false);
+  const isReloading = externalIsReloading ?? internalIsReloading;
+  const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
 
   useEffect(() => {
     setContacts(initialContacts);
   }, [initialContacts]);
+
+  const handleReloadData = async () => {
+    setInternalIsReloading(true);
+    try {
+      if (onReloadLeads) {
+        await onReloadLeads();
+      } else {
+        const res = await fetch("/api/applications");
+        const data = await res.json();
+        if (data?.leads && Array.isArray(data.leads)) {
+          const valid = (data.leads as (Lead & { application?: Application | null })[]).filter(
+            (l) => !isLeadDeleted(l.id)
+          );
+          setContacts(valid);
+        }
+      }
+      const now = new Date();
+      setLastSyncTime(
+        now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        })
+      );
+      if (onTriggerToast) {
+        onTriggerToast("🔄 Refreshed latest leads from database!");
+      }
+    } catch (err) {
+      console.warn("Reload error:", err);
+    } finally {
+      setTimeout(() => {
+        setInternalIsReloading(false);
+      }, 750);
+    }
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [searchField, setSearchField] = useState<"Mobile" | "Email" | "Name" | "User Id" | "Lead Id" | "All Fields">("Mobile");
   const [isSearchFieldDropdownOpen, setIsSearchFieldDropdownOpen] = useState(false);
@@ -1082,11 +1127,37 @@ export default function ContactDirectoryModule({
             <Save className="w-3.5 h-3.5" /> Save View
           </button>
 
-          {/* Sync Status Badge */}
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Last sync on Aug 12, 2026 11:36 AM</span>
-            <button onClick={() => onTriggerToast?.("Synced latest candidate leads from server!")} title="Sync Now" className="hover:rotate-180 transition-transform ml-1">
+          {/* Reload / Sync Button with Active Spinning Animation */}
+          <button
+            onClick={handleReloadData}
+            disabled={isReloading}
+            className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-blue-600 dark:text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60"
+            title="Reload latest leads from database"
+          >
+            <RotateCcw
+              className={`w-3.5 h-3.5 ${
+                isReloading ? "animate-spin text-sky-500" : "transition-transform hover:-rotate-45"
+              }`}
+            />
+            <span>{isReloading ? "Reloading..." : "Reload"}</span>
+          </button>
+
+          {/* Sync Status Badge (Animating strictly during reload animation time) */}
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isReloading ? "bg-amber-400 animate-ping" : "bg-emerald-500"
+              }`}
+            />
+            <span>{isReloading ? "Reloading database..." : `Last sync at ${lastSyncTime}`}</span>
+            <button
+              onClick={handleReloadData}
+              disabled={isReloading}
+              title="Sync Now"
+              className={`hover:rotate-180 transition-transform ml-1 cursor-pointer ${
+                isReloading ? "animate-spin opacity-80" : ""
+              }`}
+            >
               🔄
             </button>
           </div>
@@ -1775,12 +1846,49 @@ export default function ContactDirectoryModule({
               </thead>
 
               <tbody className="divide-y divide-slate-200 dark:divide-white/10 bg-white dark:bg-slate-950/80 text-slate-800 dark:text-slate-200">
-                {paginatedContacts.map((contact) => (
-                  <tr
-                    key={contact.id}
-                    onClick={() => handleCandidateClick(contact)}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
-                  >
+                {isReloading ? (
+                  // SKELETON LOADER ANIMATION (Active ONLY during reload animation time)
+                  Array.from({ length: 8 }).map((_, sIdx) => (
+                    <tr
+                      key={`skeleton-row-${sIdx}`}
+                      className="border-b border-slate-200 dark:border-white/5 animate-pulse bg-slate-50/40 dark:bg-slate-900/30"
+                    >
+                      <td className="p-3 text-center">
+                        <div className="w-4 h-4 rounded bg-slate-200 dark:bg-slate-800 mx-auto animate-pulse" />
+                      </td>
+                      {selectedColumns.map((col, cIdx) => (
+                        <td key={cIdx} className="p-3">
+                          <div
+                            className="h-4 rounded-md bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-slate-800 dark:via-slate-700/60 dark:to-slate-800 animate-pulse"
+                            style={{
+                              width:
+                                cIdx === 0
+                                  ? `${55 + (sIdx % 4) * 10}%`
+                                  : cIdx === 1
+                                  ? `${70 + (sIdx % 3) * 10}%`
+                                  : cIdx === 2
+                                  ? "65%"
+                                  : `${40 + (cIdx % 3) * 15}%`,
+                            }}
+                          />
+                        </td>
+                      ))}
+                      <td className="p-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5 opacity-60">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  paginatedContacts.map((contact) => (
+                    <tr
+                      key={contact.id}
+                      onClick={() => handleCandidateClick(contact)}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer animate-in fade-in duration-200"
+                    >
                     {/* Select Checkbox */}
                     <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <input
@@ -1859,7 +1967,8 @@ export default function ContactDirectoryModule({
                       </div>
                     </td>
                   </tr>
-                ))}
+                ))
+              )}
               </tbody>
             </table>
           </div>
@@ -1971,7 +2080,35 @@ export default function ContactDirectoryModule({
       ) : (
         /* CARDS VIEW (Image 1 Layout) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredContacts.length > 0 ? (
+          {isReloading ? (
+            // Cards View Skeleton Loader (Active ONLY during reload animation time)
+            Array.from({ length: 6 }).map((_, cIdx) => (
+              <div
+                key={`skeleton-card-${cIdx}`}
+                className="bubble-card p-5 border border-slate-200 dark:border-white/10 shadow-lg space-y-4 animate-pulse bg-white dark:bg-slate-900/60"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" />
+                    <div className="space-y-1.5">
+                      <div className="h-4 w-28 rounded bg-slate-200 dark:bg-slate-800" />
+                      <div className="h-3 w-20 rounded bg-slate-200 dark:bg-slate-800" />
+                    </div>
+                  </div>
+                  <div className="h-5 w-16 rounded-full bg-slate-200 dark:bg-slate-800" />
+                </div>
+                <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-950/80 space-y-2">
+                  <div className="h-3.5 w-3/4 rounded bg-slate-200 dark:bg-slate-800" />
+                  <div className="h-3.5 w-1/2 rounded bg-slate-200 dark:bg-slate-800" />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                </div>
+              </div>
+            ))
+          ) : filteredContacts.length > 0 ? (
             filteredContacts.map((contact) => (
               <div
                 key={contact.id}
