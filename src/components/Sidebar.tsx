@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
   GraduationCap,
@@ -77,6 +77,36 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close settings popup when clicking outside or pressing Escape
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        settingsMenuRef.current &&
+        !settingsMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsSettingsMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsSettingsMenuOpen(false);
+      }
+    }
+
+    if (isSettingsMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSettingsMenuOpen]);
 
   const trimmedQuery = menuSearchQuery.trim().toLowerCase();
   const matchingApplicants =
@@ -1001,149 +1031,287 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Sidebar Footer: Admin Settings, Theme Toggle & Logout */}
+        {/* Sidebar Footer: Unified Compact Bar with Settings Icon Option & Logout */}
         <div
-          className={`p-3 border-t space-y-2 ${
-            isLight ? "border-slate-200 bg-slate-50" : "border-white/10 bg-slate-950/60"
+          ref={settingsMenuRef}
+          className={`p-2.5 border-t relative ${
+            isLight ? "border-slate-200 bg-slate-50/90" : "border-white/10 bg-slate-950/80"
           }`}
         >
-          {/* Admin Settings (Moved to Left Side Bottom above Light Mode) */}
-          {currentUserRole === "ADMIN" && (
-            isCollapsed ? (
-              <Tooltip text="Admin Settings (System Configuration)" position="right">
-                <button
-                  onClick={() => handleNavClick("SETTINGS")}
-                  className={`w-full flex items-center justify-center p-2.5 rounded-xl border transition-all ${
-                    activeTab === "SETTINGS"
-                      ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-105"
-                      : isLight
-                      ? "bg-white hover:bg-slate-100 text-slate-800 border-slate-200"
-                      : "bg-slate-900/90 text-slate-200 hover:text-white border-white/10 hover:border-white/20"
-                  }`}
-                >
-                  <Settings className="w-4 h-4 text-rose-400" />
-                </button>
-              </Tooltip>
-            ) : (
-              <button
-                onClick={() => handleNavClick("SETTINGS")}
-                className={`w-full flex items-center justify-between p-2.5 rounded-2xl border text-xs font-black transition-all duration-300 cursor-pointer group ${
-                  activeTab === "SETTINGS"
-                    ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-[1.02]"
-                    : isLight
-                    ? "bg-white hover:bg-slate-100 text-slate-900 border-slate-200 shadow-sm"
-                    : "bg-slate-900/90 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div
-                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
-                      activeTab === "SETTINGS"
-                        ? "bg-white/20 text-white"
-                        : isLight
-                        ? "bg-rose-100 text-rose-600"
-                        : "bg-rose-950/80 text-rose-400 border border-rose-800/50"
-                    }`}
-                  >
-                    <Settings className="w-4 h-4" />
-                  </div>
-                  <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate">
-                      Admin Settings
-                    </span>
-                    <span
-                      className={`text-[9px] font-medium truncate ${
-                        activeTab === "SETTINGS"
-                          ? "text-rose-100"
-                          : isLight
-                          ? "text-slate-500"
-                          : "text-slate-400"
-                      }`}
-                    >
-                      System Configuration
-                    </span>
-                  </div>
-                </div>
-              </button>
-            )
-          )}
-
-          {/* Download App Footer Link */}
-          {!isCollapsed && (
-            <button
-              onClick={() => alert("Meritto Mobile App APK download initiated for Android & iOS.")}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition-all group"
-            >
-              <Download className="w-3.5 h-3.5 text-indigo-400 group-hover:translate-y-0.5 transition-transform" />
-              <span>Download App</span>
-            </button>
-          )}
-
-          {/* Theme Quick Toggle */}
-          {!isCollapsed && onThemeChange && (
+          {/* Floating Settings Popover Menu */}
+          {isSettingsMenuOpen && (
             <div
-              className={`flex items-center justify-between p-2 rounded-xl border text-xs ${
-                isLight ? "bg-white border-slate-200" : "bg-slate-900 border-white/10"
+              className={`absolute z-50 p-3 rounded-2xl shadow-2xl border backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-200 ${
+                isCollapsed
+                  ? "left-full bottom-2 ml-3 w-72"
+                  : "bottom-full left-2 right-2 mb-3"
+              } ${
+                isLight
+                  ? "bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/50"
+                  : "bg-slate-900/95 border-white/15 text-white shadow-black/80"
               }`}
             >
-              <span
-                className={`text-[11px] font-bold flex items-center gap-1.5 ${
-                  isLight ? "text-slate-700" : "text-slate-400"
-                }`}
-              >
-                {theme === "DARK" ? (
-                  <Moon className="w-3.5 h-3.5 text-indigo-400" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+              {/* Popover Header */}
+              <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                    <Settings className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                    Preferences & Tools
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsSettingsMenuOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Menu Items List */}
+              <div className="space-y-1.5">
+                {/* Admin Settings Console */}
+                {currentUserRole === "ADMIN" && (
+                  <button
+                    onClick={() => {
+                      handleNavClick("SETTINGS");
+                      setIsSettingsMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all group cursor-pointer ${
+                      activeTab === "SETTINGS"
+                        ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white border-rose-400 shadow-lg shadow-rose-500/30"
+                        : isLight
+                        ? "bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-800 border-slate-200"
+                        : "bg-slate-950/80 hover:bg-slate-800/80 text-slate-200 border-white/5 hover:border-rose-500/40"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className={`p-1.5 rounded-lg shrink-0 ${
+                          activeTab === "SETTINGS"
+                            ? "bg-white/20 text-white"
+                            : "bg-rose-500/20 text-rose-400"
+                        }`}
+                      >
+                        <Settings className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col text-left truncate">
+                        <span className="font-extrabold text-xs">Admin Settings</span>
+                        <span className="text-[10px] text-slate-400 font-medium">System Configuration</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30">
+                      Console
+                    </span>
+                  </button>
                 )}
-                {theme === "DARK" ? "Dark Mode" : "Light Mode"}
-              </span>
-              <button
-                onClick={() => onThemeChange(theme === "DARK" ? "LIGHT" : "DARK")}
-                className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] transition-all shadow-sm cursor-pointer"
-              >
-                Switch
-              </button>
+
+                {/* Theme Toggle Button */}
+                {onThemeChange && (
+                  <div
+                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs ${
+                      isLight
+                        ? "bg-slate-100 border-slate-200"
+                        : "bg-slate-950/80 border-white/5"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`p-1.5 rounded-lg shrink-0 ${
+                          theme === "DARK"
+                            ? "bg-indigo-500/20 text-indigo-400"
+                            : "bg-amber-500/20 text-amber-500"
+                        }`}
+                      >
+                        {theme === "DARK" ? (
+                          <Moon className="w-4 h-4" />
+                        ) : (
+                          <Sun className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="font-bold text-xs">
+                          {theme === "DARK" ? "Dark Mode" : "Light Mode"}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {theme === "DARK" ? "Dark theme active" : "Light theme active"}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        onThemeChange(theme === "DARK" ? "LIGHT" : "DARK");
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[10px] transition-all shadow-md cursor-pointer"
+                    >
+                      Switch
+                    </button>
+                  </div>
+                )}
+
+                {/* Download App Link */}
+                <button
+                  onClick={() => {
+                    alert("Meritto Mobile App APK download initiated for Android & iOS.");
+                    setIsSettingsMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all group cursor-pointer ${
+                    isLight
+                      ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"
+                      : "bg-slate-950/80 hover:bg-slate-800/80 text-slate-300 hover:text-white border-white/5"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400">
+                      <Download className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="font-bold text-xs">Download App</span>
+                      <span className="text-[10px] text-slate-400">Android & iOS APK</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-sky-400 font-bold group-hover:translate-x-0.5 transition-transform">
+                    APK ↓
+                  </span>
+                </button>
+              </div>
+
+              {/* Account Quick Info */}
+              <div className="mt-2.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+                <span className="truncate">{loggedInUsername}</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold text-[9px] border border-indigo-500/30">
+                  {currentUserRole === "ADMIN" ? "Admin" : "Teacher"}
+                </span>
+              </div>
             </div>
           )}
 
-          {/* User Profile info */}
-          <div
-            className={`flex items-center justify-between gap-2 p-2 rounded-2xl border ${
-              isLight
-                ? "bg-white border-slate-200 shadow-sm"
-                : "bg-slate-900/90 border-white/10"
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
+          {/* Collapsed vs Expanded Footer Bar */}
+          {isCollapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              {/* Avatar */}
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md">
                 VSB
               </div>
-              {!isCollapsed && (
+
+              {/* Settings Icon Button */}
+              <Tooltip text="Settings & Tools" position="right">
+                <button
+                  onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+                  className={`p-2 rounded-xl border transition-all cursor-pointer relative ${
+                    isSettingsMenuOpen || activeTab === "SETTINGS"
+                      ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-105"
+                      : isLight
+                      ? "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                      : "bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border-white/10"
+                  }`}
+                >
+                  <Settings
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      isSettingsMenuOpen ? "rotate-90 text-white" : "text-rose-400"
+                    }`}
+                  />
+                  {activeTab === "SETTINGS" && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-400 rounded-full animate-ping" />
+                  )}
+                </button>
+              </Tooltip>
+
+              {/* Logout Button */}
+              <Tooltip text="Logout Portal" position="right">
+                <button
+                  onClick={onLogout}
+                  className={`p-2 rounded-xl border transition-all shrink-0 cursor-pointer ${
+                    isLight
+                      ? "bg-slate-100 hover:bg-rose-500 hover:text-white border-slate-200 text-slate-600"
+                      : "bg-slate-800 hover:bg-rose-600/80 border-transparent text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </Tooltip>
+            </div>
+          ) : (
+            <div
+              className={`flex items-center justify-between gap-2 p-2 rounded-2xl border transition-all ${
+                isLight
+                  ? "bg-white border-slate-200 shadow-sm"
+                  : "bg-slate-900/90 border-white/10"
+              }`}
+            >
+              {/* User Profile */}
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md">
+                  VSB
+                </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-black truncate text-black">
+                  <p
+                    className={`text-xs font-black truncate ${
+                      isLight ? "text-slate-900" : "text-white"
+                    }`}
+                  >
                     {loggedInUsername}
                   </p>
-                  <p className="text-[10px] font-extrabold truncate text-indigo-700">
+                  <p className="text-[10px] font-extrabold truncate text-indigo-400">
                     {currentUserRole === "ADMIN" ? "System Admin" : "Faculty Lead"}
                   </p>
                 </div>
-              )}
-            </div>
+              </div>
 
-            <Tooltip text="Logout Portal" position="top">
-              <button
-                onClick={onLogout}
-                className={`p-2 rounded-xl border transition-all shrink-0 cursor-pointer ${
-                  isLight
-                    ? "bg-slate-100 hover:bg-rose-500 hover:text-white border-slate-200 text-slate-600"
-                    : "bg-slate-800 hover:bg-rose-600/80 border-transparent text-slate-400 hover:text-white"
-                }`}
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </Tooltip>
-          </div>
+              {/* Actions: Settings Icon + Logout Button */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* Setting Icon Option */}
+                <Tooltip
+                  text={
+                    isSettingsMenuOpen
+                      ? "Close Settings"
+                      : "Settings, Theme & Tools"
+                  }
+                  position="top"
+                >
+                  <button
+                    onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+                    aria-label="Settings and Preferences"
+                    className={`p-2 rounded-xl border transition-all cursor-pointer relative group ${
+                      isSettingsMenuOpen || activeTab === "SETTINGS"
+                        ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-105"
+                        : isLight
+                        ? "bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border-slate-200"
+                        : "bg-slate-800/90 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border-white/10 hover:border-rose-500/40"
+                    }`}
+                  >
+                    <Settings
+                      className={`w-4 h-4 transition-transform duration-300 group-hover:rotate-45 ${
+                        isSettingsMenuOpen
+                          ? "rotate-90 text-white"
+                          : activeTab === "SETTINGS"
+                          ? "text-white"
+                          : "text-rose-400"
+                      }`}
+                    />
+                    {activeTab === "SETTINGS" && (
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-400 rounded-full animate-ping" />
+                    )}
+                  </button>
+                </Tooltip>
+
+                {/* Logout Button */}
+                <Tooltip text="Logout Portal" position="top">
+                  <button
+                    onClick={onLogout}
+                    className={`p-2 rounded-xl border transition-all shrink-0 cursor-pointer ${
+                      isLight
+                        ? "bg-slate-100 hover:bg-rose-500 hover:text-white border-slate-200 text-slate-600"
+                        : "bg-slate-800 hover:bg-rose-600/80 border-transparent text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </Tooltip>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     </>
