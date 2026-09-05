@@ -554,6 +554,7 @@ export default function Sidebar({
               </Tooltip>
             ) : (
               <div
+                id="nav-category-dashboard"
                 className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
                   dashboardSubItems.some((item) => item.id === activeTab)
                     ? isLight
@@ -628,6 +629,7 @@ export default function Sidebar({
                   const buttonContent = (
                     <button
                       key={item.id}
+                      id={`nav-${item.id.toLowerCase().replace(/_/g, '-')}`}
                       onClick={() => handleNavClick(item.id)}
                       className={`w-full flex items-center gap-3 ${
                         isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"

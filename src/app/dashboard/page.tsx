@@ -72,6 +72,17 @@ export default function DashboardPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
 
+  // Synchronize activeTab from URL search params (e.g. ?tab=USER_DASHBOARD)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam) {
+        setActiveTab(tabParam as ActiveTab);
+      }
+    }
+  }, []);
+
   // Reusable Firebase and Database sync helper
   const applyFirebaseLeads = useCallback((fbLeads: StudentRecord[]) => {
     if (!fbLeads) return;
