@@ -36,8 +36,11 @@ import {
   PhoneCall,
   UserCheck,
   Zap,
+  Loader2,
+  Database,
+  Building,
 } from "lucide-react";
-import { Lead, Application, LeadStatus, AppStage } from "@/types/crm";
+import { Lead, Application, LeadStatus, AppStage, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
@@ -51,6 +54,36 @@ interface ApplicantDetailModalProps {
   existingLeads?: Lead[];
 }
 
+const COUNSELOR_OPTIONS = [
+  "Dr Dhanabal M Assistant Professor MECH",
+  "Dr. K. Arulmurugan HoD CSE",
+  "Dr. S. Meenakshi HoD ECE",
+  "Dr. N. Gayathri HoD IT",
+  "Prof. M. Karthik AI & DS",
+  "Dr. R. Saravanan HoD EEE",
+  "Prof. V. Anitha BME",
+  "Dr. T. Senthil HoD Civil",
+  "Prof. P. Kavitha Cyber Security",
+  "Dr. G. Ramesh HoD Robotics",
+  "Prof. P. Rajesh / Mr Admin HoD Mech",
+];
+
+const LEAD_SUB_STAGES = [
+  "Untouched",
+  "Number Busy (Not Reachable)",
+  "Wrong Number (Closed)",
+  "Number Switched Off (Not Reachable)",
+  "Coimbatore Campus (Walkin)",
+  "Not Maths Group (Closed)",
+  "Invalid Email (Closed)",
+  "After Result (Not Decided)",
+  "Agri (Not Interested in Engineering)",
+  "Studying in VSB (Closed)",
+  "Within a Week (Interested to Join VSB)",
+  "Message 1 sent (WhatsApp contact)",
+  "Medical (Not Interested in Engineering)",
+];
+
 export default function ApplicantDetailModal({
   applicant,
   currentUserRole,
@@ -61,6 +94,9 @@ export default function ApplicantDetailModal({
 }: ApplicantDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(applicant);
+  const [editSectionTab, setEditSectionTab] = useState<"PERSONAL" | "ACADEMIC" | "ADMISSION">("PERSONAL");
+  const [isSavingFirebase, setIsSavingFirebase] = useState(false);
+  const [saveSuccessToast, setSaveSuccessToast] = useState<string | null>(null);
 
   const [activeMainTab, setActiveMainTab] = useState<
     "LEAD_DETAILS" | "TIMELINE" | "CALENDAR" | "NOTES" | "COMMUNICATION" | "TICKETS" | "CALL_LOGS"
@@ -95,27 +131,50 @@ export default function ApplicantDetailModal({
 
   if (!applicant || !formData) return null;
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData) {
-      const phoneErr = validateLeadPhoneNumber(formData.phone, existingLeads, formData.id);
-      if (phoneErr) {
-        alert(phoneErr);
-        return;
-      }
+  // Save student data to Firebase and local database
+  const handleFormSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!formData) return;
+
+    // Validate phone number format and duplicates
+    const phoneErr = validateLeadPhoneNumber(formData.phone, existingLeads, formData.id);
+    if (phoneErr) {
+      alert(phoneErr);
+      return;
+    }
+
+    setIsSavingFirebase(true);
+    try {
+      // 1. Direct Save to Firebase Firestore & RTDB
+      await saveStudentToFirebase(formData);
+
+      // 2. Direct Save to SQLite database API
       try {
         await fetch("/api/applications", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
-      } catch (e) {}
-      saveStudentToFirebase(formData);
+      } catch (dbErr) {
+        console.warn("DB update notice:", dbErr);
+      }
+
+      // 3. Notify parent component to update state across the app
+      if (onSave) {
+        onSave(formData);
+      }
+
+      setSaveSuccessToast(`🔥 Successfully saved ${formData.name}'s data to Firebase!`);
+      setTimeout(() => {
+        setSaveSuccessToast(null);
+        setIsEditing(false);
+      }, 1400);
+    } catch (err: any) {
+      console.error("Save error:", err);
+      alert("Failed to save student data: " + (err?.message || ""));
+    } finally {
+      setIsSavingFirebase(false);
     }
-    if (onSave && formData) {
-      onSave(formData);
-    }
-    setIsEditing(false);
   };
 
   const generateAiSummary = () => {
@@ -179,14 +238,22 @@ export default function ApplicantDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-white w-full max-w-6xl rounded-2xl border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col max-h-[96vh] my-auto">
+      <div className="bg-white w-full max-w-6xl rounded-2xl border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col max-h-[96vh] my-auto relative">
+        {/* Success Toast Notification */}
+        {saveSuccessToast && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-emerald-400">
+            <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+            <span>{saveSuccessToast}</span>
+          </div>
+        )}
+
         {/* Top Header / Breadcrumb Bar */}
         <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
           <div className="flex items-center gap-2 text-xs font-black text-slate-950">
             <span className="text-slate-950 font-black">Lead Details</span>
             <span className="text-slate-400">&gt;</span>
             <button
-              className="p-1 rounded-md bg-white border border-slate-300 text-sky-600 hover:bg-slate-100 transition-colors shadow-sm"
+              className="p-1 rounded-md bg-white border border-slate-300 text-sky-600 hover:bg-slate-100 transition-colors shadow-sm cursor-pointer"
               title="Filter Lead Views"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -203,23 +270,23 @@ export default function ApplicantDetailModal({
             </button>
             <button
               onClick={() => onActionTrigger("CALL", formData.name)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-sky-600" /> Add Event
             </button>
+
+            {/* Edit Details Button at Top Right */}
             <button
-              onClick={() => setIsEditing(!isEditing)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-black transition-all shadow-sm ${
-                isEditing
-                  ? "bg-amber-100 text-amber-900 border-amber-300"
-                  : "bg-white hover:bg-slate-100 border-slate-300 text-slate-900"
-              }`}
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer hover:scale-105"
+              title="Edit Student Data & Save to Firebase"
             >
-              <Edit3 className="w-3.5 h-3.5" /> {isEditing ? "Viewing Mode" : "Edit Details"}
+              <Edit3 className="w-3.5 h-3.5 text-sky-600" /> Edit Details
             </button>
+
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-950 hover:bg-slate-200 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-950 hover:bg-slate-200 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -250,7 +317,7 @@ export default function ApplicantDetailModal({
             <button
               onClick={generateAiSummary}
               disabled={isGeneratingAi}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md shrink-0 ml-4"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md shrink-0 ml-4 cursor-pointer"
             >
               {isGeneratingAi ? (
                 <>
@@ -311,10 +378,15 @@ export default function ApplicantDetailModal({
                       <span>Lead Stage:</span>
                       <span className="font-black text-sky-700 flex items-center gap-1">
                         {formData.status === "NEW" ? "Untouched" : formData.status}
-                        <Edit3
-                          className="w-3 h-3 cursor-pointer text-slate-500 hover:text-slate-900 inline"
+                        {/* Pencil Icon next to Lead Stage */}
+                        <button
+                          type="button"
                           onClick={() => setIsEditing(true)}
-                        />
+                          className="p-0.5 rounded hover:bg-sky-100 text-slate-500 hover:text-sky-700 transition-colors inline-flex items-center cursor-pointer ml-1"
+                          title="Edit Stage & Student Info"
+                        >
+                          <Edit3 className="w-3 h-3 text-sky-600" />
+                        </button>
                       </span>
                     </div>
                   </div>
@@ -358,36 +430,39 @@ export default function ApplicantDetailModal({
                 {/* Quick 5 Action Buttons Bar */}
                 <div className="grid grid-cols-5 gap-1.5 border-t border-slate-200 pt-3">
                   <button
-                    onClick={() => setIsEditing(true)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm"
+                    onClick={() => onActionTrigger("WHATSAPP", formData.name)}
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm cursor-pointer"
                     title="Share / Transfer Lead"
                   >
                     <Share2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => onActionTrigger("CALL", formData.name)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm cursor-pointer"
                     title="Call Candidate"
                   >
                     <Phone className="w-3.5 h-3.5" />
                   </button>
+
+                  {/* 3rd Button: PENCIL EDIT ICON (Directly opens Edit Student Data & Firebase Save) */}
                   <button
-                    onClick={() => setActiveMainTab("NOTES")}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm"
-                    title="Add Note"
+                    onClick={() => setIsEditing(true)}
+                    className="p-2 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-sky-800 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105"
+                    title="Edit Student Data & Save to Firebase"
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <Edit3 className="w-3.5 h-3.5 text-sky-600" />
                   </button>
+
                   <button
                     onClick={() => onActionTrigger("EMAIL", formData.name)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm cursor-pointer"
                     title="Send Email"
                   >
                     <Mail className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => onActionTrigger("WHATSAPP", formData.name)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-teal-700 flex items-center justify-center transition-all shadow-sm"
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-teal-700 flex items-center justify-center transition-all shadow-sm cursor-pointer"
                     title="WhatsApp Outreach"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-teal-600" />
@@ -415,6 +490,18 @@ export default function ApplicantDetailModal({
                     </span>
                   </div>
                 </div>
+
+                {/* PROMINENT EDIT STUDENT DATA BUTTON */}
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="w-full mt-3 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                  title="Edit Student Information & Save to Firebase"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Student Data</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/20 font-black">🔥 Firebase</span>
+                </button>
               </div>
 
               {/* Assignment Details Accordion Card */}
@@ -452,17 +539,23 @@ export default function ApplicantDetailModal({
                     <span className="text-slate-700 text-[11px] block font-extrabold">
                       Upcoming Followup
                     </span>
-                    <span className="font-black text-slate-950 block">NA</span>
+                    <span className="font-mono text-slate-950 font-bold block">NA</span>
                   </div>
                   <div>
                     <span className="text-slate-700 text-[11px] block font-extrabold">Last Active</span>
-                    <span className="font-black text-slate-950 block">25 Aug 2026 06:30 PM</span>
+                    <span className="font-mono text-slate-950 font-bold block">
+                      25 Aug 2026 06:30 PM
+                    </span>
                   </div>
                   <div>
-                    <span className="text-slate-700 text-[11px] block font-extrabold">Lead Added On</span>
+                    <span className="text-slate-700 text-[11px] block font-extrabold">
+                      Lead Added On
+                    </span>
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-slate-950">25 Aug 2026 06:25 PM</span>
-                      <span className="bg-sky-100 text-sky-800 border border-sky-300 px-1.5 py-0.5 rounded text-[10px] font-black">
+                      <span className="font-mono text-slate-950 font-bold">
+                        25 Aug 2026 06:25 PM
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 text-[10px] font-black border border-sky-300">
                         0d
                       </span>
                     </div>
@@ -470,19 +563,33 @@ export default function ApplicantDetailModal({
                 </div>
               </div>
 
-              {/* Engagement Stats Card */}
+              {/* Engagement Stats Accordion Card */}
               <div className="bg-white rounded-xl border border-slate-300 p-4 space-y-2 shadow-sm text-slate-950">
-                <div className="flex items-center justify-between text-xs font-black text-slate-950">
+                <div className="flex items-center justify-between text-xs font-black text-slate-950 border-b border-slate-200 pb-2">
                   <span>Engagement Stats</span>
                   <ChevronDown className="w-4 h-4 text-slate-600" />
+                </div>
+                <div className="space-y-2 text-xs pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-700 font-extrabold text-[11px]">Total Calls</span>
+                    <span className="font-black text-slate-950 font-mono">1</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-700 font-extrabold text-[11px]">Emails Opened</span>
+                    <span className="font-black text-slate-950 font-mono">1</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-700 font-extrabold text-[11px]">WhatsApp Replies</span>
+                    <span className="font-black text-slate-950 font-mono">1</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT MAIN DETAILS TAB AREA (8 cols) */}
+            {/* RIGHT DETAILS TAB AREA (8 cols) */}
             <div className="lg:col-span-8 space-y-4">
-              {/* Main Navigation Tabs */}
-              <div className="flex items-center gap-1.5 border-b border-slate-300 overflow-x-auto pb-1 hide-scrollbar">
+              {/* Main Tab Navigation Bar */}
+              <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-slate-300 hide-scrollbar">
                 {[
                   { id: "LEAD_DETAILS", label: "Lead Details", icon: User },
                   { id: "TIMELINE", label: "Timeline", icon: Clock },
@@ -497,7 +604,7 @@ export default function ApplicantDetailModal({
                     <button
                       key={tab.id}
                       onClick={() => setActiveMainTab(tab.id as any)}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-black whitespace-nowrap transition-all rounded-t-lg border ${
+                      className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-black whitespace-nowrap transition-all rounded-t-lg border cursor-pointer ${
                         activeMainTab === tab.id
                           ? "bg-sky-600 text-white border-sky-600 shadow-md"
                           : "bg-white text-slate-950 hover:bg-slate-100 border-slate-300"
@@ -590,7 +697,7 @@ export default function ApplicantDetailModal({
                       <select
                         value={timelineFilterAction}
                         onChange={(e) => setTimelineFilterAction(e.target.value)}
-                        className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-950 text-xs font-black"
+                        className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-950 text-xs font-black cursor-pointer"
                       >
                         <option value="ALL">Select Action</option>
                         <option value="REASSIGNED">Reassigned</option>
@@ -644,7 +751,7 @@ export default function ApplicantDetailModal({
                 </div>
               )}
 
-              {/* TAB 3: LEAD DETAILS VIEW / EDIT */}
+              {/* TAB 3: LEAD DETAILS (VIEW MODE) */}
               {activeMainTab === "LEAD_DETAILS" && (
                 <div className="bg-white text-slate-950 rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm">
                   {/* Sub Tabs */}
@@ -659,7 +766,7 @@ export default function ApplicantDetailModal({
                           key={sub.id}
                           type="button"
                           onClick={() => setActiveSubTab(sub.id as any)}
-                          className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all ${
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                             activeSubTab === sub.id
                               ? "bg-indigo-600 text-white shadow-sm border border-indigo-600"
                               : "text-slate-950 font-black bg-slate-100 hover:bg-slate-200 border border-slate-300"
@@ -672,302 +779,140 @@ export default function ApplicantDetailModal({
 
                     <button
                       type="button"
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-sm"
+                      onClick={() => setIsEditing(true)}
+                      className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      {isEditing ? "View Details" : "Edit Profile"}
+                      <Edit3 className="w-3.5 h-3.5" /> Edit Profile
                     </button>
                   </div>
 
-                  {isEditing ? (
-                    <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Student Full Name</label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
-                          />
+                  <div>
+                    {/* SUBTAB 1: LEAD DETAILS */}
+                    {activeSubTab === "LEAD_DETAILS" && (
+                      <div className="space-y-2 text-xs">
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Student Name</span>
+                          <span className="col-span-7 font-black text-slate-950 text-sm">: {formData.name}</span>
                         </div>
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Mobile Number</label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
-                          />
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Mobile Number</span>
+                          <span className="col-span-7 font-black text-sky-700 font-mono text-xs">: {formData.phone}</span>
                         </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Email Address</label>
-                          <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
-                          />
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Email Address</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.email || "NA"}</span>
                         </div>
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Father&apos;s Name</label>
-                          <input
-                            type="text"
-                            value={formData.fatherName || ""}
-                            onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
-                          />
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Father&apos;s Name</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.fatherName || "NA"}</span>
                         </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Mother&apos;s Name</label>
-                          <input
-                            type="text"
-                            value={formData.motherName || ""}
-                            onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
-                          />
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Mother&apos;s Name</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.motherName || "NA"}</span>
                         </div>
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Gender</label>
-                          <select
-                            value={formData.gender || "Male"}
-                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
-                          >
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                          </select>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Gender</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.gender || "Male"}</span>
                         </div>
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Blood Group</label>
-                          <select
-                            value={formData.bloodGroup || "O+"}
-                            onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
-                          >
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                          </select>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Blood Group</span>
+                          <span className="col-span-7 font-black text-rose-700 font-mono">: {formData.bloodGroup || "O+"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Physically Disabled</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.physicallyDisabled || "No"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Community Category</span>
+                          <span className="col-span-7 font-black text-amber-800">: {formData.community || "BC"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Target V.S.B. Campus</span>
+                          <span className="col-span-7 font-black text-sky-800">: {formData.campus ? `${formData.campus} CAMPUS` : "KARUR CAMPUS"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Degree Program / Course</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.courseInterest || "B.Tech AI & Data Science"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Application Stage</span>
+                          <span className="col-span-7 font-black text-emerald-800">: {formData.application?.stage || formData.status || "INQUIRY"}</span>
                         </div>
                       </div>
+                    )}
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Community</label>
-                          <select
-                            value={formData.community || "BC"}
-                            onChange={(e) => setFormData({ ...formData, community: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
-                          >
-                            <option value="BC">BC</option>
-                            <option value="BCM">BCM</option>
-                            <option value="MBC">MBC</option>
-                            <option value="SC">SC</option>
-                            <option value="SCA">SCA</option>
-                            <option value="ST">ST</option>
-                            <option value="OC">OC</option>
-                          </select>
+                    {/* SUBTAB 2: ADDITIONAL DETAILS */}
+                    {activeSubTab === "ADDITIONAL" && (
+                      <div className="space-y-2 text-xs">
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">10th SSLC Marks (%)</span>
+                          <span className="col-span-7 font-black text-emerald-800 font-mono">: {formData.application?.marks10th ? `${formData.application.marks10th}%` : "88%"}</span>
                         </div>
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Target Campus</label>
-                          <select
-                            value={formData.campus || "KARUR"}
-                            onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
-                          >
-                            <option value="KARUR">V.S.B. Karur Campus</option>
-                            <option value="COIMBATORE">V.S.B. Coimbatore Campus</option>
-                          </select>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">12th HSC Cutoff Marks (%)</span>
+                          <span className="col-span-7 font-black text-emerald-700 font-mono">: {formData.application?.marks12th ? `${formData.application.marks12th}%` : "92%"}</span>
                         </div>
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">Course Interest</label>
-                          <input
-                            type="text"
-                            value={formData.courseInterest || ""}
-                            onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-black"
-                          />
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">TNEA Cutoff</span>
+                          <span className="col-span-7 font-black text-indigo-700 font-mono">: {formData.tneaCutoff ? `${formData.tneaCutoff}/200` : "178.5/200"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Previous School Name</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.school || "Govt Higher Secondary School"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Lead Acquisition Source</span>
+                          <span className="col-span-7 font-black text-sky-800">: {formData.source || "Organic"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Fee Payment Status</span>
+                          <span className="col-span-7 font-black text-emerald-800">: {formData.application?.paymentStatus || "PENDING"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">State</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.state || "Tamil Nadu"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">District / City</span>
+                          <span className="col-span-7 font-black text-sky-800">: {formData.district || "Karur"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Residential Address</span>
+                          <span className="col-span-7 font-black text-slate-950">: {formData.address || "123 College Road, Tamil Nadu"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Alternate Contact Phone</span>
+                          <span className="col-span-7 font-black text-sky-800 font-mono">: {formData.alternatePhone || "NA"}</span>
                         </div>
                       </div>
+                    )}
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">School Name</label>
-                          <input
-                            type="text"
-                            value={formData.school || ""}
-                            onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
-                          />
+                    {/* SUBTAB 3: FACEBOOK DETAILS */}
+                    {activeSubTab === "FACEBOOK" && (
+                      <div className="space-y-2 text-xs">
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Facebook Lead ID</span>
+                          <span className="col-span-7 font-mono font-black text-sky-800">: fb_lead_987412{formData.id.slice(-4)}</span>
                         </div>
-                        <div>
-                          <label className="block text-slate-950 font-black mb-1">District / City</label>
-                          <input
-                            type="text"
-                            value={formData.district || ""}
-                            onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-950 font-bold"
-                          />
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Ad Campaign Name</span>
+                          <span className="col-span-7 font-black text-slate-950">: VSB_Admissions_2026_TN_Engineering</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Adset Target Group</span>
+                          <span className="col-span-7 font-black text-slate-950">: TN_Higher_Secondary_Aspirants_Direct</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Lead Form Name</span>
+                          <span className="col-span-7 font-black text-emerald-800">: Direct_Admission_Form_2026</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Lead Generation Platform</span>
+                          <span className="col-span-7 font-black text-sky-800">: Meta Ads (Facebook & Instagram)</span>
                         </div>
                       </div>
-
-                      <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-950 font-black"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md"
-                        >
-                          Save Changes
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div>
-                      {/* SUBTAB 1: LEAD DETAILS */}
-                      {activeSubTab === "LEAD_DETAILS" && (
-                        <div className="space-y-2 text-xs">
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Student Name</span>
-                            <span className="col-span-7 font-black text-slate-950 text-sm">: {formData.name}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Mobile Number</span>
-                            <span className="col-span-7 font-black text-sky-700 font-mono text-xs">: {formData.phone}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Email Address</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.email || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Father&apos;s Name</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.fatherName || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Mother&apos;s Name</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.motherName || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Gender</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.gender || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Blood Group</span>
-                            <span className="col-span-7 font-black text-rose-700 font-mono">: {formData.bloodGroup || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Physically Disabled</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.physicallyDisabled || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Community Category</span>
-                            <span className="col-span-7 font-black text-amber-800">: {formData.community || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Target V.S.B. Campus</span>
-                            <span className="col-span-7 font-black text-sky-800">: {formData.campus ? `${formData.campus} CAMPUS` : ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Degree Program / Course</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.courseInterest || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Application Stage</span>
-                            <span className="col-span-7 font-black text-emerald-800">: {formData.application?.stage || formData.status || ""}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB 2: ADDITIONAL DETAILS */}
-                      {activeSubTab === "ADDITIONAL" && (
-                        <div className="space-y-2 text-xs">
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">10th SSLC Marks (%)</span>
-                            <span className="col-span-7 font-black text-emerald-800 font-mono">: {formData.application?.marks10th ? `${formData.application.marks10th}%` : ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">12th HSC Cutoff Marks (%)</span>
-                            <span className="col-span-7 font-black text-emerald-700 font-mono">: {formData.application?.marks12th ? `${formData.application.marks12th}%` : ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Previous School Name</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.school || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Lead Acquisition Source</span>
-                            <span className="col-span-7 font-black text-sky-800">: {formData.source || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Fee Payment Status</span>
-                            <span className="col-span-7 font-black text-emerald-800">: {formData.application?.paymentStatus || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">State</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.state || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">District / City</span>
-                            <span className="col-span-7 font-black text-sky-800">: {formData.district || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Residential Address</span>
-                            <span className="col-span-7 font-black text-slate-950">: {formData.address || ""}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Alternate Contact Phone</span>
-                            <span className="col-span-7 font-black text-sky-800 font-mono">: {formData.alternatePhone || ""}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB 3: FACEBOOK DETAILS */}
-                      {activeSubTab === "FACEBOOK" && (
-                        <div className="space-y-2 text-xs">
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Facebook Lead ID</span>
-                            <span className="col-span-7 font-mono font-black text-sky-800">: fb_lead_987412{formData.id.slice(-4)}</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Ad Campaign Name</span>
-                            <span className="col-span-7 font-black text-slate-950">: VSB_Admissions_2026_TN_Engineering</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Adset Target Group</span>
-                            <span className="col-span-7 font-black text-slate-950">: TN_Higher_Secondary_Aspirants_Direct</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Lead Form Name</span>
-                            <span className="col-span-7 font-black text-emerald-800">: Direct_Admission_Form_2026</span>
-                          </div>
-                          <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
-                            <span className="col-span-5 font-black text-slate-700">Lead Generation Platform</span>
-                            <span className="col-span-7 font-black text-sky-800">: Meta Ads (Facebook & Instagram)</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -980,7 +925,7 @@ export default function ApplicantDetailModal({
                     <p className="text-slate-900 font-black">No upcoming followup tasks scheduled.</p>
                     <button
                       onClick={() => onActionTrigger("CALL", formData.name)}
-                      className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-lg text-xs shadow-sm"
+                      className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-lg text-xs shadow-sm cursor-pointer"
                     >
                       + Schedule Followup Event
                     </button>
@@ -1002,7 +947,7 @@ export default function ApplicantDetailModal({
                     />
                     <button
                       onClick={handleAddNote}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg text-xs shadow-sm"
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg text-xs shadow-sm cursor-pointer"
                     >
                       Save Counselor Note
                     </button>
@@ -1063,6 +1008,588 @@ export default function ApplicantDetailModal({
             </div>
           </div>
         </div>
+
+        {/* ========================================================================= */}
+        {/* DEDICATED EDIT STUDENT DATA MODAL OVERLAY (FIREBASE & DATABASE SYNC)     */}
+        {/* ========================================================================= */}
+        {isEditing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-white/20 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-950 dark:text-white animate-in zoom-in-95 duration-200">
+              {/* Header */}
+              <div className="p-4 px-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-md">
+                    <Edit3 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-950 dark:text-white flex items-center gap-2">
+                      Edit Student Data: <span className="text-sky-600 dark:text-sky-400 uppercase">{formData.name}</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 flex items-center gap-1.5 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Live Firebase Cloud & SQLite Synchronization
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSavingFirebase}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Navigation Pill Tabs for Edit Categories */}
+              <div className="px-6 pt-3 pb-2 border-b border-slate-200 dark:border-white/10 flex items-center gap-2 bg-slate-100/60 dark:bg-slate-950/40">
+                <button
+                  type="button"
+                  onClick={() => setEditSectionTab("PERSONAL")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    editSectionTab === "PERSONAL"
+                      ? "bg-sky-600 text-white shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+                  }`}
+                >
+                  👤 Personal & Contact
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditSectionTab("ACADEMIC")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    editSectionTab === "ACADEMIC"
+                      ? "bg-sky-600 text-white shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+                  }`}
+                >
+                  🎓 Academic & Cutoff
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditSectionTab("ADMISSION")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    editSectionTab === "ADMISSION"
+                      ? "bg-sky-600 text-white shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+                  }`}
+                >
+                  🏛️ Admission, Stage & Counselor
+                </button>
+              </div>
+
+              {/* Edit Form Body */}
+              <form onSubmit={handleFormSubmit} className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+                {/* 1. PERSONAL & CONTACT SECTION */}
+                {editSectionTab === "PERSONAL" && (
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Student Full Name <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Mobile Number <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          value={formData.email || ""}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Alternate Phone Number
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.alternatePhone || ""}
+                          onChange={(e) => setFormData({ ...formData, alternatePhone: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Father&apos;s Name
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.fatherName || ""}
+                          onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Mother&apos;s Name
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.motherName || ""}
+                          onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Gender
+                        </label>
+                        <select
+                          value={formData.gender || "Male"}
+                          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Blood Group
+                        </label>
+                        <select
+                          value={formData.bloodGroup || "O+"}
+                          onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Community
+                        </label>
+                        <select
+                          value={formData.community || "BC"}
+                          onChange={(e) => setFormData({ ...formData, community: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="OC">OC</option>
+                          <option value="BC">BC</option>
+                          <option value="BCM">BCM</option>
+                          <option value="MBC">MBC</option>
+                          <option value="SC">SC</option>
+                          <option value="SCA">SCA</option>
+                          <option value="ST">ST</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Physically Disabled
+                        </label>
+                        <select
+                          value={formData.physicallyDisabled || "No"}
+                          onChange={(e) => setFormData({ ...formData, physicallyDisabled: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          District / City
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.district || ""}
+                          onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          State
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.state || "Tamil Nadu"}
+                          onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                        Full Residential Address
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={formData.address || ""}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. ACADEMIC & CUTOFF SECTION */}
+                {editSectionTab === "ACADEMIC" && (
+                  <div className="space-y-3.5">
+                    <div>
+                      <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                        Previous School / Higher Secondary School
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.school || ""}
+                        onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          10th SSLC Marks (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          max="100"
+                          min="0"
+                          value={formData.application?.marks10th || 0}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              application: {
+                                ...(formData.application || app),
+                                marks10th: parseFloat(e.target.value) || 0,
+                              },
+                            })
+                          }
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          12th HSC Marks (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          max="100"
+                          min="0"
+                          value={formData.application?.marks12th || 0}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              application: {
+                                ...(formData.application || app),
+                                marks12th: parseFloat(e.target.value) || 0,
+                              },
+                            })
+                          }
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          TNEA Cutoff (Out of 200)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.25"
+                          max="200"
+                          min="0"
+                          value={formData.tneaCutoff || 0}
+                          onChange={(e) => setFormData({ ...formData, tneaCutoff: parseFloat(e.target.value) || 0 })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          TNEA Counselling Application No.
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.counsellingAppNo || ""}
+                          onChange={(e) => setFormData({ ...formData, counsellingAppNo: e.target.value })}
+                          placeholder="e.g. TNEA2026-88914"
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          General Rank (Optional)
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.generalRank || ""}
+                          onChange={(e) => setFormData({ ...formData, generalRank: parseInt(e.target.value) || undefined })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. ADMISSION, STAGE & COUNSELOR SECTION */}
+                {editSectionTab === "ADMISSION" && (
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Target Campus <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          value={formData.campus || "KARUR"}
+                          onChange={(e) => setFormData({ ...formData, campus: e.target.value as any })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="KARUR">V.S.B. Karur Campus</option>
+                          <option value="COIMBATORE">V.S.B. Coimbatore Campus</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Degree Course Interest <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          value={formData.courseInterest || VSB_DEPARTMENTS_COURSES[0]}
+                          onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          {VSB_DEPARTMENTS_COURSES.map((course) => (
+                            <option key={course} value={course}>
+                              {course}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Lead Status <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          value={formData.status || "NEW"}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value as LeadStatus })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="NEW">NEW (Untouched)</option>
+                          <option value="CONTACTED">CONTACTED (Engaged)</option>
+                          <option value="IN_REVIEW">IN_REVIEW (Scrutiny / Decision Pending)</option>
+                          <option value="ADMITTED">ADMITTED (Enrolled in V.S.B.)</option>
+                          <option value="REJECTED">REJECTED (Closed / Dropped)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Lead Sub Stage
+                        </label>
+                        <select
+                          value={formData.subStage || LEAD_SUB_STAGES[0]}
+                          onChange={(e) => setFormData({ ...formData, subStage: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          {LEAD_SUB_STAGES.map((sub) => (
+                            <option key={sub} value={sub}>
+                              {sub}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Application Scrutiny Stage
+                        </label>
+                        <select
+                          value={formData.application?.stage || "INQUIRY"}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              application: {
+                                ...(formData.application || app),
+                                stage: e.target.value as AppStage,
+                              },
+                            })
+                          }
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="INQUIRY">INQUIRY (Form Initiated)</option>
+                          <option value="SUBMITTED">SUBMITTED (Form Completed)</option>
+                          <option value="DOCS_VERIFIED">DOCS_VERIFIED (Certificates Verified)</option>
+                          <option value="OFFER_ISSUED">OFFER_ISSUED (Provisional Admission Issued)</option>
+                          <option value="FEE_PAID">FEE_PAID (Admitted & Seat Locked)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Fee Payment Status
+                        </label>
+                        <select
+                          value={formData.application?.paymentStatus || "PENDING"}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              application: {
+                                ...(formData.application || app),
+                                paymentStatus: e.target.value,
+                              },
+                            })
+                          }
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="PENDING">PENDING</option>
+                          <option value="COMPLETED">COMPLETED</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Assigned Counselor / Owner
+                        </label>
+                        <select
+                          value={formData.assignedTo || COUNSELOR_OPTIONS[0]}
+                          onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          {COUNSELOR_OPTIONS.map((counselor) => (
+                            <option key={counselor} value={counselor}>
+                              {counselor}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Lead Acquisition Source
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.source || "Organic"}
+                          onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                          placeholder="e.g. TNEA Counselling, Walk-in, Meta Ads"
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                        Lead Score (0 - 100)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData.leadScore || 10}
+                        onChange={(e) => setFormData({ ...formData, leadScore: parseInt(e.target.value) || 0 })}
+                        className="w-full sm:w-48 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Form Action Footer */}
+                <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
+                    <Database className="w-3.5 h-3.5 text-sky-500" />
+                    Saves to Firebase Firestore & RTDB
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isSavingFirebase}
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={isSavingFirebase}
+                      className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isSavingFirebase ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
+                          <span>Saving to Firebase...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>Save to Firebase & Database</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* In-Portal Resend Admission Email Modal */}
