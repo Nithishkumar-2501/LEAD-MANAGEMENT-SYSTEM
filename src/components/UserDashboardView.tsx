@@ -42,6 +42,11 @@ interface UserDashboardViewProps {
   onToggleTask: (taskId: string) => void;
 }
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
 // 38 baseline timeline ticks matching the reference NoPaperForms dashboard
 const ALLOCATION_TIMELINE_DATES = [
   "21 Dec, 2024", "12 Jan, 2025", "28 Jan, 2025", "13 Feb, 2025",
@@ -75,8 +80,8 @@ export default function UserDashboardView({
   const [dataSourceMode, setDataSourceMode] = useState<"DATABASE" | "INSTITUTIONAL">("DATABASE");
   const isDbMode = dataSourceMode === "DATABASE";
 
-  // Engagement Chart Controls
-  const [engagementView, setEngagementView] = useState<"DAY" | "WEEK">("DAY");
+  // Engagement Chart View Mode State: "DAY" | "WEEK" | "TIMELINE"
+  const [engagementView, setEngagementView] = useState<"DAY" | "WEEK" | "TIMELINE">("DAY");
   const [hoveredDataPoint, setHoveredDataPoint] = useState<{
     date: string;
     allocated: number;
@@ -86,10 +91,10 @@ export default function UserDashboardView({
     yPercent: number;
   } | null>(null);
 
-  // Follow-up Calendar State (August, 2026 as per screenshot)
-  const [calendarMonth, setCalendarMonth] = useState<number>(7); // 7 = August (0-indexed)
+  // Follow-up Calendar State (Default to December 2026 as per user screenshot, with day 3 selected)
+  const [calendarMonth, setCalendarMonth] = useState<number>(11); // 11 = December (0-indexed)
   const [calendarYear, setCalendarYear] = useState<number>(2026);
-  const [selectedCalendarDay, setSelectedCalendarDay] = useState<number>(25);
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<number>(3);
 
   // Activity Feeds modal & filter
   const [showAllFeedsModal, setShowAllFeedsModal] = useState<boolean>(false);
@@ -115,73 +120,186 @@ export default function UserDashboardView({
       ? ((admittedLeadsCount / totalDbLeads) * 100).toFixed(1) + "%"
       : "42.8%";
 
+  // Days in current selected calendar month
+  const daysInCurrentMonth = useMemo(() => {
+    return new Date(calendarYear, calendarMonth + 1, 0).getDate();
+  }, [calendarYear, calendarMonth]);
+
+  const monthShort = MONTH_NAMES[calendarMonth].slice(0, 3);
+  const selectedDateLabel = `${String(selectedCalendarDay).padStart(2, "0")} ${monthShort}, ${calendarYear}`;
+
   // =========================================================================
-  // ENGAGEMENT CHART DATA GENERATION (DYNAMIC DATABASE INTEGRATION)
+  // DYNAMIC CHART DATA GENERATION — FULLY SYNCHRONIZED WITH SELECTED CALENDAR DATE
   // =========================================================================
   const chartData = useMemo(() => {
-    // 38 points matching the reference visual progression
-    return ALLOCATION_TIMELINE_DATES.map((dateStr, idx) => {
-      let allocated = 0;
-      let dayEngaged = 0;
-      let totalEngaged = 0;
+    const leadMultiplier = Math.max(1, totalDbLeads);
+    const targetEngaged = Math.max(1, contactedLeadsCount + inReviewLeadsCount + admittedLeadsCount);
 
-      if (isDbMode) {
-        // In Database Mode, scale dynamically to actual total leads in database
-        const leadMultiplier = Math.max(1, totalDbLeads);
-        const progressRatio = (idx + 1) / ALLOCATION_TIMELINE_DATES.length;
+    if (engagementView === "DAY") {
+      // Day View: Shows all days (1 to daysInCurrentMonth) of the selected month
+      return Array.from({ length: daysInCurrentMonth }, (_, i) => {
+        const day = i + 1;
+        const isTargetDay = day === selectedCalendarDay;
+        const dayRatio = day / daysInCurrentMonth;
+        const dateStr = `${String(day).padStart(2, "0")} ${monthShort}, ${calendarYear}`;
+        const shortDate = `${String(day).padStart(2, "0")} ${monthShort}`;
 
-        // Allocated: gradual ramp to totalDbLeads with real spikes
-        allocated = Math.round(leadMultiplier * (0.35 + 0.65 * Math.sin((idx / 38) * Math.PI)));
-        allocated = Math.max(1, Math.min(leadMultiplier, allocated));
+        let allocated = 0;
+        let dayEngaged = 0;
+        let totalEngaged = 0;
 
-        // Day-wise engaged based on tasks completed and contacted leads
-        dayEngaged = Math.max(0, Math.round((contactedLeadsCount + completedTasks.length) * (0.2 + 0.8 * ((idx % 5) / 5))));
+        if (isDbMode) {
+          // Dynamic calculation based on total leads stored in database
+          // Allocation climbs as the days progress, peaking around the selected date
+          const curveFactor = 0.4 + 0.6 * Math.sin((dayRatio * Math.PI) / 2);
+          allocated = Math.round(leadMultiplier * curveFactor);
+          allocated = Math.max(1, Math.min(leadMultiplier, allocated));
 
-        // Total engaged: cumulative progression to admitted + in-review leads
-        const totalEngagedTarget = Math.max(1, contactedLeadsCount + inReviewLeadsCount + admittedLeadsCount);
-        totalEngaged = Math.round(totalEngagedTarget * Math.pow(progressRatio, 1.2));
-      } else {
-        // Institutional Baseline (reflects 235k-400k range with DB leads added on top)
-        if (idx < 4) {
-          // Late 2024 / Early 2025 ramp
-          allocated = 130000 + idx * 10000;
-          totalEngaged = 10000 + idx * 30000;
-          dayEngaged = 2500 + (idx % 3) * 1200;
-        } else if (idx < 25) {
-          // 2025 peak cycle plateau (~340k allocated, ~240k engaged)
-          allocated = 310000 + Math.min(40000, (idx - 4) * 4000);
-          totalEngaged = Math.min(240000, 130000 + (idx - 4) * 15000);
-          dayEngaged = 3000 + (idx % 4) * 1500;
-        } else if (idx === 25) {
-          // 05 Feb 2026: Academic session cycle turnover
-          allocated = 10000 + totalDbLeads * 5;
-          totalEngaged = 2000;
-          dayEngaged = 1200;
+          // Day-wise engaged for this day
+          if (isTargetDay) {
+            dayEngaged = Math.max(1, Math.round(contactedLeadsCount * 0.4 + completedTasks.length));
+          } else {
+            dayEngaged = Math.max(0, Math.round((contactedLeadsCount + completedTasks.length) * (0.1 + 0.4 * ((day % 4) / 4))));
+          }
+
+          // Total engaged cumulative up to this day
+          totalEngaged = Math.round(targetEngaged * Math.pow(dayRatio, 0.9));
+          if (isTargetDay) {
+            totalEngaged = Math.max(totalEngaged, Math.round(targetEngaged * 0.8));
+          }
         } else {
-          // 2026-2027 admissions cycle rise towards August 2026
-          const relIdx = idx - 25;
-          allocated = Math.min(240000, 160000 + relIdx * 6500 + totalDbLeads * 50);
-          totalEngaged = Math.min(390000, 20000 + Math.pow(relIdx, 2.1) * 2200 + admittedLeadsCount * 100);
-          dayEngaged = 4500 + (idx % 5) * 2100 + contactedLeadsCount * 50;
+          // Institutional Mode scaled to ~235k-380k
+          allocated = Math.round(210000 + dayRatio * 25000 + (day % 3) * 3000 + totalDbLeads * 50);
+          dayEngaged = Math.round(3500 + ((day % 5) * 1200) + (isTargetDay ? 4000 : 0));
+          totalEngaged = Math.round(280000 + dayRatio * 105000 + admittedLeadsCount * 80);
         }
-      }
 
-      return {
-        date: dateStr,
-        allocated,
-        dayEngaged,
-        totalEngaged,
-      };
-    });
-  }, [isDbMode, totalDbLeads, contactedLeadsCount, inReviewLeadsCount, admittedLeadsCount, completedTasks.length]);
+        return {
+          dayNumber: day,
+          date: dateStr,
+          shortDate,
+          allocated,
+          dayEngaged,
+          totalEngaged,
+          isSelectedDay: isTargetDay,
+        };
+      });
+    } else if (engagementView === "WEEK") {
+      // Week View: Groups the selected month into 5 weekly periods
+      const weeksCount = 5;
+      return Array.from({ length: weeksCount }, (_, w) => {
+        const weekNum = w + 1;
+        const weekStartDay = (w * 7) + 1;
+        const weekEndDay = Math.min(daysInCurrentMonth, (w + 1) * 7);
+        const isTargetWeek = selectedCalendarDay >= weekStartDay && selectedCalendarDay <= weekEndDay;
+        const weekLabel = `Wk ${weekNum} (${weekStartDay}-${weekEndDay} ${monthShort})`;
+
+        let allocated = 0;
+        let dayEngaged = 0;
+        let totalEngaged = 0;
+
+        if (isDbMode) {
+          const ratio = (w + 1) / weeksCount;
+          allocated = Math.round(leadMultiplier * (0.5 + 0.5 * ratio));
+          dayEngaged = Math.max(1, Math.round((contactedLeadsCount + completedTasks.length) * (isTargetWeek ? 0.9 : 0.4)));
+          totalEngaged = Math.round(targetEngaged * Math.pow(ratio, 0.8));
+        } else {
+          allocated = Math.round(220000 + w * 5000);
+          dayEngaged = Math.round(18000 + (w % 2) * 4000);
+          totalEngaged = Math.round(290000 + w * 22000);
+        }
+
+        return {
+          dayNumber: weekStartDay,
+          date: weekLabel,
+          shortDate: `W${weekNum} ${monthShort}`,
+          allocated,
+          dayEngaged,
+          totalEngaged,
+          isSelectedDay: isTargetWeek,
+        };
+      });
+    } else {
+      // Full Timeline View: 38 points matching the reference NoPaperForms baseline
+      return ALLOCATION_TIMELINE_DATES.map((dateStr, idx) => {
+        let allocated = 0;
+        let dayEngaged = 0;
+        let totalEngaged = 0;
+
+        if (isDbMode) {
+          const progressRatio = (idx + 1) / ALLOCATION_TIMELINE_DATES.length;
+          allocated = Math.round(leadMultiplier * (0.35 + 0.65 * Math.sin((idx / 38) * Math.PI)));
+          allocated = Math.max(1, Math.min(leadMultiplier, allocated));
+          dayEngaged = Math.max(0, Math.round((contactedLeadsCount + completedTasks.length) * (0.2 + 0.8 * ((idx % 5) / 5))));
+          totalEngaged = Math.round(targetEngaged * Math.pow(progressRatio, 1.2));
+        } else {
+          if (idx < 4) {
+            allocated = 130000 + idx * 10000;
+            totalEngaged = 10000 + idx * 30000;
+            dayEngaged = 2500 + (idx % 3) * 1200;
+          } else if (idx < 25) {
+            allocated = 310000 + Math.min(40000, (idx - 4) * 4000);
+            totalEngaged = Math.min(240000, 130000 + (idx - 4) * 15000);
+            dayEngaged = 3000 + (idx % 4) * 1500;
+          } else if (idx === 25) {
+            allocated = 10000 + totalDbLeads * 5;
+            totalEngaged = 2000;
+            dayEngaged = 1200;
+          } else {
+            const relIdx = idx - 25;
+            allocated = Math.min(240000, 160000 + relIdx * 6500 + totalDbLeads * 50);
+            totalEngaged = Math.min(390000, 20000 + Math.pow(relIdx, 2.1) * 2200 + admittedLeadsCount * 100);
+            dayEngaged = 4500 + (idx % 5) * 2100 + contactedLeadsCount * 50;
+          }
+        }
+
+        // Check if this timeline date closely corresponds to the selected calendar month/year
+        const isTimelineSelected = dateStr.toLowerCase().includes(monthShort.toLowerCase());
+
+        return {
+          dayNumber: idx + 1,
+          date: dateStr,
+          shortDate: dateStr.split(",")[0],
+          allocated,
+          dayEngaged,
+          totalEngaged,
+          isSelectedDay: isTimelineSelected,
+        };
+      });
+    }
+  }, [
+    engagementView,
+    calendarYear,
+    selectedCalendarDay,
+    daysInCurrentMonth,
+    monthShort,
+    isDbMode,
+    totalDbLeads,
+    contactedLeadsCount,
+    inReviewLeadsCount,
+    admittedLeadsCount,
+    completedTasks.length,
+  ]);
+
+  // Selected date's active point metrics
+  const selectedDateMetrics = useMemo(() => {
+    const found = chartData.find((pt) => pt.isSelectedDay);
+    if (found) return found;
+    return chartData[0] || {
+      allocated: totalDbLeads,
+      dayEngaged: contactedLeadsCount,
+      totalEngaged: admittedLeadsCount,
+    };
+  }, [chartData, totalDbLeads, contactedLeadsCount, admittedLeadsCount]);
 
   // Max value for Y-axis scaling
   const maxY = useMemo(() => {
     if (isDbMode) {
-      return Math.max(20, Math.ceil((Math.max(totalDbLeads, 10) * 1.3) / 10) * 10);
+      const highestVal = Math.max(...chartData.map((d) => Math.max(d.allocated, d.totalEngaged)), totalDbLeads);
+      return Math.max(20, Math.ceil((highestVal * 1.25) / 10) * 10);
     }
     return 400000;
-  }, [isDbMode, totalDbLeads]);
+  }, [isDbMode, chartData, totalDbLeads]);
 
   const yAxisTicks = useMemo(() => {
     return [maxY, Math.round(maxY * 0.75), Math.round(maxY * 0.5), Math.round(maxY * 0.25), 0];
@@ -198,12 +316,14 @@ export default function UserDashboardView({
     const student3 = applicants[2]?.name || "Revathy S";
     const phone3 = applicants[2]?.phone || "9715398277";
 
+    const datePrefix = `${String(selectedCalendarDay).padStart(2, "0")} ${monthShort}`;
+
     return [
       {
         id: "feed-1",
         type: "INCOMING",
-        title: "Mr Karthikeyan G Assistant Professor English has completed an incoming call at 25/08/2026, 06:21 pm on number " + phone1 + ". 57 Sec -(In-App Calling).",
-        date: "25 Aug",
+        title: `Mr Karthikeyan G Assistant Professor English completed an incoming call on number ${phone1}. 57 Sec -(In-App Calling).`,
+        date: datePrefix,
         time: "06:21 PM",
         studentName: student1,
         phone: phone1,
@@ -211,8 +331,8 @@ export default function UserDashboardView({
       {
         id: "feed-2",
         type: "INCOMING",
-        title: "Mr Selvaraj ASSISTANT PROFESSOR EEE has completed an incoming call at 25/08/2026, 06:21 pm on number " + phone2 + ". 312 Sec -(In-App Calling).",
-        date: "25 Aug",
+        title: `Mr Selvaraj ASSISTANT PROFESSOR EEE completed an incoming call on number ${phone2}. 312 Sec -(In-App Calling).`,
+        date: datePrefix,
         time: "06:21 PM",
         studentName: student2,
         phone: phone2,
@@ -220,26 +340,26 @@ export default function UserDashboardView({
       {
         id: "feed-3",
         type: "MISSED",
-        title: "Missed call from 8825548947 at 25/08/2026, 06:00 pm -(In-App Calling).",
-        date: "25 Aug",
+        title: `Missed call from 8825548947 at ${datePrefix}, 06:00 pm -(In-App Calling).`,
+        date: datePrefix,
         time: "06:00 PM",
-        studentName: "Unregistered Lead",
+        studentName: "Direct Inquiry",
         phone: "8825548947",
       },
       {
         id: "feed-4",
         type: "MISSED",
-        title: "Missed call from 8825917737 at 25/08/2026, 05:23 pm -(In-App Calling).",
-        date: "25 Aug",
+        title: `Missed call from 8825917737 at ${datePrefix}, 05:23 pm -(In-App Calling).`,
+        date: datePrefix,
         time: "05:23 PM",
-        studentName: "Direct Inquiry",
+        studentName: "Admission Inquiry",
         phone: "8825917737",
       },
       {
         id: "feed-5",
         type: "INCOMING",
-        title: "Mr Selvaraj ASSISTANT PROFESSOR EEE has completed an incoming call at 25/08/2026, 05:02 pm on number " + phone3 + ". 35 Sec -(In-App Calling).",
-        date: "25 Aug",
+        title: `Mr Selvaraj ASSISTANT PROFESSOR EEE completed an incoming call on number ${phone3}. 35 Sec -(In-App Calling).`,
+        date: datePrefix,
         time: "05:02 PM",
         studentName: student3,
         phone: phone3,
@@ -247,8 +367,8 @@ export default function UserDashboardView({
       {
         id: "feed-6",
         type: "OUTBOUND",
-        title: "GURU PRASSAD R didn't pick the outbound call done by Mrs Brindha G HoD Chemistry at 25/08/2026, 04:45 pm -(In-App Calling).",
-        date: "25 Aug",
+        title: `GURU PRASSAD R didn't pick outbound call done by Mrs Brindha G HoD Chemistry -(In-App Calling).`,
+        date: datePrefix,
         time: "04:45 PM",
         studentName: "Guru Prassad R",
         phone: "9443311220",
@@ -256,23 +376,14 @@ export default function UserDashboardView({
       {
         id: "feed-7",
         type: "OUTBOUND",
-        title: "Dr. K. Arulmurugan HoD CSE completed counselor verification with " + (applicants[3]?.name || "Deepak V") + " on cutoff eligibility. 184 Sec -(In-App Calling).",
-        date: "25 Aug",
+        title: `Dr. K. Arulmurugan HoD CSE verified admission eligibility with ${applicants[3]?.name || "Deepak V"} on cutoff eligibility. 184 Sec.`,
+        date: datePrefix,
         time: "03:15 PM",
         studentName: applicants[3]?.name || "Deepak V",
         phone: applicants[3]?.phone || "9842144550",
       },
-      {
-        id: "feed-8",
-        type: "INCOMING",
-        title: "Admission desk logged follow-up document verification inquiry for B.E. Computer Science. -(In-App Calling).",
-        date: "25 Aug",
-        time: "02:40 PM",
-        studentName: "Campus Desk",
-        phone: "04324-290001",
-      },
     ];
-  }, [applicants]);
+  }, [applicants, selectedCalendarDay, monthShort]);
 
   const filteredFeeds = useMemo(() => {
     if (!feedSearchFilter.trim()) return activityFeeds;
@@ -286,17 +397,10 @@ export default function UserDashboardView({
   }, [activityFeeds, feedSearchFilter]);
 
   // =========================================================================
-  // FOLLOW-UP CALENDAR GENERATOR (AUGUST 2026 MATRIX)
+  // FOLLOW-UP CALENDAR GENERATOR (SYNCS MONTH & SELECTION WITH GRAPH)
   // =========================================================================
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
   const calendarDaysMatrix = useMemo(() => {
-    // Determine days in month and starting weekday
     const firstDayOfWeek = new Date(calendarYear, calendarMonth, 1).getDay(); // 0 = Sunday
-    const daysInCurrentMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
     const daysInPrevMonth = new Date(calendarYear, calendarMonth, 0).getDate();
 
     const cells: {
@@ -320,9 +424,8 @@ export default function UserDashboardView({
 
     // Current month days
     for (let d = 1; d <= daysInCurrentMonth; d++) {
-      // Add simulated follow-up indicators on specific days matching CRM pipeline
-      const hasFollowUps = d === 25 || d === 12 || d === 18 || d === 28 || (d % 7 === 3);
-      const followUpCount = d === 25 ? Math.max(3, pendingTasks.length) : (d % 5) + 1;
+      const hasFollowUps = d === 3 || d === 10 || d === 18 || d === 25 || (d % 6 === 2);
+      const followUpCount = d === selectedCalendarDay ? Math.max(3, pendingTasks.length) : (d % 4) + 1;
       cells.push({
         dayNumber: d,
         isCurrentMonth: true,
@@ -332,7 +435,7 @@ export default function UserDashboardView({
       });
     }
 
-    // Next month padding to fill grid to 35 or 42 cells
+    // Next month padding to complete the 35 or 42 grid
     const remaining = (7 - (cells.length % 7)) % 7;
     for (let j = 1; j <= remaining; j++) {
       cells.push({
@@ -345,7 +448,7 @@ export default function UserDashboardView({
     }
 
     return cells;
-  }, [calendarMonth, calendarYear, pendingTasks.length]);
+  }, [calendarMonth, calendarYear, daysInCurrentMonth, selectedCalendarDay, pendingTasks.length]);
 
   const handlePrevMonth = () => {
     if (calendarMonth === 0) {
@@ -416,70 +519,83 @@ export default function UserDashboardView({
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. TOP SECTION: ENGAGEMENT CHART (AUTHENTIC COMBO GRAPH MATCHING IMAGE)    */}
+      {/* 1. TOP SECTION: ENGAGEMENT CHART (DYNAMICALLY LINKED TO CALENDAR SELECTION) */}
       {/* ========================================================================= */}
       <div className="bubble-card p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg">
         {/* Chart Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Engagement Chart</h3>
-            <span title="Allocation vs Cumulative & Daily Lead Engagement">
+            <span title="Allocation vs Cumulative & Daily Lead Engagement — Filtered by Calendar Date">
               <Info className="w-4 h-4 text-slate-400 hover:text-sky-500 cursor-pointer" />
             </span>
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap">
-            {/* Filter by date & Day/Week toggle */}
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Filter Date Badge linked to Calendar Selection */}
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/80 border border-sky-300 dark:border-sky-500/40 text-xs font-black text-sky-800 dark:text-sky-300 shadow-sm">
+              <CalendarDays className="w-3.5 h-3.5 text-sky-500" />
+              <span>Selected Date: {selectedDateLabel}</span>
+            </div>
+
+            {/* View Switcher: Day vs Week vs Timeline */}
+            <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/10 p-0.5">
               <button
                 type="button"
-                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors"
+                onClick={() => setEngagementView("DAY")}
+                className={`px-3 py-1 rounded-md text-xs font-extrabold transition-all cursor-pointer ${
+                  engagementView === "DAY"
+                    ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-300 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
               >
-                <CalendarDays className="w-3.5 h-3.5 text-slate-400" />
-                <span>Filter by date</span>
+                Day
               </button>
-
-              <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/10 p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setEngagementView("DAY")}
-                  className={`px-3 py-1 rounded-md text-xs font-extrabold transition-all cursor-pointer ${
-                    engagementView === "DAY"
-                      ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-300 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                  }`}
-                >
-                  Day
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEngagementView("WEEK")}
-                  className={`px-3 py-1 rounded-md text-xs font-extrabold transition-all cursor-pointer ${
-                    engagementView === "WEEK"
-                      ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-300 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                  }`}
-                >
-                  Week
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setEngagementView("WEEK")}
+                className={`px-3 py-1 rounded-md text-xs font-extrabold transition-all cursor-pointer ${
+                  engagementView === "WEEK"
+                    ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-300 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Week
+              </button>
+              <button
+                type="button"
+                onClick={() => setEngagementView("TIMELINE")}
+                className={`px-3 py-1 rounded-md text-xs font-extrabold transition-all cursor-pointer ${
+                  engagementView === "TIMELINE"
+                    ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-300 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                All Timeline
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Legend Centered at Top */}
-        <div className="flex items-center justify-center gap-6 text-xs font-bold py-1">
+        {/* Legend Centered at Top with Selected Date Metrics */}
+        <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-bold py-1 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-2 border border-slate-200/60 dark:border-white/5">
           <div className="flex items-center gap-2">
             <span className="w-3.5 h-3.5 rounded bg-blue-600 shadow-sm" />
-            <span className="text-slate-700 dark:text-slate-300">Total Allocated</span>
+            <span className="text-slate-700 dark:text-slate-300">
+              Total Allocated ({selectedDateMetrics.allocated.toLocaleString()})
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-amber-400 shadow-sm border border-amber-500" />
-            <span className="text-slate-700 dark:text-slate-300">Day-wise Engaged</span>
+            <span className="text-slate-700 dark:text-slate-300">
+              Day-wise Engaged ({selectedDateMetrics.dayEngaged.toLocaleString()})
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3.5 h-3.5 rounded-full bg-red-600 shadow-sm border border-red-700" />
-            <span className="text-slate-700 dark:text-slate-300">Total Engaged</span>
+            <span className="text-slate-700 dark:text-slate-300">
+              Total Engaged ({selectedDateMetrics.totalEngaged.toLocaleString()})
+            </span>
           </div>
         </div>
 
@@ -509,30 +625,51 @@ export default function UserDashboardView({
                 <div className="border-b border-slate-300 dark:border-white/20 w-full" />
               </div>
 
-              {/* Combo Chart SVG & Bar Columns */}
+              {/* Combo Chart Bar Columns (Interactively Clickable to Select Date) */}
               <div className="absolute inset-0 pl-3 flex items-end justify-between gap-1">
                 {chartData.map((pt, i) => {
                   const barHeightPercent = Math.max(2, Math.min(100, (pt.allocated / maxY) * 100));
+                  const isHighlighted = pt.isSelectedDay;
+
                   return (
                     <div
                       key={i}
+                      onClick={() => {
+                        if (pt.dayNumber && engagementView === "DAY") {
+                          setSelectedCalendarDay(pt.dayNumber);
+                        }
+                      }}
                       onMouseEnter={() =>
                         setHoveredDataPoint({
                           date: pt.date,
                           allocated: pt.allocated,
                           dayEngaged: pt.dayEngaged,
                           totalEngaged: pt.totalEngaged,
-                          xPercent: (i / (chartData.length - 1)) * 100,
+                          xPercent: (i / Math.max(1, chartData.length - 1)) * 100,
                           yPercent: 100 - barHeightPercent,
                         })
                       }
                       onMouseLeave={() => setHoveredDataPoint(null)}
                       className="flex-1 h-full flex items-end justify-center group relative cursor-pointer"
                     >
-                      {/* Blue Bar for Total Allocated */}
+                      {/* Active Indicator Pin Above Selected Day Bar */}
+                      {isHighlighted && (
+                        <div className="absolute -top-7 z-20 flex flex-col items-center pointer-events-none">
+                          <span className="px-1.5 py-0.5 rounded-md bg-blue-600 text-white font-black text-[9px] shadow-lg animate-pulse whitespace-nowrap border border-white/40">
+                            {pt.shortDate}
+                          </span>
+                          <span className="w-1.5 h-1.5 bg-blue-600 rotate-45 -mt-1" />
+                        </div>
+                      )}
+
+                      {/* Blue Bar for Total Allocated (Glows & Highlights on Selected Calendar Day) */}
                       <div
                         style={{ height: `${barHeightPercent}%` }}
-                        className="w-full max-w-[12px] bg-blue-600 dark:bg-blue-500 hover:bg-blue-400 transition-all duration-300 rounded-t-sm shadow-sm"
+                        className={`w-full max-w-[14px] rounded-t-sm transition-all duration-300 shadow-sm ${
+                          isHighlighted
+                            ? "bg-sky-400 dark:bg-sky-400 ring-2 ring-white scale-y-105 shadow-lg shadow-sky-500/60 z-10"
+                            : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-400"
+                        }`}
                       />
                     </div>
                   );
@@ -548,8 +685,7 @@ export default function UserDashboardView({
                 {/* 1. Yellow Line: Day-wise Engaged */}
                 <path
                   d={chartData.reduce((acc, pt, idx) => {
-                    const x = (idx / (chartData.length - 1)) * 1000;
-                    // Yellow is a low fluctuating baseline
+                    const x = (idx / Math.max(1, chartData.length - 1)) * 1000;
                     const y = 224 - Math.max(6, (pt.dayEngaged / maxY) * 224);
                     return idx === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
                   }, "")}
@@ -562,17 +698,17 @@ export default function UserDashboardView({
 
                 {/* Yellow Points */}
                 {chartData.map((pt, idx) => {
-                  const x = (idx / (chartData.length - 1)) * 1000;
+                  const x = (idx / Math.max(1, chartData.length - 1)) * 1000;
                   const y = 224 - Math.max(6, (pt.dayEngaged / maxY) * 224);
                   return (
                     <circle
                       key={`ypt-${idx}`}
                       cx={x}
                       cy={y}
-                      r="2.5"
+                      r={pt.isSelectedDay ? 4.5 : 2.5}
                       fill="#eab308"
                       stroke="#ffffff"
-                      strokeWidth="0.8"
+                      strokeWidth={pt.isSelectedDay ? 1.5 : 0.8}
                     />
                   );
                 })}
@@ -580,7 +716,7 @@ export default function UserDashboardView({
                 {/* 2. Red Line: Total Engaged Cumulative Curve */}
                 <path
                   d={chartData.reduce((acc, pt, idx) => {
-                    const x = (idx / (chartData.length - 1)) * 1000;
+                    const x = (idx / Math.max(1, chartData.length - 1)) * 1000;
                     const y = 224 - Math.max(4, (pt.totalEngaged / maxY) * 224);
                     return idx === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
                   }, "")}
@@ -591,21 +727,20 @@ export default function UserDashboardView({
                   strokeLinejoin="round"
                 />
 
-                {/* Key Red Points */}
+                {/* Key Red Points & Selected Day Indicator */}
                 {chartData.map((pt, idx) => {
-                  // Place dots selectively along the curve for visual fidelity
-                  if (idx % 2 === 0 || idx === chartData.length - 1 || idx === 25) {
-                    const x = (idx / (chartData.length - 1)) * 1000;
+                  if (pt.isSelectedDay || idx % 3 === 0 || idx === chartData.length - 1) {
+                    const x = (idx / Math.max(1, chartData.length - 1)) * 1000;
                     const y = 224 - Math.max(4, (pt.totalEngaged / maxY) * 224);
                     return (
                       <circle
                         key={`rpt-${idx}`}
                         cx={x}
                         cy={y}
-                        r="3.5"
-                        fill="#dc2626"
+                        r={pt.isSelectedDay ? 5.5 : 3.5}
+                        fill={pt.isSelectedDay ? "#ef4444" : "#dc2626"}
                         stroke="#ffffff"
-                        strokeWidth="1.5"
+                        strokeWidth={pt.isSelectedDay ? 2 : 1.5}
                       />
                     );
                   }
@@ -652,14 +787,17 @@ export default function UserDashboardView({
           <div className="pl-16 pt-2">
             <div className="flex justify-between overflow-x-auto text-[9px] font-bold text-slate-500 dark:text-slate-400 select-none pb-1">
               {chartData.map((pt, i) => {
-                // Show dates at staggered intervals matching the screenshot
-                if (i % 2 === 0 || i === chartData.length - 1) {
+                const isTarget = pt.isSelectedDay;
+                // Show dates at staggered intervals or when selected
+                if (isTarget || i % 2 === 0 || i === chartData.length - 1) {
                   return (
                     <span
                       key={i}
-                      className="transform -rotate-45 origin-top-left inline-block text-[8.5px] whitespace-nowrap mt-1"
+                      className={`transform -rotate-45 origin-top-left inline-block text-[8.5px] whitespace-nowrap mt-1 cursor-pointer ${
+                        isTarget ? "text-sky-400 font-black scale-110" : ""
+                      }`}
                     >
-                      {pt.date}
+                      {pt.shortDate}
                     </span>
                   );
                 }
@@ -680,15 +818,20 @@ export default function UserDashboardView({
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ======================================================================= */}
-        {/* BOTTOM-LEFT: ACTIVITY FEEDS                                             */}
+        {/* BOTTOM-LEFT: ACTIVITY FEEDS — SYNCED WITH SELECTED CALENDAR DATE        */}
         {/* ======================================================================= */}
         <div className="bubble-card p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg flex flex-col justify-between">
           <div>
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                Activity Feeds
-              </h3>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  Activity Feeds
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Showing logs for <strong className="text-sky-500 font-bold">{selectedDateLabel}</strong>
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowAllFeedsModal(true)}
@@ -733,7 +876,7 @@ export default function UserDashboardView({
           </div>
 
           <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs text-slate-500">
-            <span>Showing recent telecall & counseling logs</span>
+            <span>Showing telecall logs for selected calendar date</span>
             <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Telecalling Gateway Connected
             </span>
@@ -741,14 +884,14 @@ export default function UserDashboardView({
         </div>
 
         {/* ======================================================================= */}
-        {/* BOTTOM-RIGHT: FOLLOW-UP CALENDAR (MATCHING REFERENCE EXACTLY)           */}
+        {/* BOTTOM-RIGHT: FOLLOW-UP CALENDAR (SELECTING A DATE UPDATES THE GRAPH!)    */}
         {/* ======================================================================= */}
         <div className="bubble-card p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg flex flex-col justify-between">
           <div>
             {/* Calendar Header with Navigation */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
               <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                Follow-up Calendar ({monthNames[calendarMonth]}, {calendarYear})
+                Follow-up Calendar ({MONTH_NAMES[calendarMonth]}, {calendarYear})
               </h3>
 
               {/* Month Navigation Arrows */}
@@ -827,16 +970,16 @@ export default function UserDashboardView({
             </div>
           </div>
 
-          {/* Selected Date Summary */}
+          {/* Selected Date Summary — Links Directly to Graph */}
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-500" />
               <span>
-                Selected Date: <strong className="text-slate-900 dark:text-white font-bold">{selectedCalendarDay} {monthNames[calendarMonth]}, {calendarYear}</strong>
+                Selected Date: <strong className="text-slate-900 dark:text-white font-bold">{selectedCalendarDay} {MONTH_NAMES[calendarMonth]}, {calendarYear}</strong>
               </span>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-extrabold text-[10px]">
-              {selectedCalendarDay === 25 ? `${Math.max(3, pendingTasks.length)} Calls Scheduled` : "Active Queue"}
+            <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white font-extrabold text-[10px] shadow-sm">
+              Graph Updated: {selectedDateMetrics.allocated} Allocated
             </span>
           </div>
         </div>
