@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher & Counselor Dashboard | SPHEREX Voice</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="webrtc-client.js"></script>
+  <script src="audio-processor.js"></script>
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="top-nav">
+    <div class="logo-wrap">
+      <span class="logo-badge">SPHEREX CRM</span>
+      <h2 style="font-size: 16px; font-weight: 800;">Admissions Counselor Calling Console</h2>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="user-badge">
+        <span class="status-dot" id="counselor-status-dot"></span>
+        <span id="counselor-name-display">Dr. Dhanabal M (Karur Campus)</span>
+      </div>
+      <a href="index.html" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">Switch View</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Active Call Strip (Hidden by default, shows when calling or in-call) -->
+    <div id="active-call-panel" class="call-strip" style="display: none;">
+      <div class="call-header">
+        <div class="call-title-wrap">
+          <div class="avatar" id="call-avatar">P</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h3 id="call-target-name" style="font-size: 18px; font-weight: 800; color: #fff;">Connecting...</h3>
+              <span id="call-badge" class="call-status-badge connecting">DIALING...</span>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+              <span id="call-target-program">B.E. Computer Science</span> • 
+              <span class="masked-phone" id="call-target-phone">+91 ••••• ••••12</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div class="call-timer" id="call-timer">00:00</div>
+        </div>
+      </div>
+
+      <!-- Live Voice Waveform Canvas -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+          <span>🎙️ Live Microphone & Voice Activity Waveform:</span>
+          <span id="audio-quality-label" style="color: #34d399; font-weight: 700;">HD Audio (WebRTC Opus P2P)</span>
+        </div>
+        <canvas id="visualizer-canvas" class="visualizer-canvas" width="800" height="60"></canvas>
+      </div>
+
+      <!-- Controls -->
+      <div class="call-controls">
+        <button id="btn-mute" class="btn btn-mute">
+          <span id="mute-icon">🎤</span>
+          <span id="mute-text">Mute Mic</span>
+        </button>
+
+        <button id="btn-hangup" class="btn btn-hangup">
+          <span>📞</span>
+          <span>End Voice Call</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Applicants Card -->
+    <div class="glass-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 800;">Student Applicants for Counseling</h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+            Initiate direct in-browser voice calls. Candidate phone numbers are 100% masked for privacy.
+          </p>
+        </div>
+        <div style="font-size: 12px; color: #38bdf8; background: rgba(2, 132, 199, 0.15); border: 1px solid rgba(2, 132, 199, 0.3); padding: 6px 14px; border-radius: 20px; font-weight: 700;">
+          🔒 Masked VoIP Gateway Active
+        </div>
+      </div>
+
+      <table class="applicant-table">
+        <thead>
+          <tr>
+            <th>Candidate Name</th>
+            <th>Interest Program</th>
+            <th>Campus</th>
+            <th>Cutoff</th>
+            <th>Contact (Masked)</th>
+            <th>Portal Presence</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="applicant-table-body">
+          <!-- Loaded dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Counselor Identity
+    const CURRENT_TEACHER = {
+      userId: "teacher_dhanabal_101",
+      role: "COUNSELOR",
+      name: "Dr. Dhanabal M",
+      displayInfo: {
+        department: "Department of Mechanical & Central Admissions",
+        campus: "KARUR",
+      }
+    };
+
+    const socket = io();
+    let rtcClient = null;
+    let audioProcessor = null;
+    let callTimerInterval = null;
+    let callSeconds = 0;
+    let activeCallPartner = null;
+    let onlineUsersMap = new Map();
+    let applicantsList = [];
+
+    // Register counselor on socket connection
+    socket.on("connect", () => {
+      console.log("[Socket] Connected with ID:", socket.id);
+      socket.emit("register-user", CURRENT_TEACHER);
+    });
+
+    socket.on("registration-success", () => {
+      document.getElementById("counselor-status-dot").classList.remove("offline");
+      fetchApplicants();
+    });
+
+    // Listen for online presence updates
+    socket.on("online-users-list", (users) => {
+      onlineUsersMap.clear();
+      users.forEach((u) => onlineUsersMap.set(u.userId, u));
+      renderApplicantsTable();
+    });
+
+    // Ringing state
+    socket.on("call-ringing", ({ callId, toUser }) => {
+      showCallPanel(toUser.name, toUser.userId, "RINGING CANDIDATE...");
+      audioProcessor.startRingtone();
+    });
+
+    // Call Accepted by Student
+    socket.on("call-accepted", async ({ callId, byUserId }) => {
+      console.log("[Teacher] Call accepted by student:", byUserId);
+      audioProcessor.stopRingtone();
+      updateCallBadge("CONNECTED (P2P HD AUDIO)", false);
+
+      // Caller creates and sends WebRTC Offer
+      try {
+        await rtcClient.createAndSendOffer(byUserId);
+        startCallTimer();
+      } catch (err) {
+        alert(err.message);
+        endCall();
+      }
+    });
+
+    // Call Declined by Student
+    socket.on("call-declined", ({ callId, reason }) => {
+      audioProcessor.stopRingtone();
+      alert(`Call Declined: ${reason}`);
+      hideCallPanel();
+    });
+
+    // Call Error Handler
+    socket.on("call-error", ({ message }) => {
+      audioProcessor.stopRingtone();
+      alert(`Call Alert: ${message}`);
+      hideCallPanel();
+    });
+
+    // Initialize WebRTC & Audio Helpers
+    audioProcessor = new AudioProcessor();
+    rtcClient = new WebRTCVoiceClient({
+      socket,
+      currentUser: CURRENT_TEACHER,
+      onStateChange: (state, payload) => {
+        console.log("[Teacher WebRTC State]:", state);
+        if (state === "CONNECTED") {
+          updateCallBadge("CONNECTED", false);
+        } else if (state === "ENDED" || state === "DISCONNECTED") {
+          endCall(false);
+        }
+      },
+      onRemoteStream: (stream) => {
+        console.log("[Teacher] Playing remote student stream");
+        const canvas = document.getElementById("visualizer-canvas");
+        audioProcessor.startVisualizer(stream, canvas);
+      },
+      onError: (err) => {
+        console.error("[Teacher WebRTC Error]", err);
+      }
+    });
+
+    // Fetch Applicants Mock Data
+    async function fetchApplicants() {
+      try {
+        const res = await fetch("/api/applicants");
+        applicantsList = await res.json();
+        renderApplicantsTable();
+      } catch (e) {
+        console.error("Failed to load applicants", e);
+      }
+    }
+
+    function renderApplicantsTable() {
+      const tbody = document.getElementById("applicant-table-body");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      applicantsList.forEach((app) => {
+        const isOnline = onlineUsersMap.has(app.id);
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>
+            <span class="candidate-name">${app.name}</span>
+            <span class="candidate-meta">${app.email}</span>
+          </td>
+          <td><strong style="color: #e2e8f0;">${app.courseInterest}</strong></td>
+          <td><span style="font-size: 11px; font-weight: 800; color: #38bdf8;">${app.campus} CAMPUS</span></td>
+          <td><strong style="color: #34d399; font-family: monospace;">${app.tneaCutoff} / 200</strong></td>
+          <td>
+            <span class="masked-phone">${app.maskedPhone}</span>
+          </td>
+          <td>
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: ${isOnline ? '#34d399' : '#94a3b8'};">
+              <span class="status-dot ${isOnline ? '' : 'offline'}"></span>
+              ${isOnline ? 'Portal Active' : 'Offline'}
+            </span>
+          </td>
+          <td style="text-align: right;">
+            <button 
+              class="btn btn-call" 
+              onclick="startVoiceCall('${app.id}', '${app.name}', '${app.courseInterest}', '${app.maskedPhone}')"
+              ${!isOnline ? 'title="Open student portal in another tab to test online calling!"' : ''}
+            >
+              <span>🎙️</span>
+              <span>Start Voice Call</span>
+            </button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Teacher clicks "Start Voice Call"
+    window.startVoiceCall = async function(studentId, name, course, phone) {
+      activeCallPartner = { id: studentId, name, course, phone };
+
+      // Ensure microphone permission is granted
+      try {
+        await rtcClient.getLocalMicrophoneStream();
+      } catch (err) {
+        alert(err.message);
+        return;
+      }
+
+      showCallPanel(name, studentId, "INITIATING CALL...");
+
+      // Send initiate-call event mapped by student ID (ZERO phone numbers exchanged!)
+      socket.emit("initiate-call", {
+        toUserId: studentId,
+        callMetadata: {
+          course,
+          counselor: CURRENT_TEACHER.name,
+        }
+      });
+    };
+
+    function showCallPanel(name, studentId, statusText) {
+      const panel = document.getElementById("active-call-panel");
+      panel.style.display = "flex";
+
+      document.getElementById("call-avatar").innerText = name.slice(0, 1).toUpperCase();
+      document.getElementById("call-target-name").innerText = name;
+      document.getElementById("call-target-program").innerText = activeCallPartner ? activeCallPartner.course : "Admissions";
+      document.getElementById("call-target-phone").innerText = activeCallPartner ? activeCallPartner.phone : "+91 ••••• ••••00";
+      updateCallBadge(statusText, true);
+
+      // Start local visualizer preview
+      if (rtcClient.localStream) {
+        const canvas = document.getElementById("visualizer-canvas");
+        audioProcessor.startVisualizer(rtcClient.localStream, canvas);
+      }
+    }
+
+    function hideCallPanel() {
+      document.getElementById("active-call-panel").style.display = "none";
+      stopCallTimer();
+      audioProcessor.stopVisualizer();
+      audioProcessor.stopRingtone();
+    }
+
+    function updateCallBadge(text, isConnecting) {
+      const badge = document.getElementById("call-badge");
+      badge.innerText = text;
+      if (isConnecting) {
+        badge.classList.add("connecting");
+      } else {
+        badge.classList.remove("connecting");
+      }
+    }
+
+    function startCallTimer() {
+      stopCallTimer();
+      callSeconds = 0;
+      const timerEl = document.getElementById("call-timer");
+      timerEl.innerText = "00:00";
+
+      callTimerInterval = setInterval(() => {
+        callSeconds++;
+        const mins = Math.floor(callSeconds / 60).toString().padStart(2, "0");
+        const secs = (callSeconds % 60).toString().padStart(2, "0");
+        timerEl.innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopCallTimer() {
+      if (callTimerInterval) {
+        clearInterval(callTimerInterval);
+        callTimerInterval = null;
+      }
+    }
+
+    // Mute / Unmute Button
+    document.getElementById("btn-mute").addEventListener("click", () => {
+      const isMuted = rtcClient.toggleMute();
+      const muteBtn = document.getElementById("btn-mute");
+      const icon = document.getElementById("mute-icon");
+      const text = document.getElementById("mute-text");
+
+      if (isMuted) {
+        muteBtn.classList.add("active");
+        icon.innerText = "🔇";
+        text.innerText = "Unmute Mic";
+      } else {
+        muteBtn.classList.remove("active");
+        icon.innerText = "🎤";
+        text.innerText = "Mute Mic";
+      }
+    });
+
+    // Hangup Button
+    document.getElementById("btn-hangup").addEventListener("click", () => {
+      endCall(true);
+    });
+
+    function endCall(sendSocketHangup = true) {
+      if (sendSocketHangup && activeCallPartner) {
+        rtcClient.hangup();
+      } else {
+        rtcClient.closeCall(false);
+      }
+      hideCallPanel();
+      activeCallPartner = null;
+    }
+  </script>
+</body>
+</html>

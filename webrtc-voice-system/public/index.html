@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPHEREX WebRTC Voice Calling System | Dual Testing Hub</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: 780px;
+      margin-top: 20px;
+    }
+    .iframe-card {
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #0f172a;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .iframe-header {
+      padding: 12px 18px;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .iframe-card iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    @media (max-width: 900px) {
+      .split-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .iframe-card {
+        height: 600px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-nav">
+    <div class="logo-wrap">
+      <span class="logo-badge">SPHEREX WEBRTC</span>
+      <h2 style="font-size: 16px; font-weight: 800;">College Admission Masked Voice Calling Architecture</h2>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="teacher.html" target="_blank" class="btn btn-primary">
+        <span>👨‍🏫</span> Open Teacher Tab
+      </a>
+      <a href="student.html" target="_blank" class="btn btn-call">
+        <span>🎓</span> Open Student Tab
+      </a>
+    </div>
+  </header>
+
+  <div class="container" style="max-width: 1300px;">
+    <!-- Architecture Overview Card -->
+    <div class="glass-card" style="margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div>
+          <h2 style="font-size: 20px; font-weight: 900;">In-Browser WebRTC Peer-to-Peer Voice System</h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+            Zero phone number exposure. WebRTC signaling routes directly through Socket.io mapped to user IDs.
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <span style="font-size: 12px; font-weight: 800; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 6px 14px; border-radius: 20px;">
+            🔒 100% Masked Phone Numbers
+          </span>
+          <span style="font-size: 12px; font-weight: 800; background: rgba(2, 132, 199, 0.15); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.4); padding: 6px 14px; border-radius: 20px;">
+            ⚡ Google Public STUN Servers
+          </span>
+          <span style="font-size: 12px; font-weight: 800; background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4); padding: 6px 14px; border-radius: 20px;">
+            🎙️ Opus HD P2P Audio
+          </span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 18px; border-top: 1px solid var(--border-color); pt-4;">
+        <div style="font-size: 12px; color: #cbd5e1; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+          <strong style="color: #38bdf8; display: block; margin-bottom: 2px;">1. Teacher Initiates</strong>
+          Teacher clicks "Start Voice Call" on Priya Dharshini. Browser accesses local mic and sends <code>initiate-call</code> via Socket.io.
+        </div>
+        <div style="font-size: 12px; color: #cbd5e1; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+          <strong style="color: #34d399; display: block; margin-bottom: 2px;">2. Student Receives</strong>
+          Student Portal displays "Admissions Office is calling...". Ringtone chimes. Student clicks [Accept Call].
+        </div>
+        <div style="font-size: 12px; color: #cbd5e1; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+          <strong style="color: #a5b4fc; display: block; margin-bottom: 2px;">3. WebRTC P2P Handshake</strong>
+          Teacher creates SDP Offer, Student answers. ICE candidates exchange. Direct browser-to-browser voice connects!
+        </div>
+        <div style="font-size: 12px; color: #cbd5e1; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+          <strong style="color: #f43f5e; display: block; margin-bottom: 2px;">4. Full In-Call Control</strong>
+          Live audio visualizer wave canvas, call duration timer, Mute/Unmute microphone, and instant Hang Up.
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Split-Screen Testing Harness -->
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <h3 style="font-size: 16px; font-weight: 800; color: #fff;">
+        🖥️ Side-by-Side Live Testing Sandbox:
+      </h3>
+      <span style="font-size: 12px; color: var(--text-muted);">
+        Tip: Allow microphone permissions on both panels when prompted!
+      </span>
+    </div>
+
+    <div class="split-grid">
+      <!-- Panel 1: Teacher Dashboard -->
+      <div class="iframe-card">
+        <div class="iframe-header">
+          <span style="color: #38bdf8;">👨‍🏫 Teacher Calling Dashboard</span>
+          <a href="teacher.html" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 11px;">Open in New Tab ↗</a>
+        </div>
+        <iframe src="teacher.html" allow="microphone; autoplay"></iframe>
+      </div>
+
+      <!-- Panel 2: Student Portal -->
+      <div class="iframe-card">
+        <div class="iframe-header">
+          <span style="color: #34d399;">🎓 Student Admission Portal</span>
+          <a href="student.html" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 11px;">Open in New Tab ↗</a>
+        </div>
+        <iframe src="student.html" allow="microphone; autoplay"></iframe>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

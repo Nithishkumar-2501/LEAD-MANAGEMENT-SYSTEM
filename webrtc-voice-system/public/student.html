@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Admission Portal | SPHEREX Voice</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="webrtc-client.js"></script>
+  <script src="audio-processor.js"></script>
+</head>
+<body>
+  <!-- Top Navigation -->
+  <header class="top-nav">
+    <div class="logo-wrap">
+      <span class="logo-badge" style="background: linear-gradient(135deg, #10b981, #0284c7);">STUDENT PORTAL</span>
+      <h2 style="font-size: 16px; font-weight: 800;">V.S.B. Engineering College Online Admissions</h2>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="user-badge">
+        <span class="status-dot" id="student-status-dot"></span>
+        <span id="student-name-display">Priya Dharshini S (Logged In)</span>
+      </div>
+      <a href="index.html" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">Switch View</a>
+    </div>
+  </header>
+
+  <div class="container" style="max-width: 800px;">
+    <!-- Active Call View (Shown when in a call) -->
+    <div id="student-active-call" class="call-strip" style="display: none;">
+      <div class="call-header">
+        <div class="call-title-wrap">
+          <div class="avatar" style="background: linear-gradient(135deg, #10b981, #0284c7);">🏛️</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h3 style="font-size: 18px; font-weight: 800; color: #fff;" id="active-counselor-name">Admissions Office</h3>
+              <span class="call-status-badge">CONNECTED (ENCRYPTED AUDIO)</span>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+              V.S.B. Central Admissions Counseling Cell • Karur & Coimbatore Campuses
+            </div>
+          </div>
+        </div>
+
+        <div class="call-timer" id="student-call-timer">00:00</div>
+      </div>
+
+      <!-- Live Voice Waveform -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+          <span>🎙️ Live Admissions Counselor Audio Stream:</span>
+          <span style="color: #34d399; font-weight: 700;">Zero Phone Number Exposure</span>
+        </div>
+        <canvas id="student-visualizer-canvas" class="visualizer-canvas" width="800" height="60"></canvas>
+      </div>
+
+      <!-- Call Controls -->
+      <div class="call-controls">
+        <button id="btn-student-mute" class="btn btn-mute">
+          <span id="student-mute-icon">🎤</span>
+          <span id="student-mute-text">Mute Mic</span>
+        </button>
+
+        <button id="btn-student-hangup" class="btn btn-hangup">
+          <span>📞</span>
+          <span>Hang Up</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Student Application Status Card -->
+    <div class="glass-card">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+        <div>
+          <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #38bdf8; background: rgba(2, 132, 199, 0.15); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(2, 132, 199, 0.3);">
+            Application No: VSB-2026-CS894
+          </span>
+          <h2 style="font-size: 22px; font-weight: 900; margin-top: 8px;" id="portal-student-title">Priya Dharshini S</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">B.E. Computer Science & Engineering • Karur Campus</p>
+        </div>
+        
+        <div style="text-align: right;">
+          <span style="font-size: 11px; color: var(--text-muted); display: block;">TNEA Cutoff</span>
+          <strong style="font-size: 20px; color: #34d399; font-family: monospace;">191.5 / 200</strong>
+        </div>
+      </div>
+
+      <!-- Quick Switcher for Testing Different Candidate Profiles -->
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 20px;">
+        <label style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">
+          Select Student Profile to Emulate:
+        </label>
+        <select id="select-student-profile" style="width: 100%; background: #0f172a; color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+          <option value="student_priya_2026">Priya Dharshini S (B.E. CSE - Karur)</option>
+          <option value="student_karthik_2026">Karthik Raja M (B.Tech AI & DS - Coimbatore)</option>
+          <option value="student_ananya_2026">Ananya Ramesh (B.E. ECE - Karur)</option>
+          <option value="student_siddharth_2026">Siddharth Verma (B.E. MECH - Coimbatore)</option>
+        </select>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Verification Status:</span>
+          <p style="font-size: 14px; font-weight: 800; color: #34d399; margin-top: 4px;">✅ Cutoff Documents Verified</p>
+        </div>
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Admissions Cell Calling Line:</span>
+          <p style="font-size: 14px; font-weight: 800; color: #38bdf8; margin-top: 4px;">🟢 In-Browser Voice Waiting...</p>
+        </div>
+      </div>
+
+      <div class="privacy-notice" style="margin-bottom: 0;">
+        <span style="font-size: 16px;">🛡️</span>
+        <div>
+          <strong style="color: #fff; display: block;">Masked Phone & WebRTC Security Guarantee</strong>
+          Your personal mobile number is never transmitted or visible to callers. Calls connect strictly through browser-to-browser peer-to-peer WebRTC audio.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- INCOMING CALL MODAL POPUP                                             -->
+  <!-- ===================================================================== -->
+  <div id="incoming-call-modal" class="modal-overlay" style="display: none;">
+    <div class="incoming-card">
+      <!-- Pulsing Calling Rings -->
+      <div class="ring-container">
+        <div class="ring-pulse"></div>
+        <div class="ring-pulse" style="animation-delay: 0.6s;"></div>
+        <div class="ring-avatar">📞</div>
+      </div>
+
+      <span class="incoming-tag">INCOMING AUDIO CALL</span>
+      <h3 class="incoming-title" id="incoming-caller-title">Admissions Office is calling...</h3>
+      <p class="incoming-sub" id="incoming-caller-sub">
+        Counselor: <strong style="color: #fff;">Dr. Dhanabal M</strong><br>
+        Department of Central Admissions • V.S.B.
+      </p>
+
+      <div class="privacy-notice">
+        <span>🔒</span>
+        <span>Secured P2P voice call. Phone numbers masked.</span>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-decline-call" class="btn-decline">
+          <span>❌</span>
+          <span>Decline</span>
+        </button>
+
+        <button id="btn-accept-call" class="btn-accept">
+          <span>📞</span>
+          <span>Accept Call</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Selected Student State
+    let currentStudent = {
+      userId: "student_priya_2026",
+      role: "STUDENT",
+      name: "Priya Dharshini S",
+      displayInfo: {
+        program: "B.E. Computer Science & Engineering",
+        campus: "KARUR"
+      }
+    };
+
+    const socket = io();
+    let rtcClient = null;
+    let audioProcessor = null;
+    let currentIncomingCall = null;
+    let callTimerInterval = null;
+    let callSeconds = 0;
+
+    audioProcessor = new AudioProcessor();
+
+    // Initialize WebRTC Voice Client
+    rtcClient = new WebRTCVoiceClient({
+      socket,
+      currentUser: currentStudent,
+      onStateChange: (state, payload) => {
+        console.log("[Student WebRTC State]:", state);
+        if (state === "CONNECTED") {
+          // Connected
+        } else if (state === "ENDED" || state === "DISCONNECTED") {
+          endStudentCall(false);
+        }
+      },
+      onRemoteStream: (stream) => {
+        console.log("[Student] Playing remote counselor stream");
+        const canvas = document.getElementById("student-visualizer-canvas");
+        audioProcessor.startVisualizer(stream, canvas);
+      },
+      onError: (err) => {
+        console.error("[Student WebRTC Error]", err);
+      }
+    });
+
+    // Socket Connection & Registration
+    socket.on("connect", () => {
+      registerStudent();
+    });
+
+    function registerStudent() {
+      socket.emit("register-user", currentStudent);
+      document.getElementById("student-status-dot").classList.remove("offline");
+      document.getElementById("student-name-display").innerText = `${currentStudent.name} (Online)`;
+    }
+
+    // Handle Profile Switcher
+    document.getElementById("select-student-profile").addEventListener("change", (e) => {
+      const selectedId = e.target.value;
+      const selectedText = e.target.options[e.target.selectedIndex].text;
+      const name = selectedText.split(" (")[0];
+
+      currentStudent = {
+        userId: selectedId,
+        role: "STUDENT",
+        name: name,
+        displayInfo: { info: selectedText }
+      };
+
+      document.getElementById("portal-student-title").innerText = name;
+      registerStudent();
+    });
+
+    // =========================================================================
+    // INCOMING CALL HANDLER
+    // =========================================================================
+    socket.on("incoming-call", ({ callId, fromUser, metadata }) => {
+      console.log("[Student] Incoming call received from:", fromUser);
+      currentIncomingCall = { callId, fromUser };
+
+      // Update modal text
+      document.getElementById("incoming-caller-title").innerText = `${fromUser.college || "Admissions Office"} is calling...`;
+      document.getElementById("incoming-caller-sub").innerHTML = `
+        Counselor: <strong style="color: #fff;">${fromUser.name}</strong><br>
+        ${fromUser.department || "Admissions Cell"} • Masked P2P Call
+      `;
+
+      // Show modal & start ringtone
+      document.getElementById("incoming-call-modal").style.display = "flex";
+      audioProcessor.startRingtone();
+    });
+
+    // Accept Incoming Call
+    document.getElementById("btn-accept-call").addEventListener("click", async () => {
+      if (!currentIncomingCall) return;
+
+      audioProcessor.stopRingtone();
+      document.getElementById("incoming-call-modal").style.display = "none";
+
+      try {
+        // Request microphone permission
+        await rtcClient.getLocalMicrophoneStream();
+      } catch (err) {
+        alert(err.message);
+        socket.emit("decline-call", {
+          callId: currentIncomingCall.callId,
+          reason: "Microphone permission was denied by student.",
+        });
+        currentIncomingCall = null;
+        return;
+      }
+
+      // Show active call strip
+      document.getElementById("student-active-call").style.display = "flex";
+      document.getElementById("active-counselor-name").innerText = `${currentIncomingCall.fromUser.name} (${currentIncomingCall.fromUser.college})`;
+      startStudentTimer();
+
+      // Emit accept-call to signaling server
+      socket.emit("accept-call", {
+        callId: currentIncomingCall.callId,
+      });
+    });
+
+    // Decline Incoming Call
+    document.getElementById("btn-decline-call").addEventListener("click", () => {
+      if (!currentIncomingCall) return;
+
+      audioProcessor.stopRingtone();
+      document.getElementById("incoming-call-modal").style.display = "none";
+
+      socket.emit("decline-call", {
+        callId: currentIncomingCall.callId,
+        reason: "Candidate declined the call.",
+      });
+
+      currentIncomingCall = null;
+    });
+
+    // Call Timer
+    function startStudentTimer() {
+      stopStudentTimer();
+      callSeconds = 0;
+      const timerEl = document.getElementById("student-call-timer");
+      timerEl.innerText = "00:00";
+
+      callTimerInterval = setInterval(() => {
+        callSeconds++;
+        const mins = Math.floor(callSeconds / 60).toString().padStart(2, "0");
+        const secs = (callSeconds % 60).toString().padStart(2, "0");
+        timerEl.innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopStudentTimer() {
+      if (callTimerInterval) {
+        clearInterval(callTimerInterval);
+        callTimerInterval = null;
+      }
+    }
+
+    // Mute / Unmute
+    document.getElementById("btn-student-mute").addEventListener("click", () => {
+      const isMuted = rtcClient.toggleMute();
+      const muteBtn = document.getElementById("btn-student-mute");
+      const icon = document.getElementById("student-mute-icon");
+      const text = document.getElementById("student-mute-text");
+
+      if (isMuted) {
+        muteBtn.classList.add("active");
+        icon.innerText = "🔇";
+        text.innerText = "Unmute Mic";
+      } else {
+        muteBtn.classList.remove("active");
+        icon.innerText = "🎤";
+        text.innerText = "Mute Mic";
+      }
+    });
+
+    // Hangup
+    document.getElementById("btn-student-hangup").addEventListener("click", () => {
+      endStudentCall(true);
+    });
+
+    function endStudentCall(sendSocketHangup = true) {
+      if (sendSocketHangup && currentIncomingCall) {
+        rtcClient.hangup(currentIncomingCall.callId);
+      } else {
+        rtcClient.closeCall(false);
+      }
+
+      document.getElementById("student-active-call").style.display = "none";
+      document.getElementById("incoming-call-modal").style.display = "none";
+      stopStudentTimer();
+      audioProcessor.stopVisualizer();
+      audioProcessor.stopRingtone();
+      currentIncomingCall = null;
+    }
+  </script>
+</body>
+</html>
