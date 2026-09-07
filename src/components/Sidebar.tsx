@@ -391,14 +391,14 @@ export default function Sidebar({
           }`}
         >
           <div className="flex items-center gap-2.5 min-w-0">
-            {/* SPHEREX Official App Logo Badge */}
-            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-slate-700 shadow-md bg-black shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+            {/* Official V.S.B. Logo Badge */}
+            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
               <Image
-                src="/spherex-logo.png"
-                alt="SPHEREX Official Logo"
+                src="/vsb-logo.png"
+                alt="V.S.B. Engineering College Logo"
                 width={36}
                 height={36}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain rounded-full"
               />
             </div>
 
