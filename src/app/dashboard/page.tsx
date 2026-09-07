@@ -553,6 +553,8 @@ export default function DashboardPage() {
             currentUserRole={currentUserRole}
             loggedInUsername={loggedInUsername}
             onTriggerToast={triggerToast}
+            applicants={filteredApplicants}
+            onSelectApplicant={handleSelectApplicant}
           />
         )}
 

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES, Lead, Application } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
 import { parseCSVToTeachers } from "@/lib/csvParser";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
-import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download } from "lucide-react";
+import TeacherStudentAuditModal from "@/components/TeacherStudentAuditModal";
+import { UserCheck, BookOpen, GraduationCap, Mail, Phone, PhoneCall, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
@@ -16,14 +17,37 @@ interface TeacherModuleProps {
   currentUserRole: "ADMIN" | "TEACHER";
   loggedInUsername?: string;
   onTriggerToast: (msg: string) => void;
+  applicants?: (Lead & { application: Application })[];
+  onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
 }
 
-export default function TeacherModule({ loggedInCampus, currentUserRole, loggedInUsername, onTriggerToast }: TeacherModuleProps) {
+export default function TeacherModule({ loggedInCampus, currentUserRole, loggedInUsername, onTriggerToast, applicants = [], onSelectApplicant }: TeacherModuleProps) {
   const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [selectedTeacherForAudit, setSelectedTeacherForAudit] = useState<Teacher | null>(null);
+
+  // Dynamic Call Audit Metrics for Each Teacher
+  const getTeacherCallStats = (tch: Teacher, index: number) => {
+    try {
+      const key = `vsb_teacher_call_records_${tch.id || tch.email}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const talked = parsed.filter((p: any) => p.isTalked).length;
+          const total = parsed.length;
+          return { talked, notTalked: total - talked, total };
+        }
+      }
+    } catch (e) {}
+
+    const total = tch.assignedQuota || 100;
+    const talked = Math.round(total * (0.46 + ((index * 9) % 24) / 100));
+    return { talked, notTalked: total - talked, total };
+  };
 
   // Admin Lead Allocation Control Panel State
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
@@ -519,6 +543,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
             return (
               <div
                 key={tch.id}
+                onClick={() => setSelectedTeacherForAudit(tch)}
                 className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/20 cursor-pointer group"
               >
                 <div className="flex items-start justify-between">
@@ -590,6 +615,54 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   </div>
                 </div>
 
+                {/* Interactive Calling Audit Badge (Talked vs Not Talked) */}
+                {(() => {
+                  const stats = getTeacherCallStats(tch, index);
+                  return (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTeacherForAudit(tch);
+                      }}
+                      className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-indigo-500/70 hover:bg-slate-900 transition-all cursor-pointer space-y-2 shadow-sm group/audit"
+                      title={`Click to view students for ${tch.name}`}
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 font-extrabold text-white">
+                          <PhoneCall className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span>Calling Audit:</span>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300 bg-indigo-500/20 px-2 py-0.5 rounded-full border border-indigo-400/30 group-hover/audit:bg-indigo-600 group-hover/audit:text-white transition-all flex items-center gap-1">
+                          <span>View Students</span>
+                          <span>➔</span>
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 font-extrabold text-emerald-300">
+                          <span>🟢 Talked:</span>
+                          <span className="font-mono font-black">{stats.talked}</span>
+                        </div>
+                        <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 font-extrabold text-amber-300">
+                          <span>🟡 Not Talked:</span>
+                          <span className="font-mono font-black">{stats.notTalked}</span>
+                        </div>
+                      </div>
+
+                      <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex border border-white/5">
+                        <div
+                          style={{ width: `${Math.round((stats.talked / stats.total) * 100)}%` }}
+                          className="bg-emerald-400"
+                        />
+                        <div
+                          style={{ width: `${100 - Math.round((stats.talked / stats.total) * 100)}%` }}
+                          className="bg-amber-500"
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                   Assigned Programs
@@ -610,13 +683,16 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 <div className="flex items-center gap-2">
                   <Tooltip text={`In-Portal Email ${tch.name}`} position="bottom">
                     <button
-                      onClick={() => handleOpenCommModal("EMAIL", {
-                        name: tch.name,
-                        email: tch.email,
-                        phone: tch.phone,
-                        campus: tch.campus,
-                        courseInterest: tch.department,
-                      })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenCommModal("EMAIL", {
+                          name: tch.name,
+                          email: tch.email,
+                          phone: tch.phone,
+                          campus: tch.campus,
+                          courseInterest: tch.department,
+                        });
+                      }}
                       className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-bold px-3 py-1.5 rounded-xl bg-indigo-950/60 border border-indigo-800/60 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     >
                       <Mail className="w-3.5 h-3.5" /> Email
@@ -641,7 +717,10 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   <div className="ml-auto">
                     <Tooltip text={`Edit ${tch.name}`} position="bottom">
                       <button
-                        onClick={() => setEditingTeacher(tch)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingTeacher(tch);
+                        }}
                         className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
@@ -1422,6 +1501,16 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         contact={activeCommContact}
         onClose={() => setActiveCommModal(null)}
         onLogSuccess={handleCommLogSuccess}
+      />
+
+      {/* TEACHER STUDENT CALL AUDIT MODAL (FOR ALL TEACHERS) */}
+      <TeacherStudentAuditModal
+        teacher={selectedTeacherForAudit}
+        isOpen={Boolean(selectedTeacherForAudit)}
+        onClose={() => setSelectedTeacherForAudit(null)}
+        currentUserRole={currentUserRole}
+        onTriggerToast={onTriggerToast}
+        allLeads={applicants}
       />
     </div>
   );
