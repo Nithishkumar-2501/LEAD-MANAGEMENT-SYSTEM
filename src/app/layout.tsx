@@ -13,6 +13,11 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "SPHEREX | College Admission CRM",
   description: "SPHEREX - Production-ready College Admission CRM for tracking student recruitment, applications, 10th/12th marks, document verification, and counselor task follow-ups.",
+  icons: {
+    icon: "/spherex-logo.png",
+    shortcut: "/favicon.png",
+    apple: "/spherex-logo.png",
+  },
 };
 
 export const viewport: Viewport = {

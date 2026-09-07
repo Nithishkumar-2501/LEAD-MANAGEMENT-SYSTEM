@@ -151,8 +151,17 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         {/* ================================================================= */}
         <div className="lg:col-span-6 p-6 sm:p-12 lg:p-14 flex flex-col justify-between bg-white text-slate-900">
           <div>
-            {/* SPHEREX CRM Pill Badge */}
-            <div className="flex items-center mb-8">
+            {/* SPHEREX CRM Pill Badge with Official Logo */}
+            <div className="flex items-center gap-2.5 mb-8">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-black p-0.5 shadow-md border border-slate-300 flex items-center justify-center shrink-0">
+                <Image
+                  src="/spherex-logo.png"
+                  alt="SPHEREX Official Logo"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <div className="inline-flex items-center px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#edf2f7] border border-slate-300/90 shadow-xs">
                 <span className="text-xs sm:text-sm font-black tracking-wider text-slate-900 uppercase">
                   SPHEREX CRM

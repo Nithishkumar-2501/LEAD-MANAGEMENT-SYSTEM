@@ -146,21 +146,21 @@ export default function Header({
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Official V.S.B. Engineering College Logo Emblem */}
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-amber-400/80 shadow-lg shadow-amber-500/30 bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+          {/* SPHEREX Official App Logo Emblem */}
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-slate-700/80 shadow-lg bg-black shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
             <Image
-              src="/vsb-logo.png"
-              alt="V.S.B. Engineering College Official Logo"
+              src="/spherex-logo.png"
+              alt="SPHEREX Official Logo"
               width={48}
               height={48}
-              className="w-full h-full object-contain rounded-full"
+              className="w-full h-full object-contain"
             />
           </div>
           <div className="min-w-0">
             <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-black dark:text-white tracking-tight flex items-center gap-2 truncate">
-              <span className="truncate text-black dark:text-white font-black">V.S.B. ENGINEERING COLLEGE</span>
-              <span className="hidden sm:inline text-[10px] font-black text-black dark:text-sky-200 bg-sky-200 dark:bg-sky-500/20 border border-sky-400 dark:border-sky-400/40 px-3 py-0.5 rounded-full shrink-0">
-                Bubble Glass OS 4.0
+              <span className="truncate text-black dark:text-white font-black">SPHEREX CRM</span>
+              <span className="hidden sm:inline-flex items-center text-[10px] font-black text-black dark:text-sky-200 bg-sky-200 dark:bg-sky-500/20 border border-sky-400 dark:border-sky-400/40 px-3 py-0.5 rounded-full shrink-0">
+                V.S.B. Admission Portal
               </span>
             </h1>
             <p className="text-[10px] sm:text-xs text-black dark:text-sky-200 flex items-center gap-1.5 font-extrabold truncate">
