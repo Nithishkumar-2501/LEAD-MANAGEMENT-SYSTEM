@@ -169,13 +169,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               </div>
             </div>
 
-            {/* Headline matching Reference Image */}
+            {/* Headline */}
             <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
-                Welcome Back
+                Welcome to
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Let&apos;s login to grab amazing deal & manage admission leads
+              <p className="text-sm sm:text-base font-bold text-slate-700 tracking-tight mt-1">
+                V.S.B. GROUP OF INSTITUTIONS
               </p>
             </div>
 
