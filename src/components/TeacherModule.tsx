@@ -544,7 +544,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               <div
                 key={tch.id}
                 onClick={() => setSelectedTeacherForAudit(tch)}
-                className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/20 cursor-pointer group"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-indigo-400 dark:hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-1 hover:shadow-xl shadow-sm cursor-pointer group"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -552,13 +552,13 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                       {tch.avatar}
                     </div>
                     <div>
-                      <h4 className="text-base font-black text-black dark:text-white group-hover:text-sky-400 transition-colors">{tch.name}</h4>
-                      <p className="text-xs text-indigo-500 dark:text-indigo-400 font-bold">{tch.department}</p>
+                      <h4 className="text-base font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-sky-400 transition-colors">{tch.name}</h4>
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">{tch.department}</p>
                     </div>
                   </div>
 
                   <div className="flex flex-col items-end gap-1.5">
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-950 text-slate-300 border-slate-700 shadow-sm">
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 shadow-xs">
                       {tch.campus} CAMPUS
                     </span>
 
@@ -574,48 +574,48 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                           `🔄 Status updated for ${tch.name}: ${newStatus === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}`
                         );
                       }}
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 transition-all cursor-pointer shadow-md transform hover:scale-105 active:scale-95 ${
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 transition-all cursor-pointer shadow-sm transform hover:scale-105 active:scale-95 ${
                         tch.status === "ACTIVE"
-                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/60 hover:bg-emerald-500/30"
-                          : "bg-amber-500/20 text-amber-300 border-amber-400/60 hover:bg-amber-500/30"
+                          ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-400/60 hover:bg-emerald-100"
+                          : "bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-400/60 hover:bg-amber-100"
                       }`}
                       title="Click to toggle Active vs On Leave availability status"
                     >
-                      <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                      <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
                       <span>{tch.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
+                <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700 dark:text-slate-300">Experience</span>
+                    <span className="font-bold text-slate-600 dark:text-slate-300">Experience</span>
                     <span className="font-black text-slate-900 dark:text-slate-100">{tch.experienceYears} Years</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700 dark:text-slate-300">Email</span>
+                    <span className="font-bold text-slate-600 dark:text-slate-300">Email</span>
                     <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-[11px]">{tch.email}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-700 dark:text-slate-300">Phone</span>
+                    <span className="font-bold text-slate-600 dark:text-slate-300">Phone</span>
                     <span className="font-black text-slate-900 dark:text-slate-100 font-mono">{tch.phone}</span>
                   </div>
                   <div className="flex justify-between items-start pt-2 border-t border-slate-200 dark:border-slate-800 font-bold">
-                    <span className="text-sky-600 dark:text-sky-400 flex items-center gap-1 font-black">
+                    <span className="text-sky-700 dark:text-sky-400 flex items-center gap-1 font-black">
                       <UserCheck className="w-3.5 h-3.5" /> Assigned Lead Quota
                     </span>
                     <div className="text-right">
-                      <span className="text-sky-700 dark:text-sky-300 font-black block">
+                      <span className="text-sky-800 dark:text-sky-300 font-black block">
                         {tch.assignedQuota?.toLocaleString() || "100"} Contacts
                       </span>
-                      <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-black bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 rounded-full inline-block mt-0.5 shadow-sm">
+                      <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-400/40 px-2 py-0.5 rounded-full inline-block mt-0.5 shadow-xs">
                         🎯 {rangeDisplay}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Interactive Calling Audit Badge (Talked vs Not Talked) */}
+                {/* Interactive Calling Audit Badge (Talked vs Not Talked) without black background */}
                 {(() => {
                   const stats = getTeacherCallStats(tch, index);
                   return (
@@ -624,39 +624,39 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                         e.stopPropagation();
                         setSelectedTeacherForAudit(tch);
                       }}
-                      className="p-3 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-indigo-500/70 hover:bg-slate-900 transition-all cursor-pointer space-y-2 shadow-sm group/audit"
+                      className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500/70 hover:bg-slate-100/80 dark:hover:bg-slate-900 transition-all cursor-pointer space-y-2 shadow-xs group/audit"
                       title={`Click to view students for ${tch.name}`}
                     >
                       <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-1.5 font-extrabold text-white">
-                          <PhoneCall className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <div className="flex items-center gap-1.5 font-extrabold text-slate-900 dark:text-white">
+                          <PhoneCall className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span>Calling Audit:</span>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300 bg-indigo-500/20 px-2 py-0.5 rounded-full border border-indigo-400/30 group-hover/audit:bg-indigo-600 group-hover/audit:text-white transition-all flex items-center gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-400/30 group-hover/audit:bg-indigo-600 group-hover/audit:text-white transition-all flex items-center gap-1">
                           <span>View Students</span>
                           <span>➔</span>
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 font-extrabold text-emerald-300">
+                        <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 font-bold text-emerald-900 dark:text-emerald-300 shadow-xs">
                           <span>🟢 Talked:</span>
-                          <span className="font-mono font-black">{stats.talked}</span>
+                          <span className="font-mono font-black text-xs">{stats.talked}</span>
                         </div>
-                        <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 font-extrabold text-amber-300">
+                        <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/30 font-bold text-amber-900 dark:text-amber-300 shadow-xs">
                           <span>🟡 Not Talked:</span>
-                          <span className="font-mono font-black">{stats.notTalked}</span>
+                          <span className="font-mono font-black text-xs">{stats.notTalked}</span>
                         </div>
                       </div>
 
-                      <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex border border-white/5">
+                      <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex border border-slate-300/60 dark:border-white/5">
                         <div
                           style={{ width: `${Math.round((stats.talked / stats.total) * 100)}%` }}
-                          className="bg-emerald-400"
+                          className="bg-emerald-500 transition-all duration-300"
                         />
                         <div
                           style={{ width: `${100 - Math.round((stats.talked / stats.total) * 100)}%` }}
-                          className="bg-amber-500"
+                          className="bg-amber-500 transition-all duration-300"
                         />
                       </div>
                     </div>
@@ -664,14 +664,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 })()}
 
               <div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                   Assigned Programs
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {tch.coursesAssigned.map((c, idx) => (
                     <span
                       key={idx}
-                      className="text-[11px] font-medium bg-indigo-950/70 border border-indigo-800/60 text-indigo-300 px-2.5 py-0.5 rounded-lg"
+                      className="text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-0.5 rounded-lg"
                     >
                       {c}
                     </span>
@@ -679,7 +679,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-start gap-2 relative z-10">
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-start gap-2 relative z-10">
                 <div className="flex items-center gap-2">
                   <Tooltip text={`In-Portal Email ${tch.name}`} position="bottom">
                     <button
@@ -693,7 +693,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                           courseInterest: tch.department,
                         });
                       }}
-                      className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-bold px-3 py-1.5 rounded-xl bg-indigo-950/60 border border-indigo-800/60 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 text-xs text-indigo-700 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-bold px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 shadow-xs transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     >
                       <Mail className="w-3.5 h-3.5" /> Email
                     </button>
@@ -706,7 +706,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                         onTriggerToast(`Initiated call to ${tch.name}`);
                         redirectToDialPad(tch.phone);
                       }}
-                      className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 shadow-xs transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     >
                       <Phone className="w-3.5 h-3.5" /> Call
                     </a>
@@ -721,7 +721,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                           e.stopPropagation();
                           setEditingTeacher(tch);
                         }}
-                        className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-sky-400 hover:text-slate-900 dark:hover:text-sky-300 font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-xs transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
                       </button>
