@@ -151,20 +151,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         {/* ================================================================= */}
         <div className="lg:col-span-6 p-6 sm:p-12 lg:p-14 flex flex-col justify-between bg-white text-slate-900">
           <div>
-            {/* Logo Row matching Reference */}
-            <div className="flex items-center gap-2.5 mb-8">
-              <div className="w-8 h-8 rounded-lg bg-[#4a2545] flex items-center justify-center text-white shadow-md">
-                {/* Modern geometric Havenix / SPHEREX icon */}
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M4 3h4v18H4zm12 0h4v18h-4zm-6 6h4v12h-4z" />
-                </svg>
+            {/* SPHEREX CRM Pill Badge */}
+            <div className="flex items-center mb-8">
+              <div className="inline-flex items-center px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#edf2f7] border border-slate-300/90 shadow-xs">
+                <span className="text-xs sm:text-sm font-black tracking-wider text-slate-900 uppercase">
+                  SPHEREX CRM
+                </span>
               </div>
-              <span className="text-xl font-extrabold tracking-tight text-slate-900">
-                Havenix<span className="text-[#4a2545]">.</span>
-              </span>
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1 border border-slate-200">
-                SPHEREX CRM
-              </span>
             </div>
 
             {/* Headline matching Reference Image */}
