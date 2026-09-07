@@ -152,7 +152,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         <div className="lg:col-span-6 p-6 sm:p-12 lg:p-14 flex flex-col justify-between bg-white text-slate-900">
           <div>
             {/* SPHEREX CRM Pill Badge with Official Logo */}
-            <div className="flex items-center gap-2.5 mb-8">
+            <div className="flex items-center justify-center gap-2.5 mb-8">
               <div className="w-9 h-9 rounded-full overflow-hidden bg-black p-0.5 shadow-md border border-slate-300 flex items-center justify-center shrink-0">
                 <Image
                   src="/spherex-logo.png"
@@ -170,7 +170,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </div>
 
             {/* Headline */}
-            <div className="mb-6">
+            <div className="mb-6 text-center">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
                 Welcome to
               </h1>
