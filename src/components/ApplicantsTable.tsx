@@ -8,6 +8,7 @@ import SpecularButton from "@/components/SpecularButton";
 import { parseCSVToLeads } from "@/lib/csvParser";
 
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
+import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 
 interface ApplicantsTableProps {
   applicants: (Lead & { application: Application })[];
@@ -85,8 +86,8 @@ export default function ApplicantsTable({
   const stagesList = ["ALL", "INQUIRY", "SUBMITTED", "DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"];
 
   return (
-    <div className="bubble-card p-4 sm:p-6 border border-white/20 flex-1 flex flex-col justify-between">
-      <div>
+    <div className="bubble-card p-3 sm:p-6 border border-white/20 flex-1 flex flex-col justify-between w-full max-w-full min-w-0 overflow-hidden">
+      <div className="w-full max-w-full min-w-0">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-white/10">
           <div>
@@ -146,7 +147,7 @@ export default function ApplicantsTable({
             </button>
 
             {/* Bubble Stage Control Pills */}
-            <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-md overflow-x-auto hide-scrollbar">
+            <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-md overflow-x-auto hide-scrollbar max-w-full">
               {stagesList.map((st) => (
                 <button
                   key={st}
@@ -165,8 +166,8 @@ export default function ApplicantsTable({
         </div>
 
         {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-200">
+        <div className="overflow-x-auto w-full max-w-full rounded-xl border border-white/10">
+          <table className="w-full min-w-[580px] sm:min-w-full text-left text-xs text-slate-200">
             <thead className="bg-slate-950/80 text-sky-300/80 uppercase font-bold text-[10px] tracking-wider border-y border-white/10">
               <tr>
                 <th className="py-3 px-4">Applicant Name</th>
@@ -269,21 +270,18 @@ export default function ApplicantsTable({
                             <Eye className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
-                        <Tooltip text={`In-Portal Call ${item.name}`}>
-                          <button
-                            onClick={() => handleOpenCommModal("CALL", {
-                              name: item.name,
-                              phone: item.phone,
-                              email: item.email,
-                              courseInterest: item.courseInterest,
-                              campus: item.campus,
-                              school: item.school || undefined,
-                              district: item.district || undefined,
-                            })}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
+                        <Tooltip text={`Call ${item.name} via Phone Dial Pad`}>
+                          <a
+                            href={getCleanTelUri(item.phone)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onActionTrigger("CALL", item.name);
+                              redirectToDialPad(item.phone);
+                            }}
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-emerald-400 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer inline-flex items-center justify-center"
                           >
                             <Phone className="w-3.5 h-3.5" />
-                          </button>
+                          </a>
                         </Tooltip>
                         <Tooltip text={`In-Portal Email ${item.name}`}>
                           <button

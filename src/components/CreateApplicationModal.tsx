@@ -6,6 +6,7 @@ import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } 
 import SpecularButton from "@/components/SpecularButton";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
+import { mobileSafeFetch } from "@/lib/mobileFetch";
 
 interface CreateApplicationModalProps {
   isOpen: boolean;
@@ -63,21 +64,43 @@ export default function CreateApplicationModal({
     setError(null);
 
     try {
-      const res = await fetch("/api/applications", {
+      const res = await mobileSafeFetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error || "Failed to create application");
+      let createdLead: Lead & { application: Application };
+
+      if (res) {
+        const json = await res.json();
+        if (!res.ok || json.error) {
+          throw new Error(json.error || "Failed to create application");
+        }
+        createdLead = json.lead;
+      } else {
+        // Mobile mode: create lead locally
+        const leadId = `lead_${Date.now()}`;
+        createdLead = {
+          ...formData,
+          id: leadId,
+          status: "NEW",
+          createdAt: new Date().toISOString(),
+          application: {
+            id: `app_${leadId}`,
+            leadId: leadId,
+            stage: formData.stage || "INQUIRY",
+            marks10th: formData.marks10th || 0,
+            marks12th: formData.marks12th || 0,
+            paymentStatus: "PENDING",
+          },
+        } as Lead & { application: Application };
       }
 
       // Real-time Firebase Database update
-      await saveStudentToFirebase(json.lead);
+      await saveStudentToFirebase(createdLead);
 
-      onApplicationCreated(json.lead);
+      onApplicationCreated(createdLead);
       onClose();
     } catch (err: any) {
       setError(err.message || "An error occurred while creating application.");

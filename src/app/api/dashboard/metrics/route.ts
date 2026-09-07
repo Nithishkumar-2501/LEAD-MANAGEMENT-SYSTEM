@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { MOCK_LEADS, MOCK_TODAYS_TASKS, MOCK_PAYMENTS } from "@/lib/mockData";
 import { LeadStatusCounts, DashboardMetricsResponse } from "@/types/crm";
 
-export const dynamic = "force-dynamic";
+
 
 export async function GET() {
   try {

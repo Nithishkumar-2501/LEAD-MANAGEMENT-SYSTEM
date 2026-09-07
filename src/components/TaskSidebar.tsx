@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Task, TaskType } from "@/types/crm";
 import { CheckSquare, Square, Phone, Mail, MessageSquare, Clock, CalendarCheck, Sparkles } from "lucide-react";
+import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 
 interface TaskSidebarProps {
   tasks: Task[];
@@ -137,12 +138,18 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
 
                   {task.lead && !task.isCompleted && (
                     <div className="flex items-center justify-end gap-1.5 mt-3 pt-2.5 border-t border-white/10">
-                      <button
-                        onClick={() => onActionTrigger("CALL", task.lead!.name)}
-                        className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 text-[11px] font-bold transition-all flex items-center gap-1"
+                      <a
+                        href={getCleanTelUri(task.lead?.phone)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onActionTrigger("CALL", task.lead!.name);
+                          if (task.lead?.phone) redirectToDialPad(task.lead.phone);
+                        }}
+                        className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        title={`Call ${task.lead?.name || "Candidate"} via Dial Pad`}
                       >
                         <Phone className="w-3 h-3" /> Call
-                      </button>
+                      </a>
                       <button
                         onClick={() => onActionTrigger("EMAIL", task.lead!.name)}
                         className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 text-[11px] font-bold transition-all flex items-center gap-1"

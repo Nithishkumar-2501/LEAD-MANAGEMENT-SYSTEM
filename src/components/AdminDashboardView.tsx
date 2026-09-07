@@ -52,7 +52,7 @@ export default function AdminDashboardView({
   ];
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn w-full max-w-full min-w-0">
       {/* Banner */}
       <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-gradient-to-r dark:from-indigo-950 dark:via-slate-900 dark:to-purple-950 border border-slate-200 dark:border-indigo-500/30 text-slate-900 dark:text-white shadow-md dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
@@ -114,7 +114,7 @@ export default function AdminDashboardView({
       />
 
       {/* Table & Task Sidebar */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-6 w-full max-w-full min-w-0">
         <ApplicantsTable
           applicants={applicants}
           searchQuery={searchQuery}

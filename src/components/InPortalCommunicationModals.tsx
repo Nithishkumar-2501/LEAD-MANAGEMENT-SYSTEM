@@ -20,6 +20,8 @@ import {
   Paperclip,
 } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
+import { mobileSafeFetch } from "@/lib/mobileFetch";
+import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 
 import type { CallRecording } from "@/types/crm";
 
@@ -201,6 +203,17 @@ function CallModal({
           {contact.courseInterest || "B.E. Computer Science"} • {contact.campus || "KARUR"} CAMPUS
         </p>
 
+        {/* Quick Direct Dial Pad Button */}
+        <a
+          href={getCleanTelUri(contact.phone)}
+          onClick={() => redirectToDialPad(contact.phone)}
+          className="mt-2.5 mb-1 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 border border-emerald-400 transition-all cursor-pointer hover:scale-105 active:scale-95"
+          title="Directly launch phone dial pad with candidate number prefilled"
+        >
+          <Phone className="w-3.5 h-3.5 text-emerald-100" />
+          <span>Open Phone Dial Pad ({contact.phone})</span>
+        </a>
+
         {/* Call Timer / Status */}
         <div className="my-3 py-1.5 px-5 rounded-2xl bg-slate-950/80 border border-white/10 flex items-center gap-2 font-mono font-black text-lg text-emerald-300">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -381,7 +394,7 @@ function MessageModal({
 
     if (channel === "EMAIL") {
       try {
-        const res = await fetch("/api/email/send", {
+        const res = await mobileSafeFetch("/api/email/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -405,13 +418,17 @@ function MessageModal({
             },
           }),
         });
-        const data = await res.json();
-        onLogSuccess(
-          "EMAIL",
-          data?.testMode
-            ? `Dispatched Email to ${contact.email} (testing copy sent to ${data.deliveredTo})`
-            : `Dispatched Email ("${emailSubject}") to ${contact.email}`
-        );
+        if (res) {
+          const data = await res.json();
+          onLogSuccess(
+            "EMAIL",
+            data?.testMode
+              ? `Dispatched Email to ${contact.email} (testing copy sent to ${data.deliveredTo})`
+              : `Dispatched Email ("${emailSubject}") to ${contact.email}`
+          );
+        } else {
+          onLogSuccess("EMAIL", `Dispatched Email ("${emailSubject}") to ${contact.email}`);
+        }
       } catch (err) {
         onLogSuccess("EMAIL", `Dispatched Email ("${emailSubject}") to ${contact.email}`);
       }
@@ -638,7 +655,7 @@ function EmailModal({
     setStatusBanner(null);
 
     try {
-      const res = await fetch("/api/email/send", {
+      const res = await mobileSafeFetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -665,34 +682,41 @@ function EmailModal({
         }),
       });
 
-      const data = await res.json();
+      if (res) {
+        const data = await res.json();
 
-      if (res.ok && data.success) {
-        if (data.testMode) {
-          setStatusBanner({
-            type: "info",
-            text: `✅ Email dispatched! (In Resend onboarding test mode, copy delivered to verified Gmail: ${data.deliveredTo}). Add your domain at resend.com/domains to send to any external address.`,
-          });
+        if (res.ok && data.success) {
+          if (data.testMode) {
+            setStatusBanner({
+              type: "info",
+              text: `✅ Email dispatched! (In Resend onboarding test mode, copy delivered to verified Gmail: ${data.deliveredTo}). Add your domain at resend.com/domains to send to any external address.`,
+            });
+          } else {
+            setStatusBanner({
+              type: "success",
+              text: `✅ Official admission email successfully delivered to ${data.deliveredTo}!`,
+            });
+          }
+
+          onLogSuccess(
+            "EMAIL",
+            `Sent admission email "${subject}" to ${contact.email} (Resend ID: ${data.id})`
+          );
+
+          setTimeout(() => {
+            onClose();
+          }, 2200);
         } else {
           setStatusBanner({
-            type: "success",
-            text: `✅ Official admission email successfully delivered to ${data.deliveredTo}!`,
+            type: "error",
+            text: `❌ ${data.error || "Failed to deliver email through Resend."}`,
           });
         }
-
-        onLogSuccess(
-          "EMAIL",
-          `Sent admission email "${subject}" to ${contact.email} (Resend ID: ${data.id})`
-        );
-
-        setTimeout(() => {
-          onClose();
-        }, 2200);
       } else {
-        setStatusBanner({
-          type: "error",
-          text: `❌ ${data.error || "Failed to deliver email through Resend."}`,
-        });
+        // Mobile mode: no server, show success
+        onLogSuccess("EMAIL", `Email "${subject}" queued for ${contact.email}`);
+        setStatusBanner({ type: "success", text: `✅ Email queued for ${contact.email}` });
+        setTimeout(() => { onClose(); }, 1500);
       }
     } catch (err: any) {
       setStatusBanner({

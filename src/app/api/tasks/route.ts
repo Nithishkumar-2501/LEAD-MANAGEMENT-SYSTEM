@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MOCK_TODAYS_TASKS } from "@/lib/mockData";
 
-export const dynamic = "force-dynamic";
+
 
 export async function GET() {
   try {

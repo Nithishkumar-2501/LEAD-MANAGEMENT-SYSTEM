@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen } from "lucide-react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import MetricCards from "@/components/MetricCards";
@@ -23,6 +24,7 @@ import UserDashboardView from "@/components/UserDashboardView";
 import MarketingDashboardView from "@/components/MarketingDashboardView";
 import EchoDashboardView from "@/components/EchoDashboardView";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
+import { mobileSafeFetch } from "@/lib/mobileFetch";
 import {
   saveStudentToFirebase,
   deleteStudentFromFirebase,
@@ -124,19 +126,21 @@ export default function DashboardPage() {
 
   const handleReloadLeads = useCallback(async () => {
     try {
-      const res = await fetch("/api/applications");
-      const data = await res.json();
-      if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
-        const dbLeads = (data.leads as (Lead & { application: Application })[]).filter(
-          (l) => !isLeadDeleted(l.id)
-        );
-        const map = new Map<string, Lead & { application: Application }>();
-        dbLeads.forEach((item) => map.set(item.id, item));
-        const merged = Array.from(map.values());
-        setApplicants(merged);
-        try {
-          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
-        } catch (err) {}
+      const res = await mobileSafeFetch("/api/applications");
+      if (res) {
+        const data = await res.json();
+        if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
+          const dbLeads = (data.leads as (Lead & { application: Application })[]).filter(
+            (l) => !isLeadDeleted(l.id)
+          );
+          const map = new Map<string, Lead & { application: Application }>();
+          dbLeads.forEach((item) => map.set(item.id, item));
+          const merged = Array.from(map.values());
+          setApplicants(merged);
+          try {
+            localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
+          } catch (err) {}
+        }
       }
       const list = await fetchStudentsFromFirestore();
       if (list && list.length > 0) {
@@ -164,8 +168,8 @@ export default function DashboardPage() {
     }
 
     // 2. Fetch from Prisma Database API — this is the PERMANENT source of truth
-    fetch("/api/applications")
-      .then((res) => res.json())
+    mobileSafeFetch("/api/applications")
+      .then((res) => res ? res.json() : null)
       .then((data) => {
         if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
           const dbLeads = (data.leads as (Lead & { application: Application })[]).filter(
@@ -338,7 +342,11 @@ export default function DashboardPage() {
   };
 
   const handleActionTrigger = (type: TaskType, leadName: string) => {
-    triggerToast(`Initiated ${type} outreach for candidate: ${leadName}`);
+    if (type === "CALL") {
+      triggerToast(`📞 Opening phone dial pad for ${leadName}...`);
+    } else {
+      triggerToast(`Initiated ${type} outreach for candidate: ${leadName}`);
+    }
   };
 
   const handleToggleTask = async (taskId: string) => {
@@ -348,7 +356,7 @@ export default function DashboardPage() {
       prev.map((t) => (t.id === taskId ? { ...t, isCompleted: nextCompleted } : t))
     );
     try {
-      await fetch("/api/tasks", {
+      await mobileSafeFetch("/api/tasks", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskId, isCompleted: nextCompleted }),
@@ -410,7 +418,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen flex font-sans bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex font-sans bg-slate-950 text-slate-100 w-full max-w-full overflow-x-hidden relative">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold text-xs px-5 py-3 rounded-full shadow-2xl animate-bounce flex items-center gap-2 border border-white/30 justify-center sm:justify-start">
@@ -438,7 +446,7 @@ export default function DashboardPage() {
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-64 transition-all duration-300">
+      <div className="flex-1 flex flex-col min-w-0 w-full max-w-full lg:pl-64 transition-all duration-300 overflow-x-hidden">
         {/* Main Header */}
         <Header
           user={MOCK_ADMIN_USER}
@@ -461,7 +469,7 @@ export default function DashboardPage() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-3 sm:p-6 w-full space-y-4 sm:space-y-6">
+        <main className="flex-1 p-3 sm:p-6 pb-28 sm:pb-6 w-full max-w-full space-y-4 sm:space-y-6 overflow-x-hidden">
         {/* ADMISSIONS & ADMIN DASHBOARD MODULE */}
         {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && (
           <AdminDashboardView
@@ -605,6 +613,71 @@ export default function DashboardPage() {
           existingLeads={applicants}
         />
       )}
+
+      {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
+        <button
+          type="button"
+          onClick={() => setActiveTab("ADMIN_DASHBOARD")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+            activeTab === "ADMIN_DASHBOARD" || activeTab === "ADMISSIONS"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Overview</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("CONTACTS")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+            activeTab === "CONTACTS" || activeTab === "STUDENTS"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <UserCheck className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Leads</span>
+        </button>
+
+        {/* Floating Quick Action Button: + Lead */}
+        <button
+          type="button"
+          onClick={() => setIsQuickLeadModalOpen(true)}
+          className="flex flex-col items-center justify-center -mt-6 w-12 h-12 rounded-full bg-gradient-to-tr from-sky-400 via-blue-600 to-indigo-600 text-white shadow-xl shadow-sky-500/40 ring-4 ring-slate-950 active:scale-95 transition-transform"
+          title="Add Quick Lead"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("USER_DASHBOARD")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+            activeTab === "USER_DASHBOARD"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <BarChart3 className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Desk</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("TEACHERS")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+            activeTab === "TEACHERS"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <BookOpen className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Faculty</span>
+        </button>
+      </nav>
       </div>
     </div>
   );

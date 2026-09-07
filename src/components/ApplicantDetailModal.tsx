@@ -43,6 +43,8 @@ import {
 import { Lead, Application, LeadStatus, AppStage, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
+import { mobileSafeFetch } from "@/lib/mobileFetch";
+import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
 
 interface ApplicantDetailModalProps {
@@ -150,7 +152,7 @@ export default function ApplicantDetailModal({
 
       // 2. Direct Save to SQLite database API
       try {
-        await fetch("/api/applications", {
+        await mobileSafeFetch("/api/applications", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
@@ -181,12 +183,9 @@ export default function ApplicantDetailModal({
     setIsGeneratingAi(true);
     setTimeout(() => {
       setAiSummary(
-        `High-intent candidate interested in ${
-          formData.courseInterest || "B.Tech Engineering"
-        }. Mobile number verified (+91-${
-          formData.phone.replace("+91-", "")
-        }). Lead source: WhatsApp campaign. Assigned owner: ${
-          formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"
+        `High-intent candidate interested in ${formData.courseInterest || "B.Tech Engineering"
+        }. Mobile number verified (+91-${formData.phone.replace("+91-", "")
+        }). Lead source: WhatsApp campaign. Assigned owner: ${formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"
         }. Current score: ${formData.leadScore || 10}/100. Recommended next action: Teleconference call for application submission.`
       );
       setIsGeneratingAi(false);
@@ -237,40 +236,58 @@ export default function ApplicantDetailModal({
   const currentStageIdx = 1;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-white w-full max-w-6xl rounded-2xl border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col max-h-[96vh] my-auto relative">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-white w-full max-w-6xl rounded-none sm:rounded-2xl border-0 sm:border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col min-h-screen sm:min-h-0 sm:max-h-[96vh] my-0 sm:my-auto relative">
         {/* Success Toast Notification */}
         {saveSuccessToast && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-emerald-400">
-            <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+          <div className="fixed sm:absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-emerald-400 max-w-[90%] text-center">
+            <CheckCircle2 className="w-4 h-4 text-emerald-200 shrink-0" />
             <span>{saveSuccessToast}</span>
           </div>
         )}
 
-        {/* Top Header / Breadcrumb Bar */}
-        <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
-          <div className="flex items-center gap-2 text-xs font-black text-slate-950">
-            <span className="text-slate-950 font-black">Lead Details</span>
-            <span className="text-slate-400">&gt;</span>
+        {/* Top Header / Breadcrumb Bar - Sticky on Mobile */}
+        <div className="sticky top-0 z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/95 backdrop-blur-md shrink-0 shadow-sm">
+          <div className="flex items-center gap-2 text-xs font-black text-slate-950 min-w-0">
             <button
-              className="p-1 rounded-md bg-white border border-slate-300 text-sky-600 hover:bg-slate-100 transition-colors shadow-sm cursor-pointer"
+              onClick={onClose}
+              className="sm:hidden p-1.5 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300"
+              title="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <span className="text-slate-950 font-black truncate">Lead Details</span>
+            <span className="text-slate-400 hidden sm:inline">&gt;</span>
+            <button
+              className="hidden sm:inline-flex p-1 rounded-md bg-white border border-slate-300 text-sky-600 hover:bg-slate-100 transition-colors shadow-sm cursor-pointer"
               title="Filter Lead Views"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <button
               onClick={() => setIsEmailModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 text-xs font-black text-indigo-700 transition-all shadow-sm cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 text-xs font-black text-indigo-700 transition-all shadow-sm cursor-pointer"
               title={`Send Official Admission Email to ${formData.email || formData.name}`}
             >
               <Mail className="w-3.5 h-3.5 text-indigo-600" /> Send Email
             </button>
+            <a
+              href={getCleanTelUri(formData.phone || "+91-6380270912")}
+              onClick={(e) => {
+                onActionTrigger("CALL", formData.name);
+                redirectToDialPad(formData.phone || "+91-6380270912");
+              }}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-xs font-black text-emerald-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+              title={`Call ${formData.name} via Phone Dial Pad`}
+            >
+              <Phone className="w-3.5 h-3.5 text-emerald-600" /> <span className="hidden sm:inline">Call</span>
+            </a>
             <button
               onClick={() => onActionTrigger("CALL", formData.name)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-sky-600" /> Add Event
             </button>
@@ -278,15 +295,17 @@ export default function ApplicantDetailModal({
             {/* Edit Details Button at Top Right */}
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer hover:scale-105"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer hover:scale-105"
               title="Edit Student Data & Save to Firebase"
             >
-              <Edit3 className="w-3.5 h-3.5 text-sky-600" /> Edit Details
+              <Edit3 className="w-3.5 h-3.5 text-sky-600" /> <span className="hidden sm:inline">Edit Details</span><span className="sm:hidden">Edit</span>
             </button>
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-950 hover:bg-slate-200 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-950 bg-slate-100 hover:bg-rose-100 hover:text-rose-700 transition-colors cursor-pointer"
+              title="Close"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -294,20 +313,20 @@ export default function ApplicantDetailModal({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 bg-slate-100/70">
+        <div className="p-3 sm:p-5 overflow-y-auto space-y-4 flex-1 bg-slate-100/70">
           {/* Mio AI Coach Section (Banner Card) */}
-          <div className="bg-indigo-50/90 rounded-xl border border-indigo-200 p-3 px-4 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md">
+          <div className="bg-indigo-50/90 rounded-xl border border-indigo-200 p-3 px-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-4 shadow-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shrink-0">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-black text-indigo-950 tracking-wide">
                     Mio AI Coach
                   </span>
-                  <span className="text-indigo-400 text-xs">|</span>
-                  <span className="text-xs text-indigo-900 font-bold">
+                  <span className="text-indigo-400 text-xs hidden sm:inline">|</span>
+                  <span className="text-xs text-indigo-900 font-bold truncate">
                     {aiSummary || "Summary will appear here once generated."}
                   </span>
                 </div>
@@ -317,7 +336,7 @@ export default function ApplicantDetailModal({
             <button
               onClick={generateAiSummary}
               disabled={isGeneratingAi}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md shrink-0 ml-4 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md shrink-0 cursor-pointer self-end sm:self-auto"
             >
               {isGeneratingAi ? (
                 <>
@@ -332,26 +351,25 @@ export default function ApplicantDetailModal({
           </div>
 
           {/* Chevron Stage Tracker Progress Ribbon */}
-          <div className="overflow-x-auto pb-1 hide-scrollbar">
-            <div className="flex items-center gap-1 min-w-[700px] bg-white p-1.5 rounded-xl border border-slate-300 shadow-sm">
+          <div className="overflow-x-auto pb-1 hide-scrollbar w-full max-w-full">
+            <div className="flex items-center gap-1 min-w-max bg-white p-1.5 rounded-xl border border-slate-300 shadow-sm">
               {stageSteps.map((step, idx) => {
                 const isActive = idx === currentStageIdx; // Verified stage active
                 const isPassed = idx < currentStageIdx;
                 return (
                   <div
                     key={step.key}
-                    className={`flex-1 text-center py-2 px-2 text-xs font-black transition-all flex items-center justify-center gap-1.5 relative ${
-                      isActive
+                    className={`text-center py-1.5 px-3 text-xs font-black transition-all flex items-center justify-center gap-1.5 relative whitespace-nowrap shrink-0 ${isActive
                         ? "bg-emerald-600 text-white border border-emerald-700 rounded-lg font-black shadow-sm"
                         : isPassed
-                        ? "bg-emerald-100 text-emerald-900 rounded-lg border border-emerald-300 font-black"
-                        : "bg-slate-100 text-slate-950 font-black rounded-lg border border-slate-300 hover:bg-slate-200 shadow-sm"
-                    }`}
+                          ? "bg-emerald-100 text-emerald-900 rounded-lg border border-emerald-300 font-black"
+                          : "bg-slate-100 text-slate-950 font-black rounded-lg border border-slate-300 hover:bg-slate-200 shadow-sm"
+                      }`}
                   >
                     {isActive && (
                       <span className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
                     )}
-                    <span className="truncate">{step.label}</span>
+                    <span>{step.label}</span>
                   </div>
                 );
               })}
@@ -412,12 +430,25 @@ export default function ApplicantDetailModal({
                   </div>
 
                   <div className="flex items-center justify-between text-slate-900">
-                    <span className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      <strong className="text-slate-950 font-black font-mono">
+                    <a
+                      href={getCleanTelUri(formData.phone || "+91-6380270912")}
+                      onClick={(e) => {
+                        onActionTrigger("CALL", formData.name);
+                        redirectToDialPad(formData.phone || "+91-6380270912");
+                      }}
+                      className="flex items-center gap-2 group hover:text-emerald-600 transition-colors text-left cursor-pointer"
+                      title="Click to dial on phone"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors shrink-0">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                      </div>
+                      <strong className="text-slate-950 group-hover:text-emerald-700 font-black font-mono underline decoration-dotted decoration-slate-400">
                         {formData.phone || "+91-6380270912"}
                       </strong>
-                    </span>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-300">
+                        Dial 📞
+                      </span>
+                    </a>
                     <span
                       title="Verified"
                       className="text-emerald-600 flex items-center justify-center w-4 h-4 rounded-full bg-emerald-100 text-[10px] font-black shrink-0 border border-emerald-300"
@@ -436,13 +467,17 @@ export default function ApplicantDetailModal({
                   >
                     <Share2 className="w-3.5 h-3.5" />
                   </button>
-                  <button
-                    onClick={() => onActionTrigger("CALL", formData.name)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm cursor-pointer"
-                    title="Call Candidate"
+                  <a
+                    href={getCleanTelUri(formData.phone || "+91-6380270912")}
+                    onClick={(e) => {
+                      onActionTrigger("CALL", formData.name);
+                      redirectToDialPad(formData.phone || "+91-6380270912");
+                    }}
+                    className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                    title={`Call ${formData.name} via Phone Dial Pad`}
                   >
-                    <Phone className="w-3.5 h-3.5" />
-                  </button>
+                    <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                  </a>
 
                   {/* 3rd Button: PENCIL EDIT ICON (Directly opens Edit Student Data & Firebase Save) */}
                   <button
@@ -604,11 +639,10 @@ export default function ApplicantDetailModal({
                     <button
                       key={tab.id}
                       onClick={() => setActiveMainTab(tab.id as any)}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-black whitespace-nowrap transition-all rounded-t-lg border cursor-pointer ${
-                        activeMainTab === tab.id
+                      className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-black whitespace-nowrap transition-all rounded-t-lg border cursor-pointer ${activeMainTab === tab.id
                           ? "bg-sky-600 text-white border-sky-600 shadow-md"
                           : "bg-white text-slate-950 hover:bg-slate-100 border-slate-300"
-                      }`}
+                        }`}
                     >
                       <Icon className="w-3.5 h-3.5" />
                       {tab.label}
@@ -766,11 +800,10 @@ export default function ApplicantDetailModal({
                           key={sub.id}
                           type="button"
                           onClick={() => setActiveSubTab(sub.id as any)}
-                          className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                            activeSubTab === sub.id
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${activeSubTab === sub.id
                               ? "bg-indigo-600 text-white shadow-sm border border-indigo-600"
                               : "text-slate-950 font-black bg-slate-100 hover:bg-slate-200 border border-slate-300"
-                          }`}
+                            }`}
                         >
                           {sub.label}
                         </button>
@@ -1047,33 +1080,30 @@ export default function ApplicantDetailModal({
                 <button
                   type="button"
                   onClick={() => setEditSectionTab("PERSONAL")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    editSectionTab === "PERSONAL"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${editSectionTab === "PERSONAL"
                       ? "bg-sky-600 text-white shadow-sm"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
-                  }`}
+                    }`}
                 >
                   👤 Personal & Contact
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditSectionTab("ACADEMIC")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    editSectionTab === "ACADEMIC"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${editSectionTab === "ACADEMIC"
                       ? "bg-sky-600 text-white shadow-sm"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
-                  }`}
+                    }`}
                 >
                   🎓 Academic & Cutoff
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditSectionTab("ADMISSION")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    editSectionTab === "ADMISSION"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${editSectionTab === "ADMISSION"
                       ? "bg-sky-600 text-white shadow-sm"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
-                  }`}
+                    }`}
                 >
                   🏛️ Admission, Stage & Counselor
                 </button>

@@ -5,7 +5,7 @@ import { Lead, Application } from "@/types/crm";
 import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 
-export const dynamic = "force-dynamic";
+
 
 export async function GET(request: Request) {
   try {

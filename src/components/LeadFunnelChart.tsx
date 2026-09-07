@@ -142,26 +142,26 @@ export default function LeadFunnelChart({
   };
 
   return (
-    <div className="bubble-card p-4 sm:p-6 mb-4 sm:mb-6 relative overflow-hidden">
+    <div className="bubble-card p-3 sm:p-6 mb-4 sm:mb-6 relative overflow-hidden w-full max-w-full min-w-0">
       {/* Header with Title and View Toggle */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 w-full max-w-full min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 ring-2 ring-white/20 shrink-0">
             <PieChart className="w-5 h-5" />
           </div>
-          <div>
-            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+          <div className="min-w-0">
+            <h3 className="text-sm font-extrabold text-white flex items-center gap-2 truncate">
               VSB TNEA Lead Conversion Funnel
             </h3>
-            <p className="text-xs text-slate-400 font-medium">
+            <p className="text-xs text-slate-400 font-medium truncate">
               Filter stage options and view candidates one by one
             </p>
           </div>
         </div>
 
         {/* View Mode Toggle & Total Counter */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-950/80 p-1 rounded-xl border border-white/15 text-[11px] font-bold">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex flex-wrap items-center bg-slate-950/80 p-1 rounded-xl border border-white/15 text-[11px] font-bold max-w-full">
             <button
               onClick={() => setViewMode("SINGLE")}
               className={`px-3 py-1 rounded-lg transition-all ${
@@ -202,7 +202,7 @@ export default function LeadFunnelChart({
       </div>
 
       {/* FILTER OPTIONS PILLS BAR (ALL + 5 STAGES) */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 hide-scrollbar">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 hide-scrollbar w-full max-w-full">
         <span className="text-xs font-bold text-slate-400 flex items-center gap-1 shrink-0 mr-1">
           <Filter className="w-3.5 h-3.5 text-sky-400" /> Filter Stage:
         </span>

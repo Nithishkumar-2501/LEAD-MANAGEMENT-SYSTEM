@@ -8,6 +8,8 @@ import InPortalCommunicationModals, { ContactTarget } from "@/components/InPorta
 import { UserCheck, BookOpen, GraduationCap, Mail, Phone, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
+import { mobileSafeFetch } from "@/lib/mobileFetch";
+import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -169,7 +171,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     setShowCsvPreviewModal(false);
 
     try {
-      await fetch("/api/teachers", {
+      await mobileSafeFetch("/api/teachers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(normalizedTeachers),
@@ -275,7 +277,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     });
 
     try {
-      await fetch("/api/teachers", {
+      await mobileSafeFetch("/api/teachers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(teacherToAdd),
@@ -298,7 +300,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     setEditingTeacher(null);
 
     try {
-      await fetch("/api/teachers", {
+      await mobileSafeFetch("/api/teachers", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(teacherToSave),
@@ -620,19 +622,18 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                       <Mail className="w-3.5 h-3.5" /> Email
                     </button>
                   </Tooltip>
-                  <Tooltip text={`In-Portal Call ${tch.name}`} position="bottom">
-                    <button
-                      onClick={() => handleOpenCommModal("CALL", {
-                        name: tch.name,
-                        email: tch.email,
-                        phone: tch.phone,
-                        campus: tch.campus,
-                        courseInterest: tch.department,
-                      })}
+                  <Tooltip text={`Call ${tch.name} via Phone Dial Pad`} position="bottom">
+                    <a
+                      href={getCleanTelUri(tch.phone)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTriggerToast(`Initiated call to ${tch.name}`);
+                        redirectToDialPad(tch.phone);
+                      }}
                       className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 shadow-md transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     >
                       <Phone className="w-3.5 h-3.5" /> Call
-                    </button>
+                    </a>
                   </Tooltip>
                 </div>
 

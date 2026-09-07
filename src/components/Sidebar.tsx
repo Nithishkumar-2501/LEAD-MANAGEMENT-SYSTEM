@@ -385,12 +385,12 @@ export default function Sidebar({
 
       {/* Main Left Sidebar */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col border-r shadow-2xl backdrop-blur-2xl transition-all duration-300 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 flex-col border-r shadow-2xl backdrop-blur-2xl transition-all duration-300 ${
           isLight
             ? "bg-white text-slate-900 border-slate-200 shadow-slate-200/50"
             : "bg-slate-950/95 text-white border-white/10 shadow-black/50"
         } ${isCollapsed ? "w-20" : "w-64"} ${
-          isOpenMobile ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          isOpenMobile ? "flex translate-x-0" : "hidden lg:flex lg:translate-x-0"
         }`}
       >
         {/* Sidebar Header / Brand Emblem (V.S.B. Engineering College) */}

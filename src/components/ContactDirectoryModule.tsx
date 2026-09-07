@@ -6,10 +6,12 @@ import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
+import { mobileSafeFetch } from "@/lib/mobileFetch";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
+import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import {
   Phone,
   Mail,
@@ -77,13 +79,15 @@ export default function ContactDirectoryModule({
       if (onReloadLeads) {
         await onReloadLeads();
       } else {
-        const res = await fetch("/api/applications");
-        const data = await res.json();
-        if (data?.leads && Array.isArray(data.leads)) {
-          const valid = (data.leads as (Lead & { application?: Application | null })[]).filter(
-            (l) => !isLeadDeleted(l.id)
-          );
-          setContacts(valid);
+        const res = await mobileSafeFetch("/api/applications");
+        if (res) {
+          const data = await res.json();
+          if (data?.leads && Array.isArray(data.leads)) {
+            const valid = (data.leads as (Lead & { application?: Application | null })[]).filter(
+              (l) => !isLeadDeleted(l.id)
+            );
+            setContacts(valid);
+          }
         }
       }
       const now = new Date();
@@ -484,6 +488,18 @@ export default function ContactDirectoryModule({
     if (col === "Registered Mobile") {
       return (
         <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-800 dark:text-slate-200">
+          <a
+            href={getCleanTelUri(contact.phone)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onActionTrigger("CALL", contact.name);
+              redirectToDialPad(contact.phone);
+            }}
+            className="p-1 rounded bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 hover:bg-sky-600 hover:text-white border border-sky-300 dark:border-sky-500/30 transition-all cursor-pointer inline-flex items-center"
+            title={`Call ${contact.name} via Phone Dial Pad`}
+          >
+            <Phone className="w-3 h-3" />
+          </a>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -500,7 +516,18 @@ export default function ContactDirectoryModule({
           >
             💬
           </button>
-          <span>{showPhone ? contact.phone : "+91 ••••• •••••"}</span>
+          <a
+            href={getCleanTelUri(contact.phone)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onActionTrigger("CALL", contact.name);
+              redirectToDialPad(contact.phone);
+            }}
+            className="hover:underline hover:text-sky-500 transition-colors"
+            title="Click to dial on phone"
+          >
+            {showPhone ? contact.phone : "+91 ••••• •••••"}
+          </a>
         </div>
       );
     }
@@ -836,17 +863,19 @@ export default function ContactDirectoryModule({
     let createdLead: any = null;
 
     try {
-      const res = await fetch("/api/contacts", {
+      const res = await mobileSafeFetch("/api/contacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (res.ok && data && !data.error) {
-        createdLead = data;
-      } else {
-        console.warn("API notice:", data?.error);
+      if (res) {
+        const data = await res.json();
+        if (res.ok && data && !data.error) {
+          createdLead = data;
+        } else {
+          console.warn("API notice:", data?.error);
+        }
       }
     } catch (apiErr) {
       console.warn("Network notice on POST /api/contacts:", apiErr);
@@ -987,14 +1016,18 @@ export default function ContactDirectoryModule({
     await saveStudentToFirebase(editingContact);
 
     try {
-      const res = await fetch("/api/contacts", {
+      const res = await mobileSafeFetch("/api/contacts", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editingContact),
       });
 
-      const updated = await res.json();
-      setContacts(contacts.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+      if (res) {
+        const updated = await res.json();
+        setContacts(contacts.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+      } else {
+        setContacts(contacts.map((c) => (c.id === editingContact.id ? editingContact : c)));
+      }
       setEditingContact(null);
     } catch (err) {
       setContacts(contacts.map((c) => (c.id === editingContact.id ? editingContact : c)));
@@ -2156,12 +2189,21 @@ export default function ContactDirectoryModule({
                   {/* Details List */}
                   <div className="space-y-2 text-xs text-slate-300 bg-slate-950/70 p-3.5 rounded-2xl border border-white/10 mb-4">
                     {/* Phone */}
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span className="font-mono font-bold text-white">
+                    <a
+                      href={getCleanTelUri(contact.phone)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onActionTrigger("CALL", contact.name);
+                        redirectToDialPad(contact.phone);
+                      }}
+                      className="flex items-center gap-2 group hover:text-emerald-400 text-left cursor-pointer"
+                      title="Click to dial on phone"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
+                      <span className="font-mono font-bold text-white group-hover:text-emerald-300 underline decoration-dotted decoration-emerald-500">
                         {showPhone ? contact.phone : "+91 ••••• •••••"}
                       </span>
-                    </div>
+                    </a>
 
                     {/* Email */}
                     <div className="flex items-center gap-2">
@@ -2243,21 +2285,18 @@ export default function ContactDirectoryModule({
                 <div className="flex items-center justify-between pt-3 border-t border-white/10 relative z-10">
                   <div className="flex items-center gap-1.5">
 
-                    <Tooltip text={`In-Portal Call ${contact.name}`} position="bottom">
-                      <button
-                        onClick={() => handleOpenCommModal("CALL", {
-                          name: contact.name,
-                          phone: contact.phone,
-                          email: contact.email,
-                          courseInterest: contact.courseInterest,
-                          campus: contact.campus,
-                          school: contact.school || undefined,
-                          district: contact.district || undefined,
-                        })}
-                        className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40"
+                    <Tooltip text={`Call ${contact.name} via Phone Dial Pad`} position="bottom">
+                      <a
+                        href={getCleanTelUri(contact.phone)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onActionTrigger("CALL", contact.name);
+                          redirectToDialPad(contact.phone);
+                        }}
+                        className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer inline-flex items-center justify-center"
                       >
                         <Phone className="w-3.5 h-3.5" />
-                      </button>
+                      </a>
                     </Tooltip>
                     <Tooltip text={`In-Portal Email ${contact.name}`} position="bottom">
                       <button

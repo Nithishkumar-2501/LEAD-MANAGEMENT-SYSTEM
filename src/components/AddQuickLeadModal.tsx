@@ -6,6 +6,7 @@ import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/ty
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
+import { mobileSafeFetch } from "@/lib/mobileFetch";
 
 interface AddQuickLeadModalProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ export default function AddQuickLeadModal({
     let savedLead: Lead & { application: Application };
 
     try {
-      const res = await fetch("/api/applications", {
+      const res = await mobileSafeFetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -87,11 +88,15 @@ export default function AddQuickLeadModal({
         }),
       });
 
-      const json = await res.json();
-      if (res.ok && json.lead) {
-        savedLead = json.lead;
+      if (res) {
+        const json = await res.json();
+        if (res.ok && json.lead) {
+          savedLead = json.lead;
+        } else {
+          throw new Error(json.error || "Failed to post to API");
+        }
       } else {
-        throw new Error(json.error || "Failed to post to API");
+        throw new Error("Mobile mode — skip API");
       }
     } catch (apiErr) {
       savedLead = {

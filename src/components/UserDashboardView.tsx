@@ -935,8 +935,9 @@ export default function UserDashboardView({
         </div>
 
         {/* User Wise Grouped Bar Chart Canvas */}
-        <div className="relative pt-2">
-          <div className="flex items-stretch">
+        <div className="overflow-x-auto hide-scrollbar w-full max-w-full pb-2">
+          <div className="relative pt-2 min-w-[580px] sm:min-w-0">
+            <div className="flex items-stretch">
             {/* Y-Axis Label and Values */}
             <div className="flex flex-col justify-between h-56 text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 pr-3 border-r border-slate-300 dark:border-white/15 select-none shrink-0">
               {userChartYTicks.map((tick, i) => (
@@ -1077,6 +1078,7 @@ export default function UserDashboardView({
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {/* ========================================================================= */}
@@ -1443,8 +1445,9 @@ export default function UserDashboardView({
         </div>
 
         {/* Chart Canvas Area */}
-        <div className="relative pt-4">
-          <div className="flex items-stretch">
+        <div className="overflow-x-auto hide-scrollbar w-full max-w-full pb-2">
+          <div className="relative pt-4 min-w-[580px] sm:min-w-0">
+            <div className="flex items-stretch">
             {/* Y-Axis Label and Values */}
             <div className="flex items-center pr-2 shrink-0">
               <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 -rotate-90 tracking-wider whitespace-nowrap select-none">
@@ -1654,6 +1657,7 @@ export default function UserDashboardView({
           </div>
         </div>
       </div>
+    </div>
 
       {/* ========================================================================= */}
       {/* 5. BOTTOM SPLIT GRID: ACTIVITY FEEDS (LEFT) & FOLLOW-UP CALENDAR (RIGHT)   */}
