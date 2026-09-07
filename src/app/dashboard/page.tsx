@@ -58,7 +58,7 @@ import {
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("ADMISSIONS");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("ADMIN_DASHBOARD");
   const [selectedCampus, setSelectedCampus] = useState<CampusLocation>("KARUR");
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");

@@ -174,15 +174,6 @@ export default function Sidebar({
 
   const admissionSubItems = [
     {
-      id: "ADMISSIONS" as ActiveTab,
-      label: "Admissions Dashboard",
-      sublabel: "Funnel & Overview",
-      icon: LayoutDashboard,
-      color: "from-sky-500 to-blue-600",
-      activeBorder: "border-sky-400",
-      activeGlow: "shadow-sky-500/30",
-    },
-    {
       id: "CONTACTS" as ActiveTab,
       label: "Lead Manager",
       sublabel: "Manage Student Leads",
