@@ -15,6 +15,8 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
       trend: `+${metrics.leadsTrend}%`,
       subtitle: "vs last intake",
       icon: Users,
+      color: "from-sky-400 to-indigo-500",
+      sphereGlow: "from-sky-400 via-indigo-500 to-purple-500",
       progress: 82,
     },
     {
@@ -23,6 +25,8 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
       trend: `+${metrics.docsVerifiedTrend}%`,
       subtitle: "10th & 12th Cutoffs",
       icon: FileCheck2,
+      color: "from-amber-400 to-orange-500",
+      sphereGlow: "from-amber-400 via-orange-500 to-pink-500",
       progress: 68,
     },
     {
@@ -31,6 +35,8 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
       trend: `+${metrics.seatsFilledTrend}%`,
       subtitle: "VSB Seats Filled",
       icon: GraduationCap,
+      color: "from-emerald-400 to-teal-500",
+      sphereGlow: "from-emerald-400 via-teal-500 to-cyan-500",
       progress: 54,
     },
     {
@@ -39,6 +45,8 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
       trend: `+${metrics.revenueTrend}%`,
       subtitle: "Tuition Revenue",
       icon: DollarSign,
+      color: "from-pink-500 to-rose-500",
+      sphereGlow: "from-pink-500 via-rose-500 to-purple-600",
       progress: 90,
     },
   ];
@@ -50,34 +58,37 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
         return (
           <div
             key={idx}
-            className="bg-white rounded-[36px] p-5 sm:p-6 border border-fog relative overflow-hidden group hover:border-steel transition-all duration-200 cursor-pointer"
+            className="bubble-card p-4 sm:p-6 relative overflow-hidden group transform hover:-translate-y-2 hover:scale-[1.03] transition-all duration-300 hover:border-sky-400/50 hover:shadow-2xl hover:shadow-sky-500/20 cursor-pointer"
           >
+            {/* Top Gloss Accent */}
+            <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${card.color}`} />
+
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="text-[11px] font-semibold text-steel uppercase tracking-wider mb-1">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   {card.title}
                 </p>
-                <h3 className="text-3xl font-semibold text-obsidian tracking-tight">{card.value}</h3>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors">{card.value}</h3>
               </div>
-              <div className="w-10 h-10 rounded-full bg-paper border border-fog flex items-center justify-center text-graphite group-hover:text-obsidian group-hover:border-steel transition-all">
-                <IconComponent className="w-4 h-4" />
+              <div className={`w-11 h-11 rounded-full bg-gradient-to-tr ${card.sphereGlow} flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 ring-2 ring-white/30 backdrop-blur-md transform group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300`}>
+                <IconComponent className="w-5 h-5" />
               </div>
             </div>
 
-            {/* Trend Indicator & Action */}
-            <div className="flex items-center justify-between mt-4 pt-3 border-t border-fog">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-graphite bg-mist px-2.5 py-0.5 rounded-full border border-fog">
-                <TrendingUp className="w-3 h-3 text-ember" />
-                <span className="font-semibold text-obsidian">{card.trend}</span>
-                <span className="text-steel font-normal ml-0.5">{card.subtitle}</span>
+            {/* Bubble Trend Indicator */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>{card.trend}</span>
+                <span className="text-slate-600 dark:text-slate-400 font-normal ml-1">{card.subtitle}</span>
               </div>
-              <ArrowUpRight className="w-4 h-4 text-steel group-hover:text-ember group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+              <ArrowUpRight className="w-4 h-4 text-sky-600 dark:text-sky-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
             </div>
 
-            {/* Hairline Progress Track */}
-            <div className="w-full bg-mist h-1 rounded-full mt-3.5 overflow-hidden">
+            {/* Glossy Progress Pill Capsule */}
+            <div className="w-full bg-slate-100 dark:bg-slate-950/70 h-2 rounded-full mt-3 overflow-hidden border border-slate-200 dark:border-white/10 p-0.5">
               <div
-                className="h-full bg-obsidian rounded-full transition-all duration-500"
+                className={`h-full bg-gradient-to-r ${card.color} rounded-full transition-all duration-500 shadow-sm`}
                 style={{ width: `${card.progress}%` }}
               />
             </div>

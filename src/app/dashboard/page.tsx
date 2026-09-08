@@ -418,12 +418,11 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen flex font-sans bg-paper text-graphite w-full max-w-full overflow-x-hidden relative">
+    <div className="min-h-screen flex font-sans bg-slate-950 text-slate-100 w-full max-w-full overflow-x-hidden relative">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 bg-obsidian text-white font-medium text-xs px-5 py-3 rounded-xl shadow-2xl border border-iron flex items-center gap-2 justify-center sm:justify-start">
-          <span className="w-2 h-2 rounded-full bg-ember" />
-          <span>{toastMessage}</span>
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold text-xs px-5 py-3 rounded-full shadow-2xl animate-bounce flex items-center gap-2 border border-white/30 justify-center sm:justify-start">
+          <span>✨ {toastMessage}</span>
         </div>
       )}
 
@@ -618,14 +617,14 @@ export default function DashboardPage() {
       )}
 
       {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-fog px-3 py-1.5 flex items-center justify-around shadow-lg safe-area-bottom select-none">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
         <button
           type="button"
           onClick={() => setActiveTab("ADMIN_DASHBOARD")}
           className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
             activeTab === "ADMIN_DASHBOARD" || activeTab === "ADMISSIONS"
-              ? "text-obsidian font-bold scale-105"
-              : "text-steel hover:text-graphite"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <LayoutDashboard className="w-5 h-5" />
@@ -637,8 +636,8 @@ export default function DashboardPage() {
           onClick={() => setActiveTab("CONTACTS")}
           className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
             activeTab === "CONTACTS" || activeTab === "STUDENTS"
-              ? "text-obsidian font-bold scale-105"
-              : "text-steel hover:text-graphite"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <UserCheck className="w-5 h-5" />
@@ -649,10 +648,10 @@ export default function DashboardPage() {
         <button
           type="button"
           onClick={() => setIsQuickLeadModalOpen(true)}
-          className="flex flex-col items-center justify-center -mt-6 w-12 h-12 rounded-full bg-obsidian text-white shadow-xl shadow-black/20 ring-4 ring-paper active:scale-95 transition-transform"
+          className="flex flex-col items-center justify-center -mt-6 w-12 h-12 rounded-full bg-gradient-to-tr from-sky-400 via-blue-600 to-indigo-600 text-white shadow-xl shadow-sky-500/40 ring-4 ring-slate-950 active:scale-95 transition-transform"
           title="Add Quick Lead"
         >
-          <Plus className="w-6 h-6 text-ember" />
+          <Plus className="w-6 h-6" />
         </button>
 
         <button
@@ -660,8 +659,8 @@ export default function DashboardPage() {
           onClick={() => setActiveTab("USER_DASHBOARD")}
           className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
             activeTab === "USER_DASHBOARD"
-              ? "text-obsidian font-bold scale-105"
-              : "text-steel hover:text-graphite"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <BarChart3 className="w-5 h-5" />
@@ -673,8 +672,8 @@ export default function DashboardPage() {
           onClick={() => setActiveTab("TEACHERS")}
           className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
             activeTab === "TEACHERS"
-              ? "text-obsidian font-bold scale-105"
-              : "text-steel hover:text-graphite"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <BookOpen className="w-5 h-5" />
