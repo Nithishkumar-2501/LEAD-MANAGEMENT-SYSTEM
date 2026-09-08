@@ -23,6 +23,7 @@ import AdminDashboardView from "@/components/AdminDashboardView";
 import UserDashboardView from "@/components/UserDashboardView";
 import MarketingDashboardView from "@/components/MarketingDashboardView";
 import EchoDashboardView from "@/components/EchoDashboardView";
+import AiIntelligenceModule from "@/components/AiIntelligenceModule";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import {
@@ -523,6 +524,15 @@ export default function DashboardPage() {
         {/* ECHO DASHBOARD MODULE */}
         {activeTab === "ECHO_DASHBOARD" && (
           <EchoDashboardView onTriggerToast={triggerToast} />
+        )}
+
+        {/* AI INTELLIGENCE SUITE MODULE */}
+        {activeTab === "AI_INTELLIGENCE" && (
+          <AiIntelligenceModule
+            applicants={applicants}
+            selectedCampus={selectedCampus}
+            onSelectApplicant={handleSelectApplicant}
+          />
         )}
 
         {/* LEAD MANAGER MODULE (MERGED CONTACT DIRECTORY & STUDENT APPLICATIONS) */}

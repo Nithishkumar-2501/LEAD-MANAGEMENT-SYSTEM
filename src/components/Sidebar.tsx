@@ -170,6 +170,15 @@ export default function Sidebar({
       activeBorder: "border-emerald-400",
       activeGlow: "shadow-emerald-500/30",
     },
+    {
+      id: "AI_INTELLIGENCE" as ActiveTab,
+      label: "NORA AI Suite",
+      sublabel: "ML Predictor & Counselor",
+      icon: Sparkles,
+      color: "from-fuchsia-500 to-indigo-600",
+      activeBorder: "border-fuchsia-400",
+      activeGlow: "shadow-fuchsia-500/30",
+    },
   ];
 
   const admissionSubItems = [

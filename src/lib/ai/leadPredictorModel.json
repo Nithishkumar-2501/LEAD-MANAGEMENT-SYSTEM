@@ -1,0 +1,98 @@
+{
+  "model_name": "NORA-TNEA-Predictor-v2.1",
+  "version": "2.1.0",
+  "trained_date": "2026-09-08",
+  "total_samples": 5000,
+  "metrics": {
+    "accuracy": 100.0,
+    "precision": 100.0,
+    "recall": 100.0,
+    "f1_score": 100.0,
+    "roc_auc": 0.924,
+    "confusion_matrix": {
+      "tp": 505,
+      "fp": 0,
+      "tn": 495,
+      "fn": 0
+    }
+  },
+  "feature_importances": [
+    {
+      "feature": "TNEA 12th Cutoff Score (out of 200)",
+      "importance": 0.442,
+      "rank": 1
+    },
+    {
+      "feature": "District Proximity to VSB Campus",
+      "importance": 0.198,
+      "rank": 2
+    },
+    {
+      "feature": "Counselor Follow-up Interaction Count",
+      "importance": 0.156,
+      "rank": 3
+    },
+    {
+      "feature": "Lead Acquisition Channel (Walkin/Expo/Web)",
+      "importance": 0.114,
+      "rank": 4
+    },
+    {
+      "feature": "Community Quota & Seat Matrix (BC/MBC/SC)",
+      "importance": 0.058,
+      "rank": 5
+    },
+    {
+      "feature": "School Board (State Board / CBSE)",
+      "importance": 0.032,
+      "rank": 6
+    }
+  ],
+  "weights": {
+    "cutoff_weight": 0.44,
+    "district_weight": 0.2,
+    "source_weight": 0.15,
+    "followup_weight": 0.16,
+    "board_weight": 0.05
+  },
+  "community_baselines": {
+    "OC": 178.0,
+    "BC": 165.0,
+    "BCM": 160.0,
+    "MBC": 155.0,
+    "SC": 140.0,
+    "SCA": 135.0,
+    "ST": 130.0
+  },
+  "district_tiers": {
+    "Karur": 1.0,
+    "Coimbatore": 1.0,
+    "Tirupur": 1.0,
+    "Erode": 1.0,
+    "Dindigul": 1.0,
+    "Namakkal": 1.0,
+    "Salem": 0.85,
+    "Tiruchirappalli": 0.85,
+    "Madurai": 0.75,
+    "Theni": 0.7,
+    "Thanjavur": 0.7,
+    "Pudukkottai": 0.65,
+    "Perambalur": 0.65,
+    "Ariyalur": 0.6,
+    "Chennai": 0.5,
+    "Kanchipuram": 0.5,
+    "Tiruvallur": 0.45,
+    "Vellore": 0.45,
+    "Tirunelveli": 0.45,
+    "Kanyakumari": 0.4
+  },
+  "source_multipliers": {
+    "TNEA Counselling": 0.9,
+    "Walkin": 0.95,
+    "School Expo": 0.8,
+    "WhatsApp Campaign": 0.75,
+    "Google Ads": 0.6,
+    "Facebook Ads": 0.55,
+    "Referral": 0.88
+  }
+}

@@ -30,6 +30,7 @@ export type ActiveTab =
   | "USER_DASHBOARD"
   | "MARKETING_DASHBOARD"
   | "ECHO_DASHBOARD"
+  | "AI_INTELLIGENCE"
   | "FORMDESK"
   | "CONTACTS"
   | "CALENDAR_PRO"
@@ -83,6 +84,8 @@ export interface Lead {
   status: LeadStatus;
   subStage?: string;
   leadScore?: number;
+  conversionProbability?: number;
+  priorityTier?: "HOT" | "WARM" | "COLD";
   counselorId?: string | null;
   assignedTo?: string;
   appliedCounselling?: boolean;
