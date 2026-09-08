@@ -1,16 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,600&display=swap');
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
 @layer base {
   :root {
-    --background: 230 60% 5%;
-    --foreground: 210 40% 98%;
+    --background: 240 5% 96%;
+    --foreground: 240 6% 10%;
+
+    /* Awesomic Design Tokens */
+    --color-obsidian: #09090b;
+    --color-graphite: #18181b;
+    --color-slate-a: #27272a;
+    --color-iron: #3f3f46;
+    --color-steel: #52525b;
+    --color-fog: #71717a;
+    --color-ash: #a1a1aa;
+    --color-mist: #d4d4d8;
+    --color-cloud: #ececee;
+    --color-paper: #f4f4f5;
+    --color-snow: #ffffff;
+    --color-ember: #ff5a00;
   }
 
   *, ::before, ::after, body, html, input, select, textarea, button, table, td, th, span, div, p, h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', var(--font-poppins), system-ui, -apple-system, sans-serif !important;
+    font-family: 'DM Sans', var(--font-dm-sans), system-ui, -apple-system, sans-serif !important;
   }
 }
 
@@ -23,90 +37,97 @@ html, body {
 }
 
 body {
-  background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
-              radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
-              radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
-              #070a14;
+  background: #f4f4f5;
   background-attachment: fixed;
-  color: #f8fafc;
-  font-family: 'Poppins', var(--font-poppins), system-ui, -apple-system, sans-serif !important;
+  color: #18181b;
+  font-family: 'DM Sans', var(--font-dm-sans), system-ui, -apple-system, sans-serif !important;
   -webkit-font-smoothing: antialiased;
 }
 
-body.light,
-.light body {
-  background: #f8fafc;
-  color: #0f172a;
-}
+/* ================================================================= */
+/* AWESOMIC DESIGN SYSTEM — Zinc Editorial Components                */
+/* ================================================================= */
 
-/* Glassy Liquid & Bubble Surfaces */
-.liquid-glass {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(20px) saturate(200%);
-  -webkit-backdrop-filter: blur(20px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
-}
-
-.light .liquid-glass,
-body.light .liquid-glass {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-}
-
+/* Card Surface — white with hairline cloud border, generous rounding */
 .bubble-card {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.35);
-  border-radius: 1.25rem;
-  color: #f8fafc;
+  background: #ffffff;
+  border: 1px solid #ececee;
+  border-radius: 24px;
+  color: #18181b;
+  transition: border-color 0.2s ease;
 }
 
 .bubble-card:hover {
-  border-color: rgba(14, 165, 233, 0.4);
-  box-shadow: 0 20px 45px -10px rgba(14, 165, 233, 0.25);
-  transform: translateY(-2px);
+  border-color: #d4d4d8;
 }
 
-.light .bubble-card,
-body.light .bubble-card {
+/* Elevated Liquid Glass — white card surface */
+.liquid-glass {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
-  color: #0f172a;
+  border: 1px solid #ececee;
+  border-radius: 20px;
+  color: #18181b;
 }
 
 /* Floating Bubble Pills */
 .bubble-pill {
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
-  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
+  background: #f4f4f5;
+  border: 1px solid #ececee;
+  border-radius: 10000px;
+  color: #18181b;
 }
 
-/* Glossy Action Button */
+/* Primary Dark Action Button */
 .glossy-btn {
-  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #ec4899 100%);
+  background: #09090b;
   color: #ffffff;
-  font-weight: 700;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4),
-              inset 0 1px 2px 0 rgba(255, 255, 255, 0.5);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  border-radius: 14px;
+  border: 1.5px solid #2c2e34;
+  box-shadow: rgba(255,255,255,0.5) 0px 0.5px 0px 0px inset,
+              rgba(117,123,133,0.4) 0px 9px 14px -5px inset,
+              rgb(44,46,52) 0px 0px 0px 1.5px,
+              rgba(0,0,0,0.14) 0px 4px 6px 0px;
+  transition: all 0.2s ease;
 }
 
 .glossy-btn:hover {
-  box-shadow: 0 12px 35px rgba(99, 102, 241, 0.6),
-              inset 0 1px 3px 0 rgba(255, 255, 255, 0.7);
-  transform: scale(1.03);
+  background: #18181b;
+  transform: translateY(-1px);
 }
 
-/* Custom Liquid Scrollbar */
+/* Tag Pill Badge — outlined */
+.tag-pill {
+  background: transparent;
+  border: 1px solid #ececee;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #18181b;
+  font-weight: 400;
+}
+
+/* Filled Tag Badge — dark */
+.tag-filled {
+  background: #3f3f46;
+  color: #fafafa;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Ember Accent Badge */
+.tag-ember {
+  background: #ff5a00;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Custom Scrollbar — zinc palette */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -115,14 +136,14 @@ body.light .bubble-card {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: #d4d4d8;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: #a1a1aa;
 }
 
-/* Hide scrollbar but keep scrollable (for horizontal pill strips) */
+/* Hide scrollbar but keep scrollable */
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -131,14 +152,10 @@ body.light .bubble-card {
   display: none;
 }
 
-/* Mobile Performance & Polish */
+/* Mobile Performance */
 @media (max-width: 640px) {
-  .liquid-glass {
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-  }
   .bubble-card {
-    border-radius: 1.25rem;
+    border-radius: 20px;
   }
   .bubble-card:hover {
     transform: none;
@@ -152,317 +169,41 @@ body.light .bubble-card {
   }
 }
 
-/* GLOBAL LIGHT MODE STYLES & OVERRIDES - PURE LIGHT CANVAS & HIGH-CONTRAST TEXT */
-html.light, 
-html.light body, 
-html.light main, 
-html.light .min-h-screen, 
-.light-mode {
-  background: #f8fafc !important;
-  color: #0f172a !important;
+/* ================================================================= */
+/* UTILITY OVERRIDES — Force Awesomic zinc on legacy dark: classes    */
+/* ================================================================= */
+
+/* All dark bg classes → paper or white */
+[class*="dark:bg-slate-"],
+[class*="dark:bg-indigo-"],
+[class*="dark:bg-sky-"],
+[class*="dark:bg-purple-"],
+[class*="dark:bg-emerald-"],
+[class*="dark:bg-amber-"],
+[class*="dark:bg-rose-"],
+[class*="dark:bg-teal-"],
+.bg-slate-900, .bg-slate-950, .bg-slate-800,
+.bg-\[\\#0b0f19\], .bg-\[\\#050813\], .bg-\[\\#070a14\], .bg-\[\\#0f172a\] {
+  background-color: #f4f4f5 !important;
+  color: #18181b !important;
 }
 
-html.light aside, .light-mode aside {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
-  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.05) !important;
+/* Dark text overrides → proper zinc hierarchy */
+[class*="dark:text-slate-"],
+[class*="dark:text-white"],
+.dark\:text-white {
+  color: #18181b !important;
 }
 
-html.light .liquid-glass, .light-mode .liquid-glass {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-  color: #0f172a !important;
+/* Dark border overrides → cloud */
+[class*="dark:border-"],
+.border-white\/10, .border-white\/15, .border-white\/20, .border-white\/30,
+.border-slate-700, .border-slate-800 {
+  border-color: #ececee !important;
 }
 
-html.light .bubble-card, .light-mode .bubble-card, html.light .glass-card, .light-mode .glass-card {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
-  color: #0f172a !important;
-}
-
-html.light .bubble-card:hover, .light-mode .bubble-card:hover {
-  border-color: #0ea5e9 !important;
-  box-shadow: 0 8px 30px -4px rgba(14, 165, 233, 0.2) !important;
-}
-
-html.light .bubble-pill, .light-mode .bubble-pill {
-  background: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-html.light header, .light-mode header {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-/* Modals & Dialogs in Light Mode */
-html.light .fixed .bg-\[\#0f172a\],
-html.light .fixed .bg-slate-900,
-html.light .fixed .bg-slate-950 {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* Inputs, Selects & Textareas in Light Mode */
-html.light input:not([type="checkbox"]):not([type="radio"]),
-html.light select,
-html.light textarea {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-  font-weight: 600 !important;
-}
-
-html.light input::placeholder,
-html.light textarea::placeholder {
-  color: #475569 !important;
-  font-weight: 500 !important;
-}
-
-/* FORCE PURE SOLID BLACK HIGH-CONTRAST TEXT IN LIGHT MODE */
-html.light header h1,
-html.light header h1 span,
-html.light header p,
-html.light header p span,
-html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
-html.light p, html.light span, html.light td, html.light th, html.light div, html.light label, html.light font,
-html.light .text-black,
-html.light .text-slate-900,
-html.light .text-slate-800,
-html.light .text-slate-700,
-html.light .text-slate-600,
-html.light .text-slate-500,
-html.light .text-slate-400,
-html.light .text-slate-300,
-html.light .text-slate-200,
-html.light .text-slate-100 {
-  color: #000000 !important;
-}
-
-/* STUDENT NAME & CREDENTIALS HIGH-CONTRAST SOLID BLACK COLOR RULE */
-html.light td div .font-bold,
-html.light td div .font-black,
-html.light tr td,
-html.light tr td span,
-html.light tr td .font-bold,
-html.light tr td .font-extrabold,
-html.light tr td .font-black,
-html.light tr th,
-html.light tr th span,
-html.light .student-name {
-  color: #000000 !important;
-  font-weight: 800 !important;
-}
-
-/* Pure White Text Preservation ONLY for Solid Filled Color Buttons in Light Mode */
-html.light button.bg-blue-600,
-html.light button.bg-indigo-600,
-html.light button.bg-emerald-600,
-html.light button.bg-rose-600,
-html.light .glossy-btn,
-html.light button[type="submit"] {
+/* Force white text on filled color buttons */
+button.bg-blue-600, button.bg-indigo-600, button.bg-emerald-600, button.bg-rose-600,
+button[type="submit"], .glossy-btn {
   color: #ffffff !important;
-}
-
-/* Vibrant High-Contrast Accents in Light Mode */
-html.light .text-sky-300,
-html.light .text-sky-400,
-html.light .text-sky-600,
-html.light .text-sky-700 {
-  color: #0284c7 !important;
-}
-
-html.light .text-indigo-300,
-html.light .text-indigo-400,
-html.light .text-indigo-600 {
-  color: #4338ca !important;
-}
-
-html.light .text-emerald-300,
-html.light .text-emerald-400,
-html.light .text-emerald-600 {
-  color: #059669 !important;
-}
-
-html.light .text-amber-300,
-html.light .text-amber-400,
-html.light .text-amber-600 {
-  color: #d97706 !important;
-}
-
-html.light .text-pink-300,
-html.light .text-pink-400,
-html.light .text-pink-600 {
-  color: #db2777 !important;
-}
-
-/* Background surfaces in Light Mode - ABSOLUTELY NO BLACK OR DARK BACKGROUNDS */
-html.light [class*="dark:bg-slate-"],
-html.light [class*="dark:bg-indigo-"],
-html.light [class*="dark:bg-sky-"],
-html.light [class*="dark:bg-purple-"],
-html.light [class*="dark:bg-emerald-"],
-html.light [class*="dark:bg-amber-"],
-html.light [class*="dark:bg-rose-"],
-html.light [class*="dark:bg-teal-"],
-html.light [class*="dark:bg-[#"],
-html.light [class*="bg-slate-800"],
-html.light [class*="bg-slate-850"],
-html.light [class*="bg-slate-900"],
-html.light [class*="bg-slate-950"],
-html.light .bg-slate-900,
-html.light .bg-slate-950,
-html.light .bg-[#0b0f19],
-html.light .bg-[#050813],
-html.light .bg-[#070a14],
-html.light .bg-[#0f172a] {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-}
-
-html.light [class*="dark:text-slate-"],
-html.light [class*="dark:text-white"] {
-  color: #0f172a !important;
-}
-
-html.light .bg-slate-900\/80,
-html.light .bg-slate-900\/90,
-html.light .bg-slate-900\/70,
-html.light .bg-slate-950\/60,
-html.light .bg-slate-950\/70,
-html.light .bg-slate-950\/80,
-html.light .bg-slate-950\/90,
-html.light .bg-slate-950\/95 {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-html.light .bg-slate-800,
-html.light .bg-slate-800\/80,
-html.light .bg-slate-800\/90 {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-html.light .bg-indigo-950\/40,
-html.light .bg-indigo-950\/60,
-html.light .bg-indigo-950\/70,
-html.light .bg-indigo-950\/80,
-html.light .bg-indigo-950\/90,
-html.light .bg-indigo-950 {
-  background-color: #eff6ff !important;
-  border-color: #bfdbfe !important;
-  color: #1e40af !important;
-}
-
-html.light .bg-sky-950\/40,
-html.light .bg-sky-950\/60,
-html.light .bg-sky-950\/80,
-html.light .bg-sky-950 {
-  background-color: #f0f9ff !important;
-  border-color: #bae6fd !important;
-  color: #0369a1 !important;
-}
-
-html.light .bg-purple-950\/40,
-html.light .bg-purple-950\/60,
-html.light .bg-purple-950\/80,
-html.light .bg-purple-950 {
-  background-color: #faf5ff !important;
-  border-color: #e9d5ff !important;
-  color: #7e22ce !important;
-}
-
-html.light .bg-emerald-950\/40,
-html.light .bg-emerald-950\/60,
-html.light .bg-emerald-950\/80,
-html.light .bg-emerald-950 {
-  background-color: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
-  color: #047857 !important;
-}
-
-html.light .bg-amber-950\/40,
-html.light .bg-amber-950\/60,
-html.light .bg-amber-950\/80,
-html.light .bg-amber-950 {
-  background-color: #fffbeb !important;
-  border-color: #fde68a !important;
-  color: #b45309 !important;
-}
-
-html.light .bg-rose-950\/40,
-html.light .bg-rose-950\/60,
-html.light .bg-rose-950\/80,
-html.light .bg-rose-950 {
-  background-color: #fff1f2 !important;
-  border-color: #fecdd3 !important;
-  color: #be123c !important;
-}
-
-/* Borders in Light Mode */
-html.light .border-slate-800,
-html.light .border-slate-700,
-html.light .border-slate-700\/80,
-html.light .border-white\/10,
-html.light .border-white\/15,
-html.light .border-white\/20,
-html.light .border-white\/30,
-html.light .border-slate-850 {
-  border-color: #e2e8f0 !important;
-}
-
-/* Modal Backdrops & Overlays in Light Mode */
-html.light .fixed.inset-0,
-html.light .bg-slate-950\/85,
-html.light .bg-slate-950\/90,
-html.light .bg-\[\#050813\]\/90 {
-  background-color: rgba(15, 23, 42, 0.45) !important;
-}
-
-/* Modal Card Surfaces in Light Mode */
-html.light .fixed .bg-\[\#0f172a\],
-html.light .fixed .bg-slate-900,
-html.light .fixed .bg-slate-950 {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.18) !important;
-}
-
-/* Chevron Stage Tracker Pipeline in Light Mode */
-html.light .bg-slate-950\/50,
-html.light .bg-slate-850,
-html.light .bg-slate-800\/90 {
-  background-color: #e2e8f0 !important;
-  border-color: #cbd5e1 !important;
-  color: #475569 !important;
-}
-
-/* Lead Strength & Score Widgets in Light Mode */
-html.light .bg-slate-950\/60,
-html.light .bg-slate-950\/70,
-html.light .bg-slate-950\/80 {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
-}
-
-/* Quick Action Circle Buttons in Light Mode */
-html.light .bg-indigo-950\/60,
-html.light .bg-teal-950\/60,
-html.light .bg-emerald-950\/60,
-html.light .bg-amber-950\/60,
-html.light .bg-rose-950\/40 {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
 }

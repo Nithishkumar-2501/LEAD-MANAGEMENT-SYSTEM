@@ -1124,11 +1124,11 @@ export default function ContactDirectoryModule({
         </div>
       )}
 
-      {/* MERITTO LEAD MANAGER TOP HEADER BAR (Matching Image 2 Reference) */}
-      <div className="bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white p-3.5 sm:p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs font-sans">
+      {/* MERITTO LEAD MANAGER TOP HEADER BAR */}
+      <div className="bg-white text-graphite p-4 sm:p-5 rounded-[36px] border border-fog flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs font-sans">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-blue-600 dark:text-sky-400" />
+          <h2 className="text-base font-semibold text-obsidian tracking-tight flex items-center gap-2">
+            <UserCheck className="w-4 h-4 text-ember" />
             Lead Manager
           </h2>
 
@@ -1143,7 +1143,7 @@ export default function ContactDirectoryModule({
                   onTriggerToast(`Applied View Filter: ${newView}`);
                 }
               }}
-              className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-paper border border-fog rounded-button px-3 py-1.5 font-medium text-graphite focus:outline-none focus:border-obsidian cursor-pointer text-xs"
             >
               <option value="Default View">Default View ∨</option>
               <option value="Karur Intake View">Karur Intake View</option>
@@ -1155,31 +1155,31 @@ export default function ContactDirectoryModule({
           {/* Save View Button */}
           <button
             onClick={() => onTriggerToast?.("Saved custom view configuration!")}
-            className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-blue-600 font-bold flex items-center gap-1.5 shadow-sm transition-all"
+            className="px-3 py-1.5 rounded-button border border-fog bg-white hover:bg-paper text-graphite font-medium flex items-center gap-1.5 transition-all text-xs"
           >
-            <Save className="w-3.5 h-3.5" /> Save View
+            <Save className="w-3.5 h-3.5 text-steel" /> Save View
           </button>
 
-          {/* Reload / Sync Button with Active Spinning Animation */}
+          {/* Reload / Sync Button */}
           <button
             onClick={handleReloadData}
             disabled={isReloading}
-            className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-blue-600 dark:text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60"
+            className="px-3 py-1.5 rounded-button border border-fog bg-white hover:bg-paper text-obsidian font-medium flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-60 text-xs"
             title="Reload latest leads from database"
           >
             <RotateCcw
               className={`w-3.5 h-3.5 ${
-                isReloading ? "animate-spin text-sky-500" : "transition-transform hover:-rotate-45"
+                isReloading ? "animate-spin text-ember" : "transition-transform hover:-rotate-45"
               }`}
             />
             <span>{isReloading ? "Reloading..." : "Reload"}</span>
           </button>
 
-          {/* Sync Status Badge (Animating strictly during reload animation time) */}
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10">
+          {/* Sync Status Badge */}
+          <div className="flex items-center gap-1.5 text-[11px] text-steel font-normal bg-paper px-3 py-1.5 rounded-full border border-fog">
             <span
               className={`w-2 h-2 rounded-full ${
-                isReloading ? "bg-amber-400 animate-ping" : "bg-emerald-500"
+                isReloading ? "bg-ember animate-ping" : "bg-obsidian"
               }`}
             />
             <span>{isReloading ? "Reloading database..." : `Last sync at ${lastSyncTime}`}</span>
@@ -1196,31 +1196,31 @@ export default function ContactDirectoryModule({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
-          {/* View Mode Toggle: Table View (Image 2) vs Cards View (Image 1) */}
-          <div className="flex items-center bg-slate-200 p-0.5 rounded-xl border border-slate-300">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+          {/* View Mode Toggle: Table View vs Cards View */}
+          <div className="flex items-center bg-paper p-1 rounded-badge border border-fog">
             <button
               onClick={() => setDirectoryViewMode("TABLE")}
-              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${directoryViewMode === "TABLE" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
+              className={`px-3 py-1 rounded-badge font-medium text-xs transition-all ${directoryViewMode === "TABLE" ? "bg-obsidian text-white shadow-sm" : "text-steel hover:text-graphite"
                 }`}
             >
-              📋 Lead Manager Table
+              Table View
             </button>
             <button
               onClick={() => setDirectoryViewMode("GRID")}
-              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${directoryViewMode === "GRID" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
+              className={`px-3 py-1 rounded-badge font-medium text-xs transition-all ${directoryViewMode === "GRID" ? "bg-obsidian text-white shadow-sm" : "text-steel hover:text-graphite"
                 }`}
             >
-              🎴 Cards View
+              Cards View
             </button>
           </div>
 
           {selectedRows.length > 0 && (
             <button
               onClick={handleBulkDelete}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/40 border border-rose-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer animate-in fade-in"
+              className="px-3.5 py-2 rounded-button bg-ember hover:bg-orange-600 text-white font-medium text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
-              <Trash2 className="w-4 h-4 text-white shrink-0" />
+              <Trash2 className="w-3.5 h-3.5 text-white shrink-0" />
               <span>Delete Selected ({selectedRows.length})</span>
             </button>
           )}
@@ -1234,18 +1234,18 @@ export default function ContactDirectoryModule({
           />
           <button
             onClick={() => document.getElementById("csv-file-upload")?.click()}
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-purple-500/40 border border-purple-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+            className="px-3.5 py-2 rounded-button bg-paper hover:bg-mist text-graphite border border-fog font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer"
           >
-            <Upload className="w-4 h-4 text-white shrink-0" />
+            <Upload className="w-3.5 h-3.5 text-steel shrink-0" />
             <span>Import CSV</span>
           </button>
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold text-xs shadow-lg shadow-pink-500/40 border border-pink-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+            className="px-4 py-2 rounded-button bg-obsidian hover:bg-black text-white font-medium text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
           >
-            <Plus className="w-4 h-4 text-white shrink-0" />
-            <span>+ Add Lead</span>
+            <Plus className="w-3.5 h-3.5 text-ember shrink-0" />
+            <span>Add Lead</span>
           </button>
         </div>
       </div>

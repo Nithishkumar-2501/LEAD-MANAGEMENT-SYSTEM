@@ -132,7 +132,7 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full liquid-glass border-b border-white/20 px-3 sm:px-6 py-3 flex flex-col gap-2.5 sm:gap-3.5 shadow-2xl">
+    <header className="sticky top-0 z-30 w-full bg-snow border-b border-cloud px-3 sm:px-6 py-3 flex flex-col gap-2.5 sm:gap-3.5">
       {/* Top Bar: Brand, Campus Selector & Admin Profile */}
       <div className="flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Hamburger (mobile) + Brand */}
@@ -140,14 +140,14 @@ export default function Header({
           {/* Hamburger button to open mobile left sidebar */}
           <button
             onClick={() => onToggleMobileSidebar ? onToggleMobileSidebar() : setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl bg-slate-900/80 border border-white/20 text-sky-300 hover:text-white transition-all shadow-md flex items-center justify-center cursor-pointer"
+            className="lg:hidden p-2 rounded-btn bg-paper border border-cloud text-steel hover:text-obsidian transition-all flex items-center justify-center cursor-pointer"
             aria-label="Toggle navigation sidebar"
           >
             <Menu className="w-5 h-5" />
           </button>
 
           {/* Official V.S.B. Engineering College Logo Emblem */}
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-amber-400 shadow-lg bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-cloud bg-snow shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
             <Image
               src="/vsb-logo.png"
               alt="V.S.B. Engineering College Official Logo"
@@ -157,15 +157,15 @@ export default function Header({
             />
           </div>
           <div className="min-w-0">
-            <h1 className="font-extrabold text-sm sm:text-base md:text-lg text-black dark:text-white tracking-tight flex items-center gap-2 truncate">
-              <span className="truncate text-black dark:text-white font-black">V.S.B. ENGINEERING COLLEGE</span>
-              <span className="hidden sm:inline-flex items-center text-[10px] font-black text-black dark:text-sky-200 bg-sky-200 dark:bg-sky-500/20 border border-sky-400 dark:border-sky-400/40 px-3 py-0.5 rounded-full shrink-0">
+            <h1 className="font-semibold text-sm sm:text-base md:text-lg text-obsidian tracking-tight flex items-center gap-2 truncate">
+              <span className="truncate text-obsidian">V.S.B. ENGINEERING COLLEGE</span>
+              <span className="hidden sm:inline-flex items-center text-[10px] font-medium text-snow bg-ember px-3 py-0.5 rounded-badge shrink-0">
                 SPHEREX CRM
               </span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-black dark:text-sky-200 flex items-center gap-1.5 font-extrabold truncate">
-              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-600 dark:text-pink-400 shrink-0" />
-              <span className="truncate text-black dark:text-sky-200">KARUR & COIMBATORE CAMPUSES</span>
+            <p className="text-[10px] sm:text-xs text-fog flex items-center gap-1.5 font-medium truncate">
+              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-ember shrink-0" />
+              <span className="truncate">KARUR & COIMBATORE CAMPUSES</span>
             </p>
           </div>
         </div>
@@ -173,12 +173,12 @@ export default function Header({
         {/* Right: Controls */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Two Campus Icon Selection Bar */}
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-200/80 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-300 dark:border-white/20 text-xs font-semibold backdrop-blur-2xl">
+          <div className="hidden md:flex items-center gap-1.5 bg-paper p-1.5 rounded-2xl border border-cloud text-xs font-medium">
             {/* Karur Campus Icon Button */}
             {loggedInCampus === "KARUR" ? (
               <Tooltip text="Active Session: V.S.B. Karur Campus">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-btn bg-obsidian text-snow font-medium transition-all cursor-pointer"
                   disabled
                 >
                   <Building2 className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
@@ -188,10 +188,10 @@ export default function Header({
             ) : (
               <Tooltip text="Access restricted to Karur Admin">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-500 font-bold cursor-not-allowed opacity-60 hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-btn text-ash font-medium cursor-not-allowed opacity-60 hover:opacity-80 transition-opacity"
                   disabled
                 >
-                  <Lock className="w-4 h-4 text-slate-700 dark:text-slate-500" />
+                  <Lock className="w-4 h-4 text-ash" />
                   <span>Karur Campus</span>
                 </button>
               </Tooltip>
@@ -201,7 +201,7 @@ export default function Header({
             {loggedInCampus === "COIMBATORE" ? (
               <Tooltip text="Active Session: V.S.B. Coimbatore Campus">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-btn bg-obsidian text-snow font-medium transition-all cursor-pointer"
                   disabled
                 >
                   <GraduationCap className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
@@ -211,10 +211,10 @@ export default function Header({
             ) : (
               <Tooltip text="Access restricted to Coimbatore Admin">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-500 font-bold cursor-not-allowed opacity-60 hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-btn text-ash font-medium cursor-not-allowed opacity-60 hover:opacity-80 transition-opacity"
                   disabled
                 >
-                  <Lock className="w-4 h-4 text-slate-700 dark:text-slate-500" />
+                  <Lock className="w-4 h-4 text-ash" />
                   <span>Coimbatore Campus</span>
                 </button>
               </Tooltip>
@@ -223,7 +223,7 @@ export default function Header({
 
           {/* Search bar — desktop */}
           <div className="relative hidden lg:block w-64">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fog" />
             <input
               type="text"
               value={searchQuery}
@@ -234,19 +234,19 @@ export default function Header({
               onFocus={() => setShowSearchResults(true)}
               onKeyDown={handleKeyDown}
               placeholder="Search candidate applications..."
-              className="w-full bg-slate-100 dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 rounded-full pl-9 pr-3.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50 backdrop-blur-xl font-bold"
+              className="w-full bg-snow border border-cloud rounded-pill pl-9 pr-3.5 py-1.5 text-xs text-graphite placeholder-ash focus:outline-none focus:border-mist font-medium"
             />
 
             {/* Dropdown Search Results Overlay */}
             {trimmedQuery.length > 0 && showSearchResults && (
-              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-slate-950/95 border border-sky-500/40 p-3 shadow-2xl z-50 backdrop-blur-2xl text-xs space-y-2 animate-in fade-in duration-150">
-                <div className="flex items-center justify-between px-2 pb-1.5 border-b border-slate-800">
-                  <span className="text-[11px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-sky-400" /> Search Applications ({searchResults.length})
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-card bg-snow border border-cloud p-3 shadow-md-a z-50 text-xs space-y-2 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between px-2 pb-1.5 border-b border-cloud">
+                  <span className="text-[11px] font-semibold text-obsidian uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-ember" /> Search Applications ({searchResults.length})
                   </span>
                   <button
                     onClick={() => setShowSearchResults(false)}
-                    className="p-1 rounded text-slate-400 hover:text-white"
+                    className="p-1 rounded text-fog hover:text-obsidian"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -258,29 +258,29 @@ export default function Header({
                       <div
                         key={applicant.id}
                         onClick={() => handleResultClick(applicant)}
-                        className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-sky-950/70 border border-slate-800 hover:border-sky-500/40 transition-all cursor-pointer flex items-center justify-between group"
+                        className="p-2.5 rounded-btn bg-snow hover:bg-paper border border-cloud hover:border-mist transition-all cursor-pointer flex items-center justify-between group"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shrink-0 shadow-md">
+                          <div className="w-8 h-8 rounded-full bg-obsidian flex items-center justify-center text-snow font-semibold text-xs shrink-0">
                             {applicant.name.slice(0, 1).toUpperCase()}
                           </div>
                           <div className="min-w-0 space-y-0.5">
-                            <div className="font-bold text-white group-hover:text-sky-300 transition-colors truncate">
+                            <div className="font-medium text-obsidian group-hover:text-ember transition-colors truncate">
                               {applicant.name}
                             </div>
-                            <div className="text-[11px] text-slate-400 truncate flex items-center gap-1.5">
+                            <div className="text-[11px] text-fog truncate flex items-center gap-1.5">
                               <span>{applicant.phone}</span>
                               <span>•</span>
-                              <span className="text-sky-400 font-semibold">{applicant.campus}</span>
+                              <span className="text-ember font-medium">{applicant.campus}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-950 text-sky-300 border border-sky-800">
+                          <span className="px-2 py-0.5 rounded-badge text-[10px] font-medium bg-paper text-iron border border-cloud">
                             {applicant.application?.stage || applicant.status || "INQUIRY"}
                           </span>
-                          <span className="text-[10px] text-sky-400 group-hover:underline font-bold flex items-center gap-0.5">
+                          <span className="text-[10px] text-ember group-hover:underline font-medium flex items-center gap-0.5">
                             Open App →
                           </span>
                         </div>
@@ -288,7 +288,7 @@ export default function Header({
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 text-center text-slate-400 text-xs">
+                  <div className="p-4 text-center text-fog text-xs">
                     No candidate applications matching &quot;{searchQuery}&quot;.
                   </div>
                 )}
@@ -299,7 +299,7 @@ export default function Header({
           {/* Search icon — mobile/tablet */}
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            className="lg:hidden p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-white/40 text-sky-200 transition-all shadow-md"
+            className="lg:hidden p-2 sm:p-2.5 rounded-full bg-paper border border-cloud hover:border-mist text-steel transition-all"
             aria-label="Search"
           >
             <Search className="w-4 h-4" />
@@ -309,13 +309,13 @@ export default function Header({
           <Tooltip text={`Switch to ${theme === "DARK" ? "Light Mode ☀️" : "Dark Mode 🌙"}`}>
             <button
               onClick={() => onThemeChange?.(theme === "DARK" ? "LIGHT" : "DARK")}
-              className="p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-sky-400 text-amber-300 transition-all shadow-md flex items-center justify-center cursor-pointer"
+              className="p-2 sm:p-2.5 rounded-full bg-paper border border-cloud hover:border-mist text-iron transition-all flex items-center justify-center cursor-pointer"
               aria-label="Toggle Theme"
             >
               {theme === "DARK" ? (
-                <Sun className="w-4 h-4 text-amber-400 animate-pulse" />
+                <Sun className="w-4 h-4 text-ember" />
               ) : (
-                <Moon className="w-4 h-4 text-indigo-600" />
+                <Moon className="w-4 h-4 text-iron" />
               )}
             </button>
           </Tooltip>
@@ -325,12 +325,12 @@ export default function Header({
             <Tooltip text="System Notifications">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:border-white/40 text-sky-200 transition-all shadow-md"
+                className="relative p-2 sm:p-2.5 rounded-full bg-paper border border-cloud hover:border-mist text-steel transition-all"
                 aria-label="Notifications"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center animate-bounce shadow-md">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-ember text-snow text-[10px] font-medium flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
@@ -338,13 +338,13 @@ export default function Header({
             </Tooltip>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-3 w-72 sm:w-80 bubble-card p-4 z-50 border border-white/30 shadow-2xl">
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
-                  <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">Bubble Notifications</h4>
+              <div className="absolute right-0 mt-3 w-72 sm:w-80 bubble-card p-4 z-50">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-cloud">
+                  <h4 className="text-xs font-semibold text-obsidian uppercase tracking-wider">Notifications</h4>
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllRead}
-                      className="text-[11px] text-sky-400 hover:underline flex items-center gap-1 font-semibold"
+                      className="text-[11px] text-ember hover:underline flex items-center gap-1 font-medium"
                     >
                       <Check className="w-3 h-3" /> Clear All
                     </button>
@@ -354,14 +354,14 @@ export default function Header({
                   {notifications.map((item) => (
                     <div
                       key={item.id}
-                      className={`p-3 rounded-2xl text-xs flex flex-col gap-1 ${
+                      className={`p-3 rounded-btn text-xs flex flex-col gap-1 ${
                         item.read
-                          ? "bg-slate-900/40 text-slate-400"
-                          : "bg-gradient-to-r from-indigo-500/20 to-pink-500/20 text-white border-l-3 border-sky-400"
+                          ? "bg-paper text-fog"
+                          : "bg-paper text-graphite border-l-2 border-ember"
                       }`}
                     >
                       <span>{item.text}</span>
-                      <span className="text-[10px] text-slate-400">{item.time}</span>
+                      <span className="text-[10px] text-ash">{item.time}</span>
                     </div>
                   ))}
                 </div>
@@ -370,20 +370,20 @@ export default function Header({
           </div>
 
           {/* User Profile Badge */}
-          <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-slate-300 dark:border-white/15">
-            <div className="flex items-center gap-2 sm:gap-2.5 bg-white border border-slate-300 px-2 sm:px-3.5 py-1 rounded-full shadow-md">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-[10px] flex items-center justify-center shadow-md">
+          <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-cloud">
+            <div className="flex items-center gap-2 sm:gap-2.5 bg-snow border border-cloud px-2 sm:px-3.5 py-1 rounded-pill">
+              <div className="w-6 h-6 rounded-full bg-obsidian text-snow font-medium text-[10px] flex items-center justify-center">
                 {currentUserRole === "ADMIN" ? "ADM" : (loggedInUsername ? loggedInUsername.slice(0, 2).toUpperCase() : "TCH")}
               </div>
-              <span className="hidden sm:inline text-xs font-black text-black">
+              <span className="hidden sm:inline text-xs font-medium text-graphite">
                 {loggedInUsername || (loggedInCampus === "KARUR" ? "adminkarur@123" : "admincovai@123")}{" "}
-                <span className="text-[10px] text-indigo-700 font-black">({currentUserRole === "ADMIN" ? "Admin" : "Teacher"})</span>
+                <span className="text-[10px] text-fog font-medium">({currentUserRole === "ADMIN" ? "Admin" : "Teacher"})</span>
               </span>
             </div>
             <Tooltip text="Logout of V.S.B. Portal">
               <button
                 onClick={onLogout}
-                className="p-2 sm:p-2.5 rounded-full bg-slate-900/70 border border-white/20 hover:bg-rose-950/80 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 transition-all shadow-md"
+                className="p-2 sm:p-2.5 rounded-full bg-paper border border-cloud hover:bg-red-50 hover:border-red-200 text-fog hover:text-red-600 transition-all"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -396,7 +396,7 @@ export default function Header({
       {mobileSearchOpen && (
         <div className="lg:hidden relative">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fog" />
             <input
               type="text"
               value={searchQuery}
@@ -408,20 +408,20 @@ export default function Header({
               onKeyDown={handleKeyDown}
               placeholder="Search candidate applications..."
               autoFocus
-              className="w-full bg-slate-900/70 border border-white/20 rounded-full pl-9 pr-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400/50 backdrop-blur-xl font-bold"
+              className="w-full bg-snow border border-cloud rounded-pill pl-9 pr-3.5 py-2 text-xs text-graphite placeholder-ash focus:outline-none focus:border-mist font-medium"
             />
           </div>
 
           {/* Mobile Dropdown Search Results Overlay */}
           {trimmedQuery.length > 0 && showSearchResults && (
-            <div className="mt-2 w-full rounded-2xl bg-slate-950/95 border border-sky-500/40 p-3 shadow-2xl z-50 backdrop-blur-2xl text-xs space-y-2">
-              <div className="flex items-center justify-between px-2 pb-1.5 border-b border-slate-800">
-                <span className="text-[11px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-sky-400" /> Search Applications ({searchResults.length})
+            <div className="mt-2 w-full rounded-card bg-snow border border-cloud p-3 shadow-md-a z-50 text-xs space-y-2">
+              <div className="flex items-center justify-between px-2 pb-1.5 border-b border-cloud">
+                <span className="text-[11px] font-semibold text-obsidian uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-ember" /> Search Applications ({searchResults.length})
                 </span>
                 <button
                   onClick={() => setShowSearchResults(false)}
-                  className="p-1 rounded text-slate-400 hover:text-white"
+                  className="p-1 rounded text-fog hover:text-obsidian"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -433,29 +433,29 @@ export default function Header({
                     <div
                       key={applicant.id}
                       onClick={() => handleResultClick(applicant)}
-                      className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-sky-950/70 border border-slate-800 hover:border-sky-500/40 transition-all cursor-pointer flex items-center justify-between group"
+                      className="p-2.5 rounded-btn bg-snow hover:bg-paper border border-cloud hover:border-mist transition-all cursor-pointer flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shrink-0 shadow-md">
+                        <div className="w-8 h-8 rounded-full bg-obsidian flex items-center justify-center text-snow font-semibold text-xs shrink-0">
                           {applicant.name.slice(0, 1).toUpperCase()}
                         </div>
                         <div className="min-w-0 space-y-0.5">
-                          <div className="font-bold text-white group-hover:text-sky-300 transition-colors truncate">
+                          <div className="font-medium text-obsidian group-hover:text-ember transition-colors truncate">
                             {applicant.name}
                           </div>
-                          <div className="text-[11px] text-slate-400 truncate flex items-center gap-1.5">
+                          <div className="text-[11px] text-fog truncate flex items-center gap-1.5">
                             <span>{applicant.phone}</span>
                             <span>•</span>
-                            <span className="text-sky-400 font-semibold">{applicant.campus}</span>
+                            <span className="text-ember font-medium">{applicant.campus}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-950 text-sky-300 border border-sky-800">
+                        <span className="px-2 py-0.5 rounded-badge text-[10px] font-medium bg-paper text-iron border border-cloud">
                           {applicant.application?.stage || applicant.status || "INQUIRY"}
                         </span>
-                        <span className="text-[10px] text-sky-400 font-bold flex items-center gap-0.5">
+                        <span className="text-[10px] text-ember font-medium flex items-center gap-0.5">
                           Open App →
                         </span>
                       </div>
@@ -463,7 +463,7 @@ export default function Header({
                   ))}
                 </div>
               ) : (
-                <div className="p-3 text-center text-slate-400 text-xs">
+                <div className="p-3 text-center text-fog text-xs">
                   No candidate applications matching &quot;{searchQuery}&quot;.
                 </div>
               )}
@@ -474,11 +474,11 @@ export default function Header({
 
       {/* Mobile Campus Selector — shown below top bar on small screens */}
       <div className="md:hidden overflow-x-auto hide-scrollbar -mx-1">
-        <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/20 text-[11px] font-semibold backdrop-blur-2xl w-max">
+        <div className="flex items-center gap-1.5 bg-paper p-1.5 rounded-2xl border border-cloud text-[11px] font-medium w-max">
           {/* Karur Campus */}
           {loggedInCampus === "KARUR" ? (
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-obsidian text-snow font-medium whitespace-nowrap"
               disabled
             >
               <Building2 className="w-3.5 h-3.5" />
@@ -486,7 +486,7 @@ export default function Header({
             </button>
           ) : (
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-ash opacity-40 cursor-not-allowed whitespace-nowrap"
               disabled
             >
               <Lock className="w-3 h-3" />
@@ -497,7 +497,7 @@ export default function Header({
           {/* Coimbatore Campus */}
           {loggedInCampus === "COIMBATORE" ? (
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-md whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-obsidian text-snow font-medium whitespace-nowrap"
               disabled
             >
               <GraduationCap className="w-3.5 h-3.5" />
@@ -505,7 +505,7 @@ export default function Header({
             </button>
           ) : (
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-ash opacity-40 cursor-not-allowed whitespace-nowrap"
               disabled
             >
               <Lock className="w-3 h-3" />
@@ -517,7 +517,7 @@ export default function Header({
 
       {/* Mobile Full Navigation Menu — slide-down panel */}
       {mobileMenuOpen && (
-        <div className="sm:hidden flex flex-col gap-1.5 pb-1 border-t border-white/15 pt-2 animate-in slide-in-from-top duration-200">
+        <div className="sm:hidden flex flex-col gap-1.5 pb-1 border-t border-cloud pt-2 animate-in slide-in-from-top duration-200">
           {filteredNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -528,7 +528,7 @@ export default function Header({
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 ${
                   isActive
                     ? "glossy-btn"
-                    : "bg-slate-900/60 border border-white/10 text-slate-300 active:bg-white/10"
+                    : "bg-paper border border-cloud text-iron hover:bg-cloud/50"
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />

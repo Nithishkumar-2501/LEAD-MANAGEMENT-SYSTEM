@@ -345,100 +345,100 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     <div className="space-y-6">
       {/* Module Overview Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="glass-card rounded-2xl p-5 border border-slate-800">
+        <div className="bg-white rounded-[36px] p-6 border border-fog">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Faculty</p>
-              <h3 className="text-2xl font-bold text-slate-100 mt-1">{filteredTeachers.length} Professors</h3>
+              <p className="text-[11px] font-semibold text-steel uppercase tracking-wider">Total Faculty</p>
+              <h3 className="text-3xl font-semibold text-obsidian mt-1">{filteredTeachers.length} Professors</h3>
             </div>
-            <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              <UserCheck className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-full bg-paper border border-fog flex items-center justify-center text-obsidian">
+              <UserCheck className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-xs text-emerald-400 font-medium mt-3 flex items-center gap-1">
+          <p className="text-xs text-ember font-medium mt-3 flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5" /> 100% Ph.D & M.E. Qualified
           </p>
         </div>
 
-        <div className="glass-card rounded-2xl p-5 border border-slate-800">
+        <div className="bg-white rounded-[36px] p-6 border border-fog">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Academic Depts</p>
-              <h3 className="text-2xl font-bold text-slate-100 mt-1">4 Departments</h3>
+              <p className="text-[11px] font-semibold text-steel uppercase tracking-wider">Academic Depts</p>
+              <h3 className="text-3xl font-semibold text-obsidian mt-1">4 Departments</h3>
             </div>
-            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <BookOpen className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-full bg-paper border border-fog flex items-center justify-center text-obsidian">
+              <BookOpen className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-xs text-purple-300 font-medium mt-3">CSE, ECE, IT, Mechanical</p>
+          <p className="text-xs text-steel font-normal mt-3">CSE, ECE, IT, Mechanical</p>
         </div>
 
-        <div className="glass-card rounded-2xl p-5 border border-slate-800">
+        <div className="bg-white rounded-[36px] p-6 border border-fog">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Campus Faculty</p>
-              <h3 className="text-2xl font-bold text-slate-100 mt-1">
-                {loggedInCampus === "KARUR" ? "Karur Campus" : "Coimbatore Campus"}
+              <p className="text-[11px] font-semibold text-steel uppercase tracking-wider">Campus Faculty</p>
+              <h3 className="text-3xl font-semibold text-obsidian mt-1">
+                {loggedInCampus === "KARUR" ? "Karur" : "Coimbatore"}
               </h3>
             </div>
-            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <GraduationCap className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-full bg-paper border border-fog flex items-center justify-center text-obsidian">
+              <GraduationCap className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-xs text-emerald-300 font-medium mt-3">V.S.B. Group of Institutions</p>
+          <p className="text-xs text-steel font-normal mt-3">V.S.B. Group of Institutions</p>
         </div>
 
-        <div className="glass-card rounded-2xl p-5 border border-slate-800">
+        <div className="bg-white rounded-[36px] p-6 border border-fog">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg Experience</p>
-              <h3 className="text-2xl font-bold text-slate-100 mt-1">12.5 Years</h3>
+              <p className="text-[11px] font-semibold text-steel uppercase tracking-wider">Avg Experience</p>
+              <h3 className="text-3xl font-semibold text-obsidian mt-1">12.5 Years</h3>
             </div>
-            <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Award className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-full bg-paper border border-fog flex items-center justify-center text-obsidian">
+              <Award className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-xs text-amber-300 font-medium mt-3">Senior Academic Leadership</p>
+          <p className="text-xs text-steel font-normal mt-3">Senior Academic Leadership</p>
         </div>
       </div>
 
       {/* Admin Lead Allocation Control Panel (At Top of Teacher Directory) */}
       {currentUserRole === "ADMIN" && (
-        <div className="bubble-card p-5 border border-indigo-500/40 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 shadow-2xl animate-in fade-in">
+        <div className="bg-white p-6 rounded-[36px] border border-fog flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 shadow-sm">
           <div className="space-y-1.5 max-w-3xl">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
-                Admin Lead Allocation Control Panel
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-3 py-0.5 rounded-full bg-paper text-obsidian border border-fog">
+                Admin Allocation Panel
               </span>
-              <span className="text-xs text-slate-300 font-bold">1,000 Total Database Contacts</span>
+              <span className="text-xs text-steel font-normal">1,000 Total Database Contacts</span>
             </div>
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <span className="text-xl">⚡</span> Total Database Leads: <span className="text-indigo-400 font-black">1,000 Contacts</span>
+            <h3 className="text-lg font-semibold text-obsidian flex items-center gap-2">
+              Total Database Leads: <span className="font-semibold text-obsidian">1,000 Contacts</span>
             </h3>
-            <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
-              <span>Admin can split database leads into specific teacher batches (e.g. 100 contacts to Prof. P. Rajesh). Teachers exclusively view & edit their assigned batch while remaining 900 leads stay protected.</span>
+            <p className="text-xs text-steel font-normal">
+              Admin can split database leads into specific faculty batches (e.g. 100 contacts to Prof. P. Rajesh). Teachers exclusively view & edit their assigned batch while remaining leads stay protected.
             </p>
 
             {/* Allocated Batches Summary Chips */}
             <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
-              <div className="px-3 py-1.5 rounded-xl bg-indigo-100 border border-indigo-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">👤 P. Rajesh:</span>
-                <span className="text-black font-extrabold">100 Leads (#1 - #100)</span>
+              <div className="px-3 py-1 rounded-pill bg-paper border border-fog flex items-center gap-1.5 font-medium text-graphite">
+                <span>👤 P. Rajesh:</span>
+                <span className="font-semibold text-obsidian">100 Leads (#1 - #100)</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-sky-100 border border-sky-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">👤 Dr. Arulmurugan:</span>
-                <span className="text-black font-extrabold">100 Leads (#101 - #200)</span>
+              <div className="px-3 py-1 rounded-pill bg-paper border border-fog flex items-center gap-1.5 font-medium text-graphite">
+                <span>👤 Dr. Arulmurugan:</span>
+                <span className="font-semibold text-obsidian">100 Leads (#101 - #200)</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-pink-100 border border-pink-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">👤 Dr. Meenakshi:</span>
-                <span className="text-black font-extrabold">100 Leads (#201 - #300)</span>
+              <div className="px-3 py-1 rounded-pill bg-paper border border-fog flex items-center gap-1.5 font-medium text-graphite">
+                <span>👤 Dr. Meenakshi:</span>
+                <span className="font-semibold text-obsidian">100 Leads (#201 - #300)</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-purple-100 border border-purple-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">👤 Dr. Gayathri:</span>
-                <span className="text-black font-extrabold">100 Leads (#301 - #400)</span>
+              <div className="px-3 py-1 rounded-pill bg-paper border border-fog flex items-center gap-1.5 font-medium text-graphite">
+                <span>👤 Dr. Gayathri:</span>
+                <span className="font-semibold text-obsidian">100 Leads (#301 - #400)</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-amber-100 border border-amber-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">⏳ 600 Unassigned Leads</span>
+              <div className="px-3 py-1 rounded-pill bg-mist border border-fog flex items-center gap-1.5 font-medium text-steel">
+                <span>⏳ 600 Unassigned Leads</span>
               </div>
             </div>
           </div>
@@ -446,7 +446,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto shrink-0">
             <button
               onClick={() => setIsAdminAuditDrawerOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 border border-emerald-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
+              className="px-4 py-2.5 rounded-button bg-paper hover:bg-mist text-graphite border border-fog font-medium text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
             >
               <Phone className="w-4 h-4 text-emerald-200" />
               <span>📞 Daily Call Analytics & Audio Audit</span>

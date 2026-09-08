@@ -367,32 +367,24 @@ export default function Sidebar({
       {/* Mobile Backdrop Overlay */}
       {isOpenMobile && (
         <div
-          className={`fixed inset-0 z-40 backdrop-blur-md lg:hidden ${
-            isLight ? "bg-slate-900/40" : "bg-slate-950/80"
-          }`}
+          className={`fixed inset-0 z-40 lg:hidden bg-obsidian/30`}
           onClick={onCloseMobile}
         />
       )}
 
       {/* Main Left Sidebar */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex-col border-r shadow-2xl backdrop-blur-2xl transition-all duration-300 ${
-          isLight
-            ? "bg-white text-slate-900 border-slate-200 shadow-slate-200/50"
-            : "bg-slate-950/95 text-white border-white/10 shadow-black/50"
-        } ${isCollapsed ? "w-20" : "w-64"} ${
+        className={`fixed top-0 bottom-0 left-0 z-50 flex-col border-r transition-all duration-300 bg-snow text-graphite border-cloud ${isCollapsed ? "w-20" : "w-64"} ${
           isOpenMobile ? "flex translate-x-0" : "hidden lg:flex lg:translate-x-0"
         }`}
       >
         {/* Sidebar Header / Brand Emblem (V.S.B. Engineering College) */}
         <div
-          className={`p-3.5 border-b flex items-center justify-between gap-2.5 ${
-            isLight ? "border-slate-200 bg-slate-50/80" : "border-white/10 bg-slate-950"
-          }`}
+          className={`p-3.5 border-b flex items-center justify-between gap-2.5 border-cloud bg-snow`}
         >
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Official V.S.B. Logo Badge */}
-            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-cloud bg-snow shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
               <Image
                 src="/vsb-logo.png"
                 alt="V.S.B. Engineering College Logo"
@@ -405,18 +397,14 @@ export default function Sidebar({
             {!isCollapsed && (
               <div className="min-w-0">
                 <h2
-                  className={`font-black text-xs sm:text-sm tracking-tight truncate uppercase leading-tight ${
-                    isLight ? "text-slate-900" : "text-white"
-                  }`}
+                  className={`font-semibold text-xs sm:text-sm tracking-tight truncate uppercase leading-tight text-obsidian`}
                 >
                   V.S.B. ENGINEERING COLLEGE
                 </h2>
                 <p
-                  className={`text-[9.5px] font-extrabold truncate flex items-center gap-1 mt-0.5 ${
-                    isLight ? "text-slate-600" : "text-slate-300"
-                  }`}
+                  className={`text-[9.5px] font-medium truncate flex items-center gap-1 mt-0.5 text-fog`}
                 >
-                  <MapPin className="w-3 h-3 text-pink-500 shrink-0" />
+                  <MapPin className="w-3 h-3 text-ember shrink-0" />
                   <span>KARUR & COIMBATORE CAMPUSES</span>
                 </p>
               </div>
@@ -426,11 +414,7 @@ export default function Sidebar({
           {/* Desktop Collapse Toggle Button */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`hidden lg:flex p-1 rounded-lg border transition-all shadow-sm shrink-0 ${
-              isLight
-                ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
-                : "bg-slate-900 border-white/10 hover:border-sky-400/50 text-slate-300 hover:text-white"
-            }`}
+            className={`hidden lg:flex p-1 rounded-lg border transition-all shrink-0 bg-paper hover:bg-cloud border-cloud text-steel`}
             title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -439,11 +423,7 @@ export default function Sidebar({
           {/* Mobile Close Button */}
           <button
             onClick={onCloseMobile}
-            className={`lg:hidden p-1 rounded-lg border ${
-              isLight
-                ? "bg-slate-100 border-slate-300 text-slate-700"
-                : "bg-slate-900 border-white/10 text-slate-300 hover:text-white"
-            }`}
+            className={`lg:hidden p-1 rounded-lg border bg-paper border-cloud text-steel`}
           >
             <X className="w-4 h-4" />
           </button>
@@ -455,7 +435,7 @@ export default function Sidebar({
           {!isCollapsed && (
             <div className="space-y-2">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                <Search className="w-3.5 h-3.5 text-ash absolute left-2.5 top-2.5" />
                 <input
                   type="text"
                   value={menuSearchQuery}
@@ -466,12 +446,12 @@ export default function Sidebar({
                     }
                   }}
                   placeholder="Search Menu or Application..."
-                  className="w-full bg-slate-900/90 border border-slate-800 focus:border-indigo-500 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none shadow-inner"
+                  className="w-full bg-paper border border-cloud focus:border-ember rounded-btn pl-8 pr-7 py-1.5 text-xs text-graphite placeholder-ash focus:outline-none"
                 />
                 {menuSearchQuery && (
                   <button
                     onClick={() => setMenuSearchQuery("")}
-                    className="absolute right-2 top-2 text-slate-400 hover:text-white"
+                    className="absolute right-2 top-2 text-ash hover:text-obsidian"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -480,8 +460,8 @@ export default function Sidebar({
 
               {/* CANDIDATE APPLICATIONS SEARCH RESULTS */}
               {trimmedQuery.length > 0 && (
-                <div className="space-y-1.5 p-2 rounded-xl bg-slate-900/90 border border-sky-500/40 shadow-xl animate-in fade-in duration-150">
-                  <div className="text-[10px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center justify-between px-1">
+                <div className="space-y-1.5 p-2 rounded-btn bg-snow border border-cloud animate-in fade-in duration-150">
+                  <div className="text-[10px] font-semibold text-ember uppercase tracking-wider flex items-center justify-between px-1">
                     <span>Matching Applications ({matchingApplicants.length})</span>
                   </div>
                   {matchingApplicants.length > 0 ? (
@@ -490,24 +470,24 @@ export default function Sidebar({
                         <div
                           key={app.id}
                           onClick={() => handleSelectApplication(app)}
-                          className="p-2 rounded-lg bg-slate-950/90 hover:bg-sky-950/90 border border-slate-800 hover:border-sky-500/50 cursor-pointer transition-all flex items-center justify-between group"
+                          className="p-2 rounded-btn bg-snow hover:bg-paper border border-cloud hover:border-mist cursor-pointer transition-all flex items-center justify-between group"
                         >
                           <div className="min-w-0 pr-1">
-                            <div className="font-extrabold text-xs text-white group-hover:text-sky-300 truncate">
+                            <div className="font-medium text-xs text-obsidian group-hover:text-ember truncate">
                               {app.name}
                             </div>
-                            <div className="text-[10px] text-slate-400 truncate font-mono">
+                            <div className="text-[10px] text-fog truncate font-mono">
                               {app.phone} • {app.campus}
                             </div>
                           </div>
-                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-800 shrink-0">
+                          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-badge bg-paper text-iron border border-cloud shrink-0">
                             View App →
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-[11px] text-slate-400 py-1 text-center font-medium">
+                    <div className="text-[11px] text-fog py-1 text-center font-medium">
                       No applications found
                     </div>
                   )}
@@ -520,9 +500,9 @@ export default function Sidebar({
           <div
             className={`px-2 text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
               isCollapsed ? "justify-center text-center" : ""
-            } ${isLight ? "text-slate-400" : "text-sky-400/80"}`}
+             } text-ash`}
           >
-            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+            <Sparkles className="w-3 h-3 text-ember shrink-0" />
             <span>{isCollapsed ? "SYS" : "SYSTEM MENU"}</span>
           </div>
 
@@ -534,10 +514,8 @@ export default function Sidebar({
                   onClick={toggleDashboardMenu}
                   className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
                     dashboardSubItems.some((item) => item.id === activeTab)
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
-                      : isLight
-                      ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200"
-                      : "bg-slate-900/80 text-slate-300 hover:text-white border border-white/10 hover:border-white/20"
+                      ? "bg-obsidian text-snow border border-obsidian"
+                      : "bg-paper text-iron hover:bg-cloud border border-cloud"
                   }`}
                 >
                   <LayoutDashboard className="w-5 h-5" />
@@ -546,37 +524,29 @@ export default function Sidebar({
             ) : (
               <div
                 id="nav-category-dashboard"
-                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
+                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-medium transition-all duration-300 cursor-pointer group border ${
                   dashboardSubItems.some((item) => item.id === activeTab)
-                    ? isLight
-                      ? "bg-sky-50 border-sky-300 text-sky-900 shadow-md"
-                      : "bg-sky-950/50 border-sky-500/40 text-sky-200 shadow-lg shadow-sky-950/50"
-                    : isLight
-                    ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
-                    : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                    ? "bg-paper border-cloud text-obsidian"
+                    : "bg-snow hover:bg-paper text-graphite border-cloud"
                 }`}
                 onClick={toggleDashboardMenu}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
+                    className={`p-2 rounded-btn shrink-0 transition-transform group-hover:scale-110 ${
                       dashboardSubItems.some((item) => item.id === activeTab)
-                        ? "bg-gradient-to-tr from-sky-500 to-blue-600 text-white"
-                        : isLight
-                        ? "bg-slate-200 text-slate-700"
-                        : "bg-slate-800 text-slate-300"
+                        ? "bg-obsidian text-snow"
+                        : "bg-paper text-steel"
                     }`}
                   >
                     <LayoutDashboard className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate">
+                    <span className="font-medium text-xs tracking-tight truncate">
                       Dashboard
                     </span>
                     <span
-                      className={`text-[10px] font-semibold truncate ${
-                        isLight ? "text-slate-500" : "text-slate-400"
-                      }`}
+                      className={`text-[10px] font-normal truncate text-fog`}
                     >
                       Management Views
                     </span>
@@ -585,11 +555,7 @@ export default function Sidebar({
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
-                      isLight
-                        ? "bg-sky-100 text-sky-700"
-                        : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
-                    }`}
+                    className={`text-[9px] font-medium px-1.5 py-0.5 rounded-badge bg-paper text-iron border border-cloud`}
                   >
                     4
                   </span>
@@ -609,8 +575,8 @@ export default function Sidebar({
               <div
                 className={`space-y-1 transition-all duration-300 ${
                   isCollapsed
-                    ? "pt-2 space-y-2 border-t border-white/10 mt-2"
-                    : "ml-3 pl-3 border-l-2 border-sky-500/30 dark:border-sky-400/20 mt-1.5 space-y-1.5"
+                    ? "pt-2 space-y-2 border-t border-cloud mt-2"
+                    : "ml-3 pl-3 border-l-2 border-cloud mt-1.5 space-y-1.5"
                 }`}
               >
                 {dashboardSubItems.map((item) => {
@@ -624,21 +590,17 @@ export default function Sidebar({
                       onClick={() => handleNavClick(item.id)}
                       className={`w-full flex items-center gap-3 ${
                         isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
-                      } rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      } rounded-btn text-xs font-medium transition-all duration-200 group relative ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
-                          : isLight
-                          ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-obsidian text-snow border border-obsidian"
+                          : "bg-snow hover:bg-paper text-iron hover:text-graphite border border-cloud"
                       }`}
                     >
                       <div
                         className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
                           isActive
-                            ? "bg-white/20 text-white"
-                            : isLight
-                            ? "bg-slate-100 text-slate-600"
-                            : "bg-slate-800/90 text-slate-300"
+                            ? "bg-snow/20 text-snow"
+                            : "bg-paper text-steel"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
@@ -647,23 +609,19 @@ export default function Sidebar({
                       {!isCollapsed && (
                         <div className="flex flex-col items-start min-w-0 text-left">
                           <span
-                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            className={`font-medium text-[11px] tracking-tight truncate w-full ${
                               isActive
-                                ? "text-white"
-                                : isLight
-                                ? "text-slate-900"
-                                : "text-slate-200 group-hover:text-white"
+                                ? "text-snow"
+                                : "text-graphite"
                             }`}
                           >
                             {item.label}
                           </span>
                           <span
-                            className={`text-[9px] font-medium truncate w-full ${
+                            className={`text-[9px] font-normal truncate w-full ${
                               isActive
-                                ? "text-white/80"
-                                : isLight
-                                ? "text-slate-500"
-                                : "text-slate-400"
+                                ? "text-snow/80"
+                                : "text-fog"
                             }`}
                           >
                             {item.sublabel}
@@ -672,7 +630,7 @@ export default function Sidebar({
                       )}
 
                       {isActive && !isCollapsed && (
-                        <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-ember" />
                       )}
                     </button>
                   );
@@ -699,51 +657,41 @@ export default function Sidebar({
                   onClick={toggleAdmissionMenu}
                   className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
                     isAnySubItemActive
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
-                      : isLight
-                      ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200"
-                      : "bg-slate-900/80 text-slate-300 hover:text-white border border-white/10 hover:border-white/20"
+                      ? "bg-obsidian text-snow border border-obsidian"
+                      : "bg-paper text-iron hover:bg-cloud border border-cloud"
                   }`}
                 >
                   <GraduationCap className="w-5 h-5" />
                   {isAnySubItemActive && (
-                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-ember" />
                   )}
                 </button>
               </Tooltip>
             ) : (
               <div
-                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
+                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-medium transition-all duration-300 cursor-pointer group border ${
                   isAnySubItemActive
-                    ? isLight
-                      ? "bg-sky-50 border-sky-300 text-sky-900 shadow-md"
-                      : "bg-sky-950/50 border-sky-500/40 text-sky-200 shadow-lg shadow-sky-950/50"
-                    : isLight
-                    ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
-                    : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                    ? "bg-paper border-cloud text-obsidian"
+                    : "bg-snow hover:bg-paper text-graphite border-cloud"
                 }`}
                 onClick={toggleAdmissionMenu}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
+                    className={`p-2 rounded-btn shrink-0 transition-transform group-hover:scale-110 ${
                       isAnySubItemActive
-                        ? "bg-gradient-to-tr from-sky-500 to-blue-600 text-white"
-                        : isLight
-                        ? "bg-slate-200 text-slate-700"
-                        : "bg-slate-800 text-slate-300"
+                        ? "bg-obsidian text-snow"
+                        : "bg-paper text-steel"
                     }`}
                   >
                     <GraduationCap className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate">
+                    <span className="font-medium text-xs tracking-tight truncate">
                       Admission CRM
                     </span>
                     <span
-                      className={`text-[10px] font-semibold truncate ${
-                        isLight ? "text-slate-500" : "text-slate-400"
-                      }`}
+                      className={`text-[10px] font-normal truncate text-fog`}
                     >
                       Management Hub
                     </span>
@@ -752,11 +700,7 @@ export default function Sidebar({
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
-                      isLight
-                        ? "bg-sky-100 text-sky-700"
-                        : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
-                    }`}
+                    className={`text-[9px] font-medium px-1.5 py-0.5 rounded-badge bg-paper text-iron border border-cloud`}
                   >
                     {filteredSubItems.length}
                   </span>
@@ -776,8 +720,8 @@ export default function Sidebar({
               <div
                 className={`space-y-1 transition-all duration-300 ${
                   isCollapsed
-                    ? "pt-2 space-y-2 border-t border-white/10 mt-2"
-                    : "ml-3 pl-3 border-l-2 border-sky-500/30 dark:border-sky-400/20 mt-1.5 space-y-1.5"
+                    ? "pt-2 space-y-2 border-t border-cloud mt-2"
+                    : "ml-3 pl-3 border-l-2 border-cloud mt-1.5 space-y-1.5"
                 }`}
               >
                 {filteredSubItems.map((item) => {
@@ -790,21 +734,17 @@ export default function Sidebar({
                       onClick={() => handleNavClick(item.id)}
                       className={`w-full flex items-center gap-3 ${
                         isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
-                      } rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      } rounded-btn text-xs font-medium transition-all duration-200 group relative ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
-                          : isLight
-                          ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-obsidian text-snow border border-obsidian"
+                          : "bg-snow hover:bg-paper text-iron hover:text-graphite border border-cloud"
                       }`}
                     >
                       <div
                         className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
                           isActive
-                            ? "bg-white/20 text-white"
-                            : isLight
-                            ? "bg-slate-100 text-slate-600"
-                            : "bg-slate-800/90 text-slate-300"
+                            ? "bg-snow/20 text-snow"
+                            : "bg-paper text-steel"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
@@ -813,23 +753,19 @@ export default function Sidebar({
                       {!isCollapsed && (
                         <div className="flex flex-col items-start min-w-0 text-left">
                           <span
-                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            className={`font-medium text-[11px] tracking-tight truncate w-full ${
                               isActive
-                                ? "text-white"
-                                : isLight
-                                ? "text-slate-900"
-                                : "text-slate-200 group-hover:text-white"
+                                ? "text-snow"
+                                : "text-graphite"
                             }`}
                           >
                             {item.label}
                           </span>
                           <span
-                            className={`text-[9px] font-medium truncate w-full ${
+                            className={`text-[9px] font-normal truncate w-full ${
                               isActive
-                                ? "text-white/80"
-                                : isLight
-                                ? "text-slate-500"
-                                : "text-slate-400"
+                                ? "text-snow/80"
+                                : "text-fog"
                             }`}
                           >
                             {item.sublabel}
@@ -838,7 +774,7 @@ export default function Sidebar({
                       )}
 
                       {isActive && !isCollapsed && (
-                        <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-ember" />
                       )}
                     </button>
                   );
@@ -858,58 +794,48 @@ export default function Sidebar({
           </div>
 
           {/* PARENT MENU ITEM 2: CONTACT & SOCIAL MEDIA PLATFORM */}
-          <div className="space-y-1 pt-2 border-t border-white/10 mt-2">
+          <div className="space-y-1 pt-2 border-t border-cloud mt-2">
             {isCollapsed ? (
               <Tooltip text="Contact & Social Media Platform" position="right">
                 <button
                   onClick={toggleSocialPlatformMenu}
                   className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
                     isAnySocialSubItemActive
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl shadow-purple-500/30 border border-purple-400 scale-105"
-                      : isLight
-                      ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200"
-                      : "bg-slate-900/80 text-slate-300 hover:text-white border border-white/10 hover:border-white/20"
+                      ? "bg-obsidian text-snow border border-obsidian"
+                      : "bg-paper text-iron hover:bg-cloud border border-cloud"
                   }`}
                 >
-                  <Share2 className="w-5 h-5 text-purple-400" />
+                  <Share2 className="w-5 h-5 text-iron" />
                   {isAnySocialSubItemActive && (
-                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-pink-400 animate-ping" />
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-ember" />
                   )}
                 </button>
               </Tooltip>
             ) : (
               <div
-                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
+                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-medium transition-all duration-300 cursor-pointer group border ${
                   isAnySocialSubItemActive
-                    ? isLight
-                      ? "bg-purple-50 border-purple-300 text-purple-900 shadow-md"
-                      : "bg-purple-950/50 border-purple-500/40 text-purple-200 shadow-lg shadow-purple-950/50"
-                    : isLight
-                    ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
-                    : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                    ? "bg-paper border-cloud text-obsidian"
+                    : "bg-snow hover:bg-paper text-graphite border-cloud"
                 }`}
                 onClick={toggleSocialPlatformMenu}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
+                    className={`p-2 rounded-btn shrink-0 transition-transform group-hover:scale-110 ${
                       isAnySocialSubItemActive
-                        ? "bg-gradient-to-tr from-purple-500 to-indigo-600 text-white"
-                        : isLight
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-purple-900/50 text-purple-300 border border-purple-500/30"
+                        ? "bg-obsidian text-snow"
+                        : "bg-paper text-steel"
                     }`}
                   >
                     <Share2 className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate">
+                    <span className="font-medium text-xs tracking-tight truncate">
                       Contact Platform
                     </span>
                     <span
-                      className={`text-[10px] font-semibold truncate ${
-                        isLight ? "text-slate-500" : "text-slate-400"
-                      }`}
+                      className={`text-[10px] font-normal truncate text-fog`}
                     >
                       Social Media Channels
                     </span>
@@ -918,19 +844,15 @@ export default function Sidebar({
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
-                      isLight
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-purple-500/20 text-purple-300 border border-purple-400/30"
-                    }`}
+                    className={`text-[9px] font-medium px-1.5 py-0.5 rounded-badge bg-paper text-iron border border-cloud`}
                   >
                     8
                   </span>
                   <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
                     {isSocialPlatformOpen ? (
-                      <ChevronDown className="w-4 h-4 text-purple-400" />
+                      <ChevronDown className="w-4 h-4 text-iron" />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                      <ChevronRight className="w-4 h-4 text-ash" />
                     )}
                   </div>
                 </div>
@@ -942,8 +864,8 @@ export default function Sidebar({
               <div
                 className={`space-y-1 transition-all duration-300 ${
                   isCollapsed
-                    ? "pt-2 space-y-2 border-t border-white/10 mt-2"
-                    : "ml-3 pl-3 border-l-2 border-purple-500/30 dark:border-purple-400/20 mt-1.5 space-y-1.5"
+                    ? "pt-2 space-y-2 border-t border-cloud mt-2"
+                    : "ml-3 pl-3 border-l-2 border-cloud mt-1.5 space-y-1.5"
                 }`}
               >
                 {socialPlatformSubItems.map((item) => {
@@ -956,21 +878,17 @@ export default function Sidebar({
                       onClick={() => handleNavClick(item.id)}
                       className={`w-full flex items-center gap-3 ${
                         isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
-                      } rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      } rounded-btn text-xs font-medium transition-all duration-200 group relative ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
-                          : isLight
-                          ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-obsidian text-snow border border-obsidian"
+                          : "bg-snow hover:bg-paper text-iron hover:text-graphite border border-cloud"
                       }`}
                     >
                       <div
                         className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
                           isActive
-                            ? "bg-white/20 text-white"
-                            : isLight
-                            ? "bg-slate-100 text-slate-600"
-                            : "bg-slate-800/90 text-slate-300"
+                            ? "bg-snow/20 text-snow"
+                            : "bg-paper text-steel"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
@@ -979,23 +897,19 @@ export default function Sidebar({
                       {!isCollapsed && (
                         <div className="flex flex-col items-start min-w-0 text-left">
                           <span
-                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            className={`font-medium text-[11px] tracking-tight truncate w-full ${
                               isActive
-                                ? "text-white"
-                                : isLight
-                                ? "text-slate-900"
-                                : "text-slate-200 group-hover:text-white"
+                                ? "text-snow"
+                                : "text-graphite"
                             }`}
                           >
                             {item.label}
                           </span>
                           <span
-                            className={`text-[9px] font-medium truncate w-full ${
+                            className={`text-[9px] font-normal truncate w-full ${
                               isActive
-                                ? "text-white/80"
-                                : isLight
-                                ? "text-slate-500"
-                                : "text-slate-400"
+                                ? "text-snow/80"
+                                : "text-fog"
                             }`}
                           >
                             {item.sublabel}
@@ -1004,7 +918,7 @@ export default function Sidebar({
                       )}
 
                       {isActive && !isCollapsed && (
-                        <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-ember" />
                       )}
                     </button>
                   );
@@ -1027,9 +941,7 @@ export default function Sidebar({
         {/* Sidebar Footer: Unified Compact Bar with Settings Icon Option & Logout */}
         <div
           ref={settingsMenuRef}
-          className={`p-2.5 border-t relative ${
-            isLight ? "border-slate-200 bg-slate-50/90" : "border-white/10 bg-slate-950/80"
-          }`}
+          className={`p-2.5 border-t relative border-cloud bg-snow`}
         >
           {/* Floating Settings Popover Menu */}
           {isSettingsMenuOpen && (
@@ -1038,25 +950,21 @@ export default function Sidebar({
                 isCollapsed
                   ? "left-full bottom-2 ml-3 w-72"
                   : "bottom-full left-2 right-2 mb-3"
-              } ${
-                isLight
-                  ? "bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/50"
-                  : "bg-slate-900/95 border-white/15 text-white shadow-black/80"
-              }`}
+              } bg-snow border-cloud text-graphite`}
             >
               {/* Popover Header */}
-              <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-white/10">
+              <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-cloud">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                  <div className="p-1.5 rounded-lg bg-paper text-ember border border-cloud">
                     <Settings className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                  <span className="text-xs font-medium uppercase tracking-wider text-graphite">
                     Preferences & Tools
                   </span>
                 </div>
                 <button
                   onClick={() => setIsSettingsMenuOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-1 rounded-lg text-fog hover:text-obsidian hover:bg-paper transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1071,30 +979,28 @@ export default function Sidebar({
                       handleNavClick("SETTINGS");
                       setIsSettingsMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all group cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-2.5 rounded-btn border text-xs font-medium transition-all group cursor-pointer ${
                       activeTab === "SETTINGS"
-                        ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white border-rose-400 shadow-lg shadow-rose-500/30"
-                        : isLight
-                        ? "bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-800 border-slate-200"
-                        : "bg-slate-950/80 hover:bg-slate-800/80 text-slate-200 border-white/5 hover:border-rose-500/40"
+                        ? "bg-obsidian text-snow border-obsidian"
+                        : "bg-paper hover:bg-cloud text-graphite border-cloud"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
                         className={`p-1.5 rounded-lg shrink-0 ${
                           activeTab === "SETTINGS"
-                            ? "bg-white/20 text-white"
-                            : "bg-rose-500/20 text-rose-400"
+                            ? "bg-snow/20 text-snow"
+                            : "bg-paper text-ember"
                         }`}
                       >
                         <Settings className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col text-left truncate">
-                        <span className="font-extrabold text-xs">Admin Settings</span>
-                        <span className="text-[10px] text-slate-400 font-medium">System Configuration</span>
+                        <span className="font-medium text-xs">Admin Settings</span>
+                        <span className="text-[10px] text-fog font-normal">System Configuration</span>
                       </div>
                     </div>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-badge bg-paper text-ember font-medium border border-cloud">
                       Console
                     </span>
                   </button>
@@ -1103,18 +1009,14 @@ export default function Sidebar({
                 {/* Theme Toggle Button */}
                 {onThemeChange && (
                   <div
-                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs ${
-                      isLight
-                        ? "bg-slate-100 border-slate-200"
-                        : "bg-slate-950/80 border-white/5"
-                    }`}
+                    className={`flex items-center justify-between p-2.5 rounded-btn border text-xs bg-paper border-cloud`}
                   >
                     <div className="flex items-center gap-2.5">
                       <div
                         className={`p-1.5 rounded-lg shrink-0 ${
                           theme === "DARK"
-                            ? "bg-indigo-500/20 text-indigo-400"
-                            : "bg-amber-500/20 text-amber-500"
+                            ? "bg-paper text-iron"
+                            : "bg-paper text-ember"
                         }`}
                       >
                         {theme === "DARK" ? (
@@ -1136,7 +1038,7 @@ export default function Sidebar({
                       onClick={() => {
                         onThemeChange(theme === "DARK" ? "LIGHT" : "DARK");
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[10px] transition-all shadow-md cursor-pointer"
+                      className="px-2.5 py-1 rounded-btn bg-obsidian hover:bg-graphite text-snow font-medium text-[10px] transition-all cursor-pointer"
                     >
                       Switch
                     </button>
@@ -1149,14 +1051,10 @@ export default function Sidebar({
                     alert("Meritto Mobile App APK download initiated for Android & iOS.");
                     setIsSettingsMenuOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all group cursor-pointer ${
-                    isLight
-                      ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"
-                      : "bg-slate-950/80 hover:bg-slate-800/80 text-slate-300 hover:text-white border-white/5"
-                  }`}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-btn border text-xs font-medium transition-all group cursor-pointer bg-paper hover:bg-cloud text-graphite border-cloud`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400">
+                    <div className="p-1.5 rounded-lg bg-paper text-ember border border-cloud">
                       <Download className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col text-left">
@@ -1164,16 +1062,16 @@ export default function Sidebar({
                       <span className="text-[10px] text-slate-400">Android & iOS APK</span>
                     </div>
                   </div>
-                  <span className="text-[10px] text-sky-400 font-bold group-hover:translate-x-0.5 transition-transform">
+                  <span className="text-[10px] text-ember font-medium group-hover:translate-x-0.5 transition-transform">
                     APK ↓
                   </span>
                 </button>
               </div>
 
               {/* Account Quick Info */}
-              <div className="mt-2.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+              <div className="mt-2.5 pt-2.5 border-t border-cloud flex items-center justify-between text-[11px] text-fog">
                 <span className="truncate">{loggedInUsername}</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold text-[9px] border border-indigo-500/30">
+                <span className="px-1.5 py-0.5 rounded-pill bg-paper text-iron font-medium text-[9px] border border-cloud">
                   {currentUserRole === "ADMIN" ? "Admin" : "Teacher"}
                 </span>
               </div>
@@ -1184,7 +1082,7 @@ export default function Sidebar({
           {isCollapsed ? (
             <div className="flex flex-col items-center gap-2">
               {/* Avatar */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md">
+              <div className="w-8 h-8 rounded-full bg-obsidian text-snow font-medium text-xs flex items-center justify-center shrink-0">
                 VSB
               </div>
 
@@ -1192,21 +1090,19 @@ export default function Sidebar({
               <Tooltip text="Settings & Tools" position="right">
                 <button
                   onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
-                  className={`p-2 rounded-xl border transition-all cursor-pointer relative ${
+                  className={`p-2 rounded-btn border transition-all cursor-pointer relative ${
                     isSettingsMenuOpen || activeTab === "SETTINGS"
-                      ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-105"
-                      : isLight
-                      ? "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
-                      : "bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border-white/10"
+                      ? "bg-obsidian text-snow border-obsidian"
+                      : "bg-paper hover:bg-cloud text-steel border-cloud"
                   }`}
                 >
                   <Settings
                     className={`w-4 h-4 transition-transform duration-300 ${
-                      isSettingsMenuOpen ? "rotate-90 text-white" : "text-rose-400"
+                      isSettingsMenuOpen ? "rotate-90 text-snow" : "text-ember"
                     }`}
                   />
                   {activeTab === "SETTINGS" && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-400 rounded-full animate-ping" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ember rounded-full" />
                   )}
                 </button>
               </Tooltip>
@@ -1215,11 +1111,7 @@ export default function Sidebar({
               <Tooltip text="Logout Portal" position="right">
                 <button
                   onClick={onLogout}
-                  className={`p-2 rounded-xl border transition-all shrink-0 cursor-pointer ${
-                    isLight
-                      ? "bg-slate-100 hover:bg-rose-500 hover:text-white border-slate-200 text-slate-600"
-                      : "bg-slate-800 hover:bg-rose-600/80 border-transparent text-slate-400 hover:text-white"
-                  }`}
+                  className={`p-2 rounded-btn border transition-all shrink-0 cursor-pointer bg-paper hover:bg-red-50 hover:text-red-600 border-cloud text-fog`}
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -1227,26 +1119,20 @@ export default function Sidebar({
             </div>
           ) : (
             <div
-              className={`flex items-center justify-between gap-2 p-2 rounded-2xl border transition-all ${
-                isLight
-                  ? "bg-white border-slate-200 shadow-sm"
-                  : "bg-slate-900/90 border-white/10"
-              }`}
+              className={`flex items-center justify-between gap-2 p-2 rounded-2xl border transition-all bg-snow border-cloud`}
             >
               {/* User Profile */}
               <div className="flex items-center gap-2 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md">
+                <div className="w-8 h-8 rounded-full bg-obsidian text-snow font-medium text-xs flex items-center justify-center shrink-0">
                   VSB
                 </div>
                 <div className="min-w-0">
                   <p
-                    className={`text-xs font-black truncate ${
-                      isLight ? "text-slate-900" : "text-white"
-                    }`}
+                    className={`text-xs font-medium truncate text-obsidian`}
                   >
                     {loggedInUsername}
                   </p>
-                  <p className="text-[10px] font-extrabold truncate text-indigo-400">
+                  <p className="text-[10px] font-medium truncate text-ember">
                     {currentUserRole === "ADMIN" ? "System Admin" : "Faculty Lead"}
                   </p>
                 </div>
@@ -1266,12 +1152,10 @@ export default function Sidebar({
                   <button
                     onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
                     aria-label="Settings and Preferences"
-                    className={`p-2 rounded-xl border transition-all cursor-pointer relative group ${
+                    className={`p-2 rounded-btn border transition-all cursor-pointer relative group ${
                       isSettingsMenuOpen || activeTab === "SETTINGS"
-                        ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-105"
-                        : isLight
-                        ? "bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border-slate-200"
-                        : "bg-slate-800/90 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border-white/10 hover:border-rose-500/40"
+                        ? "bg-obsidian text-snow border-obsidian"
+                        : "bg-paper hover:bg-cloud text-steel border-cloud"
                     }`}
                   >
                     <Settings
@@ -1279,12 +1163,12 @@ export default function Sidebar({
                         isSettingsMenuOpen
                           ? "rotate-90 text-white"
                           : activeTab === "SETTINGS"
-                          ? "text-white"
-                          : "text-rose-400"
+                          ? "text-snow"
+                          : "text-ember"
                       }`}
                     />
                     {activeTab === "SETTINGS" && (
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-400 rounded-full animate-ping" />
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ember rounded-full" />
                     )}
                   </button>
                 </Tooltip>
@@ -1293,11 +1177,7 @@ export default function Sidebar({
                 <Tooltip text="Logout Portal" position="top">
                   <button
                     onClick={onLogout}
-                    className={`p-2 rounded-xl border transition-all shrink-0 cursor-pointer ${
-                      isLight
-                        ? "bg-slate-100 hover:bg-rose-500 hover:text-white border-slate-200 text-slate-600"
-                        : "bg-slate-800 hover:bg-rose-600/80 border-transparent text-slate-400 hover:text-white"
-                    }`}
+                    className={`p-2 rounded-btn border transition-all shrink-0 cursor-pointer bg-paper hover:bg-red-50 hover:text-red-600 border-cloud text-fog`}
                   >
                     <LogOut className="w-4 h-4" />
                   </button>

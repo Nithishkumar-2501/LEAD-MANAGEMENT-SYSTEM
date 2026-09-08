@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Eye, EyeOff, Lock, Mail, AlertCircle, Check, Info, ShieldCheck, Sparkles } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Info, ShieldCheck } from "lucide-react";
 import { loginWithRealtimeAuth } from "@/lib/authService";
 
 interface LoginModalProps {
@@ -142,23 +142,23 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-obsidian/40 backdrop-blur-sm overflow-y-auto">
       {/* Main Centered Login Card */}
-      <div className="bg-white w-full max-w-md sm:max-w-lg rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden border border-slate-200/80 my-auto p-6 sm:p-10 text-slate-900 animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white w-full max-w-md rounded-[36px] border border-fog my-auto p-6 sm:p-8 text-graphite shadow-sm">
         <div>
           {/* SPHEREX CRM Pill Badge with Official Logo */}
           <div className="flex items-center justify-center gap-2.5 mb-6">
-            <div className="w-9 h-9 rounded-full overflow-hidden bg-black p-0.5 shadow-md border border-slate-300 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-obsidian p-0.5 border border-fog flex items-center justify-center shrink-0">
               <Image
                 src="/spherex-logo.png"
                 alt="SPHEREX Official Logo"
-                width={36}
-                height={36}
+                width={32}
+                height={32}
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="inline-flex items-center px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#edf2f7] border border-slate-300/90 shadow-xs">
-              <span className="text-xs sm:text-sm font-black tracking-wider text-slate-900 uppercase">
+            <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-paper border border-fog">
+              <span className="text-xs font-semibold tracking-wider text-obsidian uppercase">
                 SPHEREX CRM
               </span>
             </div>
@@ -166,42 +166,42 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
           {/* Headline */}
           <div className="mb-6 text-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
+            <h1 className="text-2xl font-semibold text-obsidian tracking-tight">
               Welcome to
             </h1>
-            <p className="text-sm sm:text-base font-bold text-slate-700 tracking-tight mt-1">
+            <p className="text-sm font-medium text-graphite tracking-tight mt-1">
               V.S.B. GROUP OF INSTITUTIONS
             </p>
           </div>
 
           {/* Error Notification */}
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <div className="mb-4 p-3 rounded-button bg-mist border border-fog text-ember text-xs font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-ember" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Form Fields matching Reference Design */}
+          {/* Form Fields */}
           <form onSubmit={handleLogin} className="space-y-3.5">
             {/* Email / ID Input */}
-            <div className="bg-[#f4f5f7] rounded-xl px-3.5 pt-2 pb-2.5 border border-transparent focus-within:border-slate-400 focus-within:bg-white transition-all">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Email
+            <div className="bg-paper rounded-button px-3.5 pt-2 pb-2.5 border border-fog focus-within:border-obsidian focus-within:bg-white transition-all">
+              <label className="block text-[10px] font-semibold text-steel uppercase tracking-wider">
+                User ID / Email
               </label>
               <input
                 type="text"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="rowok@gmail.com"
-                className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none placeholder-slate-400 mt-0.5"
+                placeholder="adminkarur@123"
+                className="w-full bg-transparent text-xs sm:text-sm font-medium text-obsidian focus:outline-none placeholder-steel mt-0.5"
               />
             </div>
 
             {/* Password Input with Show/Hide Eye */}
-            <div className="bg-[#f4f5f7] rounded-xl px-3.5 pt-2 pb-2.5 border border-transparent focus-within:border-slate-400 focus-within:bg-white transition-all relative">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="bg-paper rounded-button px-3.5 pt-2 pb-2.5 border border-fog focus-within:border-obsidian focus-within:bg-white transition-all relative">
+              <label className="block text-[10px] font-semibold text-steel uppercase tracking-wider">
                 Password
               </label>
               <div className="flex items-center justify-between mt-0.5">
@@ -211,12 +211,12 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none placeholder-slate-400 pr-8"
+                  className="w-full bg-transparent text-xs sm:text-sm font-medium text-obsidian focus:outline-none placeholder-steel pr-8"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  className="p-1 text-steel hover:text-obsidian transition-colors cursor-pointer"
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -230,12 +230,12 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
             {/* Options Row: Remember me + Forgot Password */}
             <div className="flex items-center justify-between text-xs pt-1 pb-1">
-              <label className="flex items-center gap-2 cursor-pointer text-slate-600 font-medium select-none">
+              <label className="flex items-center gap-2 cursor-pointer text-steel font-normal select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-slate-300 text-[#4a2545] focus:ring-[#4a2545]"
+                  className="w-3.5 h-3.5 rounded border-fog text-obsidian focus:ring-obsidian"
                 />
                 <span>Remember me</span>
               </label>
@@ -243,72 +243,60 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               <button
                 type="button"
                 onClick={() => setShowForgotModal(true)}
-                className="text-slate-900 font-bold hover:underline cursor-pointer"
+                className="text-graphite font-medium hover:text-obsidian hover:underline cursor-pointer"
               >
                 Forgot Password?
               </button>
             </div>
 
-            {/* Solid Plum/Berry Purple Login Button matching Reference */}
+            {/* Solid Obsidian Primary Action Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-[#4a2545] hover:bg-[#3d1e39] active:scale-[0.99] text-white font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+              className="w-full py-3 rounded-button bg-obsidian hover:bg-black active:scale-[0.99] text-white font-medium text-sm transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
             >
-              <span>{loading ? "Authenticating..." : "Login"}</span>
+              <span>{loading ? "Authenticating..." : "Sign In"}</span>
             </button>
           </form>
 
-          {/* Sign Up Row */}
-          <p className="text-center text-xs text-slate-500 font-medium mt-4">
-            Don&apos;t have an account?{" "}
-            <button
-              type="button"
-              onClick={() => setShowForgotModal(true)}
-              className="font-bold text-[#4a2545] hover:underline cursor-pointer"
-            >
-              Sign Up
-            </button>
-          </p>
-
           {/* Security Badge */}
-          <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-slate-500 text-[11px]">
-            <div className="flex items-center gap-1.5 font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>256-Bit Encrypted Portal</span>
+          <div className="mt-5 pt-3 border-t border-fog flex items-center justify-between text-steel text-[11px]">
+            <div className="flex items-center gap-1.5 font-normal">
+              <ShieldCheck className="w-3.5 h-3.5 text-obsidian" />
+              <span>Encrypted Session</span>
             </div>
-            <span className="font-mono text-emerald-600 font-bold">
+            <span className="text-graphite font-medium">
               ● Live VSB Gateway
             </span>
           </div>
         </div>
 
         {/* Quick 1-Click Credentials Selector for Demo & Faculty Access */}
-        <div className="pt-4 mt-4 border-t border-slate-100">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 text-center">
-            Quick One-Click Demo Logins:
+        <div className="pt-4 mt-4 border-t border-fog">
+          <span className="text-[10px] font-semibold text-steel uppercase tracking-wider block mb-2 text-center">
+            Authorized Demo Profiles:
           </span>
-          <div className="flex flex-wrap gap-1.5 text-[11px] justify-center">
+          <div className="flex flex-wrap gap-1.5 text-xs justify-center">
             <button
               type="button"
               onClick={() => autoFill("adminkarur@123", "vsbec@123")}
-              className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-900 font-bold border border-purple-200 transition-colors"
+              className="px-3 py-1 rounded-pill bg-paper hover:bg-mist text-graphite hover:text-obsidian font-medium border border-fog transition-colors"
             >
-              👑 Admin (Karur)
+              Admin (Karur)
             </button>
             <button
               type="button"
               onClick={() => autoFill("admincovai@123", "vsbectc@1213")}
-              className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-900 font-bold border border-sky-200 transition-colors"
+              className="px-3 py-1 rounded-pill bg-paper hover:bg-mist text-graphite hover:text-obsidian font-medium border border-fog transition-colors"
             >
-              🏛️ Admin (Coimbatore)
+              Admin (Coimbatore)
             </button>
             <button
               type="button"
               onClick={() => autoFill("teacherkarur@123", "vsbteacher@123")}
-              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold border border-emerald-200 transition-colors"
+              className="px-3 py-1 rounded-pill bg-paper hover:bg-mist text-graphite hover:text-obsidian font-medium border border-fog transition-colors"
             >
-              🧑‍🏫 Faculty (Karur)
+              Faculty (Karur)
             </button>
           </div>
         </div>
@@ -316,16 +304,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
       {/* Forgot Password / Account Help Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-slate-900 border border-slate-200">
-            <h3 className="text-base font-extrabold text-slate-950 flex items-center gap-2 mb-2">
-              <Info className="w-5 h-5 text-[#4a2545]" /> Authorized Credentials
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-obsidian/40 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-[28px] p-6 max-w-sm w-full shadow-sm text-graphite border border-fog">
+            <h3 className="text-base font-semibold text-obsidian flex items-center gap-2 mb-2">
+              <Info className="w-4 h-4 text-ember" /> Authorized Credentials
             </h3>
-            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+            <p className="text-xs text-steel mb-4 leading-relaxed">
               For security compliance, user accounts are provisioned by the Central Admissions Directorate. Use the authorized credentials below:
             </p>
 
-            <div className="space-y-2 text-xs font-mono bg-slate-100 p-3 rounded-xl mb-4 border border-slate-200">
+            <div className="space-y-1.5 text-xs font-mono bg-paper p-3 rounded-button mb-4 border border-fog">
               <div><strong>Admin Karur:</strong> adminkarur@123 / vsbec@123</div>
               <div><strong>Admin Covai:</strong> admincovai@123 / vsbectc@1213</div>
               <div><strong>Faculty:</strong> teacherkarur@123 / vsbteacher@123</div>
@@ -333,7 +321,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
             <button
               onClick={() => setShowForgotModal(false)}
-              className="w-full py-2.5 bg-[#4a2545] text-white font-bold rounded-xl text-xs hover:bg-[#3d1e39] transition-all cursor-pointer"
+              className="w-full py-2.5 bg-obsidian text-white font-medium rounded-button text-xs hover:bg-black transition-all cursor-pointer"
             >
               Close & Return to Login
             </button>

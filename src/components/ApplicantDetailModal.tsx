@@ -236,18 +236,18 @@ export default function ApplicantDetailModal({
   const currentStageIdx = 1;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-white w-full max-w-6xl rounded-none sm:rounded-2xl border-0 sm:border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col min-h-screen sm:min-h-0 sm:max-h-[96vh] my-0 sm:my-auto relative">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-0 sm:p-4 bg-obsidian/40 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-white w-full max-w-6xl rounded-none sm:rounded-[36px] border-0 sm:border border-fog shadow-sm overflow-hidden text-graphite flex flex-col min-h-screen sm:min-h-0 sm:max-h-[96vh] my-0 sm:my-auto relative">
         {/* Success Toast Notification */}
         {saveSuccessToast && (
-          <div className="fixed sm:absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-emerald-400 max-w-[90%] text-center">
-            <CheckCircle2 className="w-4 h-4 text-emerald-200 shrink-0" />
+          <div className="fixed sm:absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-button bg-obsidian text-white font-medium text-xs shadow-lg flex items-center gap-2 border border-fog max-w-[90%] text-center">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{saveSuccessToast}</span>
           </div>
         )}
 
         {/* Top Header / Breadcrumb Bar - Sticky on Mobile */}
-        <div className="sticky top-0 z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/95 backdrop-blur-md shrink-0 shadow-sm">
+        <div className="sticky top-0 z-30 px-4 sm:px-6 py-3 border-b border-fog flex items-center justify-between bg-white shrink-0">
           <div className="flex items-center gap-2 text-xs font-black text-slate-950 min-w-0">
             <button
               onClick={onClose}

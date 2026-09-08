@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
-import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, Upload, Trash2 } from "lucide-react";
+import { Eye, Phone, Mail, MessageSquare, UserCheck, Plus, Upload, Trash2 } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
-import SpecularButton from "@/components/SpecularButton";
 import { parseCSVToLeads } from "@/lib/csvParser";
 
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -69,51 +68,51 @@ export default function ApplicantsTable({
   const getStageBadge = (stage: AppStage) => {
     switch (stage) {
       case "INQUIRY":
-        return "bg-sky-500/20 text-sky-300 border-sky-400/40";
+        return "bg-paper text-graphite border-fog";
       case "SUBMITTED":
-        return "bg-purple-500/20 text-purple-300 border-purple-400/40";
+        return "bg-paper text-graphite border-fog";
       case "DOCS_VERIFIED":
-        return "bg-amber-500/20 text-amber-300 border-amber-400/40";
+        return "bg-mist text-obsidian border-fog";
       case "OFFER_ISSUED":
-        return "bg-indigo-500/20 text-indigo-300 border-indigo-400/40";
+        return "bg-mist text-obsidian border-steel";
       case "FEE_PAID":
-        return "bg-emerald-500/20 text-emerald-300 border-emerald-400/40";
+        return "bg-ember text-white border-ember";
       default:
-        return "bg-slate-900 text-slate-400 border-slate-700";
+        return "bg-paper text-steel border-fog";
     }
   };
 
   const stagesList = ["ALL", "INQUIRY", "SUBMITTED", "DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"];
 
   return (
-    <div className="bubble-card p-3 sm:p-6 border border-white/20 flex-1 flex flex-col justify-between w-full max-w-full min-w-0 overflow-hidden">
+    <div className="bg-white rounded-[36px] p-5 sm:p-6 border border-fog flex-1 flex flex-col justify-between w-full max-w-full min-w-0 overflow-hidden">
       <div className="w-full max-w-full min-w-0">
         {/* Header Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-white/10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-fog">
           <div>
-            <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-sky-400" />
+            <h3 className="text-base font-semibold text-obsidian flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-ember" />
               Recent Applicants
             </h3>
-            <p className="text-xs text-slate-400">TNEA & Management intake candidates at V.S.B.</p>
+            <p className="text-xs text-steel font-normal">TNEA & Management intake candidates at V.S.B.</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             {onOpenQuickLeadModal && (
               <button
                 onClick={onOpenQuickLeadModal}
-                className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs shadow-lg shadow-pink-500/40 border border-pink-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+                className="px-3.5 py-2 rounded-button bg-ember hover:bg-orange-600 text-white font-medium text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
               >
-                <Plus className="w-4 h-4 text-white shrink-0" />
-                <span>+ Add Quick Lead</span>
+                <Plus className="w-3.5 h-3.5 text-white shrink-0" />
+                <span>Quick Lead</span>
               </button>
             )}
 
             <button
               onClick={onOpenCreateModal}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-blue-700 text-white font-black text-xs shadow-lg shadow-sky-500/40 border border-sky-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+              className="px-3.5 py-2 rounded-button bg-obsidian hover:bg-black text-white font-medium text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-white shrink-0" />
+              <Plus className="w-3.5 h-3.5 text-white shrink-0" />
               <span>New Application</span>
             </button>
 
@@ -140,22 +139,22 @@ export default function ApplicantsTable({
             />
             <button
               onClick={() => document.getElementById("csv-dashboard-upload")?.click()}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-purple-500/40 border border-purple-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+              className="px-3.5 py-2 rounded-button bg-paper hover:bg-mist text-graphite border border-fog font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <Upload className="w-4 h-4 text-white shrink-0" />
+              <Upload className="w-3.5 h-3.5 text-steel shrink-0" />
               <span>Import CSV</span>
             </button>
 
-            {/* Bubble Stage Control Pills */}
-            <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-md overflow-x-auto hide-scrollbar max-w-full">
+            {/* Stage Control Pills */}
+            <div className="flex items-center gap-1 bg-paper p-1 rounded-full border border-fog text-xs font-medium overflow-x-auto hide-scrollbar max-w-full">
               {stagesList.map((st) => (
                 <button
                   key={st}
                   onClick={() => setSelectedStage(st)}
-                  className={`px-3 py-1 rounded-full transition-all duration-300 whitespace-nowrap shrink-0 transform hover:-translate-y-1 hover:scale-110 active:scale-95 ${
+                  className={`px-3 py-1 rounded-full transition-all whitespace-nowrap shrink-0 text-xs ${
                     selectedStage === st
-                      ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md shadow-sky-500/40 scale-[1.05]"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-white/10"
+                      ? "bg-obsidian text-white font-medium shadow-sm"
+                      : "text-steel hover:text-graphite"
                   }`}
                 >
                   {st.replace("_", " ")}
@@ -166,41 +165,41 @@ export default function ApplicantsTable({
         </div>
 
         {/* Data Table */}
-        <div className="overflow-x-auto w-full max-w-full rounded-xl border border-white/10">
-          <table className="w-full min-w-[580px] sm:min-w-full text-left text-xs text-slate-200">
-            <thead className="bg-slate-950/80 text-sky-300/80 uppercase font-bold text-[10px] tracking-wider border-y border-white/10">
+        <div className="overflow-x-auto w-full max-w-full rounded-[20px] border border-fog">
+          <table className="w-full min-w-[580px] sm:min-w-full text-left text-xs text-graphite">
+            <thead className="bg-paper text-steel uppercase font-semibold text-[10px] tracking-wider border-b border-fog">
               <tr>
-                <th className="py-3 px-4">Applicant Name</th>
-                <th className="py-3 px-4">Applied Program</th>
+                <th className="py-3 px-4">Applicant</th>
+                <th className="py-3 px-4">Program</th>
                 <th className="py-3 px-4 hidden sm:table-cell">Campus</th>
-                <th className="py-3 px-4">Stage Status</th>
-                <th className="py-3 px-4 hidden md:table-cell">TNEA Cutoff & Counselling</th>
+                <th className="py-3 px-4">Stage</th>
+                <th className="py-3 px-4 hidden md:table-cell">TNEA Cutoff</th>
                 <th className="py-3 px-4 hidden sm:table-cell">12th Marks</th>
-                <th className="py-3 px-4 text-right">Quick Actions</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-fog">
               {paginatedApplicants.length > 0 ? (
                 paginatedApplicants.map((item) => (
                   <tr
                     key={item.id}
                     onClick={() => onSelectApplicant(item)}
-                    className="hover:bg-slate-800/80 transition-all cursor-pointer group"
+                    className="hover:bg-paper/70 transition-all cursor-pointer group"
                   >
                     {/* Applicant Info */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                        <div className="w-8 h-8 rounded-full bg-paper border border-fog text-obsidian font-semibold text-xs flex items-center justify-center shrink-0">
                           {item.name
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
                         </div>
                         <div>
-                          <div className="font-extrabold text-slate-100 dark:text-slate-100 group-hover:text-blue-400 transition-colors text-sm">
+                          <div className="font-semibold text-obsidian text-xs group-hover:text-ember transition-colors">
                             {item.name}
                           </div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-steel">
                             {item.email}
                           </div>
                         </div>
@@ -208,69 +207,62 @@ export default function ApplicantsTable({
                     </td>
 
                     {/* Applied Program */}
-                    <td className="py-3.5 px-4 font-medium text-slate-300">
+                    <td className="py-3 px-4 font-normal text-graphite">
                       {item.courseInterest}
                     </td>
 
                     {/* Campus Badge */}
-                    <td className="py-3.5 px-4 hidden sm:table-cell">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider transform group-hover:scale-105 transition-transform inline-block ${
-                          item.campus === "KARUR"
-                            ? "bg-sky-500/20 text-sky-300 border-sky-400/30"
-                            : "bg-pink-500/20 text-pink-300 border-pink-400/30"
-                        }`}
-                      >
-                        {item.campus || "KARUR"} Campus
+                    <td className="py-3 px-4 hidden sm:table-cell">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-fog bg-paper text-graphite uppercase tracking-wider inline-block">
+                        {item.campus || "KARUR"}
                       </span>
                     </td>
 
                     {/* Stage Status */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1.5 shadow-sm transform group-hover:scale-105 transition-transform ${getStageBadge(
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border inline-flex items-center gap-1.5 ${getStageBadge(
                           item.application.stage
                         )}`}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
                         {item.application.stage.replace("_", " ")}
                       </span>
                     </td>
 
                     {/* TNEA Cutoff & Counselling Cell */}
-                    <td className="py-3.5 px-4 hidden md:table-cell">
+                    <td className="py-3 px-4 hidden md:table-cell">
                       <div className="space-y-0.5">
                         {item.tneaCutoff && (
-                          <div className="font-extrabold text-sky-300 font-mono text-[11px]">
-                            Cutoff: {item.tneaCutoff} / 200
+                          <div className="font-semibold text-obsidian font-mono text-xs">
+                            {item.tneaCutoff} / 200
                           </div>
                         )}
                         {item.counsellingAppNo && (
-                          <span className="inline-block text-[9.5px] font-extrabold text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">
-                            ✅ TNEA ({item.counsellingAppNo})
+                          <span className="inline-block text-[10px] font-medium text-steel">
+                            App: {item.counsellingAppNo}
                           </span>
                         )}
                       </div>
                     </td>
 
                     {/* Marks */}
-                    <td className="py-3.5 px-4 font-extrabold text-slate-100 dark:text-slate-100 hidden sm:table-cell text-sm">
-                      {item.application?.marks12th ? `${item.application.marks12th}%` : ""}
+                    <td className="py-3 px-4 font-semibold text-obsidian hidden sm:table-cell text-xs">
+                      {item.application?.marks12th ? `${item.application.marks12th}%` : "—"}
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1.5">
-
+                    <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
                         <Tooltip text={`View ${item.name} Details`}>
                           <button
                             onClick={() => onSelectApplicant(item)}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-sky-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-sky-500/40"
+                            className="p-1.5 rounded-button bg-paper border border-fog text-steel hover:text-obsidian hover:border-steel hover:bg-white transition-all"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
-                        <Tooltip text={`Call ${item.name} via Phone Dial Pad`}>
+                        <Tooltip text={`Call ${item.name}`}>
                           <a
                             href={getCleanTelUri(item.phone)}
                             onClick={(e) => {
@@ -278,12 +270,12 @@ export default function ApplicantsTable({
                               onActionTrigger("CALL", item.name);
                               redirectToDialPad(item.phone);
                             }}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-emerald-400 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer inline-flex items-center justify-center"
+                            className="p-1.5 rounded-button bg-paper border border-fog text-steel hover:text-ember hover:border-steel hover:bg-white transition-all inline-flex items-center justify-center cursor-pointer"
                           >
                             <Phone className="w-3.5 h-3.5" />
                           </a>
                         </Tooltip>
-                        <Tooltip text={`In-Portal Email ${item.name}`}>
+                        <Tooltip text={`Email ${item.name}`}>
                           <button
                             onClick={() => handleOpenCommModal("EMAIL", {
                               id: item.id,
@@ -302,12 +294,12 @@ export default function ApplicantsTable({
                               stage: item.application?.stage,
                               status: item.status,
                             })}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-indigo-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40"
+                            className="p-1.5 rounded-button bg-paper border border-fog text-steel hover:text-obsidian hover:border-steel hover:bg-white transition-all"
                           >
                             <Mail className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
-                        <Tooltip text={`In-Portal Message ${item.name}`}>
+                        <Tooltip text={`Message ${item.name}`}>
                           <button
                             onClick={() => handleOpenCommModal("MESSAGE", {
                               name: item.name,
@@ -318,7 +310,7 @@ export default function ApplicantsTable({
                               school: item.school || undefined,
                               district: item.district || undefined,
                             })}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-teal-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
+                            className="p-1.5 rounded-button bg-paper border border-fog text-steel hover:text-obsidian hover:border-steel hover:bg-white transition-all"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </button>
@@ -332,7 +324,7 @@ export default function ApplicantsTable({
                                 fetch(`/api/contacts?id=${item.id}`, { method: "DELETE" });
                               }
                             }}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-rose-600 hover:text-white text-rose-400 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-rose-600/40 cursor-pointer"
+                            className="p-1.5 rounded-button bg-paper border border-fog text-steel hover:text-red-600 hover:border-steel hover:bg-white transition-all cursor-pointer"
                             title={`Delete ${item.name}`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -344,7 +336,7 @@ export default function ApplicantsTable({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                  <td colSpan={7} className="py-8 text-center text-steel">
                     No matching applicants found for &quot;{searchQuery}&quot;.
                   </td>
                 </tr>
@@ -355,10 +347,10 @@ export default function ApplicantsTable({
       </div>
 
       {/* Table Pagination Footer Bar */}
-      <div className="mt-4 pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-300 font-sans">
+      <div className="mt-4 pt-3 border-t border-fog flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-steel">
         <div className="flex items-center gap-3">
-          <span className="font-extrabold text-slate-200">
-            Showing {filteredApplicants.length > 0 ? appStartIndex + 1 : 0} - {appEndIndex} of {filteredApplicants.length} Applicants
+          <span className="font-normal text-graphite">
+            Showing <strong className="font-semibold text-obsidian">{filteredApplicants.length > 0 ? appStartIndex + 1 : 0} - {appEndIndex}</strong> of <strong className="font-semibold text-obsidian">{filteredApplicants.length}</strong> Applicants
           </span>
         </div>
 
@@ -367,17 +359,17 @@ export default function ApplicantsTable({
           <button
             disabled={safeCurrentPage === 1}
             onClick={() => setCurrentPage(1)}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
+            className="px-2.5 py-1 rounded-badge border border-fog bg-white hover:bg-paper disabled:opacity-40 disabled:cursor-not-allowed font-medium text-graphite cursor-pointer text-xs transition-all"
             title="First Page"
           >
-            ⏮ First
+            First
           </button>
           <button
             disabled={safeCurrentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
+            className="px-2.5 py-1 rounded-badge border border-fog bg-white hover:bg-paper disabled:opacity-40 disabled:cursor-not-allowed font-medium text-graphite cursor-pointer text-xs transition-all"
           >
-            ◀ Prev
+            Prev
           </button>
 
           <div className="flex items-center gap-1">
@@ -399,10 +391,10 @@ export default function ApplicantsTable({
                   <button
                     key={pNum}
                     onClick={() => setCurrentPage(pNum)}
-                    className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer shadow-sm ${
+                    className={`w-7 h-7 rounded-badge font-semibold text-xs transition-all cursor-pointer ${
                       isActive
-                        ? "bg-sky-500 text-slate-950 font-black ring-2 ring-sky-300 scale-105"
-                        : "bg-slate-100 dark:bg-slate-800 border border-slate-400 dark:border-white/30 text-slate-950 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700"
+                        ? "bg-obsidian text-white border border-obsidian"
+                        : "bg-white border border-fog text-graphite hover:bg-paper"
                     }`}
                   >
                     {pNum}
@@ -415,22 +407,22 @@ export default function ApplicantsTable({
           <button
             disabled={safeCurrentPage === totalPages}
             onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
+            className="px-2.5 py-1 rounded-badge border border-fog bg-white hover:bg-paper disabled:opacity-40 disabled:cursor-not-allowed font-medium text-graphite cursor-pointer text-xs transition-all"
           >
-            Next ▶
+            Next
           </button>
           <button
             disabled={safeCurrentPage === totalPages}
             onClick={() => setCurrentPage(totalPages)}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
+            className="px-2.5 py-1 rounded-badge border border-fog bg-white hover:bg-paper disabled:opacity-40 disabled:cursor-not-allowed font-medium text-graphite cursor-pointer text-xs transition-all"
             title="Last Page"
           >
-            Last ⏭
+            Last
           </button>
         </div>
 
         {/* Rows Per Page */}
-        <div className="flex items-center gap-2 font-bold text-slate-300">
+        <div className="flex items-center gap-2 font-medium text-steel">
           <span>Show Rows:</span>
           <select
             value={rowsPerPage}
@@ -438,11 +430,11 @@ export default function ApplicantsTable({
               setRowsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="bg-slate-900 border border-white/20 rounded-lg px-2.5 py-1 text-slate-100 font-extrabold focus:outline-none cursor-pointer"
+            className="bg-white border border-fog rounded-button px-2.5 py-1 text-obsidian font-medium focus:outline-none cursor-pointer text-xs"
           >
-            <option value={10}>10 rows</option>
-            <option value={25}>25 rows</option>
-            <option value={50}>50 rows</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
           </select>
         </div>
       </div>
@@ -454,8 +446,6 @@ export default function ApplicantsTable({
         onClose={() => setActiveCommModal(null)}
         onLogSuccess={handleCommLogSuccess}
       />
-
-
     </div>
   );
 }
