@@ -43,6 +43,7 @@ interface HeaderProps {
   onOpenAddLeadModal?: () => void;
   applicants?: (Lead & { application: Application })[];
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
+  onOpenNoraAi?: (initialQuery?: string) => void;
 }
 
 export default function Header({
@@ -63,6 +64,7 @@ export default function Header({
   onOpenAddLeadModal,
   applicants = [],
   onSelectApplicant,
+  onOpenNoraAi,
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -303,6 +305,17 @@ export default function Header({
             aria-label="Search"
           >
             <Search className="w-4 h-4" />
+          </button>
+
+          {/* Ask Nora AI Pill Button matching Reference Design */}
+          <button
+            type="button"
+            onClick={() => onOpenNoraAi?.()}
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-indigo-400/40 shrink-0"
+            title="Ask Nora AI to analyze the live student database"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+            <span className="tracking-wide">Ask Nora AI</span>
           </button>
 
           {/* Quick Theme Toggle Button (Light Mode & Dark Mode) */}

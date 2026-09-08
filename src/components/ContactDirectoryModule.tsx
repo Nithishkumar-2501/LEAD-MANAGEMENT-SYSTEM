@@ -49,6 +49,7 @@ interface ContactDirectoryModuleProps {
   onDeleteContact?: (id: string, name: string) => void;
   isReloading?: boolean;
   onReloadLeads?: () => Promise<void> | void;
+  onOpenNoraAi?: (initialQuery?: string) => void;
 }
 
 export default function ContactDirectoryModule({
@@ -63,6 +64,7 @@ export default function ContactDirectoryModule({
   onDeleteContact,
   isReloading: externalIsReloading,
   onReloadLeads,
+  onOpenNoraAi,
 }: ContactDirectoryModuleProps) {
   const [contacts, setContacts] = useState(initialContacts);
   const [internalIsReloading, setInternalIsReloading] = useState(false);
@@ -465,9 +467,30 @@ export default function ContactDirectoryModule({
       return (
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="font-extrabold text-blue-600 dark:text-sky-300 hover:text-blue-700 dark:hover:text-sky-200 text-sm hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); handleCandidateClick(contact); }}>
+            <span
+              className="font-extrabold text-blue-600 dark:text-sky-300 hover:text-blue-700 dark:hover:text-sky-200 text-sm hover:underline cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCandidateClick(contact);
+              }}
+            >
               {contact.name}
             </span>
+
+            {/* Nora AI Mini Analysis Icon matching Screenshot */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenNoraAi) {
+                  onOpenNoraAi(`Analyze student record for ${contact.name}`);
+                }
+              }}
+              className="p-1 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white transition-all shadow-xs cursor-pointer hover:scale-110"
+              title={`Ask Nora AI to analyze ${contact.name}'s database record`}
+            >
+              <Sparkles className="w-3 h-3 text-purple-600 dark:text-purple-300" />
+            </button>
           </div>
           <button
             onClick={(e) => {
@@ -1238,6 +1261,17 @@ export default function ContactDirectoryModule({
           >
             <Upload className="w-4 h-4 text-white shrink-0" />
             <span>Import CSV</span>
+          </button>
+
+          {/* Ask Nora AI Pill Button in Lead Manager */}
+          <button
+            type="button"
+            onClick={() => onOpenNoraAi?.()}
+            className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/40 border border-indigo-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+            title="Ask Nora AI to analyze the student database"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span>Ask Nora AI</span>
           </button>
 
           <button

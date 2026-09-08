@@ -24,6 +24,7 @@ import UserDashboardView from "@/components/UserDashboardView";
 import MarketingDashboardView from "@/components/MarketingDashboardView";
 import EchoDashboardView from "@/components/EchoDashboardView";
 import AiIntelligenceModule from "@/components/AiIntelligenceModule";
+import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import {
@@ -74,6 +75,13 @@ export default function DashboardPage() {
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
+  const [isNoraModalOpen, setIsNoraModalOpen] = useState(false);
+  const [noraInitialQuery, setNoraInitialQuery] = useState("");
+
+  const handleOpenNora = (query?: string) => {
+    setNoraInitialQuery(query || "");
+    setIsNoraModalOpen(true);
+  };
 
   // Synchronize activeTab from URL search params (e.g. ?tab=USER_DASHBOARD)
   useEffect(() => {
@@ -467,6 +475,7 @@ export default function DashboardPage() {
           onOpenAddLeadModal={() => setIsQuickLeadModalOpen(true)}
           applicants={applicants}
           onSelectApplicant={handleSelectApplicant}
+          onOpenNoraAi={handleOpenNora}
         />
 
         {/* Main Content Area */}
@@ -553,6 +562,7 @@ export default function DashboardPage() {
             }}
             onDeleteContact={handleDeleteApplicant}
             onReloadLeads={handleReloadLeads}
+            onOpenNoraAi={handleOpenNora}
           />
         )}
 
@@ -625,6 +635,20 @@ export default function DashboardPage() {
           existingLeads={applicants}
         />
       )}
+
+      {/* NORA AI DATABASE ANALYTICS & SEARCH MODAL */}
+      <NoraAiDatabaseModal
+        isOpen={isNoraModalOpen}
+        onClose={() => setIsNoraModalOpen(false)}
+        applicants={applicants}
+        selectedCampus={selectedCampus}
+        onSelectApplicant={handleSelectApplicant}
+        onApplyFilter={(query) => {
+          setSearchQuery(query);
+          triggerToast(`🔍 Filtered CRM table by: "${query}"`);
+        }}
+        initialQuery={noraInitialQuery}
+      />
 
       {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
