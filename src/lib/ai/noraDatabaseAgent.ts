@@ -1,33 +1,33 @@
 /**
- * NORA AI Database Analytics & Query Agent
- * Analyzes live candidate database, applications, counseling cutoffs, and institutional metrics.
+ * NORA AI Database Analytics & Conversational Query Agent
+ * Provides precise data extraction and conversational answers directly from the student database.
  */
 
 import { Lead, Application, CampusLocation } from "@/types/crm";
 import { predictStudentConversion } from "./leadScoringEngine";
 import { askVirtualCounselor } from "./counselorKnowledge";
 
-export interface NoraQueryResult {
-  query: string;
-  answerText: string;
-  matchedLeads: (Lead & { application: Application; aiScore?: number; priorityTier?: string; computedCutoff?: number })[];
-  totalMatches: number;
-  insights?: {
-    avgCutoff?: number;
-    hotLeadsCount?: number;
-    topDistricts?: { district: string; count: number }[];
-    topCourses?: { course: string; count: number }[];
-    feePaidCount?: number;
+export interface NoraChatMessage {
+  id: string;
+  sender: "USER" | "NORA";
+  text: string;
+  specificData?: {
+    type: "SINGLE_STUDENT" | "STUDENT_LIST" | "METRICS" | "TEXT_ONLY";
+    student?: Lead & { application: Application; aiScore?: number; priorityTier?: string; computedCutoff?: number };
+    studentsList?: (Lead & { application: Application; aiScore?: number; priorityTier?: string; computedCutoff?: number })[];
+    stats?: Record<string, any>;
   };
-  suggestedPrompts: string[];
+  suggestedQueries?: string[];
+  timestamp: string;
 }
 
-export function queryNoraDatabase(
+export function processNoraChatQuery(
   query: string,
   applicants: (Lead & { application: Application })[],
   currentCampus: CampusLocation = "ALL"
-): NoraQueryResult {
+): NoraChatMessage {
   const q = (query || "").trim().toLowerCase();
+  const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   // Scope to campus if selected
   const scopeApplicants = applicants.filter((a) => {
@@ -35,7 +35,7 @@ export function queryNoraDatabase(
     return true;
   });
 
-  // Calculate AI prediction for each applicant in scope
+  // Enrich with live calculation
   const enrichedApplicants = scopeApplicants.map((a) => {
     const pred = predictStudentConversion({
       tneaCutoff: a.tneaCutoff || (a.application ? a.application.marks12th * 2 : 160),
@@ -52,7 +52,91 @@ export function queryNoraDatabase(
     };
   });
 
-  // 1. SPECIFIC DISTRICT / CITY QUERY (e.g. "salem", "karur", "coimbatore", "trichy", "namakkal", etc.)
+  // 1. SPECIFIC STUDENT LOOKUP BY NAME, PHONE, OR EMAIL
+  const matchingStudent = enrichedApplicants.find((a) => {
+    const nameLower = a.name.toLowerCase();
+    const queryClean = q
+      .replace(/^(who is|find|search for|search|get|show|details of|about|tell me about|info on|give me|check)\s+/i, "")
+      .replace(/\b(lead|student|candidate|details|record|data|profile|info|phone|cutoff|marks?|number|contact)\b/gi, "")
+      .trim();
+
+    if (queryClean.length >= 2 && (nameLower.includes(queryClean) || queryClean.includes(nameLower))) return true;
+    if (q.includes(nameLower)) return true;
+    const nameParts = nameLower.split(/\s+/);
+    if (nameParts.some((part) => part.length >= 3 && q.includes(part))) return true;
+
+    // Phone match
+    const cleanPhone = (a.phone || "").replace(/\D/g, "");
+    const cleanQuery = q.replace(/\D/g, "");
+    if (cleanQuery.length >= 6 && cleanPhone.includes(cleanQuery)) return true;
+
+    // Email match
+    if (a.email && q.includes(a.email.toLowerCase())) return true;
+    return false;
+  });
+
+  if (matchingStudent) {
+    const s = matchingStudent;
+    const cutoff = s.computedCutoff || s.tneaCutoff || 160;
+
+    const specificFields: string[] = [];
+    if (q.includes("phone") || q.includes("mobile") || q.includes("number") || q.includes("contact")) {
+      specificFields.push(`📞 **Phone**: \`${s.phone}\``);
+    }
+    if (q.includes("cutoff") || q.includes("mark")) {
+      specificFields.push(`🎯 **TNEA Cutoff**: **${cutoff}/200**`);
+    }
+    if (q.includes("course") || q.includes("branch") || q.includes("dept") || q.includes("department")) {
+      specificFields.push(`🎓 **Interested Course**: **${s.courseInterest}**`);
+    }
+    if (q.includes("district") || q.includes("city") || q.includes("location") || q.includes("native")) {
+      specificFields.push(`📍 **District**: **${s.district || "Karur"}**`);
+    }
+    if (q.includes("status") || q.includes("stage")) {
+      specificFields.push(`📊 **Status**: **${s.status}** (${s.subStage || "Untouched"})`);
+    }
+
+    const text = specificFields.length > 0
+      ? `Here are the specific details you requested for **${s.name}**:\n\n${specificFields.join("\n")}`
+      : `Here are the specific database records for **${s.name}**:`;
+
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text,
+      specificData: {
+        type: "SINGLE_STUDENT",
+        student: s,
+      },
+      suggestedQueries: [
+        `What is the cutoff for ${s.name}?`,
+        `What is ${s.name}'s phone number?`,
+        "Show hot leads",
+      ],
+      timestamp,
+    };
+  }
+
+  // ALL LEADS QUERY
+  if (q === "all" || q.includes("all leads") || q.includes("all students") || q.includes("list all") || q.includes("show all")) {
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `Listing all **${enrichedApplicants.length} candidate records** currently in the database:`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: enrichedApplicants,
+      },
+      suggestedQueries: [
+        "Show hot leads",
+        "Cutoff > 175",
+        "Untouched inquiries",
+      ],
+      timestamp,
+    };
+  }
+
+  // 2. SPECIFIC DISTRICT QUERY (e.g. "Salem", "Coimbatore", "Karur", "Trichy")
   const districts = [
     "salem", "karur", "coimbatore", "covai", "tirupur", "erode", "namakkal", "dindigul",
     "trichy", "tiruchirappalli", "madurai", "chennai", "theni", "thanjavur", "pudukkottai"
@@ -64,38 +148,28 @@ export function queryNoraDatabase(
     const matched = enrichedApplicants.filter((a) =>
       (a.district || "").toLowerCase().includes(districtKey)
     );
-
-    const hotCount = matched.filter((m) => m.priorityTier === "HOT").length;
-    const avgCutoff = matched.length
-      ? Number((matched.reduce((sum, m) => sum + (m.computedCutoff || 160), 0) / matched.length).toFixed(1))
-      : 0;
-
-    const districtCapitalized = districtKey.charAt(0).toUpperCase() + districtKey.slice(1);
+    const districtName = districtKey.charAt(0).toUpperCase() + districtKey.slice(1);
 
     return {
-      query,
-      answerText: `📍 **NORA Database Analysis for ${districtCapitalized} District**:\n\n` +
-        `• Found **${matched.length} student leads** from ${districtCapitalized}.\n` +
-        `• 🔥 **${hotCount} Hot Leads** with high admission conversion likelihood (≥72%).\n` +
-        `• Average TNEA Cutoff: **${avgCutoff}/200**.\n` +
-        (matched.length > 0
-          ? `Top candidate: **${matched[0].name}** (Cutoff: ${matched[0].computedCutoff || 160}, Course: ${matched[0].courseInterest}).`
-          : `No candidates currently recorded from this district. Try adding or importing leads.`),
-      matchedLeads: matched,
-      totalMatches: matched.length,
-      insights: {
-        avgCutoff,
-        hotLeadsCount: hotCount,
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: matched.length > 0
+        ? `Found **${matched.length} student(s)** from **${districtName}** in the database:`
+        : `There are currently no candidates recorded from **${districtName}**.`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: matched,
       },
-      suggestedPrompts: [
-        `Show hot leads from ${districtCapitalized}`,
-        `Which courses are popular in ${districtCapitalized}?`,
-        "Show untouched leads",
+      suggestedQueries: [
+        `Show hot leads from ${districtName}`,
+        "Show untouched inquiries",
+        "Cutoff > 175",
       ],
+      timestamp,
     };
   }
 
-  // 2. CUTOFF QUERIES (e.g. "cutoff > 175", "cutoff above 180", "180+", "high cutoff")
+  // 3. CUTOFF FILTER QUERIES (e.g. "cutoff > 175", "cutoff above 180", "180+")
   const cutoffMatch = q.match(/(?:cutoff|marks?)\s*(?:>|above|greater than|>=)\s*(\d{2,3})/i) ||
     q.match(/(\d{2,3})\s*(?:\+|cutoff)/i);
 
@@ -104,52 +178,48 @@ export function queryNoraDatabase(
     const matched = enrichedApplicants.filter((a) => (a.computedCutoff || 0) >= targetCutoff);
 
     return {
-      query,
-      answerText: `🎯 **NORA High Cutoff Analysis (≥ ${targetCutoff}/200)**:\n\n` +
-        `• Found **${matched.length} candidates** with TNEA Cutoff of ${targetCutoff} or higher.\n` +
-        `• All ${matched.length} candidates qualify for prime Round-1 TNEA counseling allocation in B.E CSE, B.Tech AI & DS, and IT.\n` +
-        `• Merit Scholarship Eligibility: Candidates with 180+ cutoff are eligible for 50% to 100% tuition fee waivers at V.S.B.`,
-      matchedLeads: matched,
-      totalMatches: matched.length,
-      insights: {
-        avgCutoff: matched.length
-          ? Number((matched.reduce((sum, m) => sum + (m.computedCutoff || 0), 0) / matched.length).toFixed(1))
-          : targetCutoff,
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `Found **${matched.length} candidate(s)** with TNEA Cutoff **≥ ${targetCutoff}/200**:`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: matched,
       },
-      suggestedPrompts: [
-        "Show candidates interested in CSE",
-        "Who are the hot leads?",
-        "What are the scholarship rules for 180+ cutoff?",
+      suggestedQueries: [
+        "Show hot leads",
+        "Candidates from Salem",
+        "What are the scholarship rules?",
       ],
+      timestamp,
     };
   }
 
-  // 3. PRIORITY TIER QUERIES (e.g. "hot leads", "warm leads", "cold leads")
+  // 4. PRIORITY TIER QUERY (e.g. "hot leads", "warm leads", "cold leads")
   if (q.includes("hot") || q.includes("warm") || q.includes("cold")) {
     const targetTier = q.includes("hot") ? "HOT" : q.includes("warm") ? "WARM" : "COLD";
     const matched = enrichedApplicants.filter((a) => a.priorityTier === targetTier);
 
     return {
-      query,
-      answerText: `${targetTier === "HOT" ? "🔥" : targetTier === "WARM" ? "⚡" : "❄️"} **NORA Lead Priority Analysis (${targetTier} Leads)**:\n\n` +
-        `• Found **${matched.length} ${targetTier} leads** in the database.\n` +
-        (targetTier === "HOT"
-          ? `• These candidates exhibit high conversion probability (≥72%) based on competitive cutoff, local district proximity, and active counselor follow-up.\n• **Action**: Priority seat reservation and campus counseling.`
-          : targetTier === "WARM"
-          ? `• These candidates have moderate conversion rates (45–71%).\n• **Action**: Call parent regarding hostel facilities, scholarships, and 100% placement track record.`
-          : `• These candidates are at risk of opting out or have borderline cutoffs.\n• **Action**: Recommend core engineering branches or counseling consultation.`),
-      matchedLeads: matched,
-      totalMatches: matched.length,
-      suggestedPrompts: [
-        "Show leads from Salem",
-        "How many fees paid?",
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `Here are the **${matched.length} ${targetTier} leads** (Conversion Probability ${
+        targetTier === "HOT" ? "≥ 72%" : targetTier === "WARM" ? "45–71%" : "< 45%"
+      }):`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: matched,
+      },
+      suggestedQueries: [
         "Show untouched leads",
+        "Leads from Salem",
+        "Cutoff > 175",
       ],
+      timestamp,
     };
   }
 
-  // 4. UNTOUCHED / NEW LEADS (e.g. "untouched", "new leads", "not contacted")
-  if (q.includes("untouched") || q.includes("not contacted") || q.includes("new lead") || q.includes("pending call")) {
+  // 5. UNTOUCHED LEADS (e.g. "untouched", "not contacted")
+  if (q.includes("untouched") || q.includes("not contacted") || q.includes("pending call")) {
     const matched = enrichedApplicants.filter(
       (a) =>
         a.status === "NEW" ||
@@ -158,23 +228,24 @@ export function queryNoraDatabase(
     );
 
     return {
-      query,
-      answerText: `⏳ **NORA Untouched / New Inquiries Analysis**:\n\n` +
-        `• Found **${matched.length} untouched student inquiries** waiting for counselor outreach.\n` +
-        `• Immediate follow-up within 24 hours increases admission conversion by **48%** based on NORA ML model weights.\n` +
-        `• Click any student below to dial directly or generate an automated WhatsApp pitch.`,
-      matchedLeads: matched,
-      totalMatches: matched.length,
-      suggestedPrompts: [
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `Found **${matched.length} untouched inquiries** awaiting counselor engagement:`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: matched,
+      },
+      suggestedQueries: [
         "Who are the hot leads?",
-        "Show leads with cutoff > 170",
-        "Generate WhatsApp pitch",
+        "Show leads from Salem",
+        "Cutoff > 170",
       ],
+      timestamp,
     };
   }
 
-  // 5. FEE PAYMENT / ADMISSION STATUS (e.g. "fee paid", "paid", "admitted", "payment")
-  if (q.includes("fee") || q.includes("paid") || q.includes("payment") || q.includes("admitted") || q.includes("enrol")) {
+  // 6. FEE PAYMENT / ADMISSION STATUS (e.g. "fee paid", "paid", "admitted")
+  if (q.includes("fee") && (q.includes("paid") || q.includes("payment") || q.includes("received") || q.includes("admitted"))) {
     const matched = enrichedApplicants.filter(
       (a) =>
         a.status === "ADMITTED" ||
@@ -182,113 +253,100 @@ export function queryNoraDatabase(
     );
 
     return {
-      query,
-      answerText: `💳 **NORA Fee Payment & Confirmed Enrolments Analysis**:\n\n` +
-        `• Found **${matched.length} candidates** with confirmed fee payments or verified admission status.\n` +
-        `• All official admission receipts and seat tokens have been verified in the accounts ledger.`,
-      matchedLeads: matched,
-      totalMatches: matched.length,
-      insights: {
-        feePaidCount: matched.length,
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `Found **${matched.length} student(s)** with confirmed fee payment / admitted status:`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: matched,
       },
-      suggestedPrompts: [
-        "Show untouched leads",
-        "How many leads from Coimbatore?",
-        "What is the total fee structure?",
+      suggestedQueries: [
+        "Total leads count",
+        "Show untouched inquiries",
+        "Cutoff > 180",
       ],
+      timestamp,
     };
   }
 
-  // 6. SPECIFIC STUDENT SEARCH (e.g. "find Wilsonrani", "search Gunal", "Manivel", "Yukesh", "Jaikaviesh")
-  const specificMatches = enrichedApplicants.filter((a) => {
-    const nameWords = a.name.toLowerCase().split(/\s+/);
-    return (
-      q.includes(a.name.toLowerCase()) ||
-      nameWords.some((w) => w.length > 2 && q.includes(w)) ||
-      (a.phone && q.includes(a.phone.replace(/[^0-9]/g, ""))) ||
-      (a.email && q.includes(a.email.toLowerCase()))
-    );
-  });
-
-  if (specificMatches.length > 0) {
-    const s = specificMatches[0];
-    return {
-      query,
-      answerText: `👤 **NORA Database Record Found**: **${s.name}**\n\n` +
-        `• **Phone**: ${s.phone} | **Email**: ${s.email}\n` +
-        `• **District**: ${s.district || "State Not Available"} (${s.community || "BC"} Quota)\n` +
-        `• **Course Interest**: ${s.courseInterest} (${s.campus} Campus)\n` +
-        `• **TNEA Cutoff**: **${s.computedCutoff || 160}/200**\n` +
-        `• **NORA Conversion Likelihood**: **${s.aiScore}% (${s.priorityTier} Priority)**\n` +
-        `• **Current Stage**: ${s.status} (${s.subStage || "Untouched"})\n\n` +
-        `Click **Open Dossier** below to view complete marks, documents, and call logs.`,
-      matchedLeads: specificMatches,
-      totalMatches: specificMatches.length,
-      suggestedPrompts: [
-        `Generate WhatsApp pitch for ${s.name}`,
-        "Show other leads from this district",
-        "Who are the hot leads?",
-      ],
-    };
-  }
-
-  // 7. SPECIFIC COURSE / DEPARTMENT (e.g. "cse", "computer science", "ai", "artificial intelligence", "it", "mech", "ece")
+  // 7. SPECIFIC COURSE INQUIRY (e.g. "cse", "computer science", "ai", "it", "mech", "ece")
   const courses = [
-    { key: "cse", name: "Computer Science" },
-    { key: "ai", name: "Artificial Intelligence" },
+    { key: "cse", name: "Computer Science and Engineering" },
+    { key: "ai", name: "Artificial Intelligence and Data Science" },
     { key: "it", name: "Information Technology" },
-    { key: "ece", name: "Electronics" },
-    { key: "eee", name: "Electrical" },
-    { key: "mech", name: "Mechanical" },
-    { key: "bio", name: "Bio" },
-    { key: "civil", name: "Civil" },
+    { key: "ece", name: "Electronics and Communication" },
+    { key: "eee", name: "Electrical and Electronics" },
+    { key: "mech", name: "Mechanical Engineering" },
+    { key: "bio", name: "BioMedical Engineering" },
+    { key: "civil", name: "Civil Engineering" },
   ];
   const matchedCourse = courses.find((c) => q.includes(c.key));
 
-  if (matchedCourse) {
+  if (matchedCourse && (q.includes("lead") || q.includes("student") || q.includes("applied") || q.includes("show"))) {
     const matched = enrichedApplicants.filter((a) =>
       a.courseInterest.toLowerCase().includes(matchedCourse.key)
     );
 
     return {
-      query,
-      answerText: `💻 **NORA Program Demand Analysis for ${matchedCourse.name}**:\n\n` +
-        `• Found **${matched.length} student leads** interested in ${matchedCourse.name} programs.\n` +
-        `• Historical TNEA Cutoff Benchmark at V.S.B.: ~168–174 (Karur VSB-612) and ~165–170 (Coimbatore VSB-714).\n` +
-        `• Placement track record for this department: 98%+ offers with top packages up to ₹18.5 LPA.`,
-      matchedLeads: matched,
-      totalMatches: matched.length,
-      suggestedPrompts: [
-        `Show hot leads for ${matchedCourse.name}`,
-        "What is the fee structure for CSE?",
-        "Show leads with cutoff > 175",
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `Found **${matched.length} candidate(s)** interested in **${matchedCourse.name}**:`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: matched,
+      },
+      suggestedQueries: [
+        `Show hot leads for ${matchedCourse.key.toUpperCase()}`,
+        "What is the cutoff for CSE?",
+        "Show leads from Salem",
       ],
+      timestamp,
     };
   }
 
-  // 8. DEFAULT SUMMARY & COLLEGE KNOWLEDGE FALLBACK
-  const counselorResp = askVirtualCounselor(query);
-  const totalLeads = enrichedApplicants.length;
-  const hotTotal = enrichedApplicants.filter((a) => a.priorityTier === "HOT").length;
-  const avgTotalCutoff = totalLeads
-    ? Number((enrichedApplicants.reduce((sum, a) => sum + (a.computedCutoff || 160), 0) / totalLeads).toFixed(1))
-    : 164.5;
+  // 8. TOTAL COUNT / METRICS
+  if (q.includes("how many") || q.includes("total leads") || q.includes("count") || q.includes("overview")) {
+    const total = enrichedApplicants.length;
+    const hot = enrichedApplicants.filter((a) => a.priorityTier === "HOT").length;
+    const warm = enrichedApplicants.filter((a) => a.priorityTier === "WARM").length;
+    const cold = enrichedApplicants.filter((a) => a.priorityTier === "COLD").length;
+    const paid = enrichedApplicants.filter(
+      (a) => a.status === "ADMITTED" || a.application?.paymentStatus === "PAID"
+    ).length;
 
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `📊 **Live Database Metrics Summary**:\n\n` +
+        `• **Total Candidates**: **${total}**\n` +
+        `• 🔥 **Hot Leads (≥72%)**: **${hot}**\n` +
+        `• ⚡ **Warm Leads (45-71%)**: **${warm}**\n` +
+        `• ❄️ **Cold Leads (<45%)**: **${cold}**\n` +
+        `• 💳 **Confirmed Paid / Admitted**: **${paid}**\n\n` +
+        `Ask me for any specific student or filter (e.g. *"Show leads from Salem"*, *"Find Wilsonrani"*).`,
+      specificData: {
+        type: "METRICS",
+        stats: { total, hot, warm, cold, paid },
+      },
+      suggestedQueries: [
+        "Show Hot leads",
+        "Show leads from Salem",
+        "Find Wilsonrani",
+      ],
+      timestamp,
+    };
+  }
+
+  // 9. GENERAL INSTITUTIONAL KNOWLEDGE (e.g. fees, hostel, placements)
+  const counselorResp = askVirtualCounselor(query);
   return {
-    query,
-    answerText: `🤖 **NORA AI System & Database Overview**:\n\n` +
-      `• Total Active Leads Analyzed: **${totalLeads}**\n` +
-      `• Overall Hot Leads (≥72% conversion): **${hotTotal}**\n` +
-      `• Average TNEA Cutoff: **${avgTotalCutoff}/200**\n\n` +
-      counselorResp.answer,
-    matchedLeads: enrichedApplicants.slice(0, 5),
-    totalMatches: totalLeads,
-    suggestedPrompts: [
-      "Show leads from Salem",
-      "Who are the hot leads?",
-      "Show untouched leads",
-      "Find student Wilsonrani",
-      "Cutoff above 175",
-    ],
+    id: Date.now().toString(),
+    sender: "NORA",
+    text: counselorResp.answer,
+    specificData: {
+      type: "TEXT_ONLY",
+    },
+    suggestedQueries: counselorResp.suggestedFollowUpQuestions,
+    timestamp,
   };
 }
