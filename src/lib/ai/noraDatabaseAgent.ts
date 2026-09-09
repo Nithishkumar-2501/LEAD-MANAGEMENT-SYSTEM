@@ -80,13 +80,14 @@ export function processNoraChatQuery(
       return {
         id: Date.now().toString(),
         sender: "NORA",
-        text: `Found candidate record matching phone number \`${phoneDigits}\`:\n\n` +
-          `• **Name**: **${s.name}**\n` +
-          `• 📞 **Mobile**: \`${s.phone}\`\n` +
+        text: `Found candidate record matching phone number \`${phoneDigits}\` in Firebase database:\n\n` +
+          `• **Student Name**: **${s.name}**\n` +
+          `• 📞 **Mobile**: \`${s.phone}\`` + (s.alternatePhone ? ` (Alt: \`${s.alternatePhone}\`)` : "") + `\n` +
           `• 🎯 **TNEA Cutoff**: **${s.computedCutoff}/200**\n` +
           `• 📍 **District**: **${s.district || "Karur"}**\n` +
           `• 🎓 **Course**: **${s.courseInterest}**\n` +
-          `• 📊 **Status**: **${s.status}** (${s.subStage || "Untouched"})`,
+          `• 📊 **Status**: **${s.status}** (${s.subStage || "Untouched"})\n\n` +
+          `✏️ *Click **Edit Student Details** below to modify contact info, marks, or stage in Firebase.*`,
         specificData: {
           type: "SINGLE_STUDENT",
           student: s,

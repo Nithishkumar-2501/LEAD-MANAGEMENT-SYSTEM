@@ -23,6 +23,7 @@ import {
   ArrowUpRight,
   Layers,
   Radio,
+  Edit3,
 } from "lucide-react";
 import { Lead, Application, CampusLocation, ActiveTab } from "@/types/crm";
 import { processNoraChatQuery, NoraChatMessage } from "@/lib/ai/noraDatabaseAgent";
@@ -324,14 +325,16 @@ export default function NoraAiDatabaseModal({
                         <div className="flex items-center gap-2 pt-1">
                           <button
                             onClick={() => handleOpenDossier(msg.specificData!.student!)}
-                            className="flex-1 py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                            className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/30"
+                            title="Edit student contact info, marks, stage & Firebase record"
                           >
-                            <span>Open Full Candidate Dossier</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
+                            <Edit3 className="w-4 h-4" />
+                            <span>Edit Student Details</span>
+                            <ChevronRight className="w-3.5 h-3.5 ml-auto" />
                           </button>
                           <a
                             href={`tel:${msg.specificData.student.phone}`}
-                            className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors cursor-pointer"
+                            className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors cursor-pointer"
                             title="Call Student"
                           >
                             <PhoneCall className="w-4 h-4" />
@@ -342,7 +345,7 @@ export default function NoraAiDatabaseModal({
                             )},%20this%20is%20from%20the%20Admissions%20Office.`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors cursor-pointer"
+                            className="p-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-colors cursor-pointer"
                             title="Chat on WhatsApp"
                           >
                             <MessageCircle className="w-4 h-4" />
@@ -375,11 +378,11 @@ export default function NoraAiDatabaseModal({
                               <div
                                 key={student.id}
                                 onClick={() => handleOpenDossier(student)}
-                                className="p-2.5 flex items-center justify-between gap-3 hover:bg-indigo-50/50 dark:hover:bg-slate-900/80 transition-colors cursor-pointer text-xs"
+                                className="p-2.5 flex items-center justify-between gap-3 hover:bg-indigo-50/50 dark:hover:bg-slate-900/80 transition-colors cursor-pointer text-xs group"
                               >
                                 <div className="min-w-0">
-                                  <div className="font-bold text-slate-900 dark:text-white truncate">
-                                    {student.name}
+                                  <div className="font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                                    <span>{student.name}</span>
                                   </div>
                                   <div className="text-[10px] text-slate-500 flex items-center gap-2">
                                     <span>{student.district || "Karur"}</span>
@@ -398,18 +401,17 @@ export default function NoraAiDatabaseModal({
                                   <span className="font-extrabold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] border border-indigo-200 dark:border-indigo-800">
                                     {cutoff}
                                   </span>
-                                  <span
-                                    className={`px-1.5 py-0.5 rounded text-[9px] font-black ${
-                                      student.priorityTier === "HOT"
-                                        ? "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-                                        : student.priorityTier === "WARM"
-                                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                                        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                                    }`}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenDossier(student);
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer shadow-xs"
+                                    title="Edit Student Details"
                                   >
-                                    {student.priorityTier || "LEAD"}
-                                  </span>
-                                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                                    <Edit3 className="w-3 h-3" />
+                                    <span>Edit</span>
+                                  </button>
                                 </div>
                               </div>
                             );
