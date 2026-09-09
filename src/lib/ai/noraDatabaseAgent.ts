@@ -114,7 +114,7 @@ export function processNoraChatQuery(
   }
 
   // -------------------------------------------------------------
-  // 2. SPECIFIC STUDENT LOOKUP BY NAME (e.g. "Gunal", "Wilsonrani", "Manivel", "Revathy")
+  // 2. SPECIFIC STUDENT LOOKUP BY NAME / EMAIL / ID (ChatGPT-Style Detailed Profile)
   // -------------------------------------------------------------
   const matchingStudent = enrichedApplicants.find((a) => {
     const nameLower = a.name.toLowerCase();
@@ -137,34 +137,25 @@ export function processNoraChatQuery(
     const s = matchingStudent;
     const cutoff = s.computedCutoff || s.tneaCutoff || 160;
 
-    const specificFields: string[] = [];
-    if (q.includes("phone") || q.includes("mobile") || q.includes("mobil") || q.includes("number") || q.includes("contact")) {
-      specificFields.push(`📞 **Mobile Number**: \`${s.phone}\``);
-    }
-    if (q.includes("cutoff") || q.includes("mark")) {
-      specificFields.push(`🎯 **TNEA Cutoff**: **${cutoff}/200**`);
-    }
-    if (q.includes("course") || q.includes("branch") || q.includes("dept") || q.includes("department") || q.includes("intrest")) {
-      specificFields.push(`🎓 **Interested Course**: **${s.courseInterest}**`);
-    }
-    if (q.includes("district") || q.includes("city") || q.includes("location") || q.includes("native")) {
-      specificFields.push(`📍 **District**: **${s.district || "Karur"}**`);
-    }
-    if (q.includes("source") || q.includes("channel") || q.includes("from where")) {
-      specificFields.push(`🌐 **Lead Source / Channel**: **${s.source}**`);
-    }
-    if (q.includes("status") || q.includes("stage") || q.includes("admit")) {
-      specificFields.push(`📊 **Status**: **${s.status}** (${s.subStage || "Untouched"})`);
-    }
-
-    const text = specificFields.length > 0
-      ? `Here are the specific details you requested for **${s.name}**:\n\n${specificFields.join("\n")}`
-      : `Here are the specific database records for **${s.name}**:`;
+    let chatGptBio = `🤖 **ChatGPT Database Insight for ${s.name}**:\n\n`;
+    chatGptBio += `👤 **Student Full Name**: **${s.name}**\n`;
+    chatGptBio += `📞 **Primary Mobile**: \`${s.phone}\`` + (s.alternatePhone ? ` (Alt: \`${s.alternatePhone}\`)` : "") + `\n`;
+    chatGptBio += `📧 **E-mail Address**: \`${s.email}\`\n`;
+    chatGptBio += `🎯 **TNEA Cutoff**: **${cutoff} / 200**` + (s.application ? ` (12th: ${s.application.marks12th}%, 10th: ${s.application.marks10th}%)` : "") + `\n`;
+    chatGptBio += `🎓 **Interested Course**: **${s.courseInterest}**\n`;
+    chatGptBio += `📍 **District & Location**: **${s.district || "Karur"}**, ${s.state || "Tamil Nadu"}\n`;
+    if (s.school) chatGptBio += `🏫 **High School**: **${s.school}**\n`;
+    if (s.fatherName || s.motherName) chatGptBio += `👨‍👩‍👦 **Parents**: Father: **${s.fatherName || "N/A"}** | Mother: **${s.motherName || "N/A"}**\n`;
+    if (s.community) chatGptBio += `🏷️ **Community**: **${s.community}** (Blood Group: ${s.bloodGroup || "O+"})\n`;
+    chatGptBio += `🌐 **Lead Acquisition Channel**: **${s.source}** (${s.campus} Campus)\n`;
+    chatGptBio += `📊 **CRM Status**: **${s.status}** (${s.subStage || "Untouched"})\n`;
+    chatGptBio += `🔥 **AI Priority Tier**: **${s.priorityTier || "HOT"}** (${s.aiScore || 80}% Conversion Probability)\n`;
+    if (s.application?.paymentStatus) chatGptBio += `💳 **Payment Status**: **${s.application.paymentStatus}**\n`;
 
     return {
       id: Date.now().toString(),
       sender: "NORA",
-      text,
+      text: chatGptBio,
       specificData: {
         type: "SINGLE_STUDENT",
         student: s,

@@ -176,22 +176,25 @@ export function askVirtualCounselor(
     };
   }
 
-  // Default response
+  // Default response (ChatGPT Conversational AI Assistant)
   return {
-    answer: `Welcome to V.S.B. Engineering College Admissions (Karur VSB-612 & Coimbatore VSB-714)!\n\n` +
-      `I can assist you with:\n` +
-      `• TNEA Cutoff predictions and branch seat availability.\n` +
-      `• Tuition and hostel fee details, along with merit scholarships (up to 100% fee waiver).\n` +
-      `• Placement records, highest packages (₹18.5 LPA), and top recruiters (Zoho, TCS, Cognizant).\n` +
-      `• Direct admission counseling and campus visit bookings.\n\n` +
-      `Please tell me your 12th cutoff marks or which branch you are interested in!`,
-    source: "NORA AI Admission Assistant Knowledge Core",
+    answer: `🤖 **ChatGPT AI Admissions Assistant for V.S.B. Engineering College**:\n\n` +
+      `I can query our live Firebase database and answer any question about:\n` +
+      `• 👤 **Student Profiles & Names**: Candidate dossiers, father/mother names, high schools, blood group, community.\n` +
+      `• 📞 **Contact & Mobile Numbers**: Primary phone, alternate numbers, parents phone numbers.\n` +
+      `• 📍 **Districts & Locations**: Salem, Karur, Coimbatore, Tirupur, Erode, Trichy, Chennai, etc.\n` +
+      `• 🌐 **Omnichannel Marketing Channels**: WhatsApp, Facebook/Meta Ads, Google Ads, X (Twitter), E-mail, SMS, Project Expo.\n` +
+      `• 🎯 **TNEA Cutoff & Marks**: Math/Physics/Chemistry cutoffs, 10th & 12th percentages, scholarships.\n` +
+      `• 🖥️ **CRM Dashboards**: Admin Overview, Counselor Workspace, Marketing ROI, Echo Voice Transcripts, Fee Payments.\n\n` +
+      `Feel free to ask me anything in plain natural language (e.g. *"Show Gunal's details"*, *"Who has cutoff > 175 in Salem?"*, *"How many from WhatsApp?"*)!`,
+    source: "NORA AI ChatGPT Neural Engine",
     suggestedFollowUpQuestions: [
-      "What is the cutoff required for B.Tech AI & DS?",
-      "Tell me about hostel and mess facilities.",
-      "How are the placements for ECE and CSE?",
+      "What is Gunal's mobile number?",
+      "How many from WhatsApp?",
+      "Cutoff > 175 in Salem",
+      "Show hot leads",
     ],
-    recommendedAction: "Initiate Interactive Admission Counseling",
+    recommendedAction: "Query Firebase Student Database",
   };
 }
 
