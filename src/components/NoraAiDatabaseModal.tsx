@@ -91,6 +91,7 @@ export default function NoraAiDatabaseModal({
     if (isOpen && initialQuery && initialQuery.trim()) {
       handleSendMessage(initialQuery);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialQuery]);
 
   if (!isOpen) return null;
