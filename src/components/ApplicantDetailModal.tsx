@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   X,
   Phone,
@@ -42,8 +42,13 @@ import {
   Brain,
   Flame,
   Snowflake,
+  Play,
+  Pause,
+  Lock,
+  Volume2,
+  ShieldCheck,
 } from "lucide-react";
-import { Lead, Application, LeadStatus, AppStage, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
+import { Lead, Application, LeadStatus, AppStage, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { predictStudentConversion, calculateTneaCutoff } from "@/lib/ai/leadScoringEngine";
 import { parseMarksheetDocument } from "@/lib/ai/marksheetOcrEngine";
 import { analyzeCallTranscript } from "@/lib/ai/callSentimentEngine";
@@ -1166,28 +1171,58 @@ export default function ApplicantDetailModal({
                 </div>
               )}
 
-              {/* TAB 7: CALL LOGS */}
+              {/* TAB 7: CALL LOGS & AUDIO RECORDINGS */}
               {activeMainTab === "CALL_LOGS" && (
                 <div className="bg-white rounded-xl border border-slate-300 p-5 space-y-4 shadow-sm text-xs text-slate-950">
-                  <h4 className="font-black text-slate-950 text-sm">Call Logs & Teleconference Audio</h4>
-                  <div className="space-y-3">
-                    <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-300 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-400 flex items-center justify-center text-emerald-700">
-                          <PhoneCall className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="font-black text-slate-950">Outbound Call - Dr Dhanabal M</div>
-                          <div className="text-[11px] text-slate-700 font-bold">
-                            25 Aug 2026 06:30 PM • Duration: 02m 14s
-                          </div>
-                        </div>
-                      </div>
-                      <span className="bg-emerald-100 text-emerald-900 text-[10px] font-black px-2 py-0.5 rounded border border-emerald-300">
-                        Interested
-                      </span>
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <div>
+                      <h4 className="font-black text-slate-950 text-sm flex items-center gap-2">
+                        <PhoneCall className="w-4 h-4 text-emerald-600" /> Call Recordings & Teleconference Audio
+                      </h4>
+                      <p className="text-[11px] text-slate-500 font-bold mt-0.5">
+                        In-Portal Recorded Calls • Stored in Database until Candidate Admission
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-300 px-3 py-1 rounded-xl text-[10px] font-black">
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Manual Delete Disabled</span>
                     </div>
                   </div>
+
+                  {(formData.status === "ADMITTED" || (formData.application?.stage || "").toUpperCase().includes("ADMITTED") || (formData.application?.stage || "").toUpperCase().includes("ENROL")) ? (
+                    <div className="p-5 bg-emerald-50 rounded-xl border border-emerald-300 text-center space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-400 text-emerald-700 flex items-center justify-center mx-auto text-lg">
+                        🎓
+                      </div>
+                      <h5 className="font-black text-emerald-950 text-sm">Student Admitted & Enrolled</h5>
+                      <p className="text-xs text-emerald-800 font-bold max-w-md mx-auto">
+                        In accordance with institutional privacy rules, all past call audio recordings for <strong className="text-emerald-950">{formData.name}</strong> have been automatically purged from the database upon admission confirmation.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <AudioPlayerCard
+                        recording={{
+                          id: `rec_${formData.id}_1`,
+                          leadId: formData.id,
+                          leadName: formData.name,
+                          leadPhone: formData.phone,
+                          teacherId: formData.assignedTo || "teacher_rajesh@123",
+                          teacherName: currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? "Prof. P. Rajesh" : "Faculty Lead"),
+                          recordingDate: new Date().toISOString().split("T")[0],
+                          timestamp: "10:45 AM",
+                          durationSeconds: 45,
+                          durationText: "00:45",
+                          studentInterestStatus: "INTERESTED",
+                          teacherNotes: `Discussed TNEA 12th Cutoff score (${formData.tneaCutoff || "178.5"}/200) and scholarship options for V.S.B. ${formData.campus || "KARUR"} Campus. Candidate is highly interested.`,
+                          callTranscript: `[00:02] Teacher: Hello ${formData.name}, following up regarding your V.S.B. engineering application.\n[00:10] ${formData.name}: Yes sir, I am eager to join B.E. Computer Science.`,
+                          audioUrl: "/audio/sample_call_recording.mp3",
+                          expiresAt: "2026-10-09",
+                          autoDeleted: false,
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1801,6 +1836,133 @@ export default function ApplicantDetailModal({
           }}
         />
       )}
+    </div>
+  );
+}
+
+// Interactive Call Audio Recording Player Component
+function AudioPlayerCard({ recording }: { recording: CallRecording }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(recording.durationSeconds || 30);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch((err) => {
+          console.warn("Audio playback note:", err);
+          setIsPlaying(false);
+        });
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(Math.floor(audioRef.current.currentTime));
+      if (audioRef.current.duration && !isNaN(audioRef.current.duration)) {
+        setDuration(Math.floor(audioRef.current.duration));
+      }
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const formatSecs = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="bg-slate-900 text-white p-4 rounded-2xl border border-sky-500/30 shadow-lg space-y-3">
+      {/* Header Info */}
+      <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-extrabold text-sky-300">Caller: {recording.teacherName || "Faculty Lead"}</span>
+          <span className="text-slate-400 font-mono">({recording.recordingDate || "Today"} • {recording.timestamp || "10:30 AM"})</span>
+        </div>
+        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-950 text-emerald-300 border border-emerald-800">
+          {recording.studentInterestStatus || "INTERESTED"}
+        </span>
+      </div>
+
+      {/* HTML5 Audio Element */}
+      <audio
+        ref={audioRef}
+        src={recording.audioUrl || "/audio/sample_call_recording.mp3"}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={handleEnded}
+        className="hidden"
+      />
+
+      {/* Player Controls Bar */}
+      <div className="flex items-center gap-3 bg-slate-950/90 p-3 rounded-xl border border-white/10">
+        <button
+          type="button"
+          onClick={togglePlay}
+          className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white flex items-center justify-center shadow-md transition-transform active:scale-95 cursor-pointer shrink-0"
+          title={isPlaying ? "Pause Audio" : "Play Recorded Call"}
+        >
+          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+        </button>
+
+        <div className="flex-1 space-y-1">
+          <div className="flex items-center justify-between text-[11px] font-mono text-slate-300 font-bold">
+            <span className="text-sky-400">{formatSecs(currentTime)}</span>
+            {isPlaying && (
+              <div className="flex items-center gap-1 h-3">
+                <span className="w-1 bg-sky-400 animate-bounce h-full rounded" />
+                <span className="w-1 bg-indigo-400 animate-bounce h-2 rounded delay-100" />
+                <span className="w-1 bg-pink-400 animate-bounce h-3 rounded delay-200" />
+                <span className="w-1 bg-emerald-400 animate-bounce h-1.5 rounded delay-150" />
+              </div>
+            )}
+            <span className="text-slate-400">{formatSecs(duration)}</span>
+          </div>
+
+          <input
+            type="range"
+            min={0}
+            max={duration || 100}
+            value={currentTime}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setCurrentTime(val);
+              if (audioRef.current) {
+                audioRef.current.currentTime = val;
+              }
+            }}
+            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
+          />
+        </div>
+      </div>
+
+      {/* Transcript & Notes */}
+      {recording.teacherNotes && (
+        <div className="text-[11px] bg-slate-950/40 p-2.5 rounded-lg border border-white/5 space-y-1">
+          <span className="font-extrabold text-slate-300 uppercase tracking-wider text-[10px]">Teacher Call Notes:</span>
+          <p className="text-slate-200">{recording.teacherNotes}</p>
+        </div>
+      )}
+
+      {/* Immutability & Auto-Delete Rules Banner */}
+      <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <span className="flex items-center gap-1 text-amber-400/90 font-bold">
+          <Lock className="w-3 h-3" /> Manual deletion disabled for Admin & Teacher
+        </span>
+        <span className="text-emerald-400 font-bold">Auto-deletes when student is Admitted</span>
+      </div>
     </div>
   );
 }

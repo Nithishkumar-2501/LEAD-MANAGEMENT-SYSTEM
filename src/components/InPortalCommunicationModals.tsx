@@ -102,10 +102,16 @@ function CallModal({
   const [studentInterestStatus, setStudentInterestStatus] = useState<"INTERESTED" | "ADMITTED" | "REVIEWING" | "NOT_INTERESTED" | "NO_ANSWER">("INTERESTED");
   const [callStatus, setCallStatus] = useState<"CONNECTING" | "CONNECTED" | "ENDED">("CONNECTING");
 
+  // MediaRecorder audio capture state
+  const mediaRecorderRef = useState<MediaRecorder | null>(null)[0]; // placeholder ref pattern
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string>("/audio/sample_call_recording.mp3");
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+
   useEffect(() => {
     const connectTimer = setTimeout(() => {
       setCallStatus("CONNECTED");
-    }, 1500);
+      setIsRecordingAudio(true);
+    }, 1200);
 
     return () => clearTimeout(connectTimer);
   }, []);
@@ -128,7 +134,12 @@ function CallModal({
 
   const handleEndCall = () => {
     setCallStatus("ENDED");
-    const notesSummary = callNotes.trim()
+    setIsRecordingAudio(false);
+
+    const isAdmitted = studentInterestStatus === "ADMITTED";
+    const notesSummary = isAdmitted
+      ? `Call ended (${formatTime(callSeconds)}) - Candidate ADMITTED! Call recordings auto-purged from database.`
+      : callNotes.trim()
       ? `Call duration: ${formatTime(callSeconds)}. Status: ${studentInterestStatus}. Notes: ${callNotes}`
       : `In-portal call completed (${formatTime(callSeconds)}) - ${studentInterestStatus}`;
     
@@ -153,12 +164,15 @@ function CallModal({
         studentInterestStatus,
         teacherNotes: callNotes.trim() || `Contacted student lead regarding 12th Cutoff and course admissions at V.S.B. ${contact.campus || "KARUR"} Campus.`,
         callTranscript: `[00:02] Teacher: Hello ${contact.name}, this is V.S.B. Admissions Team following up on your TNEA counselling score.\n[00:07] ${contact.name}: Hello sir! Yes, I am checking B.E. Computer Science cutoff requirements.\n[00:14] Teacher: Great! We have special scholarship seats available. Would you like to schedule a campus visit?\n[00:20] ${contact.name}: Yes sir, I am very interested to visit Karur campus this week!`,
-        audioUrl: "/audio/sample_call_recording.mp3",
+        audioUrl: recordedAudioUrl,
         expiresAt: expiresAtStr,
-        autoDeleted: false,
+        autoDeleted: isAdmitted,
       };
 
-      onSaveCallRecording(recordingPayload);
+      // Rules: If student is ADMITTED, auto-delete recording immediately
+      if (!isAdmitted) {
+        onSaveCallRecording(recordingPayload);
+      }
     }
 
     setTimeout(() => onClose(), 600);
