@@ -80,33 +80,46 @@ export default function Sidebar({
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close settings popup when clicking outside or pressing Escape
+  // Close settings & right flyout popovers when clicking outside or pressing Escape
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+
       if (
         settingsMenuRef.current &&
         !settingsMenuRef.current.contains(event.target as Node)
       ) {
         setIsSettingsMenuOpen(false);
       }
+
+      if (!target.closest("#nav-category-dashboard") && !target.closest("#flyout-dashboard")) {
+        setIsDashboardOpen(false);
+      }
+      if (!target.closest("#nav-category-admission") && !target.closest("#flyout-admission")) {
+        setIsAdmissionCrmOpen(false);
+      }
+      if (!target.closest("#nav-category-social") && !target.closest("#flyout-social")) {
+        setIsSocialPlatformOpen(false);
+      }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsSettingsMenuOpen(false);
+        setIsDashboardOpen(false);
+        setIsAdmissionCrmOpen(false);
+        setIsSocialPlatformOpen(false);
       }
     }
 
-    if (isSettingsMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleKeyDown);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isSettingsMenuOpen]);
+  }, []);
 
   const trimmedQuery = menuSearchQuery.trim().toLowerCase();
   const matchingApplicants =
@@ -536,7 +549,7 @@ export default function Sidebar({
           </div>
 
           {/* PARENT MENU ITEM 1: DASHBOARD */}
-          <div className="space-y-1">
+          <div className="relative space-y-1">
             {isCollapsed ? (
               <Tooltip text="Dashboard" position="right">
                 <button
@@ -603,42 +616,48 @@ export default function Sidebar({
                     4
                   </span>
                   <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
-                    {isDashboardOpen ? (
-                      <ChevronDown className="w-4 h-4 text-sky-400" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
-                    )}
+                    <ChevronRight
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        isDashboardOpen ? "rotate-90 text-sky-400" : "text-slate-400"
+                      }`}
+                    />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* NESTED INSIDE DASHBOARD */}
-            {(isDashboardOpen || isCollapsed) && (
+            {/* RIGHT SIDE FLYOUT POPOVER FOR DASHBOARD */}
+            {isDashboardOpen && !isCollapsed && (
               <div
-                className={`space-y-1 transition-all duration-300 ${
-                  isCollapsed
-                    ? "pt-2 space-y-2 border-t border-white/10 mt-2"
-                    : "ml-3 pl-3 border-l-2 border-sky-500/30 dark:border-sky-400/20 mt-1.5 space-y-1.5"
+                id="flyout-dashboard"
+                className={`absolute left-[calc(100%+10px)] top-0 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
+                  isLight
+                    ? "bg-white/95 text-slate-900 border-slate-200 shadow-slate-300/50"
+                    : "bg-slate-950/95 text-white border-white/15 shadow-black/80"
                 }`}
               >
+                <div className="px-2 py-1 border-b border-white/10 flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-400 flex items-center gap-1">
+                    <LayoutDashboard className="w-3 h-3" /> Dashboard Views
+                  </span>
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">
+                    {dashboardSubItems.length} Options
+                  </span>
+                </div>
                 {dashboardSubItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
-
-                  const buttonContent = (
+                  return (
                     <button
                       key={item.id}
-                      id={`nav-${item.id.toLowerCase().replace(/_/g, '-')}`}
+                      id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-3 ${
-                        isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
-                      } rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
                           : isLight
-                          ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                          : "bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
                       }`}
                     >
                       <div
@@ -646,62 +665,85 @@ export default function Sidebar({
                           isActive
                             ? "bg-white/20 text-white"
                             : isLight
-                            ? "bg-slate-100 text-slate-600"
+                            ? "bg-slate-200 text-slate-600"
                             : "bg-slate-800/90 text-slate-300"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
                       </div>
-
-                      {!isCollapsed && (
-                        <div className="flex flex-col items-start min-w-0 text-left">
-                          <span
-                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
-                              isActive
-                                ? "text-white"
-                                : isLight
-                                ? "text-slate-900"
-                                : "text-slate-200 group-hover:text-white"
-                            }`}
-                          >
-                            {item.label}
-                          </span>
-                          <span
-                            className={`text-[9px] font-medium truncate w-full ${
-                              isActive
-                                ? "text-white/80"
-                                : isLight
-                                ? "text-slate-500"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            {item.sublabel}
-                          </span>
-                        </div>
-                      )}
-
-                      {isActive && !isCollapsed && (
+                      <div className="flex flex-col items-start min-w-0 text-left">
+                        <span
+                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            isActive
+                              ? "text-white"
+                              : isLight
+                              ? "text-slate-900"
+                              : "text-slate-200 group-hover:text-white"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          className={`text-[9px] font-medium truncate w-full ${
+                            isActive
+                              ? "text-white/80"
+                              : isLight
+                              ? "text-slate-500"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {item.sublabel}
+                        </span>
+                      </div>
+                      {isActive && (
                         <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       )}
                     </button>
                   );
+                })}
+              </div>
+            )}
 
-                  if (isCollapsed) {
-                    return (
-                      <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
-                        {buttonContent}
-                      </Tooltip>
-                    );
-                  }
-
-                  return buttonContent;
+            {/* COLLAPSED STATE DASHBOARD ITEMS */}
+            {isCollapsed && isDashboardOpen && (
+              <div className="pt-2 space-y-2 border-t border-white/10 mt-2">
+                {dashboardSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
+                      <button
+                        id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
+                        onClick={() => handleNavClick(item.id)}
+                        className={`w-full flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                          isActive
+                            ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
+                            : isLight
+                            ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                            : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                        }`}
+                      >
+                        <div
+                          className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : isLight
+                              ? "bg-slate-100 text-slate-600"
+                              : "bg-slate-800/90 text-slate-300"
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                      </button>
+                    </Tooltip>
+                  );
                 })}
               </div>
             )}
           </div>
 
           {/* PARENT MENU ITEM: ADMISSION CRM */}
-          <div className="space-y-1">
+          <div className="relative space-y-1">
             {isCollapsed ? (
               <Tooltip text="Admission CRM" position="right">
                 <button
@@ -722,6 +764,7 @@ export default function Sidebar({
               </Tooltip>
             ) : (
               <div
+                id="nav-category-admission"
                 className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
                   isAnySubItemActive
                     ? isLight
@@ -770,41 +813,47 @@ export default function Sidebar({
                     {filteredSubItems.length}
                   </span>
                   <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
-                    {isAdmissionCrmOpen ? (
-                      <ChevronDown className="w-4 h-4 text-sky-400" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
-                    )}
+                    <ChevronRight
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        isAdmissionCrmOpen ? "rotate-90 text-sky-400" : "text-slate-400"
+                      }`}
+                    />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* NESTED INSIDE ADMISSION CRM */}
-            {(isAdmissionCrmOpen || isCollapsed) && (
+            {/* RIGHT SIDE FLYOUT POPOVER FOR ADMISSION CRM */}
+            {isAdmissionCrmOpen && !isCollapsed && (
               <div
-                className={`space-y-1 transition-all duration-300 ${
-                  isCollapsed
-                    ? "pt-2 space-y-2 border-t border-white/10 mt-2"
-                    : "ml-3 pl-3 border-l-2 border-sky-500/30 dark:border-sky-400/20 mt-1.5 space-y-1.5"
+                id="flyout-admission"
+                className={`absolute left-[calc(100%+10px)] top-0 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
+                  isLight
+                    ? "bg-white/95 text-slate-900 border-slate-200 shadow-slate-300/50"
+                    : "bg-slate-950/95 text-white border-white/15 shadow-black/80"
                 }`}
               >
+                <div className="px-2 py-1 border-b border-white/10 flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-400 flex items-center gap-1">
+                    <GraduationCap className="w-3 h-3" /> Admission CRM
+                  </span>
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">
+                    {filteredSubItems.length} Modules
+                  </span>
+                </div>
                 {filteredSubItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
-
-                  const buttonContent = (
+                  return (
                     <button
                       key={item.id}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-3 ${
-                        isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
-                      } rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
                           : isLight
-                          ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                          : "bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
                       }`}
                     >
                       <div
@@ -812,62 +861,84 @@ export default function Sidebar({
                           isActive
                             ? "bg-white/20 text-white"
                             : isLight
-                            ? "bg-slate-100 text-slate-600"
+                            ? "bg-slate-200 text-slate-600"
                             : "bg-slate-800/90 text-slate-300"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
                       </div>
-
-                      {!isCollapsed && (
-                        <div className="flex flex-col items-start min-w-0 text-left">
-                          <span
-                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
-                              isActive
-                                ? "text-white"
-                                : isLight
-                                ? "text-slate-900"
-                                : "text-slate-200 group-hover:text-white"
-                            }`}
-                          >
-                            {item.label}
-                          </span>
-                          <span
-                            className={`text-[9px] font-medium truncate w-full ${
-                              isActive
-                                ? "text-white/80"
-                                : isLight
-                                ? "text-slate-500"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            {item.sublabel}
-                          </span>
-                        </div>
-                      )}
-
-                      {isActive && !isCollapsed && (
+                      <div className="flex flex-col items-start min-w-0 text-left">
+                        <span
+                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            isActive
+                              ? "text-white"
+                              : isLight
+                              ? "text-slate-900"
+                              : "text-slate-200 group-hover:text-white"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          className={`text-[9px] font-medium truncate w-full ${
+                            isActive
+                              ? "text-white/80"
+                              : isLight
+                              ? "text-slate-500"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {item.sublabel}
+                        </span>
+                      </div>
+                      {isActive && (
                         <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       )}
                     </button>
                   );
+                })}
+              </div>
+            )}
 
-                  if (isCollapsed) {
-                    return (
-                      <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
-                        {buttonContent}
-                      </Tooltip>
-                    );
-                  }
-
-                  return buttonContent;
+            {/* COLLAPSED STATE ADMISSION CRM ITEMS */}
+            {isCollapsed && isAdmissionCrmOpen && (
+              <div className="pt-2 space-y-2 border-t border-white/10 mt-2">
+                {filteredSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
+                      <button
+                        onClick={() => handleNavClick(item.id)}
+                        className={`w-full flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                          isActive
+                            ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
+                            : isLight
+                            ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                            : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                        }`}
+                      >
+                        <div
+                          className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : isLight
+                              ? "bg-slate-100 text-slate-600"
+                              : "bg-slate-800/90 text-slate-300"
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                      </button>
+                    </Tooltip>
+                  );
                 })}
               </div>
             )}
           </div>
 
           {/* PARENT MENU ITEM 2: CONTACT & SOCIAL MEDIA PLATFORM */}
-          <div className="space-y-1 pt-2 border-t border-white/10 mt-2">
+          <div className="relative space-y-1 pt-2 border-t border-white/10 mt-2">
             {isCollapsed ? (
               <Tooltip text="Contact & Social Media Platform" position="right">
                 <button
@@ -888,6 +959,7 @@ export default function Sidebar({
               </Tooltip>
             ) : (
               <div
+                id="nav-category-social"
                 className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
                   isAnySocialSubItemActive
                     ? isLight
@@ -936,41 +1008,47 @@ export default function Sidebar({
                     8
                   </span>
                   <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
-                    {isSocialPlatformOpen ? (
-                      <ChevronDown className="w-4 h-4 text-purple-400" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
-                    )}
+                    <ChevronRight
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        isSocialPlatformOpen ? "rotate-90 text-purple-400" : "text-slate-400"
+                      }`}
+                    />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* NESTED INSIDE CONTACT & SOCIAL MEDIA PLATFORM */}
-            {(isSocialPlatformOpen || isCollapsed) && (
+            {/* RIGHT SIDE FLYOUT POPOVER FOR SOCIAL PLATFORM */}
+            {isSocialPlatformOpen && !isCollapsed && (
               <div
-                className={`space-y-1 transition-all duration-300 ${
-                  isCollapsed
-                    ? "pt-2 space-y-2 border-t border-white/10 mt-2"
-                    : "ml-3 pl-3 border-l-2 border-purple-500/30 dark:border-purple-400/20 mt-1.5 space-y-1.5"
+                id="flyout-social"
+                className={`absolute left-[calc(100%+10px)] top-0 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 max-h-[80vh] overflow-y-auto hide-scrollbar ${
+                  isLight
+                    ? "bg-white/95 text-slate-900 border-slate-200 shadow-slate-300/50"
+                    : "bg-slate-950/95 text-white border-white/15 shadow-black/80"
                 }`}
               >
+                <div className="px-2 py-1 border-b border-white/10 flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 flex items-center gap-1">
+                    <Share2 className="w-3 h-3" /> Contact Channels
+                  </span>
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                    {socialPlatformSubItems.length} Channels
+                  </span>
+                </div>
                 {socialPlatformSubItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
-
-                  const buttonContent = (
+                  return (
                     <button
                       key={item.id}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-3 ${
-                        isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5"
-                      } rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
                           : isLight
-                          ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                          : "bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
                       }`}
                     >
                       <div
@@ -978,55 +1056,77 @@ export default function Sidebar({
                           isActive
                             ? "bg-white/20 text-white"
                             : isLight
-                            ? "bg-slate-100 text-slate-600"
+                            ? "bg-slate-200 text-slate-600"
                             : "bg-slate-800/90 text-slate-300"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
                       </div>
-
-                      {!isCollapsed && (
-                        <div className="flex flex-col items-start min-w-0 text-left">
-                          <span
-                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
-                              isActive
-                                ? "text-white"
-                                : isLight
-                                ? "text-slate-900"
-                                : "text-slate-200 group-hover:text-white"
-                            }`}
-                          >
-                            {item.label}
-                          </span>
-                          <span
-                            className={`text-[9px] font-medium truncate w-full ${
-                              isActive
-                                ? "text-white/80"
-                                : isLight
-                                ? "text-slate-500"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            {item.sublabel}
-                          </span>
-                        </div>
-                      )}
-
-                      {isActive && !isCollapsed && (
+                      <div className="flex flex-col items-start min-w-0 text-left">
+                        <span
+                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            isActive
+                              ? "text-white"
+                              : isLight
+                              ? "text-slate-900"
+                              : "text-slate-200 group-hover:text-white"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          className={`text-[9px] font-medium truncate w-full ${
+                            isActive
+                              ? "text-white/80"
+                              : isLight
+                              ? "text-slate-500"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {item.sublabel}
+                        </span>
+                      </div>
+                      {isActive && (
                         <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       )}
                     </button>
                   );
+                })}
+              </div>
+            )}
 
-                  if (isCollapsed) {
-                    return (
-                      <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
-                        {buttonContent}
-                      </Tooltip>
-                    );
-                  }
-
-                  return buttonContent;
+            {/* COLLAPSED STATE SOCIAL PLATFORM ITEMS */}
+            {isCollapsed && isSocialPlatformOpen && (
+              <div className="pt-2 space-y-2 border-t border-white/10 mt-2">
+                {socialPlatformSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
+                      <button
+                        onClick={() => handleNavClick(item.id)}
+                        className={`w-full flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                          isActive
+                            ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
+                            : isLight
+                            ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                            : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                        }`}
+                      >
+                        <div
+                          className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : isLight
+                              ? "bg-slate-100 text-slate-600"
+                              : "bg-slate-800/90 text-slate-300"
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                      </button>
+                    </Tooltip>
+                  );
                 })}
               </div>
             )}
