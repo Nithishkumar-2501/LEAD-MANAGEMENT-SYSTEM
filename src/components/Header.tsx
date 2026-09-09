@@ -135,19 +135,10 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-30 w-full liquid-glass border-b border-slate-200 dark:border-white/20 px-2.5 sm:px-6 py-2.5 flex flex-col gap-2 sm:gap-3.5 shadow-2xl">
-      {/* Top Bar: Brand, Campus Selector & Admin Profile */}
+      {/* Top Bar: Brand, Campus Selector & Right Navigation Controls */}
       <div className="flex items-center justify-between gap-1.5 sm:gap-4 min-w-0">
-        {/* Left: Hamburger (mobile) + Brand */}
-        <div className="flex items-center gap-1.5 sm:gap-3.5 min-w-0 shrink">
-          {/* Hamburger button to open mobile left sidebar */}
-          <button
-            onClick={() => onToggleMobileSidebar ? onToggleMobileSidebar() : setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-1.5 sm:p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/20 text-slate-700 dark:text-sky-300 hover:text-sky-600 dark:hover:text-white transition-all shadow-md flex items-center justify-center cursor-pointer shrink-0"
-            aria-label="Toggle navigation sidebar"
-          >
-            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-
+        {/* Left: Official College Brand */}
+        <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 shrink">
           {/* Official V.S.B. Engineering College Logo Emblem */}
           <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-amber-400 shadow-lg bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
             <Image
@@ -173,8 +164,8 @@ export default function Header({
           </div>
         </div>
 
-        {/* Right: Controls */}
-        <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
+        {/* Right: Controls (Ask Nora AI, Search Icon, Logout, and Menu on Right Side) */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Two Campus Icon Selection Bar */}
           <div className="hidden md:flex items-center gap-1.5 bg-slate-200/80 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-300 dark:border-white/20 text-xs font-semibold backdrop-blur-2xl shrink-0">
             {/* Karur Campus Icon Button */}
@@ -299,20 +290,11 @@ export default function Header({
             )}
           </div>
 
-          {/* Search icon — mobile/tablet */}
-          <button
-            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            className="lg:hidden p-1.5 sm:p-2.5 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:border-sky-400 text-slate-700 dark:text-sky-200 transition-all shadow-md shrink-0 flex items-center justify-center"
-            aria-label="Search"
-          >
-            <Search className="w-4 h-4" />
-          </button>
-
           {/* Ask Nora AI Pill Button matching Reference Design */}
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-indigo-400/40 shrink-0"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-indigo-400/40 shrink-0"
             title="Ask Nora AI to analyze the live student database"
           >
             <img
@@ -320,95 +302,39 @@ export default function Header({
               alt="NORA AI Logo"
               className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover ring-1 ring-white/60 shrink-0"
             />
-            <span className="tracking-wide text-[11px] sm:text-xs whitespace-nowrap">
-              <span className="hidden min-[360px]:inline">Ask </span>Nora AI
-            </span>
+            <span className="tracking-wide text-xs whitespace-nowrap">Ask Nora AI</span>
           </button>
 
-          {/* Quick Theme Toggle Button (Light Mode & Dark Mode) */}
-          <Tooltip text={`Switch to ${theme === "DARK" ? "Light Mode ☀️" : "Dark Mode 🌙"}`}>
+          {/* Search Icon — mobile/tablet (Moved to the Right Side of Ask Nora AI) */}
+          <button
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            className="lg:hidden p-2 sm:p-2 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:border-sky-400 text-slate-700 dark:text-sky-200 transition-all shadow-md shrink-0 flex items-center justify-center cursor-pointer"
+            aria-label="Search"
+            title="Search Candidate Applications"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+
+          {/* Logout Button */}
+          <Tooltip text="Logout of V.S.B. Portal">
             <button
-              onClick={() => onThemeChange?.(theme === "DARK" ? "LIGHT" : "DARK")}
-              className="p-1.5 sm:p-2.5 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:border-amber-400 text-amber-500 dark:text-amber-300 transition-all shadow-md flex items-center justify-center cursor-pointer shrink-0"
-              aria-label="Toggle Theme"
+              onClick={onLogout}
+              className="p-2 sm:p-2 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:bg-rose-950/80 hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 transition-all shadow-md shrink-0 flex items-center justify-center cursor-pointer"
+              aria-label="Logout"
             >
-              {theme === "DARK" ? (
-                <Sun className="w-4 h-4 text-amber-400 animate-pulse" />
-              ) : (
-                <Moon className="w-4 h-4 text-indigo-600" />
-              )}
+              <LogOut className="w-4 h-4" />
             </button>
           </Tooltip>
 
-          {/* Notifications button */}
-          <div className="relative shrink-0">
-            <Tooltip text="System Notifications">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-1.5 sm:p-2.5 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:border-sky-400 text-slate-700 dark:text-sky-200 transition-all shadow-md shrink-0 flex items-center justify-center"
-                aria-label="Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center animate-bounce shadow-md">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            </Tooltip>
-
-            {showNotifications && (
-              <div className="absolute right-0 mt-3 w-72 sm:w-80 bubble-card p-4 z-50 border border-white/30 shadow-2xl">
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
-                  <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">Bubble Notifications</h4>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllRead}
-                      className="text-[11px] text-sky-400 hover:underline flex items-center gap-1 font-semibold"
-                    >
-                      <Check className="w-3 h-3" /> Clear All
-                    </button>
-                  )}
-                </div>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {notifications.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`p-3 rounded-2xl text-xs flex flex-col gap-1 ${
-                        item.read
-                          ? "bg-slate-900/40 text-slate-400"
-                          : "bg-gradient-to-r from-indigo-500/20 to-pink-500/20 text-white border-l-3 border-sky-400"
-                      }`}
-                    >
-                      <span>{item.text}</span>
-                      <span className="text-[10px] text-slate-400">{item.time}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* User Profile Badge */}
-          <div className="flex items-center gap-1 sm:gap-1.5 pl-1 sm:pl-2 border-l border-slate-300 dark:border-white/15 shrink-0">
-            <div className="flex items-center gap-1.5 sm:gap-2.5 bg-white border border-slate-300 px-2 sm:px-3.5 py-1 rounded-full shadow-md shrink-0">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-[9px] sm:text-[10px] flex items-center justify-center shadow-md shrink-0">
-                {currentUserRole === "ADMIN" ? "ADM" : (loggedInUsername ? loggedInUsername.slice(0, 2).toUpperCase() : "TCH")}
-              </div>
-              <span className="hidden md:inline text-xs font-black text-black">
-                {loggedInUsername || (loggedInCampus === "KARUR" ? "adminkarur@123" : "admincovai@123")}{" "}
-                <span className="text-[10px] text-indigo-700 font-black">({currentUserRole === "ADMIN" ? "Admin" : "Teacher"})</span>
-              </span>
-            </div>
-            <Tooltip text="Logout of V.S.B. Portal">
-              <button
-                onClick={onLogout}
-                className="p-1.5 sm:p-2.5 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:bg-rose-950/80 hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 transition-all shadow-md shrink-0 flex items-center justify-center"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </Tooltip>
-          </div>
+          {/* Menu / Hamburger Icon — Moved to FAR RIGHT SIDE */}
+          <button
+            onClick={() => onToggleMobileSidebar ? onToggleMobileSidebar() : setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 sm:p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/20 text-slate-700 dark:text-sky-300 hover:text-sky-600 dark:hover:text-white transition-all shadow-md flex items-center justify-center cursor-pointer shrink-0"
+            aria-label="Toggle navigation sidebar"
+            title="Menu"
+          >
+            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
         </div>
       </div>
 
