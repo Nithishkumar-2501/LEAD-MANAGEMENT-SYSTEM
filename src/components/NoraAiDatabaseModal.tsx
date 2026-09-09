@@ -156,25 +156,25 @@ export default function NoraAiDatabaseModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-slate-50 dark:bg-slate-950 w-full max-w-3xl rounded-2xl border border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[660px] max-h-[90vh] animate-in zoom-in-95 duration-200">
         {/* NORA AI Top Bar */}
-        <div className="px-4 py-3 sm:px-5 sm:py-3.5 bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 text-white border-b border-indigo-800/40 flex items-center justify-between shadow-sm shrink-0">
+        <div className="px-4 py-3 sm:px-5 sm:py-3.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                <Brain className="w-5 h-5" />
+                <Brain className="w-5 h-5 text-white" />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black tracking-tight text-white flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                <h2 className="text-base font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-pulse" />
                   NORA AI Database Assistant
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                   Live DB Active
                 </span>
               </div>
-              <p className="text-[11px] text-slate-300 font-medium">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 Live neural access to {applicants.length} student records • Role: {currentUserRole}
               </p>
             </div>
@@ -183,15 +183,15 @@ export default function NoraAiDatabaseModal({
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleResetChat}
-              className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-all text-xs font-semibold flex items-center gap-1 cursor-pointer"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-xs font-semibold flex items-center gap-1 cursor-pointer"
               title="Reset Chat"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-4 h-4 text-slate-500" />
               <span className="hidden sm:inline">Clear Chat</span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+              className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
               title="Close Nora AI"
             >
               <X className="w-5 h-5" />
