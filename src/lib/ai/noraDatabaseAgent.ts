@@ -30,7 +30,15 @@ export function processNoraChatQuery(
   currentCampus: CampusLocation = "ALL",
   currentUserRole: "ADMIN" | "COUNSELOR" | "TEACHER" = "ADMIN"
 ): NoraChatMessage {
-  const q = (query || "").trim().toLowerCase();
+  const rawQuery = (query || "").trim();
+  const normalizedQuery = rawQuery
+    .toLowerCase()
+    .replace(/\bdasgboard\b|\bdashbord\b|\bdashbaord\b|\bdash board\b/g, "dashboard")
+    .replace(/\bcontant platform\b|\bcontact platform\b|\bcommunication platform\b/g, "contact platform")
+    .replace(/\bmobil\b|\bmob\b|\bphno\b|\bcellphone\b/g, "mobile")
+    .replace(/\badmission crm\b|\bcrm system\b|\badmission system\b/g, "crm");
+
+  const q = normalizedQuery;
   const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   // Scope to campus if selected
@@ -199,6 +207,139 @@ export function processNoraChatQuery(
         "Show hot leads",
         "How many from WhatsApp?",
       ],
+      timestamp,
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 2C. GENERAL STUDENT NAME & CANDIDATE DETAILS DIRECTORY
+  // (e.g. "student name", "student details", "candidate list", "all students", "show candidates")
+  // -------------------------------------------------------------
+  if (
+    q.includes("student name") ||
+    q.includes("student details") ||
+    q.includes("student list") ||
+    q.includes("all students") ||
+    q.includes("candidate names") ||
+    q.includes("show candidates") ||
+    q.includes("list students") ||
+    q.includes("candidate details") ||
+    q.includes("show student") ||
+    q.includes("student data") ||
+    q.includes("candidate data")
+  ) {
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `🎓 **Live Candidate Database Directory** (${enrichedApplicants.length} registered students in live database):\n\n` +
+        enrichedApplicants.slice(0, 10).map((s) => `• **${s.name}** | 📞 \`${s.phone}\` | Cutoff: **${s.computedCutoff}/200** | ${s.district || "Karur"} | ${s.courseInterest}`).join("\n") +
+        (enrichedApplicants.length > 10 ? `\n\n*...and ${enrichedApplicants.length - 10} more candidate records in live database.*` : ""),
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: enrichedApplicants,
+      },
+      suggestedQueries: [
+        "What is Gunal's mobile number?",
+        "Show hot leads",
+        "Cutoff > 175",
+        "Show leads from Salem",
+      ],
+      timestamp,
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 2D. ADMISSION CRM OVERVIEW
+  // (e.g. "admission crm", "about crm", "crm overview", "crm features", "what is crm")
+  // -------------------------------------------------------------
+  if (
+    q.includes("admission crm") ||
+    q === "crm" ||
+    q.includes("about crm") ||
+    q.includes("crm overview") ||
+    q.includes("crm features") ||
+    q.includes("what is crm") ||
+    q.includes("crm system") ||
+    q.includes("admission system")
+  ) {
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `🚀 **V.S.B. Admission CRM System Overview**:\n\n` +
+        `The Admission CRM is an AI-powered enterprise platform designed to manage the full student admission lifecycle:\n` +
+        `1. 📊 **Multi-Dashboard Analytics**: Admin Executive Overview, Counselor Task Workspaces, Marketing Ad ROI, Echo Voice Transcripts, and Teacher Directory.\n` +
+        `2. 🤖 **NORA AI Suite**: Real-time ML conversion scoring (HOT/WARM/COLD), cutoff estimation, and virtual counselor AI.\n` +
+        `3. 🌐 **Omnichannel Contact Platform**: Integrated leads from WhatsApp, Facebook/Meta, Google Ads, X (Twitter), E-mail, SMS, and Project Expo.\n` +
+        `4. 💳 **Fee Payment Verification**: Real-time bank transaction checks (\`VSB_TXN_...\`) and automated provisional admission certificates.\n` +
+        `5. 📞 **Live Candidate Directory**: Quick phone, district, and marks lookup across Karur & Coimbatore campuses.`,
+      specificData: {
+        type: "DASHBOARD_NAV",
+        targetTab: "ADMIN_DASHBOARD",
+        targetTabTitle: "Explore CRM Dashboards",
+      },
+      suggestedQueries: ["Show total leads count", "Show hot leads", "What is Contact Platform?", "Explain Dashboards"],
+      timestamp,
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 2E. DASHBOARD SUITE NAVIGATION OVERVIEW
+  // (e.g. "dashboard", "dasgboard", "dashboards", "all dashboards", "explain dashboards")
+  // -------------------------------------------------------------
+  if (
+    q === "dashboard" ||
+    q === "dashboards" ||
+    q.includes("all dashboards") ||
+    q.includes("list dashboards") ||
+    q.includes("explain dashboards") ||
+    q.includes("what dashboards") ||
+    q.includes("crm dashboards") ||
+    q.includes("show dashboards")
+  ) {
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `🖥️ **V.S.B. CRM Dashboard Navigation Suite**:\n\n` +
+        `1. 🛡️ **Admin Dashboard**: Executive Overview, TNEA vs Management Quota, revenue tracking & counselor metrics.\n` +
+        `2. 👤 **User Dashboard**: Daily operational workspace for counselors with 1-click calls, WhatsApp pitches & sub-stage updates.\n` +
+        `3. 📢 **Marketing Dashboard**: Ad campaign tracking, Cost-Per-Lead (CPL), ROAS & channel attribution.\n` +
+        `4. 💬 **Echo Dashboard**: Speech-to-text transcripts of counselor calls, sentiment analysis & audio playback.\n` +
+        `5. ✨ **NORA AI Suite**: ML conversion scoring, cutoff analysis & automated AI responses.\n` +
+        `6. 👥 **Lead Manager**: Filterable candidate database with full academic & contact dossiers.\n` +
+        `7. 📖 **Teacher Directory**: Faculty mentor quota allocations (100 candidates/faculty).\n` +
+        `8. 💳 **Fee Payment**: Transaction verification & admission confirmation.\n` +
+        `9. 🌐 **Contact Platform**: 8 integrated outreach channels.`,
+      specificData: {
+        type: "DASHBOARD_NAV",
+        targetTab: "ADMIN_DASHBOARD",
+        targetTabTitle: "Open Admin Dashboard",
+      },
+      suggestedQueries: ["Open User Dashboard", "Open Marketing Dashboard", "Open Echo Dashboard", "Open Contact Platform"],
+      timestamp,
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 2F. CRM DATABASE OVERVIEW
+  // (e.g. "database", "database records", "data in crm", "what is in database")
+  // -------------------------------------------------------------
+  if (q.includes("database") || q.includes("data in crm") || q.includes("what data") || q.includes("crm data")) {
+    const total = enrichedApplicants.length;
+    const hot = enrichedApplicants.filter((a) => a.priorityTier === "HOT").length;
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `🗄️ **Live CRM Database Summary**:\n\n` +
+        `Currently holding **${total} student records** with complete details:\n` +
+        `• **Student Contact Info**: Full Name, Primary & Alternate Mobile Numbers, E-mail, Address, District & State.\n` +
+        `• **Academic Details**: 10th Marks, 12th Marks, Computed TNEA Cutoff (/200), School Name, Community & Blood Group.\n` +
+        `• **Lead Intelligence**: Acquisition Channel (WhatsApp, Meta, Ads, etc.), ML Conversion Tier (🔥 ${hot} Hot Leads), Sub-stage, & Payment Status.\n\n` +
+        `You can ask me about ANY candidate by name, phone number, district, or channel!`,
+      specificData: {
+        type: "METRICS",
+        stats: { totalCandidates: total, hotLeads: hot },
+      },
+      suggestedQueries: ["Show student name list", "Show mobile numbers", "How many from WhatsApp?", "Cutoff > 175"],
       timestamp,
     };
   }
