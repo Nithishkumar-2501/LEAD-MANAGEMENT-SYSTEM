@@ -647,6 +647,11 @@ export default function DashboardPage() {
           setSearchQuery(query);
           triggerToast(`🔍 Filtered CRM table by: "${query}"`);
         }}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          triggerToast(`🚀 Navigated to ${tab.replace(/_/g, " ")}`);
+        }}
+        currentUserRole={currentUserRole}
         initialQuery={noraInitialQuery}
       />
 

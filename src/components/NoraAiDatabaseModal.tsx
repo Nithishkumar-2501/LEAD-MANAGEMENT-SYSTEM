@@ -16,13 +16,15 @@ import {
   GraduationCap,
   ChevronRight,
   RotateCcw,
-  Bot,
   Copy,
   Check,
   PhoneCall,
   MessageCircle,
+  ArrowUpRight,
+  Layers,
+  Radio,
 } from "lucide-react";
-import { Lead, Application, CampusLocation } from "@/types/crm";
+import { Lead, Application, CampusLocation, ActiveTab } from "@/types/crm";
 import { processNoraChatQuery, NoraChatMessage } from "@/lib/ai/noraDatabaseAgent";
 
 interface NoraAiDatabaseModalProps {
@@ -32,6 +34,8 @@ interface NoraAiDatabaseModalProps {
   selectedCampus: CampusLocation;
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
   onApplyFilter?: (filterText: string) => void;
+  onNavigateTab?: (tab: ActiveTab) => void;
+  currentUserRole?: "ADMIN" | "COUNSELOR" | "TEACHER";
   initialQuery?: string;
 }
 
@@ -42,6 +46,8 @@ export default function NoraAiDatabaseModal({
   selectedCampus,
   onSelectApplicant,
   onApplyFilter,
+  onNavigateTab,
+  currentUserRole = "ADMIN",
   initialQuery = "",
 }: NoraAiDatabaseModalProps) {
   const [inputText, setInputText] = useState("");
@@ -51,13 +57,15 @@ export default function NoraAiDatabaseModal({
   const initialWelcomeMessage: NoraChatMessage = {
     id: "welcome-1",
     sender: "NORA",
-    text: `👋 Hello! I am **NORA AI**, your intelligent admissions database assistant.\n\nAsk me for specific candidate data, cutoff queries, contact numbers, or location filters. I will analyze the live database and show **only the specific data** you need.`,
+    text: `👋 Hello! I am **NORA AI**, your specialized admissions neural database assistant.\n\nAsk me anything across the student database and CRM modules:\n• 📞 **Mobile Numbers** (*"Find 9551082291"*, *"Who has phone 9894283561?"*)\n• 📍 **Districts & Names** (*"Leads from Salem"*, *"What is Gunal's cutoff?"*)\n• 🌐 **Channels & Ads** (*"How many from WhatsApp?"*, *"How many from Ads?"*, *"Facebook leads"*, *"Project Expo"*)\n• 🎯 **Cutoffs & Statuses** (*"Cutoff > 175"*, *"Highest cutoff"*, *"How many admitted?"*)\n• 🛡️ **Dashboards & Guides** (*"Explain Echo Dashboard"*, *"Admin Dashboard overview"*)\n\nI will query the database in real time and display **only the specific data** you need.`,
     suggestedQueries: [
-      "Who are the hot leads?",
+      "How many from WhatsApp?",
+      "How many from Ads?",
+      "How many from Project Expo?",
       "Leads from Salem",
       "Cutoff > 175",
-      "Untouched Inquiries",
-      "Find Wilsonrani",
+      "How many admitted?",
+      "What is Echo Dashboard?",
     ],
     timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
   };
@@ -106,10 +114,10 @@ export default function NoraAiDatabaseModal({
 
     // 2. Query Nora AI Engine
     setTimeout(() => {
-      const response = processNoraChatQuery(q, applicants, selectedCampus);
+      const response = processNoraChatQuery(q, applicants, selectedCampus, currentUserRole);
       setMessages((prev) => [...prev, response]);
       setIsThinking(false);
-    }, 350);
+    }, 300);
   };
 
   const handleResetChat = () => {
@@ -136,10 +144,17 @@ export default function NoraAiDatabaseModal({
     onClose();
   };
 
+  const handleGoToDashboard = (tab: ActiveTab) => {
+    if (onNavigateTab) {
+      onNavigateTab(tab);
+    }
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-slate-50 dark:bg-slate-950 w-full max-w-3xl rounded-2xl border border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[650px] max-h-[90vh] animate-in zoom-in-95 duration-200">
-        {/* NORA AI Top Navigation Bar */}
+      <div className="bg-slate-50 dark:bg-slate-950 w-full max-w-3xl rounded-2xl border border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[660px] max-h-[90vh] animate-in zoom-in-95 duration-200">
+        {/* NORA AI Top Bar */}
         <div className="px-4 py-3 sm:px-5 sm:py-3.5 bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 text-white border-b border-indigo-800/40 flex items-center justify-between shadow-sm shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -159,7 +174,7 @@ export default function NoraAiDatabaseModal({
                 </span>
               </div>
               <p className="text-[11px] text-slate-300 font-medium">
-                Direct neural query access to {applicants.length} student records
+                Live neural access to {applicants.length} student records • Role: {currentUserRole}
               </p>
             </div>
           </div>
@@ -202,7 +217,7 @@ export default function NoraAiDatabaseModal({
 
                 {/* Message Bubble Container */}
                 <div
-                  className={`max-w-[85%] sm:max-w-[78%] flex flex-col gap-2 ${
+                  className={`max-w-[85%] sm:max-w-[80%] flex flex-col gap-2 ${
                     isUser ? "items-end" : "items-start"
                   }`}
                 >
@@ -214,7 +229,7 @@ export default function NoraAiDatabaseModal({
                         : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs shadow-xs"
                     }`}
                   >
-                    {/* Text / Markdown display */}
+                    {/* Text display */}
                     <div className="whitespace-pre-line font-sans">
                       {msg.text}
                     </div>
@@ -232,7 +247,7 @@ export default function NoraAiDatabaseModal({
                               </span>
                             </div>
                             <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                              Registered: {new Date(msg.specificData.student.createdAt).toLocaleDateString()}
+                              Source: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{msg.specificData.student.source}</span>
                             </div>
                           </div>
 
@@ -259,7 +274,7 @@ export default function NoraAiDatabaseModal({
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                              Phone Number
+                              Mobile Number
                             </span>
                             <div className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center justify-between mt-0.5">
                               <span>{msg.specificData.student.phone}</span>
@@ -288,7 +303,7 @@ export default function NoraAiDatabaseModal({
 
                           <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                              Course Interested
+                              Interested Course
                             </span>
                             <div className="font-bold text-slate-800 dark:text-slate-200 truncate mt-0.5">
                               {msg.specificData.student.courseInterest}
@@ -370,6 +385,12 @@ export default function NoraAiDatabaseModal({
                                     <span>{student.district || "Karur"}</span>
                                     <span>•</span>
                                     <span>{student.phone}</span>
+                                    {student.source && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="text-indigo-600 dark:text-indigo-400 font-semibold truncate max-w-[90px]">{student.source}</span>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
 
@@ -397,25 +418,41 @@ export default function NoraAiDatabaseModal({
                       </div>
                     )}
 
+                    {/* SPECIFIC DATA: DASHBOARD NAVIGATION BUTTON */}
+                    {!isUser && msg.specificData?.type === "DASHBOARD_NAV" && msg.specificData.targetTab && (
+                      <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+                        <button
+                          onClick={() => handleGoToDashboard(msg.specificData!.targetTab!)}
+                          className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30 transition-all cursor-pointer"
+                        >
+                          <Layers className="w-4 h-4" />
+                          <span>{msg.specificData.targetTabTitle || `Go to ${msg.specificData.targetTab.replace(/_/g, " ")}`}</span>
+                          <ArrowUpRight className="w-4 h-4 ml-auto" />
+                        </button>
+                      </div>
+                    )}
+
                     {/* SPECIFIC DATA: METRICS TILES */}
                     {!isUser && msg.specificData?.type === "METRICS" && msg.specificData.stats && (
                       <div className="mt-3 grid grid-cols-3 gap-2">
                         <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-center">
                           <span className="text-[9px] font-bold text-indigo-500 uppercase block">Total</span>
                           <span className="text-sm font-black text-indigo-700 dark:text-indigo-300">
-                            {msg.specificData.stats.total}
+                            {msg.specificData.stats.total || msg.specificData.stats.totalCandidates}
                           </span>
                         </div>
                         <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-center">
-                          <span className="text-[9px] font-bold text-rose-500 uppercase block">Hot Leads</span>
+                          <span className="text-[9px] font-bold text-rose-500 uppercase block">
+                            {msg.specificData.stats.averageCutoff ? "Avg Cutoff" : "Hot Leads"}
+                          </span>
                           <span className="text-sm font-black text-rose-700 dark:text-rose-300">
-                            {msg.specificData.stats.hot}
+                            {msg.specificData.stats.averageCutoff || msg.specificData.stats.hot}
                           </span>
                         </div>
                         <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center">
-                          <span className="text-[9px] font-bold text-emerald-500 uppercase block">Paid</span>
+                          <span className="text-[9px] font-bold text-emerald-500 uppercase block">Paid / Adm</span>
                           <span className="text-sm font-black text-emerald-700 dark:text-emerald-300">
-                            {msg.specificData.stats.paid}
+                            {msg.specificData.stats.paid || "Verified"}
                           </span>
                         </div>
                       </div>
@@ -453,7 +490,7 @@ export default function NoraAiDatabaseModal({
             );
           })}
 
-          {/* Nora Thinking / Querying State */}
+          {/* Nora Thinking State */}
           {isThinking && (
             <div className="flex gap-3 items-start justify-start animate-pulse">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shrink-0">
@@ -461,7 +498,7 @@ export default function NoraAiDatabaseModal({
               </div>
               <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-tl-xs shadow-xs text-xs flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold">
                 <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" />
-                <span>NORA is querying live database records...</span>
+                <span>NORA is querying live database records & channels...</span>
               </div>
             </div>
           )}
@@ -473,12 +510,15 @@ export default function NoraAiDatabaseModal({
         <div className="px-4 py-2 bg-slate-100/80 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto text-[11px] hide-scrollbar shrink-0">
           <span className="text-slate-400 font-bold uppercase text-[9px] shrink-0 mr-1">Quick:</span>
           {[
+            "How many from WhatsApp?",
+            "How many from Ads?",
+            "How many from Facebook?",
+            "How many from Project Expo?",
             "Leads from Salem",
-            "Show Hot leads",
             "Cutoff > 175",
-            "Untouched Inquiries",
-            "Fee Paid Students",
-            "CSE Inquiries",
+            "Highest Cutoff",
+            "How many Admitted?",
+            "Explain Echo Dashboard",
           ].map((prompt) => (
             <button
               key={prompt}
@@ -504,7 +544,7 @@ export default function NoraAiDatabaseModal({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Ask Nora: 'What is Gunal's phone number?', 'Leads from Salem', 'Cutoff > 180'..."
+              placeholder="Ask Nora: mobile number, district, ads, whatsapp, facebook, X, cutoff, admitted..."
               className="flex-1 px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-inner"
             />
             <button
