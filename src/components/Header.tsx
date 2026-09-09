@@ -4,8 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import {
   Search,
-  Bell,
-  Check,
   Sparkles,
   GraduationCap,
   UserCheck,
@@ -15,12 +13,9 @@ import {
   Settings,
   LogOut,
   MapPin,
-  Contact,
   Menu,
   X,
   Lock,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -66,7 +61,6 @@ export default function Header({
   onSelectApplicant,
   onOpenNoraAi,
 }: HeaderProps) {
-  const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(true);
@@ -102,17 +96,6 @@ export default function Header({
     if (e.key === "Enter" && searchResults.length > 0) {
       handleResultClick(searchResults[0]);
     }
-  };
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: "New TNEA Application registered for VSB Karur CSE", time: "5m ago", read: false },
-    { id: 2, text: "Fee payment of ₹95,000 verified for VSB Coimbatore", time: "45m ago", read: false },
-    { id: 3, text: "New faculty member Dr. K. Arulmurugan assigned", time: "2h ago", read: true },
-  ]);
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const navItems = [
