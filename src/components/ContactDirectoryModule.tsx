@@ -1267,10 +1267,14 @@ export default function ContactDirectoryModule({
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/40 border border-indigo-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+            className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/40 border border-indigo-300/40 flex items-center gap-2 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
             title="Ask Nora AI to analyze the student database"
           >
-            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <img
+              src="/nora-logo.png"
+              alt="NORA AI Logo"
+              className="w-5 h-5 rounded-full object-cover ring-1 ring-white/60 shrink-0"
+            />
             <span>Ask Nora AI</span>
           </button>
 

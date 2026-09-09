@@ -240,10 +240,11 @@ export default function AiIntelligenceModule({
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-black tracking-wide uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-300 animate-pulse" />
+              <img src="/nora-logo.png" alt="NORA AI" className="w-4 h-4 rounded-full object-cover shrink-0" />
               NORA Machine Learning & Generative AI Suite
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
+              <img src="/nora-logo.png" alt="NORA AI" className="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-500/40 shadow-md" />
               NORA AI Intelligence Studio
             </h1>
             <p className="text-sm text-slate-300 max-w-2xl font-medium">

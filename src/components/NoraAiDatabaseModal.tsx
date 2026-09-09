@@ -159,9 +159,11 @@ export default function NoraAiDatabaseModal({
         <div className="px-4 py-3 sm:px-5 sm:py-3.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                <Brain className="w-5 h-5 text-white" />
-              </div>
+              <img
+                src="/nora-logo.png"
+                alt="NORA AI Logo"
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-500/40 shadow-md shadow-indigo-500/30"
+              />
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
             </div>
             <div>
@@ -211,9 +213,11 @@ export default function NoraAiDatabaseModal({
               >
                 {/* Nora Avatar on the left */}
                 {!isUser && (
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-indigo-600/20 mt-0.5">
-                    <Sparkles className="w-4 h-4 text-amber-300" />
-                  </div>
+                  <img
+                    src="/nora-logo.png"
+                    alt="NORA AI"
+                    className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-indigo-500/30 shadow-xs mt-0.5"
+                  />
                 )}
 
                 {/* Message Bubble Container */}
@@ -495,9 +499,11 @@ export default function NoraAiDatabaseModal({
           {/* Nora Thinking State */}
           {isThinking && (
             <div className="flex gap-3 items-start justify-start animate-pulse">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shrink-0">
-                <Brain className="w-4 h-4" />
-              </div>
+              <img
+                src="/nora-logo.png"
+                alt="NORA AI"
+                className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-indigo-500/30 shadow-xs"
+              />
               <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-tl-xs shadow-xs text-xs flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold">
                 <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" />
                 <span>NORA is querying live database records & channels...</span>
