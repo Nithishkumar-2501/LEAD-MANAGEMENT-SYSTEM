@@ -112,7 +112,7 @@ export function processNoraChatQuery(
     const nameLower = a.name.toLowerCase();
     const queryClean = q
       .replace(/^(who is|find|search for|search|get|show|details of|about|tell me about|info on|give me|check|call|view)\s+/i, "")
-      .replace(/\b(lead|student|candidate|details|record|data|profile|info|phone|cutoff|marks?|number|contact|mobile)\b/gi, "")
+      .replace(/\b(lead|student|candidate|details|record|data|profile|info|phone|cutoff|marks?|number|contact|mobile|mobil)\b/gi, "")
       .trim();
 
     if (queryClean.length >= 3 && (nameLower.includes(queryClean) || queryClean.includes(nameLower))) return true;
@@ -130,7 +130,7 @@ export function processNoraChatQuery(
     const cutoff = s.computedCutoff || s.tneaCutoff || 160;
 
     const specificFields: string[] = [];
-    if (q.includes("phone") || q.includes("mobile") || q.includes("number") || q.includes("contact")) {
+    if (q.includes("phone") || q.includes("mobile") || q.includes("mobil") || q.includes("number") || q.includes("contact")) {
       specificFields.push(`📞 **Mobile Number**: \`${s.phone}\``);
     }
     if (q.includes("cutoff") || q.includes("mark")) {
@@ -165,6 +165,39 @@ export function processNoraChatQuery(
         `What is ${s.name}'s phone number?`,
         `What is the cutoff for ${s.name}?`,
         `Show leads from ${s.district || "Karur"}`,
+      ],
+      timestamp,
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 2B. GENERAL MOBILE / PHONE NUMBER DIRECTORY SEARCH
+  // (e.g. "mobile number", "mobil number", "show mobile numbers", "phone numbers", "contact list", "get student numbers")
+  // -------------------------------------------------------------
+  if (
+    q.includes("mobile") ||
+    q.includes("mobil") ||
+    q.includes("phone") ||
+    q.includes("contact number") ||
+    q.includes("contact list") ||
+    q.includes("phone number")
+  ) {
+    const listWithPhone = enrichedApplicants.filter((a) => a.phone);
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `📱 **Live Candidate Mobile Directory** (${listWithPhone.length} candidates with verified numbers in database):\n\n` +
+        listWithPhone.slice(0, 10).map((s) => `• **${s.name}**: \`${s.phone}\` (${s.district || "Karur"} • ${s.courseInterest})`).join("\n") +
+        (listWithPhone.length > 10 ? `\n\n*...and ${listWithPhone.length - 10} more candidate records in live database.*` : ""),
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: listWithPhone,
+      },
+      suggestedQueries: [
+        "What is Gunal's mobile number?",
+        "What is Revathy's phone number?",
+        "Show hot leads",
+        "How many from WhatsApp?",
       ],
       timestamp,
     };
