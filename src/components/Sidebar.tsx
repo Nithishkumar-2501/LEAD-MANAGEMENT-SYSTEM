@@ -92,14 +92,14 @@ export default function Sidebar({
         setIsSettingsMenuOpen(false);
       }
 
-      if (!target.closest("#nav-category-dashboard") && !target.closest("#flyout-dashboard")) {
-        setIsDashboardOpen(false);
+      if (!target.closest("#nav-category-dashboard") && !target.closest("#flyout-dashboard") && !target.closest("#dropdown-dashboard")) {
+        if (isCollapsed) setIsDashboardOpen(false);
       }
-      if (!target.closest("#nav-category-admission") && !target.closest("#flyout-admission")) {
-        setIsAdmissionCrmOpen(false);
+      if (!target.closest("#nav-category-admission") && !target.closest("#flyout-admission") && !target.closest("#dropdown-admission")) {
+        if (isCollapsed) setIsAdmissionCrmOpen(false);
       }
-      if (!target.closest("#nav-category-social") && !target.closest("#flyout-social")) {
-        setIsSocialPlatformOpen(false);
+      if (!target.closest("#nav-category-social") && !target.closest("#flyout-social") && !target.closest("#dropdown-social")) {
+        if (isCollapsed) setIsSocialPlatformOpen(false);
       }
     }
 
@@ -327,57 +327,36 @@ export default function Sidebar({
   const [isSocialPlatformOpen, setIsSocialPlatformOpen] = useState(isSocialActive);
 
   const toggleDashboardMenu = () => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-      setIsDashboardOpen(true);
-      setIsAdmissionCrmOpen(false);
-      setIsSocialPlatformOpen(false);
-    } else {
-      setIsDashboardOpen((prev) => {
-        const next = !prev;
-        if (next) {
-          setIsAdmissionCrmOpen(false);
-          setIsSocialPlatformOpen(false);
-        }
-        return next;
-      });
-    }
+    setIsDashboardOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsAdmissionCrmOpen(false);
+        setIsSocialPlatformOpen(false);
+      }
+      return next;
+    });
   };
 
   const toggleAdmissionMenu = () => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-      setIsAdmissionCrmOpen(true);
-      setIsDashboardOpen(false);
-      setIsSocialPlatformOpen(false);
-    } else {
-      setIsAdmissionCrmOpen((prev) => {
-        const next = !prev;
-        if (next) {
-          setIsDashboardOpen(false);
-          setIsSocialPlatformOpen(false);
-        }
-        return next;
-      });
-    }
+    setIsAdmissionCrmOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsDashboardOpen(false);
+        setIsSocialPlatformOpen(false);
+      }
+      return next;
+    });
   };
 
   const toggleSocialPlatformMenu = () => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-      setIsSocialPlatformOpen(true);
-      setIsDashboardOpen(false);
-      setIsAdmissionCrmOpen(false);
-    } else {
-      setIsSocialPlatformOpen((prev) => {
-        const next = !prev;
-        if (next) {
-          setIsDashboardOpen(false);
-          setIsAdmissionCrmOpen(false);
-        }
-        return next;
-      });
-    }
+    setIsSocialPlatformOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsDashboardOpen(false);
+        setIsAdmissionCrmOpen(false);
+      }
+      return next;
+    });
   };
 
   const isLight = theme === "LIGHT";
@@ -626,11 +605,77 @@ export default function Sidebar({
               </div>
             )}
 
-            {/* RIGHT SIDE FLYOUT POPOVER FOR DASHBOARD */}
+            {/* EXPANDED STATE INLINE ACCORDION DROPDOWN FOR DASHBOARD */}
             {isDashboardOpen && !isCollapsed && (
               <div
+                id="dropdown-dashboard"
+                className="pl-2 pr-1 py-1.5 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200"
+              >
+                {dashboardSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
+                      onClick={() => handleNavClick(item.id)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group ${
+                        isActive
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-md ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
+                          : isLight
+                          ? "bg-slate-100/90 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80"
+                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                      }`}
+                    >
+                      <div
+                        className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : isLight
+                            ? "bg-slate-200 text-slate-600"
+                            : "bg-slate-800 text-slate-300"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col items-start min-w-0 text-left">
+                        <span
+                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            isActive
+                              ? "text-white"
+                              : isLight
+                              ? "text-slate-900"
+                              : "text-slate-200 group-hover:text-white"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          className={`text-[9px] font-medium truncate w-full ${
+                            isActive
+                              ? "text-white/80"
+                              : isLight
+                              ? "text-slate-500"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {item.sublabel}
+                        </span>
+                      </div>
+                      {isActive && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* COLLAPSED STATE RIGHT SIDE FLYOUT POPOVER FOR DASHBOARD */}
+            {isCollapsed && isDashboardOpen && (
+              <div
                 id="flyout-dashboard"
-                className={`absolute left-[calc(100%+10px)] top-0 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
+                className={`fixed left-20 top-20 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
                   isLight
                     ? "bg-white/95 text-slate-900 border-slate-200 shadow-slate-300/50"
                     : "bg-slate-950/95 text-white border-white/15 shadow-black/80"
@@ -651,7 +696,10 @@ export default function Sidebar({
                     <button
                       key={item.id}
                       id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
-                      onClick={() => handleNavClick(item.id)}
+                      onClick={() => {
+                        handleNavClick(item.id);
+                        setIsDashboardOpen(false);
+                      }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
@@ -699,43 +747,6 @@ export default function Sidebar({
                         <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       )}
                     </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* COLLAPSED STATE DASHBOARD ITEMS */}
-            {isCollapsed && isDashboardOpen && (
-              <div className="pt-2 space-y-2 border-t border-white/10 mt-2">
-                {dashboardSubItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
-                      <button
-                        id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
-                        onClick={() => handleNavClick(item.id)}
-                        className={`w-full flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
-                          isActive
-                            ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
-                            : isLight
-                            ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                            : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
-                        }`}
-                      >
-                        <div
-                          className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
-                            isActive
-                              ? "bg-white/20 text-white"
-                              : isLight
-                              ? "bg-slate-100 text-slate-600"
-                              : "bg-slate-800/90 text-slate-300"
-                          }`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                      </button>
-                    </Tooltip>
                   );
                 })}
               </div>
@@ -823,11 +834,76 @@ export default function Sidebar({
               </div>
             )}
 
-            {/* RIGHT SIDE FLYOUT POPOVER FOR ADMISSION CRM */}
+            {/* EXPANDED STATE INLINE ACCORDION DROPDOWN FOR ADMISSION CRM */}
             {isAdmissionCrmOpen && !isCollapsed && (
               <div
+                id="dropdown-admission"
+                className="pl-2 pr-1 py-1.5 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200"
+              >
+                {filteredSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNavClick(item.id)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group ${
+                        isActive
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-md ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
+                          : isLight
+                          ? "bg-slate-100/90 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80"
+                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                      }`}
+                    >
+                      <div
+                        className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : isLight
+                            ? "bg-slate-200 text-slate-600"
+                            : "bg-slate-800 text-slate-300"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col items-start min-w-0 text-left">
+                        <span
+                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            isActive
+                              ? "text-white"
+                              : isLight
+                              ? "text-slate-900"
+                              : "text-slate-200 group-hover:text-white"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          className={`text-[9px] font-medium truncate w-full ${
+                            isActive
+                              ? "text-white/80"
+                              : isLight
+                              ? "text-slate-500"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {item.sublabel}
+                        </span>
+                      </div>
+                      {isActive && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* COLLAPSED STATE RIGHT SIDE FLYOUT POPOVER FOR ADMISSION CRM */}
+            {isCollapsed && isAdmissionCrmOpen && (
+              <div
                 id="flyout-admission"
-                className={`absolute left-[calc(100%+10px)] top-0 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
+                className={`fixed left-20 top-36 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
                   isLight
                     ? "bg-white/95 text-slate-900 border-slate-200 shadow-slate-300/50"
                     : "bg-slate-950/95 text-white border-white/15 shadow-black/80"
@@ -847,7 +923,10 @@ export default function Sidebar({
                   return (
                     <button
                       key={item.id}
-                      onClick={() => handleNavClick(item.id)}
+                      onClick={() => {
+                        handleNavClick(item.id);
+                        setIsAdmissionCrmOpen(false);
+                      }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
@@ -895,42 +974,6 @@ export default function Sidebar({
                         <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       )}
                     </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* COLLAPSED STATE ADMISSION CRM ITEMS */}
-            {isCollapsed && isAdmissionCrmOpen && (
-              <div className="pt-2 space-y-2 border-t border-white/10 mt-2">
-                {filteredSubItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
-                      <button
-                        onClick={() => handleNavClick(item.id)}
-                        className={`w-full flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
-                          isActive
-                            ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
-                            : isLight
-                            ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                            : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
-                        }`}
-                      >
-                        <div
-                          className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
-                            isActive
-                              ? "bg-white/20 text-white"
-                              : isLight
-                              ? "bg-slate-100 text-slate-600"
-                              : "bg-slate-800/90 text-slate-300"
-                          }`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                      </button>
-                    </Tooltip>
                   );
                 })}
               </div>
@@ -1018,11 +1061,76 @@ export default function Sidebar({
               </div>
             )}
 
-            {/* RIGHT SIDE FLYOUT POPOVER FOR SOCIAL PLATFORM */}
+            {/* EXPANDED STATE INLINE ACCORDION DROPDOWN FOR SOCIAL PLATFORM */}
             {isSocialPlatformOpen && !isCollapsed && (
               <div
+                id="dropdown-social"
+                className="pl-2 pr-1 py-1.5 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200"
+              >
+                {socialPlatformSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNavClick(item.id)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group ${
+                        isActive
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-md ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
+                          : isLight
+                          ? "bg-slate-100/90 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80"
+                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                      }`}
+                    >
+                      <div
+                        className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : isLight
+                            ? "bg-slate-200 text-slate-600"
+                            : "bg-slate-800 text-slate-300"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col items-start min-w-0 text-left">
+                        <span
+                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            isActive
+                              ? "text-white"
+                              : isLight
+                              ? "text-slate-900"
+                              : "text-slate-200 group-hover:text-white"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          className={`text-[9px] font-medium truncate w-full ${
+                            isActive
+                              ? "text-white/80"
+                              : isLight
+                              ? "text-slate-500"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {item.sublabel}
+                        </span>
+                      </div>
+                      {isActive && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* COLLAPSED STATE RIGHT SIDE FLYOUT POPOVER FOR SOCIAL PLATFORM */}
+            {isCollapsed && isSocialPlatformOpen && (
+              <div
                 id="flyout-social"
-                className={`absolute left-[calc(100%+10px)] top-0 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 max-h-[80vh] overflow-y-auto hide-scrollbar ${
+                className={`fixed left-20 top-52 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 max-h-[80vh] overflow-y-auto hide-scrollbar ${
                   isLight
                     ? "bg-white/95 text-slate-900 border-slate-200 shadow-slate-300/50"
                     : "bg-slate-950/95 text-white border-white/15 shadow-black/80"
@@ -1042,7 +1150,10 @@ export default function Sidebar({
                   return (
                     <button
                       key={item.id}
-                      onClick={() => handleNavClick(item.id)}
+                      onClick={() => {
+                        handleNavClick(item.id);
+                        setIsSocialPlatformOpen(false);
+                      }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
@@ -1090,42 +1201,6 @@ export default function Sidebar({
                         <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       )}
                     </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* COLLAPSED STATE SOCIAL PLATFORM ITEMS */}
-            {isCollapsed && isSocialPlatformOpen && (
-              <div className="pt-2 space-y-2 border-t border-white/10 mt-2">
-                {socialPlatformSubItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <Tooltip key={item.id} text={`${item.label} (${item.sublabel})`} position="right">
-                      <button
-                        onClick={() => handleNavClick(item.id)}
-                        className={`w-full flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
-                          isActive
-                            ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
-                            : isLight
-                            ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
-                            : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
-                        }`}
-                      >
-                        <div
-                          className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
-                            isActive
-                              ? "bg-white/20 text-white"
-                              : isLight
-                              ? "bg-slate-100 text-slate-600"
-                              : "bg-slate-800/90 text-slate-300"
-                          }`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                      </button>
-                    </Tooltip>
                   );
                 })}
               </div>
