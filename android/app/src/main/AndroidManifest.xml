@@ -39,11 +39,21 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Queries for Native Dial Pad Intent Handling -->
+    <!-- Queries for Native Dial Pad & WhatsApp Intent Handling -->
     <queries>
         <intent>
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />
+        </intent>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="whatsapp" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" android:host="api.whatsapp.com" />
         </intent>
     </queries>
 </manifest>

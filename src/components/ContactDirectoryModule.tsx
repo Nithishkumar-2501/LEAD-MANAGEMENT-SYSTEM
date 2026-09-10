@@ -14,6 +14,12 @@ import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { getStudentLeadState } from "@/lib/studentLeadState";
 import {
+  redirectToWhatsApp,
+  getWhatsAppWebUrl,
+  formatDisplayPhone,
+  getDefaultAdmissionWhatsAppText,
+} from "@/lib/whatsappSender";
+import {
   Phone,
   Mail,
   MapPin,
@@ -530,19 +536,15 @@ export default function ContactDirectoryModule({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleOpenCommModal("MESSAGE", {
-                name: contact.name,
-                phone: contact.phone,
-                email: contact.email,
-                courseInterest: contact.courseInterest,
-                campus: contact.campus,
-              });
+              onActionTrigger("WHATSAPP", contact.name);
+              redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
             }}
-            className="p-1 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-300 dark:border-emerald-500/30 transition-all"
-            title={`WhatsApp Chat with ${contact.name}`}
+            className="p-1 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-300 dark:border-emerald-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
+            title={`Direct WhatsApp Chat with ${contact.name}`}
           >
             💬
           </button>
+
           <a
             href={getCleanTelUri(contact.phone)}
             onClick={(e) => {
@@ -2054,6 +2056,18 @@ export default function ContactDirectoryModule({
                             <Mail className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
+                        <Tooltip text={`WhatsApp Chat with ${contact.name}`} position="left">
+                          <button
+                            onClick={() => {
+                              onActionTrigger("WHATSAPP", contact.name);
+                              redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
+                            }}
+                            className="p-1.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            title={`WhatsApp Chat with ${contact.name}`}
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
                         <Tooltip text={`Edit ${contact.name}`} position="left">
                           <button
                             onClick={() => setEditingContact(contact)}
@@ -2397,22 +2411,19 @@ export default function ContactDirectoryModule({
                         <Mail className="w-3.5 h-3.5" />
                       </button>
                     </Tooltip>
-                    <Tooltip text={`In-Portal Message ${contact.name}`} position="bottom">
+                    <Tooltip text={`Direct WhatsApp to ${contact.name}`} position="bottom">
                       <button
-                        onClick={() => handleOpenCommModal("MESSAGE", {
-                          name: contact.name,
-                          phone: contact.phone,
-                          email: contact.email,
-                          courseInterest: contact.courseInterest,
-                          campus: contact.campus,
-                          school: contact.school || undefined,
-                          district: contact.district || undefined,
-                        })}
-                        className="p-2 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
+                        onClick={() => {
+                          onActionTrigger("WHATSAPP", contact.name);
+                          redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
+                        }}
+                        className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer"
+                        title={`Open WhatsApp chat with ${contact.name}`}
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
                       </button>
                     </Tooltip>
+
                   </div>
 
                   <div className="flex items-center gap-1.5">

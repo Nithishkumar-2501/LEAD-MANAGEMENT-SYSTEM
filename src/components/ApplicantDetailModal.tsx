@@ -57,6 +57,12 @@ import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { getStudentLeadState } from "@/lib/studentLeadState";
+import {
+  redirectToWhatsApp,
+  getWhatsAppWebUrl,
+  formatDisplayPhone,
+  getDefaultAdmissionWhatsAppText,
+} from "@/lib/whatsappSender";
 import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
 
 interface ApplicantDetailModalProps {
@@ -138,6 +144,7 @@ export default function ApplicantDetailModal({
   const [timelineFilterDate, setTimelineFilterDate] = useState("");
   const [commLogDateFilter, setCommLogDateFilter] = useState("");
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isOcrScanning, setIsOcrScanning] = useState(false);
   const [ocrFeedback, setOcrFeedback] = useState<string | null>(null);
   const [isCallAnalyzing, setIsCallAnalyzing] = useState(false);
@@ -372,6 +379,16 @@ export default function ApplicantDetailModal({
               title={`Send Official Admission Email to ${formData.email || formData.name}`}
             >
               <Mail className="w-3.5 h-3.5 text-indigo-600" /> Send Email
+            </button>
+            <button
+              onClick={() => {
+                onActionTrigger("WHATSAPP", formData.name);
+                redirectToWhatsApp(formData.phone, getDefaultAdmissionWhatsAppText(formData));
+              }}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-xs font-black text-emerald-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+              title={`Send WhatsApp message to ${formData.name}`}
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> WhatsApp
             </button>
             <a
               href={getCleanTelUri(formData.phone || "+91-6380270912")}
@@ -615,26 +632,42 @@ export default function ApplicantDetailModal({
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-slate-900">
-                    <a
-                      href={getCleanTelUri(formData.phone || "+91-6380270912")}
-                      onClick={(e) => {
-                        onActionTrigger("CALL", formData.name);
-                        redirectToDialPad(formData.phone || "+91-6380270912");
-                      }}
-                      className="flex items-center gap-2 group hover:text-emerald-600 transition-colors text-left cursor-pointer"
-                      title="Click to dial on phone"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors shrink-0">
-                        <Phone className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
-                      </div>
-                      <strong className="text-slate-950 group-hover:text-emerald-700 font-black font-mono underline decoration-dotted decoration-slate-400">
-                        {formData.phone || "+91-6380270912"}
-                      </strong>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-300">
-                        Dial 📞
-                      </span>
-                    </a>
+                  <div className="flex items-center justify-between text-slate-900 gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={getCleanTelUri(formData.phone || "+91-6380270912")}
+                        onClick={(e) => {
+                          onActionTrigger("CALL", formData.name);
+                          redirectToDialPad(formData.phone || "+91-6380270912");
+                        }}
+                        className="flex items-center gap-1.5 group hover:text-emerald-600 transition-colors text-left cursor-pointer"
+                        title="Click to dial on phone"
+                      >
+                        <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors shrink-0">
+                          <Phone className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                        </div>
+                        <strong className="text-slate-950 group-hover:text-emerald-700 font-black font-mono underline decoration-dotted decoration-slate-400 text-xs">
+                          {formatDisplayPhone(formData.phone || "+91-6380270912")}
+                        </strong>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-300">
+                          Dial 📞
+                        </span>
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onActionTrigger("WHATSAPP", formData.name);
+                          redirectToWhatsApp(formData.phone, getDefaultAdmissionWhatsAppText(formData));
+                        }}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
+                        title={`Open WhatsApp chat with ${formData.name}`}
+                      >
+                        <MessageSquare className="w-3 h-3" /> WhatsApp
+                      </button>
+                    </div>
+
                     <span
                       title="Verified"
                       className="text-emerald-600 flex items-center justify-center w-4 h-4 rounded-full bg-emerald-100 text-[10px] font-black shrink-0 border border-emerald-300"
@@ -682,13 +715,17 @@ export default function ApplicantDetailModal({
                     <Mail className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => onActionTrigger("WHATSAPP", formData.name)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-teal-700 flex items-center justify-center transition-all shadow-sm cursor-pointer"
-                    title="WhatsApp Outreach"
+                    onClick={() => {
+                      onActionTrigger("WHATSAPP", formData.name);
+                      redirectToWhatsApp(formData.phone, getDefaultAdmissionWhatsAppText(formData));
+                    }}
+                    className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                    title={`Send WhatsApp message to ${formData.name}`}
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-teal-600" />
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
                   </button>
                 </div>
+
 
                 {/* Lead Strength & Lead Score Stats Widgets */}
                 <div className="grid grid-cols-2 gap-2.5 border-t border-slate-200 pt-3">
@@ -1873,6 +1910,35 @@ export default function ApplicantDetailModal({
           }}
         />
       )}
+
+      {/* In-Portal Direct Message & WhatsApp Composer Modal */}
+      {isMessageModalOpen && (
+        <InPortalCommunicationModals
+          activeModal="MESSAGE"
+          contact={{
+            id: formData.id,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            courseInterest: formData.courseInterest,
+            campus: formData.campus,
+            school: formData.school,
+            district: formData.district,
+            state: formData.state,
+            tneaCutoff: formData.tneaCutoff,
+            counsellingAppNo: formData.counsellingAppNo,
+            marks10th: formData.application?.marks10th,
+            marks12th: formData.application?.marks12th,
+            stage: formData.application?.stage,
+            status: formData.status,
+          }}
+          onClose={() => setIsMessageModalOpen(false)}
+          onLogSuccess={(type, details) => {
+            onActionTrigger("WHATSAPP", `${formData.name}: ${details}`);
+          }}
+        />
+      )}
+
     </div>
   );
 }

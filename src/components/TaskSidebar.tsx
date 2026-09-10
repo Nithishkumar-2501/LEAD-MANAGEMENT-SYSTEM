@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Task, TaskType } from "@/types/crm";
 import { CheckSquare, Square, Phone, Mail, MessageSquare, Clock, CalendarCheck, Sparkles } from "lucide-react";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
+import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
 
 interface TaskSidebarProps {
   tasks: Task[];
@@ -157,8 +158,23 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
                         <Mail className="w-3 h-3" /> Email
                       </button>
                       <button
-                        onClick={() => onActionTrigger("WHATSAPP", task.lead!.name)}
-                        className="px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white border border-teal-400/40 text-[11px] font-bold transition-all flex items-center gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onActionTrigger("WHATSAPP", task.lead!.name);
+                          if (task.lead?.phone) {
+                            redirectToWhatsApp(
+                              task.lead.phone,
+                              getDefaultAdmissionWhatsAppText({
+                                name: task.lead.name,
+                                courseInterest: task.lead.courseInterest,
+                                campus: (task.lead as any).campus,
+                              })
+
+                            );
+                          }
+                        }}
+                        className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        title={`Open WhatsApp chat with ${task.lead?.name || "Candidate"}`}
                       >
                         <MessageSquare className="w-3 h-3" /> WhatsApp
                       </button>

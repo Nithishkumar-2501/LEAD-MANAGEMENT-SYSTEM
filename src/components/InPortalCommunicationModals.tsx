@@ -22,6 +22,11 @@ import {
 import Tooltip from "@/components/Tooltip";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
+import {
+  redirectToWhatsApp,
+  getWhatsAppWebUrl,
+  formatDisplayPhone,
+} from "@/lib/whatsappSender";
 
 import type { CallRecording } from "@/types/crm";
 
@@ -406,6 +411,29 @@ function MessageModal({
       },
     ]);
 
+    if (channel === "WHATSAPP") {
+      // Dispatches directly to WhatsApp on both Mobile App (native deep link) and Web Browser (WhatsApp Web)
+      const success = redirectToWhatsApp(contact.phone, messageText);
+      if (success) {
+        onLogSuccess(
+          "MESSAGE",
+          `Dispatched WhatsApp outreach to ${contact.name} (${formatDisplayPhone(contact.phone)})`
+        );
+      }
+      setTimeout(() => onClose(), 800);
+      return;
+    }
+
+    if (channel === "SMS") {
+      if (typeof window !== "undefined") {
+        const cleanPhone = contact.phone.replace(/\D/g, "");
+        window.location.href = `sms:${cleanPhone}?body=${encodeURIComponent(messageText)}`;
+      }
+      onLogSuccess("MESSAGE", `Dispatched SMS to ${contact.name} (${contact.phone})`);
+      setTimeout(() => onClose(), 800);
+      return;
+    }
+
     if (channel === "EMAIL") {
       try {
         const res = await mobileSafeFetch("/api/email/send", {
@@ -446,10 +474,8 @@ function MessageModal({
       } catch (err) {
         onLogSuccess("EMAIL", `Dispatched Email ("${emailSubject}") to ${contact.email}`);
       }
-    } else {
-      onLogSuccess("MESSAGE", `Dispatched ${channel} message to ${contact.name}`);
+      setTimeout(() => onClose(), 800);
     }
-    setTimeout(() => onClose(), 800);
   };
 
   return (
@@ -473,8 +499,10 @@ function MessageModal({
             <p className="text-xs text-slate-400">
               {channel === "EMAIL" ? (
                 <>Send Email directly from CRM to candidate: <strong className="text-violet-300">{contact.name}</strong> ({contact.email || "No Email Provided"})</>
+              ) : channel === "WHATSAPP" ? (
+                <>Send WhatsApp directly to candidate: <strong className="text-emerald-300">{contact.name}</strong> ({formatDisplayPhone(contact.phone)})</>
               ) : (
-                <>Send SMS / WhatsApp directly from CRM to candidate: <strong className="text-teal-300">{contact.name}</strong> ({contact.phone})</>
+                <>Send SMS directly from CRM to candidate: <strong className="text-teal-300">{contact.name}</strong> ({contact.phone})</>
               )}
             </p>
           </div>
@@ -487,7 +515,7 @@ function MessageModal({
             onClick={() => setChannel("WHATSAPP")}
             className={`flex-1 py-1.5 px-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 ${
               channel === "WHATSAPP"
-                ? "bg-teal-500 text-white shadow-md font-extrabold"
+                ? "bg-emerald-600 text-white shadow-md font-extrabold"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -516,6 +544,34 @@ function MessageModal({
             <span>📧</span> <span>Direct E-mail Portal</span>
           </button>
         </div>
+
+        {/* WhatsApp Verified Banner (When channel is WHATSAPP) */}
+        {channel === "WHATSAPP" && (
+          <div className="p-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <div>
+                <span className="text-[11px] text-emerald-300 font-bold block">
+                  Target WhatsApp: <strong className="font-mono text-white">{formatDisplayPhone(contact.phone)}</strong>
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  Direct WhatsApp dispatch (Native Mobile App & Web Browser)
+                </span>
+              </div>
+            </div>
+            {contact.phone && (
+              <a
+                href={getWhatsAppWebUrl(contact.phone, messageText)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-bold text-emerald-300 underline hover:text-white px-2 py-1 rounded bg-emerald-900/60 border border-emerald-500/30 shrink-0"
+                title="Directly launch WhatsApp Web in a new browser tab"
+              >
+                Open WhatsApp Web ↗
+              </a>
+            )}
+          </div>
+        )}
 
         {/* Template Picker */}
         <div>
@@ -554,7 +610,7 @@ function MessageModal({
 
           <div>
             <label className="block text-xs font-bold text-slate-300 mb-1">
-              {channel === "EMAIL" ? "Email Content" : "Message Text"}
+              {channel === "EMAIL" ? "Email Content" : channel === "WHATSAPP" ? "WhatsApp Message Content" : "Message Text"}
             </label>
             <textarea
               rows={4}
@@ -567,7 +623,8 @@ function MessageModal({
 
           <div className="flex items-center justify-between pt-1">
             <span className="text-[10px] text-slate-400 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-teal-400" /> Secure V.S.B. Portal Outbound API
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              {channel === "WHATSAPP" ? "WhatsApp Deep Link / Web Gateway" : "Secure V.S.B. Outbound Gateway"}
             </span>
 
             <div className="flex gap-2">
@@ -580,12 +637,12 @@ function MessageModal({
               </button>
               <button
                 type="submit"
-                className={`flex items-center gap-1.5 px-5 py-2 rounded-xl font-bold text-white shadow-lg text-xs transition-all ${
+                className={`flex items-center gap-1.5 px-5 py-2 rounded-xl font-bold text-white shadow-lg text-xs transition-all cursor-pointer ${
                   channel === "EMAIL"
                     ? "bg-violet-600 hover:bg-violet-500 shadow-violet-600/30"
                     : channel === "SMS"
                     ? "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30"
-                    : "bg-teal-500 hover:bg-teal-400 shadow-teal-500/30"
+                    : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30 active:scale-95"
                 }`}
               >
                 <Send className="w-3.5 h-3.5" />
@@ -593,7 +650,7 @@ function MessageModal({
                   ? "Send Direct E-mail"
                   : channel === "SMS"
                   ? "Send Direct SMS"
-                  : "Send In-Portal Message"}
+                  : "Send via WhatsApp (App & Web)"}
               </button>
             </div>
           </div>
@@ -602,6 +659,7 @@ function MessageModal({
     </div>
   );
 }
+
 
 // ----------------------------------------------------
 // 3. IN-PORTAL EMAIL COMPOSER MODAL (Connected to Resend API)

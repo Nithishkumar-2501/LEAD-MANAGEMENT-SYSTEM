@@ -27,6 +27,7 @@ import AiIntelligenceModule from "@/components/AiIntelligenceModule";
 import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
+import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
 import {
   saveStudentToFirebase,
   deleteStudentFromFirebase,
@@ -353,6 +354,19 @@ export default function DashboardPage() {
   const handleActionTrigger = (type: TaskType, leadName: string) => {
     if (type === "CALL") {
       triggerToast(`📞 Opening phone dial pad for ${leadName}...`);
+    } else if (type === "WHATSAPP") {
+      const targetLead = applicants.find(
+        (a) =>
+          a.name.toLowerCase() === leadName.toLowerCase() ||
+          leadName.toLowerCase().includes(a.name.toLowerCase()) ||
+          a.name.toLowerCase().includes(leadName.toLowerCase())
+      );
+      if (targetLead?.phone) {
+        redirectToWhatsApp(targetLead.phone, getDefaultAdmissionWhatsAppText(targetLead));
+        triggerToast(`💬 Opening WhatsApp for ${targetLead.name}...`);
+      } else {
+        triggerToast(`💬 Initiated WhatsApp outreach for candidate: ${leadName}`);
+      }
     } else {
       triggerToast(`Initiated ${type} outreach for candidate: ${leadName}`);
     }

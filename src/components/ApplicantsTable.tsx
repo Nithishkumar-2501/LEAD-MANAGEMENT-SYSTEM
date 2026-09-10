@@ -10,6 +10,7 @@ import { getStudentLeadState } from "@/lib/studentLeadState";
 
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
+import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
 
 interface ApplicantsTableProps {
   applicants: (Lead & { application: Application })[];
@@ -339,22 +340,19 @@ export default function ApplicantsTable({
                             <Mail className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
-                        <Tooltip text={`In-Portal Message ${item.name}`}>
+                        <Tooltip text={`WhatsApp Chat with ${item.name}`}>
                           <button
-                            onClick={() => handleOpenCommModal("MESSAGE", {
-                              name: item.name,
-                              phone: item.phone,
-                              email: item.email,
-                              courseInterest: item.courseInterest,
-                              campus: item.campus,
-                              school: item.school || undefined,
-                              district: item.district || undefined,
-                            })}
-                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-teal-500 hover:text-white text-slate-300 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-teal-500/40"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onActionTrigger("WHATSAPP", item.name);
+                              redirectToWhatsApp(item.phone, getDefaultAdmissionWhatsAppText(item));
+                            }}
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-emerald-400 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer inline-flex items-center justify-center"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
+
                         <Tooltip text={`Delete ${item.name}`}>
                           <button
                             onClick={() => {
