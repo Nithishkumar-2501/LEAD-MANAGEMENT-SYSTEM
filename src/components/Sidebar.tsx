@@ -427,7 +427,7 @@ export default function Sidebar({
           {/* Desktop Collapse Toggle Button */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`hidden lg:flex p-1 rounded-lg border transition-all shadow-sm shrink-0 ${
+            className={`press-spring hidden lg:flex p-1.5 rounded-lg border transition-all duration-200 shadow-sm shrink-0 cursor-pointer ${
               isLight
                 ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
                 : "bg-slate-900 border-white/10 hover:border-sky-400/50 text-slate-300 hover:text-white"
@@ -440,7 +440,7 @@ export default function Sidebar({
           {/* Mobile Close Button */}
           <button
             onClick={onCloseMobile}
-            className={`lg:hidden p-1 rounded-lg border ${
+            className={`press-spring lg:hidden p-1.5 rounded-lg border cursor-pointer ${
               isLight
                 ? "bg-slate-100 border-slate-300 text-slate-700"
                 : "bg-slate-900 border-white/10 text-slate-300 hover:text-white"

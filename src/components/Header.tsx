@@ -277,7 +277,7 @@ export default function Header({
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-indigo-400/40 shrink-0"
+            className="press-spring flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-indigo-400/40 shrink-0"
             title="Ask Nora AI to analyze the live student database"
           >
             <img
@@ -291,7 +291,7 @@ export default function Header({
           {/* Search Icon — mobile/tablet (Moved to the Right Side of Ask Nora AI) */}
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            className="lg:hidden p-2 sm:p-2 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:border-sky-400 text-slate-700 dark:text-sky-200 transition-all shadow-md shrink-0 flex items-center justify-center cursor-pointer"
+            className="press-spring lg:hidden p-2 sm:p-2 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:border-sky-400 text-slate-700 dark:text-sky-200 transition-all shadow-md shrink-0 flex items-center justify-center cursor-pointer"
             aria-label="Search"
             title="Search Candidate Applications"
           >

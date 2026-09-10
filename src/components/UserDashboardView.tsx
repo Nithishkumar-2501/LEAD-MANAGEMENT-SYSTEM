@@ -817,7 +817,7 @@ export default function UserDashboardView({
           <button
             type="button"
             onClick={() => setActiveDashboardTab("MY_DASHBOARD")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+            className={`press-spring px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
               activeDashboardTab === "MY_DASHBOARD"
                 ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-sky-400 shadow-sm"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -828,7 +828,7 @@ export default function UserDashboardView({
           <button
             type="button"
             onClick={() => setActiveDashboardTab("PRODUCTIVITY_REPORT")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+            className={`press-spring px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
               activeDashboardTab === "PRODUCTIVITY_REPORT"
                 ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-sky-400 shadow-sm"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -843,7 +843,7 @@ export default function UserDashboardView({
           <div className="flex items-center rounded-xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-white/10">
             <button
               onClick={() => setDataSourceMode("DATABASE")}
-              className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`press-spring px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
                 isDbMode
                   ? "bg-sky-600 text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
@@ -854,7 +854,7 @@ export default function UserDashboardView({
             </button>
             <button
               onClick={() => setDataSourceMode("INSTITUTIONAL")}
-              className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`press-spring px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
                 !isDbMode
                   ? "bg-sky-600 text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
@@ -870,7 +870,7 @@ export default function UserDashboardView({
       {/* ========================================================================= */}
       {/* 1. USER WISE LEAD AND APPLICATION COUNT (IMAGE 2)                         */}
       {/* ========================================================================= */}
-      <div className="bubble-card p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg">
+      <div className="bubble-card card-hover-elevate p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg">
         {/* Header with Title & Legend & Filter Dropdowns */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">

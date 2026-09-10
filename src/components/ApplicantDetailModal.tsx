@@ -342,8 +342,8 @@ export default function ApplicantDetailModal({
   const currentStageIdx = 1;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-white w-full max-w-6xl rounded-none sm:rounded-2xl border-0 sm:border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col min-h-screen sm:min-h-0 sm:max-h-[96vh] my-0 sm:my-auto relative">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-md transition-all duration-300 overflow-y-auto">
+      <div className="bg-white w-full max-w-6xl rounded-none sm:rounded-2xl border-0 sm:border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col min-h-screen sm:min-h-0 sm:max-h-[96vh] my-0 sm:my-auto relative animate-enter-modal">
         {/* Success Toast Notification */}
         {saveSuccessToast && (
           <div className="fixed sm:absolute top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-emerald-400 max-w-[90%] text-center">
@@ -357,7 +357,7 @@ export default function ApplicantDetailModal({
           <div className="flex items-center gap-2 text-xs font-black text-slate-950 min-w-0">
             <button
               onClick={onClose}
-              className="sm:hidden p-1.5 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300"
+              className="press-spring sm:hidden p-1.5 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300"
               title="Close modal"
             >
               <X className="w-4 h-4" />
@@ -365,7 +365,7 @@ export default function ApplicantDetailModal({
             <span className="text-slate-950 font-black truncate">Lead Details</span>
             <span className="text-slate-400 hidden sm:inline">&gt;</span>
             <button
-              className="hidden sm:inline-flex p-1 rounded-md bg-white border border-slate-300 text-sky-600 hover:bg-slate-100 transition-colors shadow-sm cursor-pointer"
+              className="press-spring hidden sm:inline-flex p-1 rounded-md bg-white border border-slate-300 text-sky-600 hover:bg-slate-100 transition-colors shadow-sm cursor-pointer"
               title="Filter Lead Views"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -375,7 +375,7 @@ export default function ApplicantDetailModal({
           <div className="flex items-center gap-1.5 sm:gap-3">
             <button
               onClick={() => setIsEmailModalOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 text-xs font-black text-indigo-700 transition-all shadow-sm cursor-pointer"
+              className="press-spring hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 text-xs font-black text-indigo-700 transition-all shadow-sm cursor-pointer"
               title={`Send Official Admission Email to ${formData.email || formData.name}`}
             >
               <Mail className="w-3.5 h-3.5 text-indigo-600" /> Send Email
@@ -385,7 +385,7 @@ export default function ApplicantDetailModal({
                 onActionTrigger("WHATSAPP", formData.name);
                 redirectToWhatsApp(formData.phone, getDefaultAdmissionWhatsAppText(formData));
               }}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-xs font-black text-emerald-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+              className="press-spring hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-xs font-black text-emerald-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
               title={`Send WhatsApp message to ${formData.name}`}
             >
               <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> WhatsApp
@@ -396,14 +396,14 @@ export default function ApplicantDetailModal({
                 onActionTrigger("CALL", formData.name);
                 redirectToDialPad(formData.phone || "+91-6380270912");
               }}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-xs font-black text-emerald-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+              className="press-spring flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-xs font-black text-emerald-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
               title={`Call ${formData.name} via Phone Dial Pad`}
             >
               <Phone className="w-3.5 h-3.5 text-emerald-600" /> <span className="hidden sm:inline">Call</span>
             </a>
             <button
               onClick={() => onActionTrigger("CALL", formData.name)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer"
+              className="press-spring hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-sky-600" /> Add Event
             </button>
@@ -411,7 +411,7 @@ export default function ApplicantDetailModal({
             {/* Edit Details Button at Top Right */}
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer hover:scale-105"
+              className="press-spring flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer hover:scale-105"
               title="Edit Student Data & Save to Firebase"
             >
               <Edit3 className="w-3.5 h-3.5 text-sky-600" /> <span className="hidden sm:inline">Edit Details</span><span className="sm:hidden">Edit</span>
@@ -419,7 +419,7 @@ export default function ApplicantDetailModal({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-950 bg-slate-100 hover:bg-rose-100 hover:text-rose-700 transition-colors cursor-pointer"
+              className="press-spring p-1.5 rounded-lg text-slate-600 hover:text-slate-950 bg-slate-100 hover:bg-rose-100 hover:text-rose-700 transition-colors cursor-pointer"
               title="Close"
               aria-label="Close"
             >

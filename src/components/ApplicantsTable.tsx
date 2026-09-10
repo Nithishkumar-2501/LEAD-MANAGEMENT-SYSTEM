@@ -241,21 +241,21 @@ export default function ApplicantsTable({
                         return (
                           <div className="flex flex-col gap-1 items-start">
                             {stateInfo.state === "HOT" && (
-                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black border inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border-rose-400/40 shadow-sm">
-                                <Flame className="w-3 h-3 text-rose-400 animate-pulse" />
-                                HOT (Admitted)
+                              <span className="badge-status-hot px-2.5 py-0.5 rounded-full text-[10px] font-black inline-flex items-center gap-1.5 shadow-sm">
+                                <Flame className="w-3 h-3 text-rose-500 animate-pulse" />
+                                <span>HOT (Admitted)</span>
                               </span>
                             )}
                             {stateInfo.state === "WARM" && (
-                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black border inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-400/40 shadow-sm">
-                                <Zap className="w-3 h-3 text-amber-400" />
-                                WARM (Ready)
+                              <span className="badge-status-warm px-2.5 py-0.5 rounded-full text-[10px] font-black inline-flex items-center gap-1.5 shadow-sm">
+                                <Zap className="w-3 h-3 text-amber-500" />
+                                <span>WARM (Ready)</span>
                               </span>
                             )}
                             {stateInfo.state === "COLD" && (
-                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black border inline-flex items-center gap-1 bg-sky-500/20 text-sky-300 border-sky-400/40 shadow-sm">
-                                <Snowflake className="w-3 h-3 text-sky-400" />
-                                COLD (Not Interested)
+                              <span className="badge-status-cold px-2.5 py-0.5 rounded-full text-[10px] font-black inline-flex items-center gap-1.5 shadow-sm">
+                                <Snowflake className="w-3 h-3 text-sky-500" />
+                                <span>COLD (Not Interested)</span>
                               </span>
                             )}
                             <span

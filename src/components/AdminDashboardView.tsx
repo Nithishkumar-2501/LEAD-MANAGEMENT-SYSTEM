@@ -54,7 +54,7 @@ export default function AdminDashboardView({
   return (
     <div className="space-y-6 animate-fadeIn w-full max-w-full min-w-0">
       {/* Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-gradient-to-r dark:from-indigo-950 dark:via-slate-900 dark:to-purple-950 border border-slate-200 dark:border-indigo-500/30 text-slate-900 dark:text-white shadow-md dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="card-hover-elevate p-4 sm:p-5 rounded-2xl bg-white dark:bg-gradient-to-r dark:from-indigo-950 dark:via-slate-900 dark:to-purple-950 border border-slate-200 dark:border-indigo-500/30 text-slate-900 dark:text-white shadow-md dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300">
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-600/30 border border-indigo-200 dark:border-indigo-400/40 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shadow-sm shrink-0">
             <ShieldCheck className="w-6 h-6 text-indigo-600 dark:text-sky-400" />
@@ -80,7 +80,7 @@ export default function AdminDashboardView({
       <MetricCards metrics={metrics} />
 
       {/* TNEA Cutoff Analytics Card */}
-      <div className="bubble-card p-5 space-y-4">
+      <div className="bubble-card card-hover-elevate p-5 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-sky-600 dark:text-sky-400" /> TNEA Cutoff Distribution Breakdown
@@ -90,14 +90,14 @@ export default function AdminDashboardView({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {cutoffBrackets.map((item, idx) => (
-            <div key={idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 space-y-2">
+            <div key={idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 space-y-2 card-hover-elevate transition-all duration-200">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{item.label}</span>
                 <span className="text-sm font-black text-slate-900 dark:text-white">{item.count}</span>
               </div>
               <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${item.color}`}
+                  className={`h-full rounded-full ${item.color} transition-all duration-700`}
                   style={{ width: `${Math.min(100, (item.count / applicants.length) * 100)}%` }}
                 />
               </div>
