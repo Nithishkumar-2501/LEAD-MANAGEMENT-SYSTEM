@@ -466,6 +466,7 @@ export default function DashboardPage() {
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         applicants={applicants}
         onSelectApplicant={handleSelectApplicant}
+        onOpenNoraAi={() => handleOpenNora()}
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}

@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
+import { NoiseBackground } from "@/components/ui/noise-background";
 
 interface SidebarProps {
   user: User;
@@ -56,6 +57,7 @@ interface SidebarProps {
   onCloseMobile?: () => void;
   applicants?: (Lead & { application: Application })[];
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
+  onOpenNoraAi?: () => void;
 }
 
 export default function Sidebar({
@@ -74,6 +76,7 @@ export default function Sidebar({
   onCloseMobile,
   applicants = [],
   onSelectApplicant,
+  onOpenNoraAi,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
@@ -326,12 +329,32 @@ export default function Sidebar({
   const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(isAdmissionActive);
   const [isSocialPlatformOpen, setIsSocialPlatformOpen] = useState(isSocialActive);
 
+  // Auto-sync open states with activeTab whenever activeTab changes anywhere in the app
+  useEffect(() => {
+    if (dashboardSubItems.some((item) => item.id === activeTab)) {
+      setIsDashboardOpen(true);
+      setIsAdmissionCrmOpen(false);
+      setIsSocialPlatformOpen(false);
+    } else if (filteredSubItems.some((item) => item.id === activeTab)) {
+      setIsAdmissionCrmOpen(true);
+      setIsDashboardOpen(false);
+      setIsSocialPlatformOpen(false);
+    } else if (socialPlatformSubItems.some((item) => item.id === activeTab)) {
+      setIsSocialPlatformOpen(true);
+      setIsDashboardOpen(false);
+      setIsAdmissionCrmOpen(false);
+    }
+  }, [activeTab]);
+
   const toggleDashboardMenu = () => {
     setIsDashboardOpen((prev) => {
       const next = !prev;
       if (next) {
         setIsAdmissionCrmOpen(false);
         setIsSocialPlatformOpen(false);
+        if (!dashboardSubItems.some((item) => item.id === activeTab)) {
+          onTabChange("ADMIN_DASHBOARD");
+        }
       }
       return next;
     });
@@ -343,6 +366,9 @@ export default function Sidebar({
       if (next) {
         setIsDashboardOpen(false);
         setIsSocialPlatformOpen(false);
+        if (!filteredSubItems.some((item) => item.id === activeTab)) {
+          onTabChange("CONTACTS");
+        }
       }
       return next;
     });
@@ -354,6 +380,9 @@ export default function Sidebar({
       if (next) {
         setIsDashboardOpen(false);
         setIsAdmissionCrmOpen(false);
+        if (!socialPlatformSubItems.some((item) => item.id === activeTab)) {
+          onTabChange("SOCIAL_ADS");
+        }
       }
       return next;
     });
@@ -1410,13 +1439,39 @@ export default function Sidebar({
               </Tooltip>
             </div>
           ) : (
-            <div
-              className={`flex items-center justify-between gap-2 p-2 rounded-2xl border transition-all ${
-                isLight
-                  ? "bg-white border-slate-200 shadow-sm"
-                  : "bg-slate-900/90 border-white/10"
-              }`}
-            >
+            <div className="space-y-2">
+              <NoiseBackground
+                containerClassName="w-full rounded-2xl p-1 shadow-sm"
+                gradientColors={[
+                  "rgb(99, 102, 241)",
+                  "rgb(236, 72, 153)",
+                  "rgb(14, 165, 233)",
+                ]}
+                noiseIntensity={0.12}
+                speed={0.1}
+              >
+                <button
+                  type="button"
+                  onClick={() => onOpenNoraAi?.()}
+                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-white font-extrabold text-[11px] shadow-xs hover:brightness-105 active:scale-98 transition-all cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
+                    <span>NORA AI Engine</span>
+                  </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    Live
+                  </span>
+                </button>
+              </NoiseBackground>
+
+              <div
+                className={`flex items-center justify-between gap-2 p-2 rounded-2xl border transition-all ${
+                  isLight
+                    ? "bg-white border-slate-200 shadow-sm"
+                    : "bg-slate-900/90 border-white/10"
+                }`}
+              >
               {/* User Profile */}
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md">
@@ -1487,6 +1542,7 @@ export default function Sidebar({
                   </button>
                 </Tooltip>
               </div>
+            </div>
             </div>
           )}
         </div>
