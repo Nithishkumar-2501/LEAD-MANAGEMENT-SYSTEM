@@ -268,10 +268,14 @@ export default function NoraAiDatabaseModal({
                                   : "bg-sky-500/10 text-sky-600 border-sky-500/30"
                               }`}
                             >
-                              {msg.specificData.student.priorityTier === "HOT" && <Flame className="w-3 h-3" />}
-                              {msg.specificData.student.priorityTier === "WARM" && <Zap className="w-3 h-3" />}
-                              {msg.specificData.student.priorityTier === "COLD" && <Snowflake className="w-3 h-3" />}
-                              {msg.specificData.student.priorityTier} ({msg.specificData.student.aiScore || 70}%)
+                              {msg.specificData.student.priorityTier === "HOT" && <Flame className="w-3 h-3 animate-pulse text-rose-500" />}
+                              {msg.specificData.student.priorityTier === "WARM" && <Zap className="w-3 h-3 text-amber-500" />}
+                              {msg.specificData.student.priorityTier === "COLD" && <Snowflake className="w-3 h-3 text-sky-500" />}
+                              {msg.specificData.student.priorityTier === "HOT"
+                                ? `HOT (Admitted - ${msg.specificData.student.aiScore || 70}%)`
+                                : msg.specificData.student.priorityTier === "WARM"
+                                ? `WARM (Ready - ${msg.specificData.student.aiScore || 70}%)`
+                                : `COLD (Not Interested - ${msg.specificData.student.aiScore || 70}%)`}
                             </span>
                           )}
                         </div>

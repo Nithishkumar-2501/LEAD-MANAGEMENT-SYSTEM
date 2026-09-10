@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
-import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, Upload, Trash2 } from "lucide-react";
+import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, Upload, Trash2, Flame, Zap, Snowflake } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import { parseCSVToLeads } from "@/lib/csvParser";
+import { getStudentLeadState } from "@/lib/studentLeadState";
 
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
@@ -54,7 +55,14 @@ export default function ApplicantsTable({
       item.courseInterest.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStage = selectedStage === "ALL" || item.application.stage === selectedStage;
+    const stateInfo = getStudentLeadState(item);
+    const matchesStage = (() => {
+      if (selectedStage === "ALL") return true;
+      if (selectedStage === "HOT") return stateInfo.state === "HOT";
+      if (selectedStage === "WARM") return stateInfo.state === "WARM";
+      if (selectedStage === "COLD") return stateInfo.state === "COLD";
+      return item.application.stage === selectedStage;
+    })();
 
     return matchesSearch && matchesStage;
   });
@@ -83,7 +91,7 @@ export default function ApplicantsTable({
     }
   };
 
-  const stagesList = ["ALL", "INQUIRY", "SUBMITTED", "DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"];
+  const stagesList = ["ALL", "HOT", "WARM", "COLD", "INQUIRY", "SUBMITTED", "DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"];
 
   return (
     <div className="bubble-card p-3 sm:p-6 border border-white/20 flex-1 flex flex-col justify-between w-full max-w-full min-w-0 overflow-hidden">
@@ -173,7 +181,7 @@ export default function ApplicantsTable({
                 <th className="py-3 px-4">Applicant Name</th>
                 <th className="py-3 px-4">Applied Program</th>
                 <th className="py-3 px-4 hidden sm:table-cell">Campus</th>
-                <th className="py-3 px-4">Stage Status</th>
+                <th className="py-3 px-4">State & Stage</th>
                 <th className="py-3 px-4 hidden md:table-cell">TNEA Cutoff & Counselling</th>
                 <th className="py-3 px-4 hidden sm:table-cell">12th Marks</th>
                 <th className="py-3 px-4 text-right">Quick Actions</th>
@@ -225,16 +233,40 @@ export default function ApplicantsTable({
                       </span>
                     </td>
 
-                    {/* Stage Status */}
+                    {/* State & Stage Status */}
                     <td className="py-3.5 px-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1.5 shadow-sm transform group-hover:scale-105 transition-transform ${getStageBadge(
-                          item.application.stage
-                        )}`}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                        {item.application.stage.replace("_", " ")}
-                      </span>
+                      {(() => {
+                        const stateInfo = getStudentLeadState(item);
+                        return (
+                          <div className="flex flex-col gap-1 items-start">
+                            {stateInfo.state === "HOT" && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black border inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border-rose-400/40 shadow-sm">
+                                <Flame className="w-3 h-3 text-rose-400 animate-pulse" />
+                                HOT (Admitted)
+                              </span>
+                            )}
+                            {stateInfo.state === "WARM" && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black border inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-400/40 shadow-sm">
+                                <Zap className="w-3 h-3 text-amber-400" />
+                                WARM (Ready)
+                              </span>
+                            )}
+                            {stateInfo.state === "COLD" && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black border inline-flex items-center gap-1 bg-sky-500/20 text-sky-300 border-sky-400/40 shadow-sm">
+                                <Snowflake className="w-3 h-3 text-sky-400" />
+                                COLD (Not Interested)
+                              </span>
+                            )}
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border inline-flex items-center gap-1 ${getStageBadge(
+                                item.application.stage
+                              )}`}
+                            >
+                              {item.application.stage.replace("_", " ")}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* TNEA Cutoff & Counselling Cell */}

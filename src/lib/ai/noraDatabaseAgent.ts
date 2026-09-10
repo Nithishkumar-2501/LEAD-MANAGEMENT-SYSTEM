@@ -55,6 +55,8 @@ export function processNoraChatQuery(
       district: a.district || "Karur",
       source: a.source || "TNEA Counselling",
       courseInterest: a.courseInterest,
+      status: a.status,
+      stage: a.application?.stage,
     });
     return {
       ...a,
@@ -149,8 +151,8 @@ export function processNoraChatQuery(
     if (s.fatherName || s.motherName) chatGptBio += `👨‍👩‍👦 **Parents**: Father: **${s.fatherName || "N/A"}** | Mother: **${s.motherName || "N/A"}**\n`;
     if (s.community) chatGptBio += `🏷️ **Community**: **${s.community}** (Blood Group: ${s.bloodGroup || "O+"})\n`;
     chatGptBio += `🌐 **Lead Acquisition Channel**: **${s.source}** (${s.campus} Campus)\n`;
-    chatGptBio += `📊 **CRM Status**: **${s.status}** (${s.subStage || "Untouched"})\n`;
-    chatGptBio += `🔥 **AI Priority Tier**: **${s.priorityTier || "HOT"}** (${s.aiScore || 80}% Conversion Probability)\n`;
+    const tierState = s.priorityTier === "HOT" ? "🔥 HOT (Admitted)" : s.priorityTier === "WARM" ? "⚡ WARM (Ready to Admit)" : "❄️ COLD (Not Interested)";
+    chatGptBio += `🎯 **Student State & Priority**: **${tierState}** (${s.aiScore || 80}% Conversion Probability)\n`;
     if (s.application?.paymentStatus) chatGptBio += `💳 **Payment Status**: **${s.application.paymentStatus}**\n`;
 
     return {

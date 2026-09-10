@@ -108,6 +108,8 @@ export default function AiIntelligenceModule({
         source: app.source || "TNEA Counselling",
         counselorFollowups: 2,
         courseInterest: app.courseInterest,
+        status: app.status,
+        stage: app.application?.stage,
       });
       return {
         ...app,
@@ -350,12 +352,12 @@ export default function AiIntelligenceModule({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-rose-500 uppercase flex items-center gap-1">
-                    <Flame className="w-3.5 h-3.5 text-rose-500" /> Hot Leads (≥72%)
+                    <Flame className="w-3.5 h-3.5 text-rose-500" /> Hot Leads (Admitted)
                   </p>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                     {hotCount}
                   </h3>
-                  <p className="text-[11px] text-slate-400 mt-0.5">High probability of enrollment</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Admitted students & high intent</p>
                 </div>
                 <div className="p-3 bg-rose-50 dark:bg-rose-950/50 text-rose-600 rounded-xl">
                   <Flame className="w-6 h-6" />
@@ -374,12 +376,12 @@ export default function AiIntelligenceModule({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
-                    <Zap className="w-3.5 h-3.5 text-amber-500" /> Warm Leads (45-71%)
+                    <Zap className="w-3.5 h-3.5 text-amber-500" /> Warm Leads (Ready to Admit)
                   </p>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                     {warmCount}
                   </h3>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Need parent engagement/hostel pitch</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Ready to be admitted / in pipeline</p>
                 </div>
                 <div className="p-3 bg-amber-50 dark:bg-amber-950/50 text-amber-600 rounded-xl">
                   <Zap className="w-6 h-6" />
@@ -398,12 +400,12 @@ export default function AiIntelligenceModule({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-sky-500 uppercase flex items-center gap-1">
-                    <Snowflake className="w-3.5 h-3.5 text-sky-500" /> Cold Leads (&lt;45%)
+                    <Snowflake className="w-3.5 h-3.5 text-sky-500" /> Cold Leads (Not Interested)
                   </p>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                     {coldCount}
                   </h3>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Borderline cutoffs / distant</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Not interested / dropped / closed</p>
                 </div>
                 <div className="p-3 bg-sky-50 dark:bg-sky-950/50 text-sky-600 rounded-xl">
                   <Snowflake className="w-6 h-6" />
@@ -554,10 +556,14 @@ export default function AiIntelligenceModule({
                             <span
                               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold border ${tierColor}`}
                             >
-                              {lead.priorityTier === "HOT" && <Flame className="w-3 h-3" />}
-                              {lead.priorityTier === "WARM" && <Zap className="w-3 h-3" />}
-                              {lead.priorityTier === "COLD" && <Snowflake className="w-3 h-3" />}
-                              {lead.priorityTier}
+                              {lead.priorityTier === "HOT" && <Flame className="w-3 h-3 text-rose-500 animate-pulse" />}
+                              {lead.priorityTier === "WARM" && <Zap className="w-3 h-3 text-amber-500" />}
+                              {lead.priorityTier === "COLD" && <Snowflake className="w-3 h-3 text-sky-500" />}
+                              {lead.priorityTier === "HOT"
+                                ? "HOT (Admitted)"
+                                : lead.priorityTier === "WARM"
+                                ? "WARM (Ready)"
+                                : "COLD (Not Interested)"}
                             </span>
                           </td>
 

@@ -18,6 +18,9 @@ export interface StudentPredictionInput {
   counselorFollowups?: number;
   campusPreference?: "KARUR" | "COIMBATORE";
   courseInterest?: string;
+  status?: string;
+  stage?: string;
+  studentInterestStatus?: string;
 }
 
 export interface PredictionResult {
@@ -107,14 +110,42 @@ export function predictStudentConversion(input: StudentPredictionInput): Predict
     0.05 * (boardFactor - 0.95);
 
   const clampedProb = Math.max(0.05, Math.min(0.98, rawScore));
-  const probabilityPercentage = Math.round(clampedProb * 100);
+  let probabilityPercentage = Math.round(clampedProb * 100);
 
-  // 8. Priority Tier
+  // 8. Priority Tier (HOT = Admitted, WARM = Ready to Admit, COLD = Not Interested / Rejected)
+  const sUpper = (input.status || "").toUpperCase().trim();
+  const stgUpper = (input.stage || "").toUpperCase().trim();
+  const intUpper = (input.studentInterestStatus || "").toUpperCase().trim();
+
   let priorityTier: "HOT" | "WARM" | "COLD" = "WARM";
-  if (probabilityPercentage >= 72) {
+
+  if (
+    sUpper === "ADMITTED" ||
+    stgUpper === "FEE_PAID" ||
+    stgUpper.includes("ADMIT") ||
+    intUpper === "ADMITTED"
+  ) {
     priorityTier = "HOT";
-  } else if (probabilityPercentage < 45) {
+    probabilityPercentage = Math.max(92, probabilityPercentage);
+  } else if (
+    sUpper === "REJECTED" ||
+    sUpper === "NOT_INTERESTED" ||
+    sUpper === "CLOSED" ||
+    sUpper === "DROPPED" ||
+    sUpper === "LOST" ||
+    intUpper === "NOT_INTERESTED"
+  ) {
     priorityTier = "COLD";
+    probabilityPercentage = Math.min(22, probabilityPercentage);
+  } else {
+    // Lead is ready to be admitted (New, Contacted, Scrutiny/Review, Docs Verified, Offer Issued)
+    if (probabilityPercentage >= 78) {
+      priorityTier = "HOT";
+    } else if (probabilityPercentage < 40) {
+      priorityTier = "COLD";
+    } else {
+      priorityTier = "WARM";
+    }
   }
 
   // 9. Identify Strengths & Risk Factors

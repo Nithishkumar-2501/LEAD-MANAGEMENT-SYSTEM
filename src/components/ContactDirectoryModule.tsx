@@ -12,6 +12,7 @@ import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
+import { getStudentLeadState } from "@/lib/studentLeadState";
 import {
   Phone,
   Mail,
@@ -35,6 +36,9 @@ import {
   Calendar,
   RotateCcw,
   RefreshCw,
+  Flame,
+  Zap,
+  Snowflake,
 } from "lucide-react";
 
 interface ContactDirectoryModuleProps {
@@ -577,34 +581,30 @@ export default function ContactDirectoryModule({
       return <span className="text-slate-800 dark:text-slate-200 font-mono text-[11px] font-medium">{formattedDate}</span>;
     }
     if (col === "Lead Stage") {
-      if (!contact.status) return <span></span>;
-      const statusText =
-        contact.status === "NEW"
-          ? "Untouched"
-          : contact.status === "CONTACTED"
-            ? "Interested to Study Engin..."
-            : contact.status === "IN_REVIEW"
-              ? "Not Reachable"
-              : contact.status === "ADMITTED"
-                ? "Admitted"
-                : contact.status === "REJECTED"
-                  ? "Closed"
-                  : contact.status || "";
+      const stateInfo = getStudentLeadState(contact);
 
-      const badgeStyle =
-        statusText === "Untouched"
-          ? "bg-red-50 dark:bg-rose-500/20 text-red-600 dark:text-rose-300 border-red-200 dark:border-rose-500/40 font-extrabold shadow-sm"
-          : statusText.startsWith("Interested")
-            ? "bg-sky-50 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-500/40 font-extrabold shadow-sm"
-            : statusText === "Not Reachable"
-              ? "bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/40 font-bold shadow-sm"
-              : statusText === "Admitted"
-                ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-400/40 font-extrabold shadow-sm"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 font-bold shadow-sm";
+      if (stateInfo.state === "HOT") {
+        return (
+          <span className="px-3 py-1 rounded-full text-[11px] font-black border inline-flex items-center gap-1.5 whitespace-nowrap bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border-rose-300 dark:border-rose-500/40 shadow-sm">
+            <Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse shrink-0" />
+            <span>HOT (Admitted)</span>
+          </span>
+        );
+      }
+
+      if (stateInfo.state === "WARM") {
+        return (
+          <span className="px-3 py-1 rounded-full text-[11px] font-extrabold border inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 shadow-sm">
+            <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span>WARM (Ready to Admit)</span>
+          </span>
+        );
+      }
 
       return (
-        <span className={`px-3 py-1 rounded-full text-[11px] border whitespace-nowrap inline-block ${badgeStyle}`}>
-          {statusText}
+        <span className="px-3 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1.5 whitespace-nowrap bg-sky-50 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-500/40 shadow-sm">
+          <Snowflake className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+          <span>COLD (Not Interested)</span>
         </span>
       );
     }
@@ -624,7 +624,10 @@ export default function ContactDirectoryModule({
     else if (rule.field === "Registered Name") fieldValue = c.name;
     else if (rule.field === "Registered Email") fieldValue = c.email;
     else if (rule.field === "Registered Mobile") fieldValue = c.phone;
-    else if (rule.field === "Lead Stage") fieldValue = c.status;
+    else if (rule.field === "Lead Stage") {
+      const stateInfo = getStudentLeadState(c);
+      fieldValue = `${c.status || ""} ${stateInfo.state} ${stateInfo.detailedLabel}`;
+    }
     else if (rule.field === "Campus") fieldValue = c.campus;
     else if (rule.field === "Course") fieldValue = c.courseInterest || "";
     else if (rule.field === "Gender") fieldValue = (c as any).gender || "Male";
@@ -635,9 +638,9 @@ export default function ContactDirectoryModule({
     const targetVal = rule.value.toLowerCase().trim();
     const actualVal = fieldValue.toLowerCase().trim();
 
-    if (rule.operator === "Equals") return actualVal === targetVal;
+    if (rule.operator === "Equals") return actualVal === targetVal || actualVal.includes(targetVal);
     if (rule.operator === "Contains") return actualVal.includes(targetVal);
-    if (rule.operator === "Not Equals") return actualVal !== targetVal;
+    if (rule.operator === "Not Equals") return !actualVal.includes(targetVal);
     if (rule.operator === "Greater Than") return parseFloat(actualVal) > parseFloat(targetVal);
     if (rule.operator === "Less Than") return parseFloat(actualVal) < parseFloat(targetVal);
     return true;
@@ -645,21 +648,20 @@ export default function ContactDirectoryModule({
 
   // Filter Contacts
   const filteredContacts = contacts.filter((c) => {
+    const stateInfo = getStudentLeadState(c);
     const matchesSearch = (() => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase().trim();
-      if (searchField === "Mobile") return c.phone.toLowerCase().includes(q);
-      if (searchField === "Email") return c.email.toLowerCase().includes(q);
-      if (searchField === "Name") return c.name.toLowerCase().includes(q);
-      if (searchField === "User Id" || searchField === "Lead Id") return (c.id || "").toLowerCase().includes(q);
       return (
         c.name.toLowerCase().includes(q) ||
-        c.phone.includes(q) ||
         c.email.toLowerCase().includes(q) ||
-        (c.id || "").toLowerCase().includes(q) ||
+        c.phone.includes(q) ||
+        (c.courseInterest && c.courseInterest.toLowerCase().includes(q)) ||
         (c.school && c.school.toLowerCase().includes(q)) ||
         (c.district && c.district.toLowerCase().includes(q)) ||
-        (c.address && c.address.toLowerCase().includes(q))
+        (c.address && c.address.toLowerCase().includes(q)) ||
+        stateInfo.detailedLabel.toLowerCase().includes(q) ||
+        stateInfo.state.toLowerCase() === q
       );
     })();
 
@@ -669,7 +671,16 @@ export default function ContactDirectoryModule({
       selectedDistrict === "ALL" ||
       (c.district && c.district.toLowerCase() === selectedDistrict.toLowerCase());
 
-    const matchesStatus = selectedStatus === "ALL" || c.status === selectedStatus;
+    const matchesStatus = (() => {
+      if (selectedStatus === "ALL") return true;
+      if (selectedStatus === "HOT") return stateInfo.state === "HOT";
+      if (selectedStatus === "WARM") return stateInfo.state === "WARM";
+      if (selectedStatus === "COLD") return stateInfo.state === "COLD";
+      if (c.status === selectedStatus) return true;
+      if (selectedStatus === "ADMITTED" && stateInfo.state === "HOT") return true;
+      if (selectedStatus === "REJECTED" && stateInfo.state === "COLD") return true;
+      return false;
+    })();
 
     const matchesCounselling =
       counsellingFilter === "ALL"
@@ -702,7 +713,13 @@ export default function ContactDirectoryModule({
       if (!filterVal || filterVal === "ALL") return true;
       const actual = getFieldValueForCol(c, col).toLowerCase();
       const filter = filterVal.toLowerCase().trim();
-      if (col === "Lead Stage" || col === "Campus" || col === "Gender" || col === "Community" || col === "State") {
+      if (col === "Lead Stage") {
+        if (filter === "hot") return stateInfo.state === "HOT";
+        if (filter === "warm") return stateInfo.state === "WARM";
+        if (filter === "cold") return stateInfo.state === "COLD";
+        return actual === filter || (c.status || "").toLowerCase() === filter;
+      }
+      if (col === "Campus" || col === "Gender" || col === "Community" || col === "State") {
         return actual === filter;
       }
       return actual.includes(filter);
@@ -766,7 +783,17 @@ export default function ContactDirectoryModule({
       if (!leadStageFilter || leadStageFilter === "Select Here" || leadStageFilter === "ALL") return true;
       const statusUpper = (c.status || "").toUpperCase();
       const valLower = leadStageFilter.toLowerCase();
+      const stateInfo = getStudentLeadState(c);
 
+      if (valLower.includes("hot") || valLower === "admitted") {
+        return stateInfo.state === "HOT";
+      }
+      if (valLower.includes("warm") || valLower.includes("ready")) {
+        return stateInfo.state === "WARM";
+      }
+      if (valLower.includes("cold") || valLower.includes("not interested") || valLower === "rejected") {
+        return stateInfo.state === "COLD";
+      }
       if (valLower === "untouched") {
         return statusUpper === "NEW" || statusUpper === "UNTOUCHED" || !c.assignedTo;
       }
@@ -1400,16 +1427,44 @@ export default function ContactDirectoryModule({
           </button>
 
           <button
-            onClick={() => setSelectedStatus("NEW")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "NEW"
-              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
+            onClick={() => setSelectedStatus("HOT")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "HOT"
+              ? "bg-gradient-to-r from-rose-600 via-orange-600 to-amber-600 text-white border-rose-300 shadow-xl shadow-rose-500/40 font-black scale-[1.03] ring-2 ring-rose-400/50"
               : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
               }`}
           >
-            <span className="text-lg">🆕</span>
+            <span className="text-lg">🔥</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs font-black">New Inquiry</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "NEW").length} Leads</span>
+              <span className="block text-xs font-black text-rose-500 dark:text-rose-400 group-hover:text-white">HOT (Admitted)</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => getStudentLeadState(c).state === "HOT").length} Admitted</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setSelectedStatus("WARM")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "WARM"
+              ? "bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 text-white border-amber-300 shadow-xl shadow-amber-500/40 font-black scale-[1.03] ring-2 ring-amber-400/50"
+              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
+              }`}
+          >
+            <span className="text-lg">⚡</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs font-black text-amber-600 dark:text-amber-400">WARM (Ready)</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => getStudentLeadState(c).state === "WARM").length} Ready</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setSelectedStatus("COLD")}
+            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "COLD"
+              ? "bg-gradient-to-r from-sky-600 via-cyan-600 to-blue-700 text-white border-sky-300 shadow-xl shadow-sky-500/40 font-black scale-[1.03] ring-2 ring-sky-400/50"
+              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
+              }`}
+          >
+            <span className="text-lg">❄️</span>
+            <div className="text-left leading-tight">
+              <span className="block text-xs font-black text-sky-600 dark:text-sky-400">COLD (Not Interested)</span>
+              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => getStudentLeadState(c).state === "COLD").length} Leads</span>
             </div>
           </button>
 
@@ -1438,34 +1493,6 @@ export default function ContactDirectoryModule({
             <div className="text-left leading-tight">
               <span className="block text-xs font-black">Cutoff Review</span>
               <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "IN_REVIEW").length} Leads</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedStatus("ADMITTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "ADMITTED"
-              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
-              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
-              }`}
-          >
-            <span className="text-lg">🎓</span>
-            <div className="text-left leading-tight">
-              <span className="block text-xs font-black">Admitted</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "ADMITTED").length} Leads</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setSelectedStatus("REJECTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "REJECTED"
-              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
-              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
-              }`}
-          >
-            <span className="text-lg">❌</span>
-            <div className="text-left leading-tight">
-              <span className="block text-xs font-black">Rejected</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "REJECTED").length} Leads</span>
             </div>
           </button>
         </div>
@@ -1512,11 +1539,18 @@ export default function ContactDirectoryModule({
               className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-3.5 py-1.5 text-xs text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
             >
               <option value="Select Here">Select Here ∨</option>
-              <option value="Untouched">Untouched</option>
-              <option value="New Inquiry">New Inquiry</option>
-              <option value="Contacted">Contacted</option>
-              <option value="Cutoff Review">Cutoff Review</option>
-              <option value="Admitted">Admitted</option>
+              <optgroup label="Student Lead States">
+                <option value="HOT">🔥 HOT (Admitted)</option>
+                <option value="WARM">⚡ WARM (Ready to Admit)</option>
+                <option value="COLD">❄️ COLD (Not Interested)</option>
+              </optgroup>
+              <optgroup label="Detailed Stages">
+                <option value="Untouched">Untouched (New)</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Cutoff Review">Cutoff Review</option>
+                <option value="Admitted">Admitted</option>
+                <option value="Rejected">Rejected</option>
+              </optgroup>
             </select>
           </div>
 
@@ -1801,7 +1835,10 @@ export default function ContactDirectoryModule({
                             }
                             className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
                           >
-                            <option value="ALL">All Stages</option>
+                            <option value="ALL">All States & Stages</option>
+                            <option value="HOT">🔥 HOT (Admitted)</option>
+                            <option value="WARM">⚡ WARM (Ready to Admit)</option>
+                            <option value="COLD">❄️ COLD (Not Interested)</option>
                             <option value="NEW">NEW</option>
                             <option value="CONTACTED">CONTACTED</option>
                             <option value="IN_REVIEW">IN_REVIEW</option>

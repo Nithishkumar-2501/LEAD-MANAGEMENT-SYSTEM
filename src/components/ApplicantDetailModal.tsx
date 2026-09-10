@@ -56,6 +56,7 @@ import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
+import { getStudentLeadState } from "@/lib/studentLeadState";
 import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
 
 interface ApplicantDetailModalProps {
@@ -151,6 +152,8 @@ export default function ApplicantDetailModal({
       source: formData.source || "TNEA Counselling",
       counselorFollowups: 2,
       courseInterest: formData.courseInterest,
+      status: formData.status,
+      stage: formData.application?.stage,
     });
   }, [formData]);
 
@@ -433,10 +436,14 @@ export default function ApplicantDetailModal({
                             : "bg-sky-500/20 text-sky-300 border-sky-500/40"
                         }`}
                       >
-                        {aiPrediction.priorityTier === "HOT" && <Flame className="w-3 h-3 text-rose-400" />}
+                        {aiPrediction.priorityTier === "HOT" && <Flame className="w-3 h-3 text-rose-400 animate-pulse" />}
                         {aiPrediction.priorityTier === "WARM" && <Zap className="w-3 h-3 text-amber-400" />}
                         {aiPrediction.priorityTier === "COLD" && <Snowflake className="w-3 h-3 text-sky-400" />}
-                        {aiPrediction.conversionProbability}% Likelihood ({aiPrediction.priorityTier})
+                        {aiPrediction.priorityTier === "HOT"
+                          ? `HOT (Admitted - ${aiPrediction.conversionProbability}%)`
+                          : aiPrediction.priorityTier === "WARM"
+                          ? `WARM (Ready - ${aiPrediction.conversionProbability}%)`
+                          : `COLD (Not Interested - ${aiPrediction.conversionProbability}%)`}
                       </span>
                     )}
                     <span className="text-[11px] font-extrabold text-indigo-200 bg-white/10 px-2 py-0.5 rounded-md">
@@ -549,20 +556,42 @@ export default function ApplicantDetailModal({
                     <h3 className="text-sm font-black text-slate-950 tracking-tight truncate uppercase">
                       {formData.name}
                     </h3>
-                    <div className="flex items-center gap-1 text-[11px] text-slate-700 font-extrabold">
-                      <span>Lead Stage:</span>
-                      <span className="font-black text-sky-700 flex items-center gap-1">
-                        {formData.status === "NEW" ? "Untouched" : formData.status}
-                        {/* Pencil Icon next to Lead Stage */}
-                        <button
-                          type="button"
-                          onClick={() => setIsEditing(true)}
-                          className="p-0.5 rounded hover:bg-sky-100 text-slate-500 hover:text-sky-700 transition-colors inline-flex items-center cursor-pointer ml-1"
-                          title="Edit Stage & Student Info"
-                        >
-                          <Edit3 className="w-3 h-3 text-sky-600" />
-                        </button>
-                      </span>
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-700 font-extrabold flex-wrap">
+                      <span>Student State:</span>
+                      {(() => {
+                        const studentState = getStudentLeadState(formData);
+                        if (studentState.state === "HOT") {
+                          return (
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black border flex items-center gap-1 bg-rose-50 text-rose-700 border-rose-300 shadow-sm">
+                              <Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+                              HOT (Admitted)
+                            </span>
+                          );
+                        }
+                        if (studentState.state === "WARM") {
+                          return (
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black border flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-300 shadow-sm">
+                              <Zap className="w-3.5 h-3.5 text-amber-500" />
+                              WARM (Ready to Admit)
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black border flex items-center gap-1 bg-sky-50 text-sky-700 border-sky-300 shadow-sm">
+                            <Snowflake className="w-3.5 h-3.5 text-sky-500" />
+                            COLD (Not Interested)
+                          </span>
+                        );
+                      })()}
+                      {/* Pencil Icon next to Student State */}
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(true)}
+                        className="p-0.5 rounded hover:bg-sky-100 text-slate-500 hover:text-sky-700 transition-colors inline-flex items-center cursor-pointer ml-0.5"
+                        title="Edit State & Student Info"
+                      >
+                        <Edit3 className="w-3 h-3 text-sky-600" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1637,18 +1666,26 @@ export default function ApplicantDetailModal({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
                         <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
-                          Lead Status <span className="text-rose-500">*</span>
+                          Lead Status & Student State <span className="text-rose-500">*</span>
                         </label>
                         <select
                           value={formData.status || "NEW"}
-                          onChange={(e) => setFormData({ ...formData, status: e.target.value as LeadStatus })}
+                          onChange={(e) => {
+                            const newStatus = e.target.value as LeadStatus;
+                            const stateInfo = getStudentLeadState(newStatus);
+                            setFormData({
+                              ...formData,
+                              status: newStatus,
+                              priorityTier: stateInfo.state,
+                            });
+                          }}
                           className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
                         >
-                          <option value="NEW">NEW (Untouched)</option>
-                          <option value="CONTACTED">CONTACTED (Engaged)</option>
-                          <option value="IN_REVIEW">IN_REVIEW (Scrutiny / Decision Pending)</option>
-                          <option value="ADMITTED">ADMITTED (Enrolled in V.S.B.)</option>
-                          <option value="REJECTED">REJECTED (Closed / Dropped)</option>
+                          <option value="ADMITTED">🔥 HOT - Admitted (Enrolled in V.S.B.)</option>
+                          <option value="NEW">⚡ WARM - Ready to Admit (New Lead)</option>
+                          <option value="CONTACTED">⚡ WARM - Ready to Admit (Contacted / Engaged)</option>
+                          <option value="IN_REVIEW">⚡ WARM - Ready to Admit (Scrutiny / Review)</option>
+                          <option value="REJECTED">❄️ COLD - Not Interested (Closed / Dropped)</option>
                         </select>
                       </div>
 
