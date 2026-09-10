@@ -29,60 +29,60 @@ export default function MarketingDashboardView({
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-gradient-to-r dark:from-purple-950 dark:via-slate-900 dark:to-indigo-950 border border-slate-200 dark:border-purple-500/30 text-slate-900 dark:text-white shadow-md dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-600/30 border border-purple-200 dark:border-purple-400/40 flex items-center justify-center text-purple-600 dark:text-purple-300 shadow-sm shrink-0">
-            <Megaphone className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <div className="w-11 h-11 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 shadow-sm shrink-0">
+            <Megaphone className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Omnichannel Marketing Campaign Dashboard</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">Real-time candidate lead acquisition across 8 digital & field campaign channels</p>
+            <h2 className="text-lg font-black tracking-tight text-slate-900">Omnichannel Marketing Campaign Dashboard</h2>
+            <p className="text-xs text-slate-600 font-medium">Real-time candidate lead acquisition across 8 digital & field campaign channels</p>
           </div>
         </div>
 
-        <div className="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-500/20 border border-purple-200 dark:border-purple-400/40 text-xs font-black text-purple-800 dark:text-purple-300 shadow-sm">
+        <div className="px-3.5 py-1.5 rounded-xl bg-purple-50 border border-purple-200 text-xs font-black text-purple-800 shadow-sm">
           Total Marketing Inquiries: 2,440 Candidates
         </div>
       </div>
 
       {/* Campaign ROI Performance Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bubble-card p-4 flex items-center justify-between">
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
           <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Total Campaign Spend</p>
-            <h4 className="text-xl font-black text-white">₹2,45,000</h4>
+            <p className="text-[10px] font-extrabold text-slate-500 uppercase">Total Campaign Spend</p>
+            <h4 className="text-xl font-black text-slate-900">₹2,45,000</h4>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-400/30 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center font-bold">
             <DollarSign className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bubble-card p-4 flex items-center justify-between">
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
           <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Average Cost-per-Lead</p>
-            <h4 className="text-xl font-black text-sky-400">₹100 / Lead</h4>
+            <p className="text-[10px] font-extrabold text-slate-500 uppercase">Average Cost-per-Lead</p>
+            <h4 className="text-xl font-black text-sky-600">₹100 / Lead</h4>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-400/30 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 border border-sky-200 flex items-center justify-center font-bold">
             <Target className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bubble-card p-4 flex items-center justify-between">
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
           <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Conversion ROI</p>
-            <h4 className="text-xl font-black text-emerald-400">+315%</h4>
+            <p className="text-[10px] font-extrabold text-slate-500 uppercase">Conversion ROI</p>
+            <h4 className="text-xl font-black text-emerald-600">+315%</h4>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-bold">
             <TrendingUp className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bubble-card p-4 flex items-center justify-between">
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
           <div>
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Confirmed Admissions</p>
-            <h4 className="text-xl font-black text-amber-300">185 Students</h4>
+            <p className="text-[10px] font-extrabold text-slate-500 uppercase">Confirmed Admissions</p>
+            <h4 className="text-xl font-black text-amber-600">185 Students</h4>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold">
             <Award className="w-5 h-5" />
           </div>
         </div>
@@ -96,30 +96,31 @@ export default function MarketingDashboardView({
             <div
               key={idx}
               onClick={() => onNavigateTab && onNavigateTab(ch.tab)}
-              className={`p-4 rounded-2xl bg-slate-950/90 border ${ch.border} hover:border-purple-400/60 transition-all space-y-3 cursor-pointer group shadow-lg`}
+              className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-purple-400/80 hover:shadow-md transition-all space-y-3 cursor-pointer group shadow-sm"
             >
               <div className="flex items-center justify-between">
-                <div className={`p-2.5 rounded-xl bg-gradient-to-tr ${ch.color} text-white shadow-md group-hover:scale-110 transition-transform`}>
+                <div className={`p-2.5 rounded-xl bg-gradient-to-tr ${ch.color} text-white shadow-sm group-hover:scale-110 transition-transform`}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300">
                   {ch.roi}
                 </span>
               </div>
 
               <div>
-                <h4 className="font-extrabold text-sm text-white group-hover:text-purple-300 transition-colors">
+                <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-purple-600 transition-colors">
                   {ch.title}
                 </h4>
-                <div className="flex items-center justify-between mt-1 text-xs text-slate-400">
-                  <span>Inquiries: <strong className="text-white">{ch.count}</strong></span>
-                  <span>CPL: <strong className="text-sky-300">{ch.cpl}</strong></span>
+                <div className="flex items-center justify-between mt-1 text-xs text-slate-600">
+                  <span>Inquiries: <strong className="text-slate-950 font-black">{ch.count}</strong></span>
+                  <span>CPL: <strong className="text-sky-600 font-bold">{ch.cpl}</strong></span>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
     </div>
   );
 }

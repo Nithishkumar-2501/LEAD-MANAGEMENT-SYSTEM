@@ -431,31 +431,31 @@ export default function ApplicantDetailModal({
         {/* Modal Scrollable Body */}
         <div className="p-3 sm:p-5 overflow-y-auto space-y-4 flex-1 bg-slate-100/70">
           {/* SPHEREX AI Intelligence Suite Banner */}
-          <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 rounded-xl border border-indigo-700/60 p-3.5 px-4 text-white shadow-md flex flex-col gap-3">
+          <div className="bg-white rounded-xl border border-indigo-200/80 p-3.5 px-4 text-slate-900 shadow-sm flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shrink-0">
                   <Brain className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-black tracking-wide text-indigo-300 uppercase flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" /> NORA AI Engine
+                    <span className="text-xs font-black tracking-wide text-indigo-700 uppercase flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> NORA AI Engine
                     </span>
-                    <span className="text-slate-500 text-xs hidden sm:inline">•</span>
+                    <span className="text-slate-400 text-xs hidden sm:inline">•</span>
                     {aiPrediction && (
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[11px] font-black border flex items-center gap-1 ${
                           aiPrediction.priorityTier === "HOT"
-                            ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                            ? "bg-rose-100 text-rose-800 border-rose-300"
                             : aiPrediction.priorityTier === "WARM"
-                            ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                            : "bg-sky-500/20 text-sky-300 border-sky-500/40"
+                            ? "bg-amber-100 text-amber-800 border-amber-300"
+                            : "bg-sky-100 text-sky-800 border-sky-300"
                         }`}
                       >
-                        {aiPrediction.priorityTier === "HOT" && <Flame className="w-3 h-3 text-rose-400 animate-pulse" />}
-                        {aiPrediction.priorityTier === "WARM" && <Zap className="w-3 h-3 text-amber-400" />}
-                        {aiPrediction.priorityTier === "COLD" && <Snowflake className="w-3 h-3 text-sky-400" />}
+                        {aiPrediction.priorityTier === "HOT" && <Flame className="w-3 h-3 text-rose-600 animate-pulse" />}
+                        {aiPrediction.priorityTier === "WARM" && <Zap className="w-3 h-3 text-amber-600" />}
+                        {aiPrediction.priorityTier === "COLD" && <Snowflake className="w-3 h-3 text-sky-600" />}
                         {aiPrediction.priorityTier === "HOT"
                           ? `HOT (Admitted - ${aiPrediction.conversionProbability}%)`
                           : aiPrediction.priorityTier === "WARM"
@@ -463,11 +463,11 @@ export default function ApplicantDetailModal({
                           : `COLD (Not Interested - ${aiPrediction.conversionProbability}%)`}
                       </span>
                     )}
-                    <span className="text-[11px] font-extrabold text-indigo-200 bg-white/10 px-2 py-0.5 rounded-md">
+                    <span className="text-[11px] font-black text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
                       Cutoff: {aiPrediction?.tneaCutoff || formData.tneaCutoff || 165}/200
                     </span>
                   </div>
-                  <p className="text-xs text-slate-200 mt-1 font-medium line-clamp-1">
+                  <p className="text-xs text-slate-700 mt-1 font-medium line-clamp-1">
                     {aiSummary ||
                       (aiPrediction
                         ? `${aiPrediction.counselorActionRecommendation}`
@@ -475,6 +475,7 @@ export default function ApplicantDetailModal({
                   </p>
                 </div>
               </div>
+
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">

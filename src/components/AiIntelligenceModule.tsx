@@ -235,21 +235,21 @@ export default function AiIntelligenceModule({
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12">
       {/* Top Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-800/40 p-6 sm:p-8 text-white shadow-2xl">
-        <div className="absolute -right-12 -top-12 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute right-32 -bottom-8 w-48 h-48 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl bg-white border border-indigo-200/80 p-6 sm:p-8 text-slate-900 shadow-md">
+        <div className="absolute -right-12 -top-12 w-64 h-64 bg-indigo-50 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-32 -bottom-8 w-48 h-48 bg-purple-50 rounded-full blur-2xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-black tracking-wide uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-black tracking-wide uppercase">
               <img src="/nora-logo.png" alt="NORA AI" className="w-4 h-4 rounded-full object-cover shrink-0" />
               NORA Machine Learning & Generative AI Suite
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
-              <img src="/nora-logo.png" alt="NORA AI" className="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-500/40 shadow-md" />
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 flex items-center gap-3">
+              <img src="/nora-logo.png" alt="NORA AI" className="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-200 shadow-sm" />
               NORA AI Intelligence Studio
             </h1>
-            <p className="text-sm text-slate-300 max-w-2xl font-medium">
+            <p className="text-sm text-slate-600 max-w-2xl font-medium">
               Real-time student conversion probability, What-If admission simulator, automated
               marksheet OCR, and virtual admission counseling powered by NORA for V.S.B. Karur (VSB-612) &
               Coimbatore (VSB-714).
@@ -257,71 +257,72 @@ export default function AiIntelligenceModule({
           </div>
 
           {/* Quick Metrics Badge */}
-          <div className="flex items-center gap-3 shrink-0 bg-slate-800/80 backdrop-blur-md border border-slate-700/60 p-3.5 rounded-xl">
-            <div className="p-3 bg-indigo-600/30 border border-indigo-400/30 rounded-lg text-indigo-400">
+          <div className="flex items-center gap-3 shrink-0 bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm">
+            <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-600">
               <Brain className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+              <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
                 Model ROC-AUC
               </div>
-              <div className="text-xl font-black text-emerald-400">0.924 (92.4%)</div>
-              <div className="text-[11px] text-slate-400">NORA Ensemble v2.1</div>
+              <div className="text-xl font-black text-emerald-600">0.924 (92.4%)</div>
+              <div className="text-[11px] text-slate-500 font-medium">NORA Ensemble v2.1</div>
             </div>
           </div>
         </div>
 
         {/* Sub-Navigation Tabs */}
-        <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-slate-800/80">
+        <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-slate-200">
           <button
             onClick={() => setActiveTab("PREDICTOR")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeTab === "PREDICTOR"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/50"
-                : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/40"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 border border-indigo-600"
+                : "bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 border border-slate-200 shadow-xs"
             }`}
           >
-            <Flame className="w-4 h-4 text-orange-400" />
+            <Flame className="w-4 h-4 text-orange-500" />
             NORA Lead Predictor ({scoredApplicants.length})
           </button>
 
           <button
             onClick={() => setActiveTab("SIMULATOR")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeTab === "SIMULATOR"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/50"
-                : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/40"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 border border-indigo-600"
+                : "bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 border border-slate-200 shadow-xs"
             }`}
           >
-            <Sliders className="w-4 h-4 text-sky-400" />
+            <Sliders className="w-4 h-4 text-sky-600" />
             What-If Admission Simulator
           </button>
 
           <button
             onClick={() => setActiveTab("COUNSELOR")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeTab === "COUNSELOR"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/50"
-                : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/40"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 border border-indigo-600"
+                : "bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 border border-slate-200 shadow-xs"
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-emerald-400" />
+            <MessageSquare className="w-4 h-4 text-emerald-600" />
             AI Virtual Counselor & Outreach
           </button>
 
           <button
             onClick={() => setActiveTab("METRICS")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeTab === "METRICS"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/50"
-                : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/40"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 border border-indigo-600"
+                : "bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 border border-slate-200 shadow-xs"
             }`}
           >
-            <BarChart2 className="w-4 h-4 text-purple-400" />
+            <BarChart2 className="w-4 h-4 text-purple-600" />
             Model Architecture & Evaluation
           </button>
         </div>
       </div>
+
 
       {/* TAB 1: LEAD CONVERSION PREDICTOR */}
       {activeTab === "PREDICTOR" && (
