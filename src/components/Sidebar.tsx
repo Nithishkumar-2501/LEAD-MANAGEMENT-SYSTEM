@@ -609,7 +609,7 @@ export default function Sidebar({
             {isDashboardOpen && !isCollapsed && (
               <div
                 id="dropdown-dashboard"
-                className="pl-2 pr-1 py-1.5 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200"
+                className="space-y-1.5 pt-1.5 animate-in fade-in slide-in-from-top-1 duration-200"
               >
                 {dashboardSubItems.map((item) => {
                   const Icon = item.icon;
@@ -619,39 +619,39 @@ export default function Sidebar({
                       key={item.id}
                       id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group border cursor-pointer ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-md ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
                           : isLight
-                          ? "bg-slate-100/90 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-900 border-slate-200/80 shadow-xs"
+                          : "bg-slate-900/70 hover:bg-slate-800/90 text-slate-200 hover:text-white border-white/5 hover:border-white/15 shadow-xs"
                       }`}
                     >
                       <div
-                        className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                        className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-xs ${
                           isActive
                             ? "bg-white/20 text-white"
                             : isLight
-                            ? "bg-slate-200 text-slate-600"
-                            : "bg-slate-800 text-slate-300"
+                            ? "bg-slate-100 text-slate-700"
+                            : "bg-slate-800/90 text-slate-300"
                         }`}
                       >
-                        <Icon className="w-3.5 h-3.5" />
+                        <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                          className={`font-black text-xs tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
                               ? "text-slate-900"
-                              : "text-slate-200 group-hover:text-white"
+                              : "text-slate-100 group-hover:text-white"
                           }`}
                         >
                           {item.label}
                         </span>
                         <span
-                          className={`text-[9px] font-medium truncate w-full ${
+                          className={`text-[10px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -838,7 +838,7 @@ export default function Sidebar({
             {isAdmissionCrmOpen && !isCollapsed && (
               <div
                 id="dropdown-admission"
-                className="pl-2 pr-1 py-1.5 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200"
+                className="space-y-1.5 pt-1.5 animate-in fade-in slide-in-from-top-1 duration-200"
               >
                 {filteredSubItems.map((item) => {
                   const Icon = item.icon;
@@ -847,39 +847,39 @@ export default function Sidebar({
                     <button
                       key={item.id}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group border cursor-pointer ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-md ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
                           : isLight
-                          ? "bg-slate-100/90 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-900 border border-slate-200/80 shadow-xs"
+                          : "bg-slate-900/70 hover:bg-slate-800/90 text-slate-200 hover:text-white border border-white/5 hover:border-white/15 shadow-xs"
                       }`}
                     >
                       <div
-                        className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                        className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-xs ${
                           isActive
                             ? "bg-white/20 text-white"
                             : isLight
-                            ? "bg-slate-200 text-slate-600"
-                            : "bg-slate-800 text-slate-300"
+                            ? "bg-slate-100 text-slate-700"
+                            : "bg-slate-800/90 text-slate-300"
                         }`}
                       >
-                        <Icon className="w-3.5 h-3.5" />
+                        <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                          className={`font-black text-xs tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
                               ? "text-slate-900"
-                              : "text-slate-200 group-hover:text-white"
+                              : "text-slate-100 group-hover:text-white"
                           }`}
                         >
                           {item.label}
                         </span>
                         <span
-                          className={`text-[9px] font-medium truncate w-full ${
+                          className={`text-[10px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -1065,7 +1065,7 @@ export default function Sidebar({
             {isSocialPlatformOpen && !isCollapsed && (
               <div
                 id="dropdown-social"
-                className="pl-2 pr-1 py-1.5 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200"
+                className="space-y-1.5 pt-1.5 animate-in fade-in slide-in-from-top-1 duration-200"
               >
                 {socialPlatformSubItems.map((item) => {
                   const Icon = item.icon;
@@ -1074,39 +1074,39 @@ export default function Sidebar({
                     <button
                       key={item.id}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group border cursor-pointer ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-md ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
                           : isLight
-                          ? "bg-slate-100/90 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80"
-                          : "bg-slate-900/40 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/5 hover:border-white/15"
+                          ? "bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-900 border border-slate-200/80 shadow-xs"
+                          : "bg-slate-900/70 hover:bg-slate-800/90 text-slate-200 hover:text-white border border-white/5 hover:border-white/15 shadow-xs"
                       }`}
                     >
                       <div
-                        className={`p-1.5 rounded-lg shrink-0 transition-transform group-hover:scale-110 ${
+                        className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-xs ${
                           isActive
                             ? "bg-white/20 text-white"
                             : isLight
-                            ? "bg-slate-200 text-slate-600"
-                            : "bg-slate-800 text-slate-300"
+                            ? "bg-slate-100 text-slate-700"
+                            : "bg-slate-800/90 text-slate-300"
                         }`}
                       >
-                        <Icon className="w-3.5 h-3.5" />
+                        <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                          className={`font-black text-xs tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
                               ? "text-slate-900"
-                              : "text-slate-200 group-hover:text-white"
+                              : "text-slate-100 group-hover:text-white"
                           }`}
                         >
                           {item.label}
                         </span>
                         <span
-                          className={`text-[9px] font-medium truncate w-full ${
+                          className={`text-[10px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -1118,7 +1118,7 @@ export default function Sidebar({
                         </span>
                       </div>
                       {isActive && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
+                        <span className="ml-auto w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
                       )}
                     </button>
                   );
