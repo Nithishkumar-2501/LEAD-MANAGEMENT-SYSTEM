@@ -528,12 +528,12 @@ export default function Sidebar({
           </div>
 
           {/* PARENT MENU ITEM 1: DASHBOARD */}
-          <div className="relative space-y-1">
+          <div className="relative space-y-1.5">
             {isCollapsed ? (
               <Tooltip text="Dashboard" position="right">
                 <button
                   onClick={toggleDashboardMenu}
-                  className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
+                  className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative press-spring ${
                     dashboardSubItems.some((item) => item.id === activeTab)
                       ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
                       : isLight
@@ -547,36 +547,36 @@ export default function Sidebar({
             ) : (
               <div
                 id="nav-category-dashboard"
-                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
-                  dashboardSubItems.some((item) => item.id === activeTab)
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border card-hover-elevate press-spring shadow-xs ${
+                  isDashboardOpen || dashboardSubItems.some((item) => item.id === activeTab)
                     ? isLight
-                      ? "bg-sky-50 border-sky-300 text-sky-900 shadow-md"
-                      : "bg-sky-950/50 border-sky-500/40 text-sky-200 shadow-lg shadow-sky-950/50"
+                      ? "bg-sky-50/90 border-sky-300 text-slate-900 shadow-md ring-1 ring-sky-300/40"
+                      : "bg-sky-950/60 border-sky-500/50 text-sky-200 shadow-lg shadow-sky-950/40 ring-1 ring-sky-500/30"
                     : isLight
-                    ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
-                    : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                    ? "bg-white hover:bg-slate-50 text-slate-900 border-slate-200 shadow-xs"
+                    : "bg-slate-900/70 hover:bg-slate-850 text-slate-200 border-white/10 hover:border-white/20"
                 }`}
                 onClick={toggleDashboardMenu}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
-                      dashboardSubItems.some((item) => item.id === activeTab)
-                        ? "bg-gradient-to-tr from-sky-500 to-blue-600 text-white"
+                    className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center transition-all duration-300 shadow-sm ${
+                      isDashboardOpen || dashboardSubItems.some((item) => item.id === activeTab)
+                        ? "bg-gradient-to-tr from-blue-600 via-sky-500 to-cyan-400 text-white shadow-md shadow-blue-500/35 ring-2 ring-sky-300/40"
                         : isLight
-                        ? "bg-slate-200 text-slate-700"
-                        : "bg-slate-800 text-slate-300"
+                        ? "bg-blue-500 text-white shadow-sm"
+                        : "bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-sm"
                     }`}
                   >
-                    <LayoutDashboard className="w-4 h-4" />
+                    <LayoutDashboard className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate">
+                    <span className="font-extrabold text-xs tracking-tight truncate text-slate-950 dark:text-white">
                       Dashboard
                     </span>
                     <span
                       className={`text-[10px] font-semibold truncate ${
-                        isLight ? "text-slate-500" : "text-slate-400"
+                        isLight ? "text-slate-600 font-bold" : "text-slate-400"
                       }`}
                     >
                       Management Views
@@ -584,20 +584,20 @@ export default function Sidebar({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                    className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                       isLight
-                        ? "bg-sky-100 text-sky-700"
+                        ? "bg-sky-100 text-sky-700 border border-sky-200"
                         : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
                     }`}
                   >
                     4
                   </span>
-                  <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
+                  <div className="p-0.5 rounded-lg transition-transform">
                     <ChevronRight
-                      className={`w-4 h-4 transition-transform duration-200 ${
-                        isDashboardOpen ? "rotate-90 text-sky-400" : "text-slate-400"
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        isDashboardOpen ? "rotate-90 text-sky-500" : "text-slate-400 group-hover:translate-x-0.5"
                       }`}
                     />
                   </div>
@@ -754,12 +754,12 @@ export default function Sidebar({
           </div>
 
           {/* PARENT MENU ITEM: ADMISSION CRM */}
-          <div className="relative space-y-1">
+          <div className="relative space-y-1.5">
             {isCollapsed ? (
               <Tooltip text="Admission CRM" position="right">
                 <button
                   onClick={toggleAdmissionMenu}
-                  className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
+                  className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative press-spring ${
                     isAnySubItemActive
                       ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
                       : isLight
@@ -776,36 +776,36 @@ export default function Sidebar({
             ) : (
               <div
                 id="nav-category-admission"
-                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
-                  isAnySubItemActive
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border card-hover-elevate press-spring shadow-xs ${
+                  isAdmissionCrmOpen || isAnySubItemActive
                     ? isLight
-                      ? "bg-sky-50 border-sky-300 text-sky-900 shadow-md"
-                      : "bg-sky-950/50 border-sky-500/40 text-sky-200 shadow-lg shadow-sky-950/50"
+                      ? "bg-sky-50/90 border-sky-300 text-slate-900 shadow-md ring-1 ring-sky-300/40"
+                      : "bg-sky-950/60 border-sky-500/50 text-sky-200 shadow-lg shadow-sky-950/40 ring-1 ring-sky-500/30"
                     : isLight
-                    ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
-                    : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                    ? "bg-white hover:bg-slate-50 text-slate-900 border-slate-200 shadow-xs"
+                    : "bg-slate-900/70 hover:bg-slate-850 text-slate-200 border-white/10 hover:border-white/20"
                 }`}
                 onClick={toggleAdmissionMenu}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
-                      isAnySubItemActive
-                        ? "bg-gradient-to-tr from-sky-500 to-blue-600 text-white"
+                    className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center transition-all duration-300 shadow-xs ${
+                      isAdmissionCrmOpen || isAnySubItemActive
+                        ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-2 ring-sky-300/40"
                         : isLight
-                        ? "bg-slate-200 text-slate-700"
-                        : "bg-slate-800 text-slate-300"
+                        ? "bg-slate-100 text-slate-800 border border-slate-200"
+                        : "bg-slate-800/90 text-slate-200 border border-white/10"
                     }`}
                   >
-                    <GraduationCap className="w-4 h-4" />
+                    <GraduationCap className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate">
+                    <span className="font-extrabold text-xs tracking-tight truncate text-slate-950 dark:text-white">
                       Admission CRM
                     </span>
                     <span
                       className={`text-[10px] font-semibold truncate ${
-                        isLight ? "text-slate-500" : "text-slate-400"
+                        isLight ? "text-slate-600 font-bold" : "text-slate-400"
                       }`}
                     >
                       Management Hub
@@ -813,20 +813,20 @@ export default function Sidebar({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                    className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                       isLight
-                        ? "bg-sky-100 text-sky-700"
+                        ? "bg-sky-100 text-sky-700 border border-sky-200"
                         : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
                     }`}
                   >
                     {filteredSubItems.length}
                   </span>
-                  <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
+                  <div className="p-0.5 rounded-lg transition-transform">
                     <ChevronRight
-                      className={`w-4 h-4 transition-transform duration-200 ${
-                        isAdmissionCrmOpen ? "rotate-90 text-sky-400" : "text-slate-400"
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        isAdmissionCrmOpen ? "rotate-90 text-sky-500" : "text-slate-400 group-hover:translate-x-0.5"
                       }`}
                     />
                   </div>
@@ -981,12 +981,12 @@ export default function Sidebar({
           </div>
 
           {/* PARENT MENU ITEM 2: CONTACT & SOCIAL MEDIA PLATFORM */}
-          <div className="relative space-y-1 pt-2 border-t border-white/10 mt-2">
+          <div className="relative space-y-1.5 pt-2 border-t border-slate-200 dark:border-white/10 mt-2">
             {isCollapsed ? (
               <Tooltip text="Contact & Social Media Platform" position="right">
                 <button
                   onClick={toggleSocialPlatformMenu}
-                  className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative ${
+                  className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative press-spring ${
                     isAnySocialSubItemActive
                       ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl shadow-purple-500/30 border border-purple-400 scale-105"
                       : isLight
@@ -1003,36 +1003,36 @@ export default function Sidebar({
             ) : (
               <div
                 id="nav-category-social"
-                className={`w-full flex items-center justify-between px-3 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border ${
-                  isAnySocialSubItemActive
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer group border card-hover-elevate press-spring shadow-xs ${
+                  isSocialPlatformOpen || isAnySocialSubItemActive
                     ? isLight
-                      ? "bg-purple-50 border-purple-300 text-purple-900 shadow-md"
-                      : "bg-purple-950/50 border-purple-500/40 text-purple-200 shadow-lg shadow-purple-950/50"
+                      ? "bg-purple-50/90 border-purple-300 text-slate-900 shadow-md ring-1 ring-purple-300/40"
+                      : "bg-purple-950/60 border-purple-500/50 text-purple-200 shadow-lg shadow-purple-950/40 ring-1 ring-purple-500/30"
                     : isLight
-                    ? "bg-slate-50 hover:bg-slate-100 text-slate-900 border-slate-200"
-                    : "bg-slate-900/60 hover:bg-slate-900 text-slate-200 border-white/10 hover:border-white/20"
+                    ? "bg-white hover:bg-slate-50 text-slate-900 border-slate-200 shadow-xs"
+                    : "bg-slate-900/70 hover:bg-slate-850 text-slate-200 border-white/10 hover:border-white/20"
                 }`}
                 onClick={toggleSocialPlatformMenu}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-sm ${
-                      isAnySocialSubItemActive
-                        ? "bg-gradient-to-tr from-purple-500 to-indigo-600 text-white"
+                    className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center transition-all duration-300 shadow-xs ${
+                      isSocialPlatformOpen || isAnySocialSubItemActive
+                        ? "bg-purple-200 dark:bg-purple-900/80 text-purple-800 dark:text-purple-200 shadow-sm ring-2 ring-purple-300/40"
                         : isLight
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-purple-900/50 text-purple-300 border border-purple-500/30"
+                        ? "bg-purple-100 text-purple-700 border border-purple-200/80"
+                        : "bg-purple-900/40 text-purple-300 border border-purple-500/20"
                     }`}
                   >
-                    <Share2 className="w-4 h-4" />
+                    <Share2 className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate">
+                    <span className="font-extrabold text-xs tracking-tight truncate text-slate-950 dark:text-white">
                       Contact Platform
                     </span>
                     <span
                       className={`text-[10px] font-semibold truncate ${
-                        isLight ? "text-slate-500" : "text-slate-400"
+                        isLight ? "text-slate-600 font-bold" : "text-slate-400"
                       }`}
                     >
                       Social Media Channels
@@ -1040,20 +1040,20 @@ export default function Sidebar({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                    className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                       isLight
-                        ? "bg-purple-100 text-purple-700"
+                        ? "bg-purple-100 text-purple-700 border border-purple-200"
                         : "bg-purple-500/20 text-purple-300 border border-purple-400/30"
                     }`}
                   >
                     8
                   </span>
-                  <div className="p-1 rounded-lg hover:bg-white/10 transition-transform">
+                  <div className="p-0.5 rounded-lg transition-transform">
                     <ChevronRight
-                      className={`w-4 h-4 transition-transform duration-200 ${
-                        isSocialPlatformOpen ? "rotate-90 text-purple-400" : "text-slate-400"
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        isSocialPlatformOpen ? "rotate-90 text-purple-500" : "text-slate-400 group-hover:translate-x-0.5"
                       }`}
                     />
                   </div>
