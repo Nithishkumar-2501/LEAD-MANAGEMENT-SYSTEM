@@ -18,7 +18,7 @@ interface AdminDashboardViewProps {
   selectedStageFilter: string | null;
   onSelectStage: (stage: string | null) => void;
   onSelectApplicant: (applicant: Lead & { application: Application }) => void;
-  onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
+  onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP" | "SMS", name: string) => void;
   onOpenCreateModal: () => void;
   onOpenQuickLeadModal: () => void;
   onToggleTask: (taskId: string) => void;

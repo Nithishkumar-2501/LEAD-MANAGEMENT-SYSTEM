@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Lead, Application, AppStage } from "@/types/crm";
-import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, Upload, Trash2, Flame, Zap, Snowflake } from "lucide-react";
+import { Eye, Phone, Mail, MessageSquare, ChevronRight, UserCheck, Plus, Upload, Trash2, Flame, Zap, Snowflake, Send } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import { parseCSVToLeads } from "@/lib/csvParser";
@@ -11,12 +11,13 @@ import { getStudentLeadState } from "@/lib/studentLeadState";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
+import { redirectToSms, getDefaultAdmissionSmsText } from "@/lib/smsSender";
 
 interface ApplicantsTableProps {
   applicants: (Lead & { application: Application })[];
   searchQuery: string;
   onSelectApplicant: (applicant: Lead & { application: Application }) => void;
-  onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
+  onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP" | "SMS", name: string) => void;
   onOpenCreateModal: () => void;
   onOpenQuickLeadModal?: () => void;
   onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
@@ -47,7 +48,8 @@ export default function ApplicantsTable({
   };
 
   const handleCommLogSuccess = (type: "CALL" | "MESSAGE" | "EMAIL", details: string) => {
-    onActionTrigger(type === "MESSAGE" ? "WHATSAPP" : type, activeCommContact?.name || "Candidate");
+    const triggerType = type === "MESSAGE" ? (details.toLowerCase().includes("sms") ? "SMS" : "WHATSAPP") : type;
+    onActionTrigger(triggerType, activeCommContact?.name || "Candidate");
   };
 
   const filteredApplicants = applicants.filter((item) => {
@@ -350,6 +352,19 @@ export default function ApplicantsTable({
                             className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-emerald-500 hover:text-white text-emerald-400 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer inline-flex items-center justify-center"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
+
+                        <Tooltip text={`Native SMS to ${item.name}`}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onActionTrigger("SMS", item.name);
+                              redirectToSms(item.phone, getDefaultAdmissionSmsText(item));
+                            }}
+                            className="p-2 rounded-full bg-slate-900/80 border border-white/20 hover:bg-indigo-500 hover:text-white text-indigo-400 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40 cursor-pointer inline-flex items-center justify-center"
+                          >
+                            <Send className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
 

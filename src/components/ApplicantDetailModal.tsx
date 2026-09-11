@@ -63,13 +63,18 @@ import {
   formatDisplayPhone,
   getDefaultAdmissionWhatsAppText,
 } from "@/lib/whatsappSender";
+import {
+  redirectToSms,
+  getDefaultAdmissionSmsText,
+  formatSmsNumber,
+} from "@/lib/smsSender";
 import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
   currentUserRole: "ADMIN" | "TEACHER" | "COUNSELOR";
   onClose: () => void;
-  onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
+  onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP" | "SMS", name: string) => void;
   onSave?: (updated: Lead & { application: Application }) => void;
   existingLeads?: Lead[];
 }
@@ -385,10 +390,27 @@ export default function ApplicantDetailModal({
                 onActionTrigger("WHATSAPP", formData.name);
                 redirectToWhatsApp(formData.phone, getDefaultAdmissionWhatsAppText(formData));
               }}
-              className="press-spring hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-xs font-black text-emerald-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
-              title={`Send WhatsApp message to ${formData.name}`}
+              className="press-spring flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-xs font-black text-emerald-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+              title={`Access WhatsApp App & send message to ${formData.name}`}
             >
-              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> WhatsApp
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> <span className="hidden sm:inline">WhatsApp</span>
+            </button>
+            <button
+              onClick={() => {
+                onActionTrigger("SMS", formData.name);
+                redirectToSms(formData.phone, getDefaultAdmissionSmsText(formData));
+              }}
+              className="press-spring flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 text-xs font-black text-indigo-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+              title={`Access Native SMS App & send message to ${formData.name}`}
+            >
+              <Send className="w-3.5 h-3.5 text-indigo-600" /> <span className="hidden sm:inline">SMS</span>
+            </button>
+            <button
+              onClick={() => setIsMessageModalOpen(true)}
+              className="press-spring flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-300 text-xs font-black text-teal-700 transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+              title={`Open Message Composer (WhatsApp / SMS) for ${formData.name}`}
+            >
+              <FileText className="w-3.5 h-3.5 text-teal-600" /> <span className="hidden sm:inline">Message</span>
             </button>
             <a
               href={getCleanTelUri(formData.phone || "+91-6380270912")}
@@ -401,12 +423,6 @@ export default function ApplicantDetailModal({
             >
               <Phone className="w-3.5 h-3.5 text-emerald-600" /> <span className="hidden sm:inline">Call</span>
             </a>
-            <button
-              onClick={() => onActionTrigger("CALL", formData.name)}
-              className="press-spring hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-sky-600" /> Add Event
-            </button>
 
             {/* Edit Details Button at Top Right */}
             <button
@@ -667,6 +683,31 @@ export default function ApplicantDetailModal({
                       >
                         <MessageSquare className="w-3 h-3" /> WhatsApp
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onActionTrigger("SMS", formData.name);
+                          redirectToSms(formData.phone, getDefaultAdmissionSmsText(formData));
+                        }}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
+                        title={`Open native SMS application for ${formData.name}`}
+                      >
+                        <Send className="w-3 h-3" /> SMS
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMessageModalOpen(true);
+                        }}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-600 hover:bg-teal-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
+                        title={`Open Message Composer for ${formData.name}`}
+                      >
+                        <FileText className="w-3 h-3" /> Compose
+                      </button>
                     </div>
 
                     <span
@@ -678,15 +719,8 @@ export default function ApplicantDetailModal({
                   </div>
                 </div>
 
-                {/* Quick 5 Action Buttons Bar */}
-                <div className="grid grid-cols-5 gap-1.5 border-t border-slate-200 pt-3">
-                  <button
-                    onClick={() => onActionTrigger("WHATSAPP", formData.name)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm cursor-pointer"
-                    title="Share / Transfer Lead"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                  </button>
+                {/* Quick 6 Action Buttons Bar (Call, WhatsApp, SMS, Message Composer, Email, Edit) */}
+                <div className="grid grid-cols-6 gap-1.5 border-t border-slate-200 pt-3">
                   <a
                     href={getCleanTelUri(formData.phone || "+91-6380270912")}
                     onClick={(e) => {
@@ -699,22 +733,6 @@ export default function ApplicantDetailModal({
                     <Phone className="w-3.5 h-3.5 text-emerald-600" />
                   </a>
 
-                  {/* 3rd Button: PENCIL EDIT ICON (Directly opens Edit Student Data & Firebase Save) */}
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="p-2 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-sky-800 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105"
-                    title="Edit Student Data & Save to Firebase"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 text-sky-600" />
-                  </button>
-
-                  <button
-                    onClick={() => onActionTrigger("EMAIL", formData.name)}
-                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm cursor-pointer"
-                    title="Send Email"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                  </button>
                   <button
                     onClick={() => {
                       onActionTrigger("WHATSAPP", formData.name);
@@ -724,6 +742,41 @@ export default function ApplicantDetailModal({
                     title={`Send WhatsApp message to ${formData.name}`}
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      onActionTrigger("SMS", formData.name);
+                      redirectToSms(formData.phone, getDefaultAdmissionSmsText(formData));
+                    }}
+                    className="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 text-indigo-700 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                    title={`Send Native SMS message to ${formData.name}`}
+                  >
+                    <Send className="w-3.5 h-3.5 text-indigo-600" />
+                  </button>
+
+                  <button
+                    onClick={() => setIsMessageModalOpen(true)}
+                    className="p-2 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                    title={`Compose custom message (SMS / WhatsApp) for ${formData.name}`}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-teal-600" />
+                  </button>
+
+                  <button
+                    onClick={() => setIsEmailModalOpen(true)}
+                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105"
+                    title={`Send Email to ${formData.email || formData.name}`}
+                  >
+                    <Mail className="w-3.5 h-3.5 text-slate-700" />
+                  </button>
+
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-2 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-300 text-sky-800 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105"
+                    title="Edit Student Data & Save to Firebase"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-sky-600" />
                   </button>
                 </div>
 
@@ -1283,7 +1336,7 @@ export default function ApplicantDetailModal({
                           studentInterestStatus: "INTERESTED",
                           teacherNotes: `Discussed TNEA 12th Cutoff score (${formData.tneaCutoff || "178.5"}/200) and scholarship options for V.S.B. ${formData.campus || "KARUR"} Campus. Candidate is highly interested.`,
                           callTranscript: `[00:02] Teacher: Hello ${formData.name}, following up regarding your V.S.B. engineering application.\n[00:10] ${formData.name}: Yes sir, I am eager to join B.E. Computer Science.`,
-                          audioUrl: "/audio/sample_call_recording.mp3",
+                          audioUrl: "/audio/sample_call_recording.wav",
                           expiresAt: "2026-10-09",
                           autoDeleted: false,
                         }}
@@ -1935,7 +1988,8 @@ export default function ApplicantDetailModal({
           }}
           onClose={() => setIsMessageModalOpen(false)}
           onLogSuccess={(type, details) => {
-            onActionTrigger("WHATSAPP", `${formData.name}: ${details}`);
+            const triggerType = details.toLowerCase().includes("sms") ? "SMS" : "WHATSAPP";
+            onActionTrigger(triggerType, `${formData.name}: ${details}`);
           }}
         />
       )}
@@ -1948,22 +2002,96 @@ export default function ApplicantDetailModal({
 function AudioPlayerCard({ recording }: { recording: CallRecording }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(recording.durationSeconds || 30);
+  const [duration, setDuration] = useState(recording.durationSeconds || 45);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const synthIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopSynthesis = () => {
+    if (synthIntervalRef.current) {
+      clearInterval(synthIntervalRef.current);
+      synthIntervalRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
+  };
+
+  const playSynthesizedVoiceCall = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) {
+        setIsPlaying(true);
+        return;
+      }
+      const ctx = new AudioCtx();
+      audioContextRef.current = ctx;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(310, ctx.currentTime);
+
+      const freqs = [310, 360, 280, 420, 340, 300, 390, 320];
+      freqs.forEach((f, idx) => {
+        osc.frequency.setValueAtTime(f, ctx.currentTime + idx * 0.5);
+      });
+
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.015, ctx.currentTime + 3.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+
+      setIsPlaying(true);
+
+      synthIntervalRef.current = setInterval(() => {
+        setCurrentTime((prev) => {
+          if (prev >= duration) {
+            stopSynthesis();
+            setIsPlaying(false);
+            return 0;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } catch (e) {
+      setIsPlaying(true);
+    }
+  };
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
     if (isPlaying) {
-      audioRef.current.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      stopSynthesis();
       setIsPlaying(false);
+      return;
+    }
+
+    if (audioRef.current) {
+      if (currentTime >= duration) {
+        audioRef.current.currentTime = 0;
+        setCurrentTime(0);
+      }
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((err) => {
+            console.warn("[Audio] HTML5 audio error, engaging Web Audio fallback:", err);
+            playSynthesizedVoiceCall();
+          });
+      }
     } else {
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch((err) => {
-          console.warn("Audio playback note:", err);
-          setIsPlaying(false);
-        });
+      playSynthesizedVoiceCall();
     }
   };
 
@@ -1977,6 +2105,7 @@ function AudioPlayerCard({ recording }: { recording: CallRecording }) {
   };
 
   const handleEnded = () => {
+    stopSynthesis();
     setIsPlaying(false);
     setCurrentTime(0);
   };
@@ -2001,14 +2130,18 @@ function AudioPlayerCard({ recording }: { recording: CallRecording }) {
         </span>
       </div>
 
-      {/* HTML5 Audio Element */}
+      {/* HTML5 Audio Element with Native WAV Sources */}
       <audio
         ref={audioRef}
-        src={recording.audioUrl || "/audio/sample_call_recording.mp3"}
+        preload="auto"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
         className="hidden"
-      />
+      >
+        <source src={recording.audioUrl || "/audio/sample_call_recording.wav"} type="audio/wav" />
+        <source src="/audio/sample_call_recording.wav" type="audio/wav" />
+        <source src="/audio/sample_call_recording.mp3" type="audio/mpeg" />
+      </audio>
 
       {/* Player Controls Bar */}
       <div className="flex items-center gap-3 bg-slate-950/90 p-3 rounded-xl border border-white/10">

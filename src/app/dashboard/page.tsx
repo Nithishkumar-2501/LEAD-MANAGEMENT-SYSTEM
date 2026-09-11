@@ -28,6 +28,7 @@ import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
+import { redirectToSms, getDefaultAdmissionSmsText } from "@/lib/smsSender";
 import {
   saveStudentToFirebase,
   deleteStudentFromFirebase,
@@ -366,6 +367,19 @@ export default function DashboardPage() {
         triggerToast(`💬 Opening WhatsApp for ${targetLead.name}...`);
       } else {
         triggerToast(`💬 Initiated WhatsApp outreach for candidate: ${leadName}`);
+      }
+    } else if (type === "SMS") {
+      const targetLead = applicants.find(
+        (a) =>
+          a.name.toLowerCase() === leadName.toLowerCase() ||
+          leadName.toLowerCase().includes(a.name.toLowerCase()) ||
+          a.name.toLowerCase().includes(leadName.toLowerCase())
+      );
+      if (targetLead?.phone) {
+        redirectToSms(targetLead.phone, getDefaultAdmissionSmsText(targetLead));
+        triggerToast(`📱 Opening native SMS app for ${targetLead.name}...`);
+      } else {
+        triggerToast(`📱 Initiated native SMS outreach for candidate: ${leadName}`);
       }
     } else {
       triggerToast(`Initiated ${type} outreach for candidate: ${leadName}`);

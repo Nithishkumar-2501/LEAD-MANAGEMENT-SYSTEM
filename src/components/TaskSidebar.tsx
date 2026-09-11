@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Task, TaskType } from "@/types/crm";
-import { CheckSquare, Square, Phone, Mail, MessageSquare, Clock, CalendarCheck, Sparkles } from "lucide-react";
+import { CheckSquare, Square, Phone, Mail, MessageSquare, Clock, CalendarCheck, Sparkles, Send } from "lucide-react";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
+import { redirectToSms, getDefaultAdmissionSmsText } from "@/lib/smsSender";
 
 interface TaskSidebarProps {
   tasks: Task[];
@@ -39,6 +40,12 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
         return {
           icon: MessageSquare,
           color: "bg-teal-500/20 text-teal-300 border-teal-400/40",
+        };
+      case "SMS":
+      default:
+        return {
+          icon: Send,
+          color: "bg-indigo-500/20 text-indigo-300 border-indigo-400/40",
         };
     }
   };
@@ -177,6 +184,26 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
                         title={`Open WhatsApp chat with ${task.lead?.name || "Candidate"}`}
                       >
                         <MessageSquare className="w-3 h-3" /> WhatsApp
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onActionTrigger("SMS", task.lead!.name);
+                          if (task.lead?.phone) {
+                            redirectToSms(
+                              task.lead.phone,
+                              getDefaultAdmissionSmsText({
+                                name: task.lead.name,
+                                courseInterest: task.lead.courseInterest,
+                                campus: (task.lead as any).campus,
+                              })
+                            );
+                          }
+                        }}
+                        className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        title={`Open native SMS app to text ${task.lead?.name || "Candidate"}`}
+                      >
+                        <Send className="w-3 h-3" /> SMS
                       </button>
                     </div>
                   )}

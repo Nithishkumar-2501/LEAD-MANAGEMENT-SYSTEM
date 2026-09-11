@@ -20,7 +20,7 @@ export type LeadStatus = "NEW" | "CONTACTED" | "IN_REVIEW" | "ADMITTED" | "REJEC
 
 export type AppStage = "INQUIRY" | "SUBMITTED" | "DOCS_VERIFIED" | "OFFER_ISSUED" | "FEE_PAID";
 
-export type TaskType = "CALL" | "EMAIL" | "WHATSAPP";
+export type TaskType = "CALL" | "EMAIL" | "WHATSAPP" | "SMS";
 
 export type CampusLocation = "ALL" | "KARUR" | "COIMBATORE";
 

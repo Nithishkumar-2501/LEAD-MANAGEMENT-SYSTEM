@@ -20,6 +20,10 @@ import {
   getDefaultAdmissionWhatsAppText,
 } from "@/lib/whatsappSender";
 import {
+  redirectToSms,
+  getDefaultAdmissionSmsText,
+} from "@/lib/smsSender";
+import {
   Phone,
   Mail,
   MapPin,
@@ -28,18 +32,26 @@ import {
   Trash2,
   Plus,
   Search,
+  SlidersHorizontal,
+  ChevronDown,
+  Download,
+  Upload,
+  Calendar,
+  Sparkles,
+  MessageSquare,
+  MessageCircle,
+  Eye,
+  CheckCircle,
+  Clock,
+  Send,
   Filter,
   UserCheck,
   Building,
   CheckCircle2,
   X,
   Save,
-  MessageSquare,
-  Sparkles,
-  Upload,
   ShieldCheck,
   GraduationCap,
-  Calendar,
   RotateCcw,
   RefreshCw,
   Flame,
@@ -52,7 +64,7 @@ interface ContactDirectoryModuleProps {
   selectedCampus: CampusLocation;
   currentUserRole?: "ADMIN" | "TEACHER";
   loggedInUsername?: string;
-  onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP", name: string) => void;
+  onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP" | "SMS", name: string) => void;
   onTriggerToast?: (msg: string) => void;
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
   onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
@@ -345,7 +357,7 @@ export default function ContactDirectoryModule({
       studentInterestStatus: "INTERESTED",
       teacherNotes: "Candidate has 192.5 TNEA cutoff. Very interested in B.E. BioMedical at Karur Campus. Scheduled campus visit for Aug 25.",
       callTranscript: "[00:02] Prof. Rajesh: Good morning Revathy, this is Prof. Rajesh from V.S.B. Admissions Desk.\n[00:08] Revathy: Hello sir! I wanted to check my cutoff eligibility for BioMedical Engineering.\n[00:15] Prof. Rajesh: Your 192.5 cutoff score is well within our merit rank scholarship bracket! We are offering 50% tuition waiver.\n[00:24] Revathy: That's wonderful sir! I am very interested to join V.S.B. Karur campus.",
-      audioUrl: "/audio/sample_call_recording.mp3",
+      audioUrl: "/audio/sample_call_recording.wav",
       expiresAt: "2026-09-21",
       autoDeleted: false,
     },
@@ -363,7 +375,7 @@ export default function ContactDirectoryModule({
       studentInterestStatus: "ADMITTED",
       teacherNotes: "Student paid initial admission token fee. Confirmed B.E. Computer Science enrollment.",
       callTranscript: "[00:03] Prof. Rajesh: Hello Gunal, congratulations on your 188.0 TNEA cutoff!\n[00:10] Gunal: Thank you sir! I have submitted my online application for CSE.\n[00:18] Prof. Rajesh: Excellent! Your seat allocation is confirmed under General Counselling quota.",
-      audioUrl: "/audio/sample_call_recording.mp3",
+      audioUrl: "/audio/sample_call_recording.wav",
       expiresAt: "2026-09-21",
       autoDeleted: false,
     },
@@ -381,7 +393,7 @@ export default function ContactDirectoryModule({
       studentInterestStatus: "INTERESTED",
       teacherNotes: "Inquired about AI & Data Science labs and hostel facilities.",
       callTranscript: "[00:02] Dr. Arulmurugan: Hello Manivel, calling from V.S.B. CSE Department.\n[00:08] Manivel: Hello sir! Does V.S.B. have NVIDIA AI deep learning labs?\n[00:15] Dr. Arulmurugan: Yes! We have dedicated AI/ML center of excellence with 100% placement record.",
-      audioUrl: "/audio/sample_call_recording.mp3",
+      audioUrl: "/audio/sample_call_recording.wav",
       expiresAt: "2026-09-21",
       autoDeleted: false,
     },
@@ -399,7 +411,7 @@ export default function ContactDirectoryModule({
       studentInterestStatus: "INTERESTED",
       teacherNotes: "Cutoff 194.2. Interested in ECE Coimbatore campus.",
       callTranscript: "[00:03] Dr. Meenakshi: Hello Vignesh, congratulation on 96.8% in 12th marks!\n[00:09] S. Vignesh: Thank you ma'am! I am interested in ECE at Coimbatore campus.\n[00:16] Dr. Meenakshi: We have top tier Core VLSI & Telecom company tie-ups.",
-      audioUrl: "/audio/sample_call_recording.mp3",
+      audioUrl: "/audio/sample_call_recording.wav",
       expiresAt: "2026-09-21",
       autoDeleted: false,
     },
@@ -543,6 +555,17 @@ export default function ContactDirectoryModule({
             title={`Direct WhatsApp Chat with ${contact.name}`}
           >
             💬
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onActionTrigger("SMS", contact.name);
+              redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
+            }}
+            className="p-1 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-300 dark:border-indigo-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
+            title={`Direct Native SMS with ${contact.name}`}
+          >
+            📱
           </button>
 
           <a
@@ -2068,6 +2091,18 @@ export default function ContactDirectoryModule({
                             <MessageSquare className="w-3.5 h-3.5" />
                           </button>
                         </Tooltip>
+                        <Tooltip text={`Native SMS to ${contact.name}`} position="left">
+                          <button
+                            onClick={() => {
+                              onActionTrigger("SMS", contact.name);
+                              redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
+                            }}
+                            className="p-1.5 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            title={`Send Native SMS to ${contact.name}`}
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                        </Tooltip>
                         <Tooltip text={`Edit ${contact.name}`} position="left">
                           <button
                             onClick={() => setEditingContact(contact)}
@@ -2421,6 +2456,18 @@ export default function ContactDirectoryModule({
                         title={`Open WhatsApp chat with ${contact.name}`}
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip text={`Direct Native SMS to ${contact.name}`} position="bottom">
+                      <button
+                        onClick={() => {
+                          onActionTrigger("SMS", contact.name);
+                          redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
+                        }}
+                        className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40 cursor-pointer"
+                        title={`Open Native SMS App for ${contact.name}`}
+                      >
+                        <Send className="w-3.5 h-3.5" />
                       </button>
                     </Tooltip>
 

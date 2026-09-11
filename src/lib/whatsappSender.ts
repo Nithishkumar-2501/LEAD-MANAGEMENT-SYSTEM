@@ -62,6 +62,16 @@ export function getWhatsAppNativeDeepLink(rawPhone?: string | null, message?: st
 }
 
 /**
+ * Generate direct wa.me link for universal mobile and web routing
+ */
+export function getWaMeUrl(rawPhone?: string | null, message?: string): string {
+  const cleanPhone = formatWhatsAppNumber(rawPhone);
+  const encodedText = message ? encodeURIComponent(message.trim()) : "";
+  if (!cleanPhone) return "";
+  return `https://wa.me/${cleanPhone}${encodedText ? `?text=${encodedText}` : ""}`;
+}
+
+/**
  * Generate direct WhatsApp Web URL for desktop browsers
  */
 export function getWhatsAppWebUrl(rawPhone?: string | null, message?: string): string {

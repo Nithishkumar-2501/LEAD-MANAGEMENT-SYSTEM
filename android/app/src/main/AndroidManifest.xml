@@ -39,12 +39,33 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Queries for Native Dial Pad & WhatsApp Intent Handling -->
+    <!-- Queries for Native Dial Pad, SMS Apps & WhatsApp Intent Handling -->
     <queries>
+        <!-- Native Phone Dialer -->
         <intent>
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />
         </intent>
+
+        <!-- Native SMS Apps (Google Messages, Samsung Messages, AOSP, etc.) -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="sms" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="smsto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="sms" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="smsto" />
+        </intent>
+
+        <!-- WhatsApp & WhatsApp Business -->
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
         <intent>
@@ -52,8 +73,16 @@
             <data android:scheme="whatsapp" />
         </intent>
         <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="whatsapp" />
+        </intent>
+        <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" android:host="api.whatsapp.com" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" android:host="wa.me" />
         </intent>
     </queries>
 </manifest>

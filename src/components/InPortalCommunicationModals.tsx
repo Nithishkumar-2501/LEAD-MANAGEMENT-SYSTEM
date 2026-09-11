@@ -27,6 +27,11 @@ import {
   getWhatsAppWebUrl,
   formatDisplayPhone,
 } from "@/lib/whatsappSender";
+import {
+  redirectToSms,
+  formatSmsNumber,
+  getSmsUrl,
+} from "@/lib/smsSender";
 
 import type { CallRecording } from "@/types/crm";
 
@@ -109,7 +114,7 @@ function CallModal({
 
   // MediaRecorder audio capture state
   const mediaRecorderRef = useState<MediaRecorder | null>(null)[0]; // placeholder ref pattern
-  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string>("/audio/sample_call_recording.mp3");
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string>("/audio/sample_call_recording.wav");
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
 
   useEffect(() => {
@@ -425,11 +430,10 @@ function MessageModal({
     }
 
     if (channel === "SMS") {
-      if (typeof window !== "undefined") {
-        const cleanPhone = contact.phone.replace(/\D/g, "");
-        window.location.href = `sms:${cleanPhone}?body=${encodeURIComponent(messageText)}`;
+      const success = redirectToSms(contact.phone, messageText);
+      if (success) {
+        onLogSuccess("MESSAGE", `Dispatched native SMS to ${contact.name} (${formatSmsNumber(contact.phone)})`);
       }
-      onLogSuccess("MESSAGE", `Dispatched SMS to ${contact.name} (${contact.phone})`);
       setTimeout(() => onClose(), 800);
       return;
     }
@@ -573,6 +577,33 @@ function MessageModal({
           </div>
         )}
 
+        {/* SMS Verified Banner (When channel is SMS) */}
+        {channel === "SMS" && (
+          <div className="p-2.5 rounded-xl bg-indigo-950/70 border border-indigo-500/40 text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse" />
+              <div>
+                <span className="text-[11px] text-indigo-300 font-bold block">
+                  Target SMS Number: <strong className="font-mono text-white">{formatSmsNumber(contact.phone)}</strong>
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  Direct SMS dispatch (Native Android Messages, Samsung Messages, Apple Messages)
+                </span>
+              </div>
+            </div>
+            {contact.phone && (
+              <button
+                type="button"
+                onClick={() => redirectToSms(contact.phone, messageText)}
+                className="text-[10px] font-bold text-indigo-300 underline hover:text-white px-2 py-1 rounded bg-indigo-900/60 border border-indigo-500/30 shrink-0 cursor-pointer"
+                title="Launch device's native SMS application directly"
+              >
+                Open SMS App ↗
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Template Picker */}
         <div>
           <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center gap-1">
@@ -610,7 +641,7 @@ function MessageModal({
 
           <div>
             <label className="block text-xs font-bold text-slate-300 mb-1">
-              {channel === "EMAIL" ? "Email Content" : channel === "WHATSAPP" ? "WhatsApp Message Content" : "Message Text"}
+              {channel === "EMAIL" ? "Email Content" : channel === "WHATSAPP" ? "WhatsApp Message Content" : "SMS Message Text"}
             </label>
             <textarea
               rows={4}
@@ -621,17 +652,52 @@ function MessageModal({
             />
           </div>
 
+          {/* Quick Dual App Dispatch Shortcuts */}
+          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-950/80 border border-white/10">
+            <span className="text-[11px] text-slate-400 font-bold">Direct App Access:</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  redirectToWhatsApp(contact.phone, messageText);
+                  onLogSuccess("MESSAGE", `Dispatched WhatsApp message to ${contact.name} (${formatDisplayPhone(contact.phone)})`);
+                  setTimeout(() => onClose(), 800);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-bold transition-all cursor-pointer"
+                title="Launch WhatsApp app with this text"
+              >
+                💬 WhatsApp
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  redirectToSms(contact.phone, messageText);
+                  onLogSuccess("MESSAGE", `Dispatched native SMS to ${contact.name} (${formatSmsNumber(contact.phone)})`);
+                  setTimeout(() => onClose(), 800);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 text-[11px] font-bold transition-all cursor-pointer"
+                title="Launch device's native SMS app with this text"
+              >
+                📱 SMS App
+              </button>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between pt-1">
             <span className="text-[10px] text-slate-400 flex items-center gap-1">
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              {channel === "WHATSAPP" ? "WhatsApp Deep Link / Web Gateway" : "Secure V.S.B. Outbound Gateway"}
+              {channel === "WHATSAPP"
+                ? "Native WhatsApp App Gateway"
+                : channel === "SMS"
+                ? "Native Device SMS App Gateway"
+                : "Secure V.S.B. Outbound Gateway"}
             </span>
 
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white text-xs font-bold cursor-pointer"
               >
                 Cancel
               </button>
@@ -641,7 +707,7 @@ function MessageModal({
                   channel === "EMAIL"
                     ? "bg-violet-600 hover:bg-violet-500 shadow-violet-600/30"
                     : channel === "SMS"
-                    ? "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30"
+                    ? "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30 active:scale-95"
                     : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30 active:scale-95"
                 }`}
               >
@@ -649,8 +715,8 @@ function MessageModal({
                 {channel === "EMAIL"
                   ? "Send Direct E-mail"
                   : channel === "SMS"
-                  ? "Send Direct SMS"
-                  : "Send via WhatsApp (App & Web)"}
+                  ? "Open in SMS App"
+                  : "Open in WhatsApp"}
               </button>
             </div>
           </div>
