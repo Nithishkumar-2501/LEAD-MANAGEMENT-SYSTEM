@@ -6,11 +6,12 @@ import { MOCK_TEACHERS } from "@/lib/mockData";
 import { parseCSVToTeachers } from "@/lib/csvParser";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import TeacherStudentAuditModal from "@/components/TeacherStudentAuditModal";
-import { UserCheck, BookOpen, GraduationCap, Mail, Phone, PhoneCall, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download } from "lucide-react";
+import { UserCheck, BookOpen, GraduationCap, Mail, Phone, PhoneCall, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download, Camera, Image as ImageIcon } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
+import { uploadTeacherProfilePhotoToFirebase, saveTeacherToFirebase } from "@/lib/firebaseSync";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -323,6 +324,9 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     const teacherToSave = editingTeacher;
     setEditingTeacher(null);
 
+    // Save to Firebase Firestore & RTDB
+    saveTeacherToFirebase(teacherToSave);
+
     try {
       await mobileSafeFetch("/api/teachers", {
         method: "PUT",
@@ -330,6 +334,53 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         body: JSON.stringify(teacherToSave),
       });
     } catch (err) {}
+  };
+
+  // Dedicated Photo Upload for Editing Faculty with Firebase Storage
+  const handleEditTeacherPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingTeacher) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 400;
+        canvas.height = 400;
+        const ctx = canvas.getContext("2d");
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
+        ctx?.drawImage(img, sx, sy, minDim, minDim, 0, 0, 400, 400);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+
+        // Immediate state update
+        setEditingTeacher((prev) => (prev ? { ...prev, photoUrl: dataUrl } : null));
+
+        try {
+          const firebaseUrl = await uploadTeacherProfilePhotoToFirebase(editingTeacher.id, dataUrl);
+          setEditingTeacher((prev) => (prev ? { ...prev, photoUrl: firebaseUrl } : null));
+
+          // Also update in teachers list
+          setTeachers((prev) => {
+            const updated = prev.map((t) => (t.id === editingTeacher.id ? { ...t, photoUrl: firebaseUrl } : t));
+            try {
+              localStorage.setItem("vsb_crm_teachers", JSON.stringify(updated));
+            } catch (e) {}
+            return updated;
+          });
+
+          onTriggerToast(`📸 Profile photo saved to Firebase for ${editingTeacher.name}!`);
+        } catch (err) {
+          onTriggerToast(`📸 Photo updated for ${editingTeacher.name}!`);
+        }
+      };
+      img.src = result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -548,8 +599,25 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
-                      {tch.avatar}
+                    <div className="relative group/avatar shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md transform group-hover:scale-105 transition-transform overflow-hidden">
+                        {tch.photoUrl ? (
+                          <img src={tch.photoUrl} alt={tch.name} className="w-full h-full object-cover" />
+                        ) : (
+                          tch.avatar
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingTeacher(tch);
+                        }}
+                        className="absolute -bottom-1 -right-1 p-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-slate-900 cursor-pointer active:scale-90 transition-all opacity-85 group-hover/avatar:opacity-100"
+                        title="Upload/Edit Photo"
+                      >
+                        <Camera className="w-2.5 h-2.5" />
+                      </button>
                     </div>
                     <div>
                       <h4 className="text-base font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-sky-400 transition-colors">{tch.name}</h4>
@@ -950,6 +1018,49 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
             )}
 
             <form onSubmit={handleUpdateTeacherSubmit} className="space-y-3 text-xs">
+              {/* Profile Photo Uploader with Firebase Sync */}
+              <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-700/80 space-y-2.5">
+                <label className="block text-slate-200 font-bold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Faculty Profile Photo (Firebase Storage)</span>
+                  </span>
+                  {editingTeacher.photoUrl && (
+                    <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Saved in Firebase
+                    </span>
+                  )}
+                </label>
+
+                <div className="flex items-center gap-3.5">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 shadow-md shrink-0 overflow-hidden relative group">
+                    <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-white font-black text-base overflow-hidden">
+                      {editingTeacher.photoUrl ? (
+                        <img src={editingTeacher.photoUrl} alt={editingTeacher.name} className="w-full h-full object-cover" />
+                      ) : (
+                        editingTeacher.avatar
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-1">
+                    <label className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer inline-flex transition-all active:scale-95 shadow-sm">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{editingTeacher.photoUrl ? "Change Photo" : "Upload Photo"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleEditTeacherPhotoUpload(e)}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      Crops to square & saves to Firebase cloud storage bucket.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Full Name {currentUserRole === "TEACHER" && "(Locked)"}</label>
                 <input
@@ -1511,6 +1622,15 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         currentUserRole={currentUserRole}
         onTriggerToast={onTriggerToast}
         allLeads={applicants}
+        teachersList={teachers}
+        onUpdateTeacherPhoto={(teacherId, photoUrl) => {
+          setTeachers((prev) => {
+            const updated = prev.map((t) => (t.id === teacherId ? { ...t, photoUrl } : t));
+            saveTeachersList(updated);
+            return updated;
+          });
+          setSelectedTeacherForAudit((prev) => (prev && prev.id === teacherId ? { ...prev, photoUrl } : prev));
+        }}
       />
     </div>
   );

@@ -166,6 +166,7 @@ export interface Teacher {
   experienceYears: number;
   status: "ACTIVE" | "ON_LEAVE";
   avatar: string;
+  photoUrl?: string;
   assignedQuota?: number;
   assignedRangeText?: string;
   contactedCount?: number;

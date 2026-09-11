@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Teacher, Lead, Application } from "@/types/crm";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
+import { uploadTeacherProfilePhotoToFirebase, redirectStudentLeadInFirebase } from "@/lib/firebaseSync";
+import { MOCK_TEACHERS } from "@/lib/mockData";
 import {
   X,
   Phone,
@@ -26,6 +28,11 @@ import {
   Award,
   ChevronDown,
   Calendar,
+  Camera,
+  Upload,
+  ArrowRightLeft,
+  Users,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export interface StudentCallRecord {
@@ -46,6 +53,12 @@ export interface StudentCallRecord {
   callNotes?: string;
   transcript?: string;
   hasAudioRecording?: boolean;
+  isRedirected?: boolean;
+  redirectedTo?: string;
+  redirectedToId?: string;
+  redirectReason?: string;
+  redirectNotes?: string;
+  redirectedAt?: string;
 }
 
 interface TeacherStudentAuditModalProps {
@@ -55,6 +68,8 @@ interface TeacherStudentAuditModalProps {
   currentUserRole: "ADMIN" | "TEACHER";
   onTriggerToast: (msg: string) => void;
   allLeads?: (Lead & { application: Application })[];
+  teachersList?: Teacher[];
+  onUpdateTeacherPhoto?: (teacherId: string, photoUrl: string) => void;
 }
 
 const TN_FIRST_NAMES = [
@@ -107,9 +122,11 @@ export default function TeacherStudentAuditModal({
   currentUserRole,
   onTriggerToast,
   allLeads = [],
+  teachersList = [],
+  onUpdateTeacherPhoto,
 }: TeacherStudentAuditModalProps) {
   const [studentRecords, setStudentRecords] = useState<StudentCallRecord[]>([]);
-  const [activeFilter, setActiveFilter] = useState<"ALL" | "TALKED" | "NOT_TALKED">("ALL");
+  const [activeFilter, setActiveFilter] = useState<"ALL" | "TALKED" | "NOT_TALKED" | "REDIRECTED">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("ALL");
   const [expandedRecordId, setExpandedRecordId] = useState<string | null>(null);
@@ -118,6 +135,174 @@ export default function TeacherStudentAuditModal({
   const [customInterestStatus, setCustomInterestStatus] = useState<StudentCallRecord["interestStatus"]>("INTERESTED");
   const [customDurationText, setCustomDurationText] = useState("03:45");
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+
+  // Teacher Profile Photo State & Ref
+  const [currentTeacherPhoto, setCurrentTeacherPhoto] = useState<string>(teacher?.photoUrl || "");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (teacher?.photoUrl) {
+      setCurrentTeacherPhoto(teacher.photoUrl);
+    }
+  }, [teacher]);
+
+  // Lead Redirection / Transfer State
+  const [redirectingStudent, setRedirectingStudent] = useState<StudentCallRecord | null>(null);
+  const [redirectReason, setRedirectReason] = useState("Candidate Unreachable / Number Busy (Alternate Shift Followup)");
+  const [redirectTargetTeacherId, setRedirectTargetTeacherId] = useState("");
+  const [redirectNotes, setRedirectNotes] = useState("");
+
+  // All Available Teachers for Lead Handover
+  const availableTeachers = useMemo<Teacher[]>(() => {
+    if (teachersList && teachersList.length > 0) return teachersList;
+    try {
+      const stored = localStorage.getItem("vsb_crm_teachers");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return MOCK_TEACHERS;
+  }, [teachersList]);
+
+  // Handle Teacher Profile Photo Upload with Firebase & Canvas Optimizer
+  const handleTeacherPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !teacher) return;
+
+    setIsUploadingPhoto(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 400;
+        canvas.height = 400;
+        const ctx = canvas.getContext("2d");
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
+        ctx?.drawImage(img, sx, sy, minDim, minDim, 0, 0, 400, 400);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+
+        setCurrentTeacherPhoto(dataUrl);
+
+        try {
+          const firebaseUrl = await uploadTeacherProfilePhotoToFirebase(teacher.id, dataUrl);
+          setCurrentTeacherPhoto(firebaseUrl);
+
+          // Update local teachers list
+          try {
+            const stored = localStorage.getItem("vsb_crm_teachers");
+            let list: Teacher[] = stored ? JSON.parse(stored) : [];
+            if (Array.isArray(list)) {
+              list = list.map((t) => (t.id === teacher.id ? { ...t, photoUrl: firebaseUrl } : t));
+              localStorage.setItem("vsb_crm_teachers", JSON.stringify(list));
+            }
+          } catch (e) {}
+
+          onUpdateTeacherPhoto?.(teacher.id, firebaseUrl);
+          onTriggerToast(`📸 Profile photo saved to Firebase for ${teacher.name}!`);
+        } catch (err) {
+          onTriggerToast(`📸 Photo updated for ${teacher.name}!`);
+        } finally {
+          setIsUploadingPhoto(false);
+        }
+      };
+      img.src = result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  // Open Lead Redirection Modal
+  const handleOpenRedirectModal = (student: StudentCallRecord) => {
+    setRedirectingStudent(student);
+    setRedirectReason("Candidate Unreachable / Number Busy (Alternate Shift Followup)");
+    const otherTeachers = availableTeachers.filter(
+      (t) => t.id !== teacher?.id && t.email !== teacher?.email
+    );
+    setRedirectTargetTeacherId(otherTeachers[0]?.id || otherTeachers[0]?.email || "");
+    setRedirectNotes(
+      `Candidate was unreachable during shift call. Cutoff: ${student.cutoffMarks}. Branch interest: ${student.courseInterest}. Please follow up.`
+    );
+  };
+
+  // Confirm and Execute Lead Redirection
+  const handleConfirmRedirect = async () => {
+    if (!redirectingStudent || !teacher || !redirectTargetTeacherId) return;
+
+    const targetTeacher = availableTeachers.find(
+      (t) => t.id === redirectTargetTeacherId || t.email === redirectTargetTeacherId
+    );
+    if (!targetTeacher) return;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+
+    // 1. Mark as redirected in current teacher's records
+    const updatedCurrent: StudentCallRecord[] = studentRecords.map((s) => {
+      if (s.id === redirectingStudent.id) {
+        return {
+          ...s,
+          isRedirected: true,
+          redirectedTo: targetTeacher.name,
+          redirectedToId: targetTeacher.id || targetTeacher.email,
+          redirectReason,
+          redirectNotes,
+          redirectedAt: `Today, ${timeStr}`,
+          callNotes: `[REDIRECTED TO ${targetTeacher.name.toUpperCase()}]: ${redirectReason} - Notes: "${redirectNotes}"`,
+        };
+      }
+      return s;
+    });
+    saveRecords(updatedCurrent);
+
+    // 2. Append to target teacher's queue in localStorage
+    try {
+      const targetStorageKey = `vsb_teacher_call_records_${targetTeacher.id || targetTeacher.email}`;
+      const targetExistingStr = localStorage.getItem(targetStorageKey);
+      let targetList: StudentCallRecord[] = targetExistingStr ? JSON.parse(targetExistingStr) : [];
+      if (!Array.isArray(targetList)) targetList = [];
+
+      const existingIdx = targetList.findIndex(
+        (item) => item.id === redirectingStudent.id || item.phone === redirectingStudent.phone
+      );
+
+      const transferredRecord: StudentCallRecord = {
+        ...redirectingStudent,
+        isTalked: false,
+        isRedirected: false,
+        talkedAt: undefined,
+        callNotes: `[TRANSFERRED FROM ${teacher.name.toUpperCase()}]: ${redirectReason}. Handoff Notes: "${redirectNotes}"`,
+      };
+
+      if (existingIdx >= 0) {
+        targetList[existingIdx] = transferredRecord;
+      } else {
+        targetList = [transferredRecord, ...targetList];
+      }
+      localStorage.setItem(targetStorageKey, JSON.stringify(targetList));
+    } catch (e) {
+      console.warn("Target queue update error:", e);
+    }
+
+    // 3. Sync to Firebase
+    try {
+      await redirectStudentLeadInFirebase(
+        redirectingStudent.id,
+        teacher.name,
+        targetTeacher.name,
+        redirectReason,
+        redirectNotes
+      );
+    } catch (e) {}
+
+    onTriggerToast(`🔀 Lead ${redirectingStudent.studentName} redirected to ${targetTeacher.name} successfully!`);
+    setRedirectingStudent(null);
+  };
 
   // Initialize or Load Persistent Records for Selected Teacher
   useEffect(() => {
@@ -242,6 +427,7 @@ export default function TeacherStudentAuditModal({
   const totalCount = studentRecords.length;
   const talkedCount = studentRecords.filter((s) => s.isTalked).length;
   const notTalkedCount = totalCount - talkedCount;
+  const redirectedCount = studentRecords.filter((s) => s.isRedirected).length;
   const talkedPercentage = totalCount > 0 ? Math.round((talkedCount / totalCount) * 100) : 0;
   const notTalkedPercentage = 100 - talkedPercentage;
   const admittedCount = studentRecords.filter((s) => s.interestStatus === "ADMITTED").length;
@@ -252,6 +438,7 @@ export default function TeacherStudentAuditModal({
     return studentRecords.filter((s) => {
       if (activeFilter === "TALKED" && !s.isTalked) return false;
       if (activeFilter === "NOT_TALKED" && s.isTalked) return false;
+      if (activeFilter === "REDIRECTED" && !s.isRedirected) return false;
 
       if (selectedDistrict !== "ALL" && s.district !== selectedDistrict) return false;
 
@@ -366,10 +553,31 @@ export default function TeacherStudentAuditModal({
         <div className="p-4 sm:p-6 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 border-b border-white/10 shrink-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-xl shrink-0">
-                <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-white font-black text-lg">
-                  {teacher.avatar}
+              <div className="relative group/photo shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-xl shrink-0 overflow-hidden">
+                  <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-white font-black text-lg overflow-hidden">
+                    {currentTeacherPhoto ? (
+                      <img src={currentTeacherPhoto} alt={teacher.name} className="w-full h-full object-cover" />
+                    ) : (
+                      teacher.avatar
+                    )}
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-slate-900 cursor-pointer active:scale-95 transition-all"
+                  title="Upload Profile Photo to Firebase"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                </button>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleTeacherPhotoUpload}
+                  className="hidden"
+                />
               </div>
 
               <div className="min-w-0">
@@ -544,6 +752,17 @@ export default function TeacherStudentAuditModal({
             >
               <span>🟡 Not Talked ({notTalkedCount})</span>
             </button>
+            <button
+              onClick={() => setActiveFilter("REDIRECTED")}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeFilter === "REDIRECTED"
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "text-purple-400 hover:text-purple-300"
+              }`}
+            >
+              <PhoneForwarded className="w-3.5 h-3.5" />
+              <span>🔀 Redirected ({redirectedCount})</span>
+            </button>
           </div>
 
           {/* Search & District Selector */}
@@ -714,6 +933,27 @@ export default function TeacherStudentAuditModal({
                         )}
                       </button>
 
+                      {/* Unable to Talk / Redirect Lead Action */}
+                      {!student.isRedirected && (
+                        <button
+                          onClick={() => handleOpenRedirectModal(student)}
+                          className="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                          title="Unable to talk to candidate? Redirect lead to another faculty counselor"
+                        >
+                          <PhoneForwarded className="w-3.5 h-3.5 text-amber-400" />
+                          <span className="hidden sm:inline">Unable to Talk?</span>
+                          <span>Redirect</span>
+                        </button>
+                      )}
+
+                      {/* Redirected Status Badge */}
+                      {student.isRedirected && (
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-black bg-purple-950/90 text-purple-300 border border-purple-700/60 flex items-center gap-1 shadow-sm">
+                          <PhoneForwarded className="w-3 h-3 text-purple-400" />
+                          <span>Redirected to {student.redirectedTo}</span>
+                        </span>
+                      )}
+
                       {/* Expand / Details Toggle */}
                       {student.isTalked && (
                         <button
@@ -877,6 +1117,149 @@ export default function TeacherStudentAuditModal({
                 className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 cursor-pointer transition-all"
               >
                 Save & Update Call Status
+              </button>
+            </div>
+
+            {/* Quick Handover Trigger when Unable to Connect */}
+            <div className="pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => {
+                  const rec = loggingRecord;
+                  setLoggingRecord(null);
+                  handleOpenRedirectModal(rec);
+                }}
+                className="w-full py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <PhoneForwarded className="w-4 h-4 text-amber-400" />
+                <span>Unable to Talk? Redirect Lead to Another Teacher</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* REDIRECT STUDENT LEAD TO OTHER TEACHERS MODAL                       */}
+      {/* =================================================================== */}
+      {redirectingStudent && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 border border-amber-500/50 rounded-2xl w-full max-w-lg p-5 space-y-4 shadow-2xl text-white">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+                  <PhoneForwarded className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white">Redirect Student Lead to Faculty</h3>
+                  <p className="text-xs text-slate-400">
+                    Hand over candidate to another teacher / department specialist
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setRedirectingStudent(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Candidate Summary Banner */}
+            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-white text-xs">{redirectingStudent.studentName}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 border border-indigo-800">
+                  Cutoff: {redirectingStudent.cutoffMarks}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Phone: <strong className="text-emerald-400 font-mono">{redirectingStudent.phone}</strong> • {redirectingStudent.district} • {redirectingStudent.courseInterest}
+              </p>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              {/* Reason Selection */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  Reason for Redirection / Unable to Talk:
+                </label>
+                <select
+                  value={redirectReason}
+                  onChange={(e) => setRedirectReason(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
+                >
+                  <option value="Candidate Unreachable / Number Busy (Alternate Shift Followup)">
+                    📵 Candidate Unreachable / Number Busy (Alternate Shift Followup)
+                  </option>
+                  <option value="Student Requested Specific Branch Specialist (AI & DS, CSE, ECE, Mech)">
+                    🎓 Student Requested Specific Branch Specialist
+                  </option>
+                  <option value="Language / Regional Counselor Assistance">
+                    🗣️ Language / Regional Counselor Assistance
+                  </option>
+                  <option value="Teacher Schedule Conflict / On Leave">
+                    ⏳ Teacher Schedule Conflict / On Leave
+                  </option>
+                  <option value="Candidate Requested Senior HoD / Professor Consultation">
+                    🏛️ Candidate Requested Senior HoD / Professor Consultation
+                  </option>
+                  <option value="Follow-up Call Scheduled for Next Shift">
+                    🔄 Follow-up Call Scheduled for Next Shift
+                  </option>
+                </select>
+              </div>
+
+              {/* Target Teacher Selection */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  Select Recipient Faculty Counselor:
+                </label>
+                <select
+                  value={redirectTargetTeacherId}
+                  onChange={(e) => setRedirectTargetTeacherId(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
+                >
+                  {availableTeachers
+                    .filter((t) => t.id !== teacher?.id && t.email !== teacher?.email)
+                    .map((t) => (
+                      <option key={t.id || t.email} value={t.id || t.email}>
+                        {t.name} — {t.department} ({t.campus} Campus)
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Handoff Notes */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  Handoff Instructions / Notes for New Teacher:
+                </label>
+                <textarea
+                  rows={3}
+                  value={redirectNotes}
+                  onChange={(e) => setRedirectNotes(e.target.value)}
+                  placeholder="Provide context on candidate interest, best time to call, specific doubts asked..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 resize-none font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setRedirectingStudent(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRedirect}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs shadow-lg shadow-amber-600/30 cursor-pointer transition-all flex items-center gap-1.5 active:scale-95"
+              >
+                <PhoneForwarded className="w-3.5 h-3.5" />
+                <span>Confirm & Redirect Lead</span>
               </button>
             </div>
           </div>

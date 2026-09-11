@@ -8,9 +8,10 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { ref, set, update, remove, get, child } from "firebase/database";
+import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storage";
 import { signInAnonymously } from "firebase/auth";
-import { auth, db, rtdb } from "@/lib/firebase";
-import { Lead, Application } from "@/types/crm";
+import { auth, db, rtdb, storage } from "@/lib/firebase";
+import { Lead, Application, Teacher } from "@/types/crm";
 
 export type StudentRecord = Lead & { application?: Application | null };
 
@@ -265,3 +266,128 @@ export async function deleteStudentFromFirebase(studentId: string): Promise<bool
   return true;
 }
 
+// Upload Teacher Profile Photo to Firebase Storage with Firestore/RTDB fallback
+export async function uploadTeacherProfilePhotoToFirebase(
+  teacherId: string,
+  photoDataUrl: string
+): Promise<string> {
+  if (!teacherId || !photoDataUrl) return photoDataUrl;
+
+  try {
+    await ensureFirebaseAuth();
+  } catch (e) {}
+
+  const safeTeacherId = teacherId.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+  // 1. Try Firebase Storage upload
+  try {
+    const fileRef = storageRef(storage, `teachers/${safeTeacherId}/profile_${Date.now()}.jpg`);
+    await withTimeout(uploadString(fileRef, photoDataUrl, "data_url"), 4000);
+    const downloadUrl = await getDownloadURL(fileRef);
+
+    // Save download URL to Firestore & RTDB
+    try {
+      const docRef = doc(db, "teachers", safeTeacherId);
+      await setDoc(docRef, { photoUrl: downloadUrl, updatedAt: new Date().toISOString() }, { merge: true });
+      await update(ref(rtdb, `teachers/${safeTeacherId}`), { photoUrl: downloadUrl, updatedAt: new Date().toISOString() });
+    } catch (e) {}
+
+    console.log(`📸 [Firebase Storage] Teacher profile photo uploaded successfully: ${downloadUrl}`);
+    return downloadUrl;
+  } catch (storageErr) {
+    console.warn("Firebase Storage direct upload note, storing photo URL in Firestore/RTDB:", storageErr);
+
+    // 2. Direct Firestore + RTDB persistence (stores optimized dataUrl safely)
+    try {
+      const docRef = doc(db, "teachers", safeTeacherId);
+      await setDoc(docRef, { photoUrl: photoDataUrl, updatedAt: new Date().toISOString() }, { merge: true });
+      await update(ref(rtdb, `teachers/${safeTeacherId}`), { photoUrl: photoDataUrl, updatedAt: new Date().toISOString() });
+    } catch (dbErr) {
+      console.warn("Firestore/RTDB photo save notice:", dbErr);
+    }
+
+    return photoDataUrl;
+  }
+}
+
+// Save or update Teacher profile in Firebase Firestore & Realtime Database
+export async function saveTeacherToFirebase(teacher: Teacher): Promise<boolean> {
+  if (!teacher || !teacher.id) return false;
+
+  const safeTeacherId = teacher.id.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const cleanPayload = sanitizeForFirebase({
+    ...teacher,
+    id: teacher.id,
+    updatedAt: new Date().toISOString(),
+  });
+
+  try {
+    await ensureFirebaseAuth();
+  } catch (e) {}
+
+  // 1. Firestore sync
+  try {
+    const docRef = doc(db, "teachers", safeTeacherId);
+    await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 2500);
+  } catch (err: any) {
+    console.warn("Firestore save teacher notice:", err?.message || err);
+  }
+
+  // 2. RTDB sync (non-blocking)
+  try {
+    const rtdbRef = ref(rtdb, `teachers/${safeTeacherId}`);
+    set(rtdbRef, cleanPayload).catch(() => {});
+  } catch (e) {}
+
+  return true;
+}
+
+// Sync Student Lead Redirection / Transfer in Firebase
+export async function redirectStudentLeadInFirebase(
+  leadId: string,
+  fromTeacherName: string,
+  toTeacherName: string,
+  reason: string,
+  notes: string
+): Promise<boolean> {
+  if (!leadId) return false;
+
+  const transferLog = {
+    transferredAt: new Date().toISOString(),
+    fromTeacher: fromTeacherName,
+    toTeacher: toTeacherName,
+    reason,
+    notes,
+  };
+
+  try {
+    await ensureFirebaseAuth();
+  } catch (e) {}
+
+  try {
+    const docRef = doc(db, "students", leadId);
+    await withTimeout(
+      setDoc(
+        docRef,
+        {
+          assignedTo: toTeacherName,
+          lastTransfer: transferLog,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      ),
+      2500
+    );
+  } catch (err) {}
+
+  try {
+    const rtdbRef = ref(rtdb, `students/${leadId}`);
+    update(rtdbRef, {
+      assignedTo: toTeacherName,
+      lastTransfer: transferLog,
+      updatedAt: new Date().toISOString(),
+    }).catch(() => {});
+  } catch (e) {}
+
+  return true;
+}

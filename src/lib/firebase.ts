@@ -3,6 +3,7 @@ import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
+import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -23,6 +24,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
+const storage = getStorage(app);
 
 // Analytics initialization (safe for Next.js client-side execution)
 let analyticsPromise: Promise<Analytics | null> = Promise.resolve(null);
@@ -30,4 +32,4 @@ if (typeof window !== "undefined") {
   analyticsPromise = isSupported().then((supported) => (supported ? getAnalytics(app) : null));
 }
 
-export { app, auth, db, rtdb, analyticsPromise, firebaseConfig };
+export { app, auth, db, rtdb, storage, analyticsPromise, firebaseConfig };
