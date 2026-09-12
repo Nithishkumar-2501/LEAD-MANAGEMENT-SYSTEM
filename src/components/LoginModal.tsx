@@ -259,17 +259,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </button>
           </form>
 
-          {/* Sign Up Row */}
-          <p className="text-center text-xs text-slate-500 font-medium mt-4">
-            Don&apos;t have an account?{" "}
-            <button
-              type="button"
-              onClick={() => setShowForgotModal(true)}
-              className="font-bold text-[#4a2545] hover:underline cursor-pointer"
-            >
-              Sign Up
-            </button>
-          </p>
+
 
           {/* Security Badge */}
           <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-slate-500 text-[11px]">
