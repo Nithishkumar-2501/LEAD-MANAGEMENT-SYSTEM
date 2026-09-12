@@ -35,6 +35,7 @@ export type ActiveTab =
   | "CONTACTS"
   | "CALENDAR_PRO"
   | "APPLICATION_MANAGER"
+  | "APPLICATION_OFFLINE_LOGS"
   | "MARKETING"
   | "CAMPAIGN_MANAGER"
   | "QUERY_MANAGER"
@@ -196,4 +197,22 @@ export interface DashboardMetricsResponse {
   leadStatusCounts: LeadStatusCounts;
   todaysTasks: Task[];
   recentApplicants: (Lead & { application: Application })[];
+}
+
+export interface ManagedApplication {
+  id: string;
+  registeredName: string;
+  applicationNo: string;
+  formName: string;
+  registeredEmail: string;
+  registeredMobile: string;
+  formStatus: "Complete" | "Incomplete";
+  paymentStatus: "Payment Pending" | "Payment Approved" | "Payment Rejected";
+  paymentMethod?: string;
+  applicationOwner?: string;
+  applicationStage?: string;
+  campus?: "KARUR" | "COIMBATORE" | "ALL";
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
 }

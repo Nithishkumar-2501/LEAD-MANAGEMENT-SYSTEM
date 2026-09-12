@@ -11,7 +11,7 @@ import { ref, set, update, remove, get, child } from "firebase/database";
 import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storage";
 import { signInAnonymously } from "firebase/auth";
 import { auth, db, rtdb, storage } from "@/lib/firebase";
-import { Lead, Application, Teacher } from "@/types/crm";
+import { Lead, Application, Teacher, ManagedApplication } from "@/types/crm";
 
 export type StudentRecord = Lead & { application?: Application | null };
 
@@ -390,4 +390,319 @@ export async function redirectStudentLeadInFirebase(
   } catch (e) {}
 
   return true;
+}
+
+// -------------------------------------------------------------
+// APPLICATION MANAGER (ADMIN ONLY) FIREBASE PERSISTENCE & SYNC
+// -------------------------------------------------------------
+
+export const SEED_MANAGED_APPLICATIONS: ManagedApplication[] = [
+  {
+    id: "app_1371_karur",
+    registeredName: "KARTHIKEYAN R",
+    applicationNo: "VSBEC/2026/1371",
+    formName: "Application Form VSB Karur (Engineering)",
+    registeredEmail: "ramesh17051984rk@gmail.com",
+    registeredMobile: "+91-8124052163",
+    formStatus: "Incomplete",
+    paymentStatus: "Payment Pending",
+    paymentMethod: "-",
+    applicationOwner: "Prof. P. Rajesh",
+    applicationStage: "Inquiry Stage",
+    campus: "KARUR",
+    createdAt: "2026-09-12 11:57 AM",
+    updatedAt: "2026-09-12 11:57 AM",
+  },
+  {
+    id: "app_1375_coimbatore",
+    registeredName: "Santhosh",
+    applicationNo: "VSBCTC/2026/1375",
+    formName: "Application Form VSB Coimbatore (Engineering)",
+    registeredEmail: "ffsandy169@gmail.com",
+    registeredMobile: "+91 9363255461",
+    formStatus: "Complete",
+    paymentStatus: "Payment Pending",
+    paymentMethod: "-",
+    applicationOwner: "Dr. S. Meenakshi",
+    applicationStage: "Application Completed",
+    campus: "COIMBATORE",
+    createdAt: "2026-09-12 11:55 AM",
+    updatedAt: "2026-09-12 11:55 AM",
+  },
+  {
+    id: "app_1370_karur",
+    registeredName: "T Lohit",
+    applicationNo: "VSBEC/2026/1370",
+    formName: "Application Form VSB Karur (Engineering)",
+    registeredEmail: "tmsamy9@gmail.com",
+    registeredMobile: "+91-9492080881",
+    formStatus: "Incomplete",
+    paymentStatus: "Payment Pending",
+    paymentMethod: "-",
+    applicationOwner: "Prof. P. Rajesh",
+    applicationStage: "Document Pending",
+    campus: "KARUR",
+    createdAt: "2026-09-12 11:50 AM",
+    updatedAt: "2026-09-12 11:50 AM",
+  },
+  {
+    id: "app_1374_coimbatore",
+    registeredName: "R.saibami",
+    applicationNo: "VSBCTC/2026/1374",
+    formName: "Application Form VSB Coimbatore (Engineering)",
+    registeredEmail: "saibaraniravichandran2009@gmail.com",
+    registeredMobile: "+91-8148409624",
+    formStatus: "Incomplete",
+    paymentStatus: "Payment Pending",
+    paymentMethod: "-",
+    applicationOwner: "Dr. K. Arulmurugan",
+    applicationStage: "Inquiry Stage",
+    campus: "COIMBATORE",
+    createdAt: "2026-09-12 11:45 AM",
+    updatedAt: "2026-09-12 11:45 AM",
+  },
+  {
+    id: "app_1373_coimbatore",
+    registeredName: "Dhanvanth K.L.",
+    applicationNo: "VSBCTC/2026/1373",
+    formName: "Application Form VSB Coimbatore (Engineering)",
+    registeredEmail: "harithasreekumar0223@gmail.com",
+    registeredMobile: "+91-8925439697",
+    formStatus: "Incomplete",
+    paymentStatus: "Payment Pending",
+    paymentMethod: "-",
+    applicationOwner: "Dr. S. Meenakshi",
+    applicationStage: "Profile Initiated",
+    campus: "COIMBATORE",
+    createdAt: "2026-09-12 11:40 AM",
+    updatedAt: "2026-09-12 11:40 AM",
+  },
+  {
+    id: "app_1369_karur",
+    registeredName: "Kanchani lekhana reddy",
+    applicationNo: "VSBEC/2026/1369",
+    formName: "Application Form VSB Karur (Engineering)",
+    registeredEmail: "kanchanilekhana789@gmail.com",
+    registeredMobile: "+91-7989824523",
+    formStatus: "Incomplete",
+    paymentStatus: "Payment Pending",
+    paymentMethod: "-",
+    applicationOwner: "Prof. P. Rajesh",
+    applicationStage: "Marks Verification",
+    campus: "KARUR",
+    createdAt: "2026-09-12 11:35 AM",
+    updatedAt: "2026-09-12 11:35 AM",
+  },
+  {
+    id: "app_1372_coimbatore",
+    registeredName: "Rahul Kumar",
+    applicationNo: "VSBCTC/2026/1372",
+    formName: "Application Form VSB Coimbatore (Engineering)",
+    registeredEmail: "rahuldigital5880@gmail.com",
+    registeredMobile: "+91-9217493368",
+    formStatus: "Incomplete",
+    paymentStatus: "Payment Pending",
+    paymentMethod: "-",
+    applicationOwner: "Dr. K. Arulmurugan",
+    applicationStage: "Personal Details",
+    campus: "COIMBATORE",
+    createdAt: "2026-09-12 11:30 AM",
+    updatedAt: "2026-09-12 11:30 AM",
+  },
+  {
+    id: "app_1368_karur",
+    registeredName: "Rahul Kumar",
+    applicationNo: "VSBEC/2026/1368",
+    formName: "Application Form VSB Karur (Engineering)",
+    registeredEmail: "rahuldigital5880@gmail.com",
+    registeredMobile: "+91-9217493368",
+    formStatus: "Incomplete",
+    paymentStatus: "Payment Pending",
+    paymentMethod: "-",
+    applicationOwner: "Prof. P. Rajesh",
+    applicationStage: "Parent Details",
+    campus: "KARUR",
+    createdAt: "2026-09-12 11:28 AM",
+    updatedAt: "2026-09-12 11:28 AM",
+  },
+  {
+    id: "app_1371_coimbatore_ebi",
+    registeredName: "Ebi Yesudass",
+    applicationNo: "VSBCTC/2026/1371",
+    formName: "Application Form VSB Coimbatore (Engineering)",
+    registeredEmail: "itzaddy098@gmail.com",
+    registeredMobile: "+91-9622981509",
+    formStatus: "Complete",
+    paymentStatus: "Payment Approved",
+    paymentMethod: "Online",
+    applicationOwner: "Dr. S. Meenakshi",
+    applicationStage: "Admitted / Enrolled",
+    campus: "COIMBATORE",
+    createdAt: "2026-09-12 11:15 AM",
+    updatedAt: "2026-09-12 11:15 AM",
+  },
+  {
+    id: "app_1367_karur_ebi",
+    registeredName: "Ebi Yesudass",
+    applicationNo: "VSBEC/2026/1367",
+    formName: "Application Form VSB Karur (Engineering)",
+    registeredEmail: "itzaddy098@gmail.com",
+    registeredMobile: "+91-9622981509",
+    formStatus: "Complete",
+    paymentStatus: "Payment Approved",
+    paymentMethod: "Online",
+    applicationOwner: "Prof. P. Rajesh",
+    applicationStage: "Admitted / Enrolled",
+    campus: "KARUR",
+    createdAt: "2026-09-12 11:10 AM",
+    updatedAt: "2026-09-12 11:10 AM",
+  },
+];
+
+const LOCAL_STORAGE_APP_KEY = "vsb_managed_applications_cache";
+
+export async function saveApplicationToFirebase(app: ManagedApplication): Promise<boolean> {
+  const appId = app.id || `app_${Date.now()}`;
+  const payload: ManagedApplication = {
+    ...app,
+    id: appId,
+    updatedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " (Live)",
+  };
+
+  const cleanPayload = sanitizeForFirebase(payload);
+
+  // 1. Update localStorage instantly
+  try {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
+      let list: ManagedApplication[] = cached ? JSON.parse(cached) : [...SEED_MANAGED_APPLICATIONS];
+      const idx = list.findIndex((a) => a.id === appId);
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...cleanPayload };
+      } else {
+        list.unshift(cleanPayload);
+      }
+      localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(list));
+    }
+  } catch (e) {}
+
+  // 2. Ensure auth & push to Firestore
+  try {
+    await ensureFirebaseAuth();
+    const docRef = doc(db, "managed_applications", appId);
+    await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 2500);
+  } catch (err: any) {
+    console.warn("Firestore managed_applications notice:", err?.message || err);
+  }
+
+  // 3. Push to Realtime Database
+  try {
+    const rtdbRef = ref(rtdb, `managed_applications/${appId}`);
+    set(rtdbRef, cleanPayload).catch(() => {});
+  } catch (e) {}
+
+  return true;
+}
+
+export async function deleteApplicationFromFirebase(appId: string): Promise<boolean> {
+  if (!appId) return false;
+
+  // 1. Update localStorage
+  try {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
+      if (cached) {
+        let list: ManagedApplication[] = JSON.parse(cached);
+        list = list.filter((a) => a.id !== appId);
+        localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(list));
+      }
+    }
+  } catch (e) {}
+
+  // 2. Delete from Firestore & RTDB
+  try {
+    await ensureFirebaseAuth();
+    await withTimeout(deleteDoc(doc(db, "managed_applications", appId)), 2000);
+  } catch (e) {}
+
+  try {
+    remove(ref(rtdb, `managed_applications/${appId}`)).catch(() => {});
+  } catch (e) {}
+
+  return true;
+}
+
+export async function fetchApplicationsFromFirebase(): Promise<ManagedApplication[]> {
+  let results: ManagedApplication[] = [];
+
+  // Try Firestore
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDocs(collection(db, "managed_applications")), 3000);
+    if (snap && !snap.empty) {
+      snap.forEach((docSnap) => {
+        results.push(docSnap.data() as ManagedApplication);
+      });
+    }
+  } catch (err) {}
+
+  // Try RTDB if Firestore was empty
+  if (results.length === 0) {
+    try {
+      const snap = await withTimeout(get(child(ref(rtdb), "managed_applications")), 2000);
+      if (snap && snap.exists()) {
+        const val = snap.val();
+        results = Object.values(val) as ManagedApplication[];
+      }
+    } catch (e) {}
+  }
+
+  // If still empty, check localStorage or use SEED
+  if (results.length === 0) {
+    try {
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
+        if (cached) {
+          results = JSON.parse(cached);
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (results.length === 0) {
+    results = [...SEED_MANAGED_APPLICATIONS];
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(results));
+      }
+    } catch (e) {}
+  }
+
+  return results;
+}
+
+export function subscribeToFirebaseApplications(
+  callback: (apps: ManagedApplication[]) => void
+): () => void {
+  try {
+    const colRef = collection(db, "managed_applications");
+    const unsub = onSnapshot(
+      colRef,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const list: ManagedApplication[] = [];
+          snapshot.forEach((docSnap) => {
+            list.push(docSnap.data() as ManagedApplication);
+          });
+          callback(list);
+        }
+      },
+      (err) => {
+        console.warn("Snapshot notice on managed_applications:", err?.message);
+      }
+    );
+    return unsub;
+  } catch (e) {
+    return () => {};
+  }
 }

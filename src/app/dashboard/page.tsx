@@ -24,6 +24,7 @@ import UserDashboardView from "@/components/UserDashboardView";
 import MarketingDashboardView from "@/components/MarketingDashboardView";
 import EchoDashboardView from "@/components/EchoDashboardView";
 import AiIntelligenceModule from "@/components/AiIntelligenceModule";
+import ApplicationManagerModule from "@/components/ApplicationManagerModule";
 import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
@@ -592,6 +593,19 @@ export default function DashboardPage() {
             onDeleteContact={handleDeleteApplicant}
             onReloadLeads={handleReloadLeads}
             onOpenNoraAi={handleOpenNora}
+          />
+        )}
+
+        {/* APPLICATION MANAGER MODULE (ADMIN ONLY - IMAGES 1 & 2) */}
+        {(activeTab === "APPLICATION_MANAGER" || activeTab === "APPLICATION_OFFLINE_LOGS") &&
+          currentUserRole === "ADMIN" && (
+          <ApplicationManagerModule
+            loggedInCampus={selectedCampus}
+            onTriggerToast={triggerToast}
+            subView={activeTab === "APPLICATION_OFFLINE_LOGS" ? "OFFLINE_LOGS" : "MANAGE"}
+            onNavigateSubView={(view) =>
+              setActiveTab(view === "OFFLINE_LOGS" ? "APPLICATION_OFFLINE_LOGS" : "APPLICATION_MANAGER")
+            }
           />
         )}
 
