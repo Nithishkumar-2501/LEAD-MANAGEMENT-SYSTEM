@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Lead, Application, Task, CampusLocation } from "@/types/crm";
+import GoogleCalendarModal from "@/components/GoogleCalendarModal";
 import {
   UserCheck,
   PhoneCall,
@@ -221,6 +222,8 @@ export default function UserDashboardView({
   const [calendarMonth, setCalendarMonth] = useState<number>(11); // 11 = December (0-indexed)
   const [calendarYear, setCalendarYear] = useState<number>(2026);
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<number>(3);
+  const [isGCalModalOpen, setIsGCalModalOpen] = useState<boolean>(false);
+  const [currentTasks, setCurrentTasks] = useState<Task[]>(tasks || []);
 
   // Activity Feeds modal & filter
   const [showAllFeedsModal, setShowAllFeedsModal] = useState<boolean>(false);
@@ -1729,28 +1732,47 @@ export default function UserDashboardView({
         {/* ======================================================================= */}
         <div className="bubble-card p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3 flex-wrap gap-2">
               <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                 Follow-up Calendar ({MONTH_NAMES[calendarMonth]}, {calendarYear})
               </h3>
 
-              <div className="flex items-center gap-1 border border-slate-200 dark:border-white/10 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handlePrevMonth}
-                  aria-label="Previous Month"
-                  className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                  onClick={() => setIsGCalModalOpen(true)}
+                  className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+                  title="Import and Sync with Google Calendar"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4H19Z" fill="#4285F4" />
+                    <path d="M19 20H5V9H19V20Z" fill="white" />
+                    <path d="M12 11H7V16H12V11Z" fill="#34A853" />
+                    <path d="M17 11H13V16H17V11Z" fill="#EA4335" />
+                    <path d="M12 17H7V19H12V17Z" fill="#FBBC05" />
+                    <path d="M17 17H13V19H17V17Z" fill="#4285F4" />
+                  </svg>
+                  <span>Google Calendar</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={handleNextMonth}
-                  aria-label="Next Month"
-                  className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+
+                <div className="flex items-center gap-1 border border-slate-200 dark:border-white/10 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800">
+                  <button
+                    type="button"
+                    onClick={handlePrevMonth}
+                    aria-label="Previous Month"
+                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextMonth}
+                    aria-label="Next Month"
+                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1805,16 +1827,25 @@ export default function UserDashboardView({
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 text-xs flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 text-xs flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-500" />
               <span>
                 Selected Date: <strong className="text-slate-900 dark:text-white font-bold">{selectedCalendarDay} {MONTH_NAMES[calendarMonth]}, {calendarYear}</strong>
               </span>
             </div>
-            <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white font-extrabold text-[10px] shadow-sm">
-              Graph Updated: {selectedDateMetrics.allocated.toLocaleString()} Allocated
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsGCalModalOpen(true)}
+                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] shadow-xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+              >
+                <span>Import / Sync G-Cal</span>
+              </button>
+              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-extrabold text-[10px] shadow-sm">
+                Graph Updated: {selectedDateMetrics.allocated.toLocaleString()} Allocated
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -1898,6 +1929,18 @@ export default function UserDashboardView({
           </div>
         </div>
       )}
+      {/* Google Calendar Import & Synchronization Modal */}
+      <GoogleCalendarModal
+        isOpen={isGCalModalOpen}
+        onClose={() => setIsGCalModalOpen(false)}
+        pendingTasks={currentTasks}
+        onEventsImported={(imported) => {
+          setCurrentTasks((prev) => [...imported, ...prev]);
+        }}
+        onTriggerToast={(msg) => {
+          console.log(msg);
+        }}
+      />
     </div>
   );
 }

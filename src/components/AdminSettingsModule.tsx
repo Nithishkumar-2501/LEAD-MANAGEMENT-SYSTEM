@@ -20,8 +20,10 @@ import {
   Plus,
   Users,
   AlertCircle,
-  X
+  X,
+  Calendar
 } from "lucide-react";
+import GoogleCalendarModal from "@/components/GoogleCalendarModal";
 
 interface AdminSettingsModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -63,6 +65,7 @@ export default function AdminSettingsModule({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isGCalModalOpen, setIsGCalModalOpen] = useState(false);
 
   // System Accounts List with Password & Login Status
   const [accounts, setAccounts] = useState<SystemAccount[]>(() => {
@@ -742,7 +745,67 @@ export default function AdminSettingsModule({
             </div>
           </form>
         </div>
+
+        {/* Google Workspace & Calendar Integration Card */}
+        <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-5 lg:col-span-2">
+          <div className="border-b border-slate-800 pb-3 flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center p-1">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4H19Z" fill="#4285F4" />
+                  <path d="M19 20H5V9H19V20Z" fill="white" />
+                  <path d="M12 11H7V16H12V11Z" fill="#34A853" />
+                  <path d="M17 11H13V16H17V11Z" fill="#EA4335" />
+                  <path d="M12 17H7V19H12V17Z" fill="#FBBC05" />
+                  <path d="M17 17H13V19H17V17Z" fill="#4285F4" />
+                </svg>
+              </div>
+              <span>Google Calendar & Workspace Synchronization</span>
+            </h3>
+
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live Sync Ready
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsGCalModalOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <span>Import & Sync Google Calendar</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Connected Account</span>
+              <p className="font-bold text-white text-sm font-mono">admissions@vsbec.in</p>
+              <p className="text-[10px] text-slate-500">Google Workspace Primary Calendar</p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Sync Mechanism</span>
+              <p className="font-bold text-emerald-400 text-sm">iCal (.ICS) & Live Event Template</p>
+              <p className="text-[10px] text-slate-500">Auto-links follow-ups with Google Meet</p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Default Target Desk</span>
+              <p className="font-bold text-sky-400 text-sm">{loggedInCampus} Admissions Directorate</p>
+              <p className="text-[10px] text-slate-500">Candidate verification & counseling slots</p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Google Calendar Import & Sync Modal */}
+      <GoogleCalendarModal
+        isOpen={isGCalModalOpen}
+        onClose={() => setIsGCalModalOpen(false)}
+        onTriggerToast={onTriggerToast}
+      />
     </div>
   );
 }
