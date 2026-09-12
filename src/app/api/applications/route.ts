@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { MOCK_LEADS } from "@/lib/mockData";
 import { AppStage, LeadStatus, CampusLocation } from "@/types/crm";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
@@ -19,7 +18,7 @@ export async function GET() {
     });
     return NextResponse.json({ leads }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ leads: MOCK_LEADS }, { status: 200 });
+    return NextResponse.json({ leads: [] }, { status: 200 });
   }
 }
 
@@ -134,8 +133,6 @@ export async function POST(request: Request) {
           paymentStatus: (stage === "FEE_PAID" ? "COMPLETED" : "PENDING") as "COMPLETED" | "PENDING",
         },
       };
-
-      MOCK_LEADS.unshift(mockLead as any);
 
       return NextResponse.json({ success: true, lead: mockLead }, { status: 201 });
     }

@@ -56,7 +56,6 @@ import {
 
 import {
   MOCK_ADMIN_USER,
-  MOCK_LEADS,
   MOCK_TODAYS_TASKS,
   MOCK_PAYMENTS,
 } from "@/lib/mockData";
@@ -198,15 +197,8 @@ export default function DashboardPage() {
             return merged;
           });
         } else {
-          // Fall back to cached or mock data if database is empty
-          setApplicants((prev) => {
-            const valid = prev.filter((p) => !isLeadDeleted(p.id));
-            return valid.length > 0
-              ? valid
-              : (MOCK_LEADS as (Lead & { application: Application })[]).filter(
-                  (m) => !isLeadDeleted(m.id)
-                );
-          });
+          // Keep valid real leads without falling back to mock records
+          setApplicants((prev) => prev.filter((p) => !isLeadDeleted(p.id)));
         }
       })
       .catch((err) => {

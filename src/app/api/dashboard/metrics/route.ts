@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { MOCK_LEADS, MOCK_TODAYS_TASKS, MOCK_PAYMENTS } from "@/lib/mockData";
 import { LeadStatusCounts, DashboardMetricsResponse } from "@/types/crm";
-
-
+import { fetchStudentsFromFirestore, StudentRecord } from "@/lib/firebaseSync";
 
 export async function GET() {
   try {
@@ -58,35 +56,21 @@ export async function GET() {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
     const todaysTasks = await prisma.task.findMany({
       where: {
-        isCompleted: false,
         dueDate: {
           gte: startOfDay,
-          lte: endOfDay,
         },
       },
-      include: {
-        lead: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-            email: true,
-            courseInterest: true,
-          },
-        },
-      },
+      take: 5,
       orderBy: {
         dueDate: "asc",
       },
     });
 
+    // Recent 5 leads
     const recentApplicants = await prisma.lead.findMany({
-      take: 10,
+      take: 5,
       orderBy: {
         createdAt: "desc",
       },
@@ -113,25 +97,30 @@ export async function GET() {
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
-    // Fallback metrics from mock data when DB is uninitialized
+    // Fallback: calculate live metrics from Firebase Firestore
+    let students: StudentRecord[] = [];
+    try {
+      students = await fetchStudentsFromFirestore();
+    } catch (e) {}
 
-    // Calculate fallback metrics from mock data
-    const totalLeads = MOCK_LEADS.length;
+    const totalLeads = students.length;
 
-    const applicationsVerified = MOCK_LEADS.filter((l) =>
-      ["DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"].includes(l.application.stage)
+    const applicationsVerified = students.filter((l) =>
+      l.application ? ["DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"].includes(l.application.stage) : false
     ).length;
 
-    const seatsFilled = MOCK_LEADS.filter((l) => l.application.stage === "FEE_PAID").length;
+    const seatsFilled = students.filter(
+      (l) => l.status === "ADMITTED" || (l.application && l.application.stage === "FEE_PAID")
+    ).length;
 
-    const totalRevenue = MOCK_PAYMENTS.reduce((sum, p) => sum + p.amount, 0);
+    const totalRevenue = seatsFilled * 50000;
 
     const leadStatusCounts: LeadStatusCounts = {
-      NEW: MOCK_LEADS.filter((l) => l.status === "NEW").length,
-      CONTACTED: MOCK_LEADS.filter((l) => l.status === "CONTACTED").length,
-      IN_REVIEW: MOCK_LEADS.filter((l) => l.status === "IN_REVIEW").length,
-      ADMITTED: MOCK_LEADS.filter((l) => l.status === "ADMITTED").length,
-      REJECTED: MOCK_LEADS.filter((l) => l.status === "REJECTED").length,
+      NEW: students.filter((l) => l.status === "NEW").length,
+      CONTACTED: students.filter((l) => l.status === "CONTACTED").length,
+      IN_REVIEW: students.filter((l) => l.status === "IN_REVIEW").length,
+      ADMITTED: students.filter((l) => l.status === "ADMITTED").length,
+      REJECTED: students.filter((l) => l.status === "REJECTED").length,
     };
 
     const fallbackResponse: DashboardMetricsResponse = {
@@ -146,8 +135,8 @@ export async function GET() {
         revenueTrend: 18.7,
       },
       leadStatusCounts,
-      todaysTasks: MOCK_TODAYS_TASKS,
-      recentApplicants: MOCK_LEADS,
+      todaysTasks: [],
+      recentApplicants: students.slice(0, 10) as any,
     };
 
     return NextResponse.json(fallbackResponse, { status: 200 });

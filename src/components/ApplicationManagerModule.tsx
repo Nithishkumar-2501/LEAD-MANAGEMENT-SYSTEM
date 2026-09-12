@@ -32,8 +32,7 @@ import {
   saveApplicationToFirebase,
   deleteApplicationFromFirebase,
   fetchApplicationsFromFirebase,
-  subscribeToFirebaseApplications,
-  SEED_MANAGED_APPLICATIONS
+  subscribeToFirebaseApplications
 } from "@/lib/firebaseSync";
 
 interface ApplicationManagerModuleProps {
@@ -49,8 +48,8 @@ export default function ApplicationManagerModule({
   subView = "MANAGE",
   onNavigateSubView,
 }: ApplicationManagerModuleProps) {
-  const [applications, setApplications] = useState<ManagedApplication[]>(SEED_MANAGED_APPLICATIONS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [applications, setApplications] = useState<ManagedApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [lastSyncedTime, setLastSyncedTime] = useState("Sep 12, 2026 11:57 AM");
   const [isRotating, setIsRotating] = useState(false);
 
@@ -83,9 +82,7 @@ export default function ApplicationManagerModule({
     setIsRotating(true);
     try {
       const data = await fetchApplicationsFromFirebase();
-      if (data && data.length > 0) {
-        setApplications(data);
-      }
+      setApplications(data || []);
       const now = new Date();
       const dateFormatted = now.toLocaleDateString("en-US", {
         month: "short",
@@ -777,7 +774,16 @@ export default function ApplicationManagerModule({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-                {paginatedApplications.length === 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={10} className="text-center py-12 text-slate-500 text-xs">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <RefreshCw className="w-5 h-5 text-sky-600 animate-spin" />
+                        <span className="font-semibold text-slate-600">Loading student applications from Firebase...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedApplications.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="text-center py-10 text-slate-400 text-xs">
                       No applications found matching the selected filters.

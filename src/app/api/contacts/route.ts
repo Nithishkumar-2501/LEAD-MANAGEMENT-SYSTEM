@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { MOCK_LEADS } from "@/lib/mockData";
 import { Lead, Application } from "@/types/crm";
 import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
@@ -13,7 +12,7 @@ export async function GET(request: Request) {
     const campus = searchParams.get("campus");
     const district = searchParams.get("district");
 
-    let leads: (Lead & { application: Application })[];
+    let leads: (Lead & { application: Application })[] = [];
     try {
       const dbLeads = await prisma.lead.findMany({
         include: { application: true },
@@ -21,7 +20,7 @@ export async function GET(request: Request) {
       });
       leads = dbLeads as unknown as (Lead & { application: Application })[];
     } catch (e) {
-      leads = MOCK_LEADS as (Lead & { application: Application })[];
+      leads = [];
     }
 
     let filtered = leads;
@@ -36,7 +35,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(filtered);
   } catch (error) {
-    return NextResponse.json(MOCK_LEADS);
+    return NextResponse.json([]);
   }
 }
 

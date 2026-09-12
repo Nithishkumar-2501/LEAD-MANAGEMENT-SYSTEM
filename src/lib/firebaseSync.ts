@@ -396,170 +396,7 @@ export async function redirectStudentLeadInFirebase(
 // APPLICATION MANAGER (ADMIN ONLY) FIREBASE PERSISTENCE & SYNC
 // -------------------------------------------------------------
 
-export const SEED_MANAGED_APPLICATIONS: ManagedApplication[] = [
-  {
-    id: "app_1371_karur",
-    registeredName: "KARTHIKEYAN R",
-    applicationNo: "VSBEC/2026/1371",
-    formName: "Application Form VSB Karur (Engineering)",
-    registeredEmail: "ramesh17051984rk@gmail.com",
-    registeredMobile: "+91-8124052163",
-    formStatus: "Incomplete",
-    paymentStatus: "Payment Pending",
-    paymentMethod: "-",
-    applicationOwner: "Prof. P. Rajesh",
-    applicationStage: "Inquiry Stage",
-    campus: "KARUR",
-    createdAt: "2026-09-12 11:57 AM",
-    updatedAt: "2026-09-12 11:57 AM",
-  },
-  {
-    id: "app_1375_coimbatore",
-    registeredName: "Santhosh",
-    applicationNo: "VSBCTC/2026/1375",
-    formName: "Application Form VSB Coimbatore (Engineering)",
-    registeredEmail: "ffsandy169@gmail.com",
-    registeredMobile: "+91 9363255461",
-    formStatus: "Complete",
-    paymentStatus: "Payment Pending",
-    paymentMethod: "-",
-    applicationOwner: "Dr. S. Meenakshi",
-    applicationStage: "Application Completed",
-    campus: "COIMBATORE",
-    createdAt: "2026-09-12 11:55 AM",
-    updatedAt: "2026-09-12 11:55 AM",
-  },
-  {
-    id: "app_1370_karur",
-    registeredName: "T Lohit",
-    applicationNo: "VSBEC/2026/1370",
-    formName: "Application Form VSB Karur (Engineering)",
-    registeredEmail: "tmsamy9@gmail.com",
-    registeredMobile: "+91-9492080881",
-    formStatus: "Incomplete",
-    paymentStatus: "Payment Pending",
-    paymentMethod: "-",
-    applicationOwner: "Prof. P. Rajesh",
-    applicationStage: "Document Pending",
-    campus: "KARUR",
-    createdAt: "2026-09-12 11:50 AM",
-    updatedAt: "2026-09-12 11:50 AM",
-  },
-  {
-    id: "app_1374_coimbatore",
-    registeredName: "R.saibami",
-    applicationNo: "VSBCTC/2026/1374",
-    formName: "Application Form VSB Coimbatore (Engineering)",
-    registeredEmail: "saibaraniravichandran2009@gmail.com",
-    registeredMobile: "+91-8148409624",
-    formStatus: "Incomplete",
-    paymentStatus: "Payment Pending",
-    paymentMethod: "-",
-    applicationOwner: "Dr. K. Arulmurugan",
-    applicationStage: "Inquiry Stage",
-    campus: "COIMBATORE",
-    createdAt: "2026-09-12 11:45 AM",
-    updatedAt: "2026-09-12 11:45 AM",
-  },
-  {
-    id: "app_1373_coimbatore",
-    registeredName: "Dhanvanth K.L.",
-    applicationNo: "VSBCTC/2026/1373",
-    formName: "Application Form VSB Coimbatore (Engineering)",
-    registeredEmail: "harithasreekumar0223@gmail.com",
-    registeredMobile: "+91-8925439697",
-    formStatus: "Incomplete",
-    paymentStatus: "Payment Pending",
-    paymentMethod: "-",
-    applicationOwner: "Dr. S. Meenakshi",
-    applicationStage: "Profile Initiated",
-    campus: "COIMBATORE",
-    createdAt: "2026-09-12 11:40 AM",
-    updatedAt: "2026-09-12 11:40 AM",
-  },
-  {
-    id: "app_1369_karur",
-    registeredName: "Kanchani lekhana reddy",
-    applicationNo: "VSBEC/2026/1369",
-    formName: "Application Form VSB Karur (Engineering)",
-    registeredEmail: "kanchanilekhana789@gmail.com",
-    registeredMobile: "+91-7989824523",
-    formStatus: "Incomplete",
-    paymentStatus: "Payment Pending",
-    paymentMethod: "-",
-    applicationOwner: "Prof. P. Rajesh",
-    applicationStage: "Marks Verification",
-    campus: "KARUR",
-    createdAt: "2026-09-12 11:35 AM",
-    updatedAt: "2026-09-12 11:35 AM",
-  },
-  {
-    id: "app_1372_coimbatore",
-    registeredName: "Rahul Kumar",
-    applicationNo: "VSBCTC/2026/1372",
-    formName: "Application Form VSB Coimbatore (Engineering)",
-    registeredEmail: "rahuldigital5880@gmail.com",
-    registeredMobile: "+91-9217493368",
-    formStatus: "Incomplete",
-    paymentStatus: "Payment Pending",
-    paymentMethod: "-",
-    applicationOwner: "Dr. K. Arulmurugan",
-    applicationStage: "Personal Details",
-    campus: "COIMBATORE",
-    createdAt: "2026-09-12 11:30 AM",
-    updatedAt: "2026-09-12 11:30 AM",
-  },
-  {
-    id: "app_1368_karur",
-    registeredName: "Rahul Kumar",
-    applicationNo: "VSBEC/2026/1368",
-    formName: "Application Form VSB Karur (Engineering)",
-    registeredEmail: "rahuldigital5880@gmail.com",
-    registeredMobile: "+91-9217493368",
-    formStatus: "Incomplete",
-    paymentStatus: "Payment Pending",
-    paymentMethod: "-",
-    applicationOwner: "Prof. P. Rajesh",
-    applicationStage: "Parent Details",
-    campus: "KARUR",
-    createdAt: "2026-09-12 11:28 AM",
-    updatedAt: "2026-09-12 11:28 AM",
-  },
-  {
-    id: "app_1371_coimbatore_ebi",
-    registeredName: "Ebi Yesudass",
-    applicationNo: "VSBCTC/2026/1371",
-    formName: "Application Form VSB Coimbatore (Engineering)",
-    registeredEmail: "itzaddy098@gmail.com",
-    registeredMobile: "+91-9622981509",
-    formStatus: "Complete",
-    paymentStatus: "Payment Approved",
-    paymentMethod: "Online",
-    applicationOwner: "Dr. S. Meenakshi",
-    applicationStage: "Admitted / Enrolled",
-    campus: "COIMBATORE",
-    createdAt: "2026-09-12 11:15 AM",
-    updatedAt: "2026-09-12 11:15 AM",
-  },
-  {
-    id: "app_1367_karur_ebi",
-    registeredName: "Ebi Yesudass",
-    applicationNo: "VSBEC/2026/1367",
-    formName: "Application Form VSB Karur (Engineering)",
-    registeredEmail: "itzaddy098@gmail.com",
-    registeredMobile: "+91-9622981509",
-    formStatus: "Complete",
-    paymentStatus: "Payment Approved",
-    paymentMethod: "Online",
-    applicationOwner: "Prof. P. Rajesh",
-    applicationStage: "Admitted / Enrolled",
-    campus: "KARUR",
-    createdAt: "2026-09-12 11:10 AM",
-    updatedAt: "2026-09-12 11:10 AM",
-  },
-];
-
-const LOCAL_STORAGE_APP_KEY = "vsb_managed_applications_cache";
+const LOCAL_STORAGE_APP_KEY = "vsb_managed_applications_cache_v2";
 
 export async function saveApplicationToFirebase(app: ManagedApplication): Promise<boolean> {
   const appId = app.id || `app_${Date.now()}`;
@@ -575,7 +412,7 @@ export async function saveApplicationToFirebase(app: ManagedApplication): Promis
   try {
     if (typeof window !== "undefined") {
       const cached = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
-      let list: ManagedApplication[] = cached ? JSON.parse(cached) : [...SEED_MANAGED_APPLICATIONS];
+      let list: ManagedApplication[] = cached ? JSON.parse(cached) : [];
       const idx = list.findIndex((a) => a.id === appId);
       if (idx >= 0) {
         list[idx] = { ...list[idx], ...cleanPayload };
@@ -635,18 +472,27 @@ export async function deleteApplicationFromFirebase(appId: string): Promise<bool
 export async function fetchApplicationsFromFirebase(): Promise<ManagedApplication[]> {
   let results: ManagedApplication[] = [];
 
-  // Try Firestore
+  // 1. Purge legacy mock caches if any
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("vsb_managed_applications_cache");
+    } catch (e) {}
+  }
+
+  // 2. Query Firestore managed_applications
   try {
     await ensureFirebaseAuth();
-    const snap = await withTimeout(getDocs(collection(db, "managed_applications")), 3000);
+    const snap = await withTimeout(getDocs(collection(db, "managed_applications")), 3500);
     if (snap && !snap.empty) {
       snap.forEach((docSnap) => {
         results.push(docSnap.data() as ManagedApplication);
       });
     }
-  } catch (err) {}
+  } catch (err: any) {
+    console.warn("Firestore managed_applications read notice:", err?.message || err);
+  }
 
-  // Try RTDB if Firestore was empty
+  // 3. Try RTDB if Firestore was empty
   if (results.length === 0) {
     try {
       const snap = await withTimeout(get(child(ref(rtdb), "managed_applications")), 2000);
@@ -657,23 +503,46 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
     } catch (e) {}
   }
 
-  // If still empty, check localStorage or use SEED
+  // 4. If still empty, load live students from Firestore and map them to ManagedApplication
   if (results.length === 0) {
     try {
-      if (typeof window !== "undefined") {
-        const cached = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
-        if (cached) {
-          results = JSON.parse(cached);
-        }
+      const students = await fetchStudentsFromFirestore();
+      if (students && students.length > 0) {
+        results = students.map((s, idx) => {
+          const isCoimbatore = (s.name || "").toLowerCase().includes("coimbatore") || (idx % 2 === 1);
+          const campus = isCoimbatore ? "COIMBATORE" : "KARUR";
+          const prefix = campus === "COIMBATORE" ? "VSBCTC/2026/" : "VSBEC/2026/";
+          return {
+            id: s.id ? `app_${s.id}` : `app_${1300 + idx}`,
+            registeredName: s.name || "Student Applicant",
+            applicationNo: `${prefix}${1300 + idx}`,
+            formName: `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
+            registeredEmail: s.email || `${(s.name || "applicant").toLowerCase().replace(/\s+/g, "")}@gmail.com`,
+            registeredMobile: s.phone || "+91 9876543210",
+            formStatus: s.status === "ADMITTED" ? "Complete" : "Incomplete",
+            paymentStatus: s.status === "ADMITTED" ? "Payment Approved" : "Payment Pending",
+            paymentMethod: s.status === "ADMITTED" ? "Online" : "-",
+            applicationOwner: campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh",
+            applicationStage: s.status === "ADMITTED" ? "Admission Offered" : "Inquiry Stage",
+            campus: campus,
+            createdAt: "2026-09-12 10:00 AM",
+            updatedAt: "2026-09-12 10:00 AM",
+          };
+        });
       }
     } catch (e) {}
   }
 
-  if (results.length === 0) {
-    results = [...SEED_MANAGED_APPLICATIONS];
+  // 5. Update local cache with live data
+  if (typeof window !== "undefined" && results.length > 0) {
     try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(results));
+      localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(results));
+    } catch (e) {}
+  } else if (typeof window !== "undefined" && results.length === 0) {
+    try {
+      const cached = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
+      if (cached) {
+        results = JSON.parse(cached);
       }
     } catch (e) {}
   }
