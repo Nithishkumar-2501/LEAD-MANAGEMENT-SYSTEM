@@ -302,6 +302,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </button>
           </div>
         </div>
+
+        {/* Department Attribution Footer */}
+        <div className="mt-5 pt-3.5 border-t border-slate-100 text-center">
+          <p className="text-[11px] sm:text-xs font-medium text-slate-500 tracking-wide">
+            Created by{" "}
+            <span className="text-slate-800 font-bold">
+              Department of Artificial Intelligence and Data Science
+            </span>
+          </p>
+        </div>
       </div>
 
       {/* Forgot Password / Account Help Modal */}
