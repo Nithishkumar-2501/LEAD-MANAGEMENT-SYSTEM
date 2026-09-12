@@ -536,14 +536,6 @@ export default function SocialMediaPlatformModule({
               <span className="text-black font-black">Launch New Campaign</span>
             </SpecularButton>
 
-            <button
-              onClick={() => handleOpenNewCampaignModal()}
-              className="px-3 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs font-black shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-              title="Upload College Image or Launch Campaign"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Upload College Ad</span>
-            </button>
           </div>
         </div>
 
