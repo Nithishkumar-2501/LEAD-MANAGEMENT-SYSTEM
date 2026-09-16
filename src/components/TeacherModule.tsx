@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES, Lead, Application } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
 import { parseCSVToTeachers } from "@/lib/csvParser";
@@ -29,10 +29,30 @@ interface TeacherModuleProps {
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
 }
 
+// Helper to guarantee that all department staff samples from MOCK_TEACHERS are always present
+function mergeWithMockTeachers(incomingList: Teacher[]): Teacher[] {
+  const map = new Map<string, Teacher>();
+  // 1. Seed with MOCK_TEACHERS (all 17+ departments)
+  MOCK_TEACHERS.forEach((t) => {
+    map.set((t.id || t.email).toLowerCase().trim(), t);
+  });
+  // 2. Overlay incoming records (preserving user edits, photo uploads, status updates)
+  if (Array.isArray(incomingList)) {
+    incomingList.forEach((t) => {
+      const key = (t.id || t.email).toLowerCase().trim();
+      const existing = map.get(key);
+      map.set(key, existing ? { ...existing, ...t } : t);
+    });
+  }
+  return Array.from(map.values());
+}
+
 export default function TeacherModule({ loggedInCampus, currentUserRole, loggedInUsername, onTriggerToast, applicants = [], onSelectApplicant }: TeacherModuleProps) {
-  const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
+  const [teachers, setTeachers] = useState<Teacher[]>(() => mergeWithMockTeachers(MOCK_TEACHERS));
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("ALL");
+  const [selectedCampusFilter, setSelectedCampusFilter] = useState<"ALL" | "KARUR" | "COIMBATORE">("ALL");
+  const [facultyScope, setFacultyScope] = useState<"ALL" | "MINE">("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [selectedTeacherForAudit, setSelectedTeacherForAudit] = useState<Teacher | null>(null);
@@ -170,7 +190,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setTeachers(parsed);
+          const merged = mergeWithMockTeachers(parsed);
+          setTeachers(merged);
         }
       }
     } catch (err) {}
@@ -179,8 +200,9 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     fetchTeachersFromFirebase()
       .then((fbTeachers) => {
         if (Array.isArray(fbTeachers) && fbTeachers.length > 0) {
-          setTeachers(fbTeachers);
-          saveTeachersList(fbTeachers);
+          const merged = mergeWithMockTeachers(fbTeachers);
+          setTeachers(merged);
+          saveTeachersList(merged);
         }
       })
       .catch((err) => {
@@ -190,20 +212,19 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     // 3. Real-time Firebase Observer: updates automatically whenever any teacher is modified
     const unsubscribe = subscribeToFirebaseTeachers((liveList) => {
       if (Array.isArray(liveList) && liveList.length > 0) {
-        setTeachers(liveList);
-        saveTeachersList(liveList);
+        const merged = mergeWithMockTeachers(liveList);
+        setTeachers(merged);
+        saveTeachersList(merged);
       }
     });
 
     // 4. Also fetch from /api/teachers
-    fetch(`/api/teachers?campus=${loggedInCampus}`)
+    fetch(`/api/teachers?campus=ALL`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setTeachers((prev) => {
-            const dbIds = new Set(data.map((d: Teacher) => d.id || d.email));
-            const localOnly = prev.filter((p) => !dbIds.has(p.id) && !dbIds.has(p.email));
-            const merged = [...data, ...localOnly];
+            const merged = mergeWithMockTeachers([...prev, ...data]);
             try {
               localStorage.setItem("vsb_crm_teachers", JSON.stringify(merged));
             } catch (e) {}
@@ -216,7 +237,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     return () => {
       unsubscribe();
     };
-  }, [loggedInCampus]);
+  }, []);
 
   const handleConfirmCSVImport = async () => {
     if (csvParsedTeachers.length === 0) return;
@@ -277,39 +298,65 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     setNewTeacher((prev) => ({ ...prev, campus: loggedInCampus }));
   }, [loggedInCampus]);
 
-  const departments = ["ALL", ...VSB_DEPARTMENTS_COURSES];
+  // Dynamically extract all unique academic departments present across faculty records
+  const departments = useMemo(() => {
+    const set = new Set<string>();
+    teachers.forEach((t) => {
+      if (t.department) set.add(t.department.trim());
+    });
+    return ["ALL", ...Array.from(set).sort()];
+  }, [teachers]);
 
-  const filteredTeachers = teachers.filter((t) => {
-    // If logged in as TEACHER role, strictly scope to ONLY their unique User ID / Email!
-    const matchesTeacherSelf =
-      currentUserRole === "ADMIN"
-        ? true
-        : Boolean(
-            loggedInUsername &&
-              (t.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
-                t.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim())
-          );
+  const filteredTeachers = useMemo(() => {
+    return teachers
+      .filter((t) => {
+        // Faculty Scope Filter: If user toggles "MINE", show only current teacher profile
+        if (facultyScope === "MINE" && loggedInUsername) {
+          const isSelf =
+            t.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
+            t.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim();
+          if (!isSelf) return false;
+        }
 
-    const matchesSearch =
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.email.toLowerCase().includes(search.toLowerCase()) ||
-      t.coursesAssigned.some((c) => c.toLowerCase().includes(search.toLowerCase()));
+        // Search Query (matches name, email, department, or assigned course)
+        const q = search.toLowerCase().trim();
+        const matchesSearch =
+          !q ||
+          t.name.toLowerCase().includes(q) ||
+          t.email.toLowerCase().includes(q) ||
+          (t.department && t.department.toLowerCase().includes(q)) ||
+          t.coursesAssigned.some((c) => c.toLowerCase().includes(q));
 
-    const matchesDept =
-      selectedDept === "ALL" ||
-      t.department === selectedDept ||
-      t.department.toLowerCase().includes(selectedDept.toLowerCase()) ||
-      selectedDept.toLowerCase().includes(t.department.toLowerCase());
+        // Department Filter
+        const matchesDept =
+          selectedDept === "ALL" ||
+          t.department.toLowerCase().trim() === selectedDept.toLowerCase().trim() ||
+          t.department.toLowerCase().includes(selectedDept.toLowerCase()) ||
+          selectedDept.toLowerCase().includes(t.department.toLowerCase());
 
-    const matchesCampus =
-      currentUserRole === "TEACHER"
-        ? true
-        : !t.campus ||
-          t.campus === loggedInCampus ||
-          t.campus.toUpperCase().includes(loggedInCampus);
+        // Campus Filter
+        const matchesCampus =
+          selectedCampusFilter === "ALL" ||
+          !t.campus ||
+          t.campus.toUpperCase() === selectedCampusFilter;
 
-    return matchesTeacherSelf && matchesSearch && matchesDept && matchesCampus;
-  });
+        return matchesSearch && matchesDept && matchesCampus;
+      })
+      .sort((a, b) => {
+        // Logged-in teacher profile appears at the very top for effortless convenience
+        if (loggedInUsername) {
+          const isSelfA =
+            a.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
+            a.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim();
+          const isSelfB =
+            b.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
+            b.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim();
+          if (isSelfA && !isSelfB) return -1;
+          if (!isSelfA && isSelfB) return 1;
+        }
+        return 0;
+      });
+  }, [teachers, facultyScope, loggedInUsername, search, selectedDept, selectedCampusFilter]);
 
   const handleAddTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -483,6 +530,16 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(6);
 
+  const avgExperience = useMemo(() => {
+    if (filteredTeachers.length === 0) return "12.0";
+    const sum = filteredTeachers.reduce((acc, t) => acc + (Number(t.experienceYears) || 0), 0);
+    return (sum / filteredTeachers.length).toFixed(1);
+  }, [filteredTeachers]);
+
+  const uniqueDeptsCount = useMemo(() => {
+    return departments.filter((d) => d !== "ALL").length;
+  }, [departments]);
+
   const totalPages = Math.max(1, Math.ceil(filteredTeachers.length / rowsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const tchStartIndex = (safeCurrentPage - 1) * rowsPerPage;
@@ -512,13 +569,13 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Academic Depts</p>
-              <h3 className="text-2xl font-bold text-slate-100 mt-1">4 Departments</h3>
+              <h3 className="text-2xl font-bold text-slate-100 mt-1">{uniqueDeptsCount} Departments</h3>
             </div>
             <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
               <BookOpen className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xs text-purple-300 font-medium mt-3">CSE, ECE, IT, Mechanical</p>
+          <p className="text-xs text-purple-300 font-medium mt-3">All V.S.B. Academic Departments</p>
         </div>
 
         <div className="glass-card rounded-2xl p-5 border border-slate-800">
@@ -526,7 +583,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Campus Faculty</p>
               <h3 className="text-2xl font-bold text-slate-100 mt-1">
-                {loggedInCampus === "KARUR" ? "Karur Campus" : "Coimbatore Campus"}
+                {selectedCampusFilter === "ALL" ? "Karur & CBE Campuses" : selectedCampusFilter === "KARUR" ? "Karur Campus" : "Coimbatore Campus"}
               </h3>
             </div>
             <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -540,7 +597,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg Experience</p>
-              <h3 className="text-2xl font-bold text-slate-100 mt-1">12.5 Years</h3>
+              <h3 className="text-2xl font-bold text-slate-100 mt-1">{avgExperience} Years</h3>
             </div>
             <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
               <Award className="w-5 h-5" />
@@ -619,22 +676,30 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
             <p className="text-xs text-slate-400">View faculty allocations, department leads, and contact information</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative w-full sm:w-64">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="relative w-full sm:w-56">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
                 placeholder="Search teacher, department..."
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
+            {/* Academic Department Dropdown Filter */}
             <select
               value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              onChange={(e) => {
+                setSelectedDept(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-medium max-w-[200px]"
+              title="Filter by Academic Department"
             >
               {departments.map((d) => (
                 <option key={d} value={d}>
@@ -642,6 +707,57 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 </option>
               ))}
             </select>
+
+            {/* Campus Selector Filter */}
+            <select
+              value={selectedCampusFilter}
+              onChange={(e) => {
+                setSelectedCampusFilter(e.target.value as "ALL" | "KARUR" | "COIMBATORE");
+                setCurrentPage(1);
+              }}
+              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-medium"
+              title="Filter by Campus"
+            >
+              <option value="ALL">All Campuses</option>
+              <option value="KARUR">Karur Campus</option>
+              <option value="COIMBATORE">Coimbatore Campus</option>
+            </select>
+
+            {/* Scope Toggle: All Staff vs My Profile */}
+            {loggedInUsername && (
+              <div className="flex items-center p-0.5 bg-slate-900 border border-slate-700 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFacultyScope("ALL");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    facultyScope === "ALL"
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                  title="View all department staff members"
+                >
+                  All Staff ({teachers.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFacultyScope("MINE");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    facultyScope === "MINE"
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                  title="View only my assigned profile"
+                >
+                  My Profile
+                </button>
+              </div>
+            )}
 
             {/* Hidden File Input for CSV Upload */}
             <input
@@ -655,7 +771,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
             {/* Download Sample CSV Template */}
             <button
               onClick={handleDownloadSampleCSV}
-              className="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              className="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
               title="Download Faculty CSV Template"
             >
               <Download className="w-3.5 h-3.5 text-emerald-400" /> <span>Sample CSV</span>
@@ -687,20 +803,25 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               Firebase Live
             </span>
 
-            {currentUserRole === "ADMIN" && (
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="px-3.5 py-1.5 rounded-xl border border-purple-400/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/30 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" /> <span>Add Faculty</span>
-              </button>
-            )}
+            {/* Add Faculty Button (Matches reference image) */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-3.5 py-1.5 rounded-xl border border-purple-400/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/30 cursor-pointer"
+              title="Add New Faculty Member"
+            >
+              <Plus className="w-4 h-4" /> <span>Add Faculty</span>
+            </button>
           </div>
         </div>
 
         {/* Teachers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {paginatedTeachers.map((tch, index) => {
+            const isSelf = Boolean(
+              loggedInUsername &&
+              (tch.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
+                tch.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim())
+            );
             const rangeDisplay =
               tch.assignedRangeText ||
               `Contacts #${((index % 10) * 100) + 1} to #${((index % 10) + 1) * 100}`;
@@ -734,7 +855,14 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                       </button>
                     </div>
                     <div>
-                      <h4 className="text-base font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-sky-400 transition-colors">{tch.name}</h4>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="text-base font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-sky-400 transition-colors">{tch.name}</h4>
+                        {isSelf && (
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 shadow-xs flex items-center gap-1">
+                            👑 You (Logged In)
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">{tch.department}</p>
                     </div>
                   </div>
@@ -897,34 +1025,32 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   </Tooltip>
                 </div>
 
-                {currentUserRole === "ADMIN" && (
-                  <div className="ml-auto flex items-center gap-1.5">
-                    <Tooltip text={`Edit ${tch.name}`} position="bottom">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingTeacher(tch);
-                        }}
-                        className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-sky-400 hover:text-slate-900 dark:hover:text-sky-300 font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-xs transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit
-                      </button>
-                    </Tooltip>
+                <div className="ml-auto flex items-center gap-1.5">
+                  <Tooltip text={`Edit ${tch.name}`} position="bottom">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingTeacher(tch);
+                      }}
+                      className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-sky-400 hover:text-slate-900 dark:hover:text-sky-300 font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-xs transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> Edit
+                    </button>
+                  </Tooltip>
 
-                    <Tooltip text={`Delete ${tch.name} from Firebase & Directory`} position="bottom">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTeacher(tch.id, tch.name);
-                        }}
-                        className="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 font-bold px-2 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 shadow-xs transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                        title="Remove faculty from Firebase & Directory"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </Tooltip>
-                  </div>
-                )}
+                  <Tooltip text={`Delete ${tch.name} from Firebase & Directory`} position="bottom">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTeacher(tch.id, tch.name);
+                      }}
+                      className="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 font-bold px-2 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 shadow-xs transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      title="Remove faculty from Firebase & Directory"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
+                </div>
               </div>
             </div>
           );

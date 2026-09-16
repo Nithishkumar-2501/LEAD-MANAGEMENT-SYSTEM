@@ -48,10 +48,15 @@ export async function GET(request: Request) {
       }
     }
 
-    // 3. Fallback to MOCK_TEACHERS if both were empty
-    if (teachers.length === 0) {
-      teachers = MOCK_TEACHERS;
-    }
+    // 3. Guarantee all department staff members from MOCK_TEACHERS are always present
+    const teacherMap = new Map<string, Teacher>();
+    MOCK_TEACHERS.forEach((t) => teacherMap.set((t.id || t.email).toLowerCase(), t));
+    teachers.forEach((t) => {
+      const key = (t.id || t.email).toLowerCase();
+      const existing = teacherMap.get(key);
+      teacherMap.set(key, existing ? { ...existing, ...t } : t);
+    });
+    teachers = Array.from(teacherMap.values());
 
     if (campus && campus !== "ALL") {
       teachers = teachers.filter(
