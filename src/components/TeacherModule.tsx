@@ -6,12 +6,19 @@ import { MOCK_TEACHERS } from "@/lib/mockData";
 import { parseCSVToTeachers } from "@/lib/csvParser";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import TeacherStudentAuditModal from "@/components/TeacherStudentAuditModal";
-import { UserCheck, BookOpen, GraduationCap, Mail, Phone, PhoneCall, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download, Camera, Image as ImageIcon } from "lucide-react";
+import { UserCheck, BookOpen, GraduationCap, Mail, Phone, PhoneCall, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download, Camera, Image as ImageIcon, Trash2, RefreshCw } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
-import { uploadTeacherProfilePhotoToFirebase, saveTeacherToFirebase } from "@/lib/firebaseSync";
+import {
+  uploadTeacherProfilePhotoToFirebase,
+  saveTeacherToFirebase,
+  deleteTeacherFromFirebase,
+  fetchTeachersFromFirebase,
+  subscribeToFirebaseTeachers,
+} from "@/lib/firebaseSync";
+import { formatPhoneWith91 } from "@/lib/phoneValidation";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -145,6 +152,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     e.target.value = "";
   };
 
+  const [isFirebaseSyncing, setIsFirebaseSyncing] = useState(false);
+
   // Persistent Storage Sync Helper (LocalStorage + Database API)
   const saveTeachersList = (updatedList: Teacher[]) => {
     setTeachers(updatedList);
@@ -153,8 +162,9 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     } catch (e) {}
   };
 
-  // Initial Load: Fetch from LocalStorage & Database API
+  // Initial Load: Fetch from Firebase (Firestore + RTDB), LocalStorage & Database API
   useEffect(() => {
+    // 1. Instant hydration from localStorage
     try {
       const stored = localStorage.getItem("vsb_crm_teachers");
       if (stored) {
@@ -165,6 +175,27 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
       }
     } catch (err) {}
 
+    // 2. Fetch directly from Firebase Firestore & Realtime Database
+    fetchTeachersFromFirebase()
+      .then((fbTeachers) => {
+        if (Array.isArray(fbTeachers) && fbTeachers.length > 0) {
+          setTeachers(fbTeachers);
+          saveTeachersList(fbTeachers);
+        }
+      })
+      .catch((err) => {
+        console.warn("Firebase teachers fetch notice:", err);
+      });
+
+    // 3. Real-time Firebase Observer: updates automatically whenever any teacher is modified
+    const unsubscribe = subscribeToFirebaseTeachers((liveList) => {
+      if (Array.isArray(liveList) && liveList.length > 0) {
+        setTeachers(liveList);
+        saveTeachersList(liveList);
+      }
+    });
+
+    // 4. Also fetch from /api/teachers
     fetch(`/api/teachers?campus=${loggedInCampus}`)
       .then((res) => res.json())
       .then((data) => {
@@ -181,6 +212,10 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         }
       })
       .catch(() => {});
+
+    return () => {
+      unsubscribe();
+    };
   }, [loggedInCampus]);
 
   const handleConfirmCSVImport = async () => {
@@ -188,12 +223,18 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     const normalizedTeachers = csvParsedTeachers.map((t) => ({
       ...t,
       campus: loggedInCampus,
+      phone: formatPhoneWith91(t.phone),
     }));
     const updated = [...normalizedTeachers, ...teachers];
     saveTeachersList(updated);
-    onTriggerToast(`✨ Successfully imported ${normalizedTeachers.length} faculty members into V.S.B. ${loggedInCampus} Directory!`);
+    onTriggerToast(`✨ Successfully imported ${normalizedTeachers.length} faculty members into V.S.B. ${loggedInCampus} Directory and Firebase!`);
     setCsvParsedTeachers([]);
     setShowCsvPreviewModal(false);
+
+    // Save every imported teacher to Firebase Firestore & RTDB
+    for (const t of normalizedTeachers) {
+      saveTeacherToFirebase(t).catch(() => {});
+    }
 
     try {
       await mobileSafeFetch("/api/teachers", {
@@ -225,7 +266,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [newTeacher, setNewTeacher] = useState({
     name: "",
     email: "",
-    phone: "",
+    phone: "+91-",
     department: VSB_DEPARTMENTS_COURSES[0] as string,
     campus: loggedInCampus as CampusLocation,
     courses: VSB_DEPARTMENTS_COURSES[0] as string,
@@ -274,11 +315,13 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     e.preventDefault();
     if (!newTeacher.name || !newTeacher.email) return;
 
+    const formattedPhone = formatPhoneWith91(newTeacher.phone || "+91-9876500000");
+
     const teacherToAdd: Teacher = {
       id: `tch_${Date.now()}`,
       name: newTeacher.name,
       email: newTeacher.email,
-      phone: newTeacher.phone || "+91 98765 00000",
+      phone: formattedPhone,
       department: newTeacher.department,
       campus: loggedInCampus,
       coursesAssigned: [newTeacher.courses],
@@ -290,7 +333,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     const updated = [teacherToAdd, ...teachers];
     saveTeachersList(updated);
     setShowAddModal(false);
-    onTriggerToast(`Faculty member ${teacherToAdd.name} registered at V.S.B. ${teacherToAdd.campus} Campus!`);
+    onTriggerToast(`✨ Faculty member ${teacherToAdd.name} registered and saved to Firebase!`);
     setNewTeacher({
       name: "",
       email: "",
@@ -301,6 +344,10 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
       experienceYears: 5,
     });
 
+    // 1. Persist directly to Firebase Firestore & RTDB
+    await saveTeacherToFirebase(teacherToAdd);
+
+    // 2. Persist to API
     try {
       await mobileSafeFetch("/api/teachers", {
         method: "POST",
@@ -314,19 +361,24 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     e.preventDefault();
     if (!editingTeacher) return;
 
-    const updatedList = teachers.map((t) => (t.id === editingTeacher.id ? editingTeacher : t));
+    const teacherToSave: Teacher = {
+      ...editingTeacher,
+      phone: formatPhoneWith91(editingTeacher.phone),
+    };
+
+    const updatedList = teachers.map((t) => (t.id === teacherToSave.id ? teacherToSave : t));
     saveTeachersList(updatedList);
 
     setCsvParsedTeachers((prev) =>
-      prev.map((t) => (t.id === editingTeacher.id ? editingTeacher : t))
+      prev.map((t) => (t.id === teacherToSave.id ? teacherToSave : t))
     );
-    onTriggerToast(`🔑 Profile updated for faculty member ${editingTeacher.name}!`);
-    const teacherToSave = editingTeacher;
+    onTriggerToast(`🔑 Profile updated & synced to Firebase for ${teacherToSave.name}!`);
     setEditingTeacher(null);
 
-    // Save to Firebase Firestore & RTDB
-    saveTeacherToFirebase(teacherToSave);
+    // 1. Save to Firebase Firestore & RTDB
+    await saveTeacherToFirebase(teacherToSave);
 
+    // 2. Save to API
     try {
       await mobileSafeFetch("/api/teachers", {
         method: "PUT",
@@ -334,6 +386,45 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         body: JSON.stringify(teacherToSave),
       });
     } catch (err) {}
+  };
+
+  const handleDeleteTeacher = async (teacherId: string, teacherName: string) => {
+    if (!confirm(`Are you sure you want to remove faculty member "${teacherName}" from the directory and Firebase?`)) {
+      return;
+    }
+
+    const updated = teachers.filter((t) => t.id !== teacherId && t.email !== teacherId);
+    saveTeachersList(updated);
+    onTriggerToast(`🗑️ Removed ${teacherName} from directory & Firebase`);
+
+    // 1. Delete from Firebase Firestore & RTDB
+    try {
+      await deleteTeacherFromFirebase(teacherId);
+    } catch (e) {}
+
+    // 2. Delete from API / SQLite
+    try {
+      await mobileSafeFetch(`/api/teachers?id=${encodeURIComponent(teacherId)}`, {
+        method: "DELETE",
+      });
+    } catch (err) {}
+  };
+
+  const handleSyncAllToFirebase = async () => {
+    setIsFirebaseSyncing(true);
+    onTriggerToast("🔥 Syncing all faculty records to Firebase Firestore & RTDB...");
+    try {
+      let count = 0;
+      for (const t of teachers) {
+        await saveTeacherToFirebase(t);
+        count++;
+      }
+      onTriggerToast(`✅ Successfully stored and synchronized all ${count} faculty members in Firebase!`);
+    } catch (err) {
+      onTriggerToast("⚠️ Some records could not be synced. Please check your connection.");
+    } finally {
+      setIsFirebaseSyncing(false);
+    }
   };
 
   // Dedicated Photo Upload for Editing Faculty with Firebase Storage
@@ -573,6 +664,23 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               <Upload className="w-3.5 h-3.5 text-indigo-100" /> <span>Import CSV</span>
             </button>
 
+            {/* Firebase Live Cloud Sync Button */}
+            <button
+              onClick={handleSyncAllToFirebase}
+              disabled={isFirebaseSyncing}
+              className="px-3 py-1.5 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-orange-600/30 cursor-pointer disabled:opacity-50"
+              title="Persist & store all faculty details into Firebase Firestore & RTDB"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isFirebaseSyncing ? "animate-spin" : ""}`} />
+              <span>{isFirebaseSyncing ? "Syncing..." : "🔥 Sync to Firebase"}</span>
+            </button>
+
+            {/* Live Indicator */}
+            <span className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Firebase Live
+            </span>
+
             {currentUserRole === "ADMIN" && (
               <button
                 onClick={() => setShowAddModal(true)}
@@ -636,10 +744,12 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                       onClick={(e) => {
                         e.stopPropagation();
                         const newStatus: "ACTIVE" | "ON_LEAVE" = tch.status === "ACTIVE" ? "ON_LEAVE" : "ACTIVE";
-                        const updatedList = teachers.map((t) => (t.id === tch.id || t.email === tch.email ? { ...t, status: newStatus } : t));
+                        const updatedTeacher: Teacher = { ...tch, status: newStatus };
+                        const updatedList = teachers.map((t) => (t.id === tch.id || t.email === tch.email ? updatedTeacher : t));
                         saveTeachersList(updatedList);
+                        saveTeacherToFirebase(updatedTeacher);
                         onTriggerToast(
-                          `🔄 Status updated for ${tch.name}: ${newStatus === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}`
+                          `🔄 Status updated for ${tch.name}: ${newStatus === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"} (Saved to Firebase)`
                         );
                       }}
                       className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 transition-all cursor-pointer shadow-sm transform hover:scale-105 active:scale-95 ${
@@ -647,7 +757,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                           ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-400/60 hover:bg-emerald-100"
                           : "bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-400/60 hover:bg-amber-100"
                       }`}
-                      title="Click to toggle Active vs On Leave availability status"
+                      title="Click to toggle Active vs On Leave availability status (stored in Firebase)"
                     >
                       <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
                       <span>{tch.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}</span>
@@ -782,7 +892,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 </div>
 
                 {currentUserRole === "ADMIN" && (
-                  <div className="ml-auto">
+                  <div className="ml-auto flex items-center gap-1.5">
                     <Tooltip text={`Edit ${tch.name}`} position="bottom">
                       <button
                         onClick={(e) => {
@@ -791,7 +901,20 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                         }}
                         className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-sky-400 hover:text-slate-900 dark:hover:text-sky-300 font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-xs transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit Faculty
+                        <Edit3 className="w-3.5 h-3.5" /> Edit
+                      </button>
+                    </Tooltip>
+
+                    <Tooltip text={`Delete ${tch.name} from Firebase & Directory`} position="bottom">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTeacher(tch.id, tch.name);
+                        }}
+                        className="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 font-bold px-2 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 shadow-xs transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        title="Remove faculty from Firebase & Directory"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </Tooltip>
                   </div>
@@ -924,6 +1047,24 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })}
                   placeholder="e.g. arul.cse@vsb.ac.in"
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Mobile Phone (Compulsory +91-)</label>
+                <input
+                  type="text"
+                  required
+                  value={newTeacher.phone}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (!val.startsWith("+91-") && !val.startsWith("+91")) {
+                      val = "+91-" + val.replace(/^\+?91-?/, "");
+                    }
+                    setNewTeacher({ ...newTeacher, phone: val });
+                  }}
+                  placeholder="+91-9876543210"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono"
                 />
               </div>
 
@@ -1413,22 +1554,26 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   const teacherObj = MOCK_TEACHERS.find(t => t.id === splitTargetTeacher);
                   const teacherName = teacherObj ? teacherObj.name : splitTargetTeacher;
                   const endNum = Math.min(1000, splitStartNumber + splitQuantity - 1);
-
+                  let targetTeacherObj: Teacher | null = null;
                   // Update teacher record's assignedRangeText & quota
                   const updatedTeachers = teachers.map((t) => {
                     if (t.id === splitTargetTeacher || t.email === splitTargetTeacher) {
-                      return {
+                      targetTeacherObj = {
                         ...t,
                         assignedQuota: splitQuantity,
                         assignedRangeText: `Contacts #${splitStartNumber} to #${endNum}`,
                       };
+                      return targetTeacherObj;
                     }
                     return t;
                   });
                   saveTeachersList(updatedTeachers);
+                  if (targetTeacherObj) {
+                    saveTeacherToFirebase(targetTeacherObj);
+                  }
 
                   onTriggerToast(
-                    `⚡ Successfully allocated batch #${splitStartNumber} to #${endNum} (${splitQuantity} Contacts) to ${teacherName}!`
+                    `⚡ Successfully allocated batch #${splitStartNumber} to #${endNum} (${splitQuantity} Contacts) to ${teacherName} (Saved to Firebase)!`
                   );
                   setIsSplitModalOpen(false);
                 }}
@@ -1627,6 +1772,10 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
           setTeachers((prev) => {
             const updated = prev.map((t) => (t.id === teacherId ? { ...t, photoUrl } : t));
             saveTeachersList(updated);
+            const target = updated.find((t) => t.id === teacherId);
+            if (target) {
+              saveTeacherToFirebase(target);
+            }
             return updated;
           });
           setSelectedTeacherForAudit((prev) => (prev && prev.id === teacherId ? { ...prev, photoUrl } : prev));

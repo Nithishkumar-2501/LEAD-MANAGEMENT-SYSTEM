@@ -354,9 +354,16 @@ export async function saveTeacherToFirebase(teacher: Teacher): Promise<boolean> 
   if (!teacher || !teacher.id) return false;
 
   const safeTeacherId = teacher.id.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const formattedPhone = formatPhoneWith91(teacher.phone);
   const cleanPayload = sanitizeForFirebase({
     ...teacher,
     id: teacher.id,
+    phone: formattedPhone,
+    coursesAssigned: Array.isArray(teacher.coursesAssigned)
+      ? teacher.coursesAssigned
+      : typeof teacher.coursesAssigned === "string"
+      ? JSON.parse(teacher.coursesAssigned)
+      : ["B.E. Computer Science"],
     updatedAt: new Date().toISOString(),
   });
 
@@ -364,10 +371,14 @@ export async function saveTeacherToFirebase(teacher: Teacher): Promise<boolean> 
     await ensureFirebaseAuth();
   } catch (e) {}
 
+  let firestoreSuccess = false;
+
   // 1. Firestore sync
   try {
     const docRef = doc(db, "teachers", safeTeacherId);
-    await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 2500);
+    await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 3000);
+    firestoreSuccess = true;
+    console.log(`🔥 [Firebase Firestore] Saved teacher record: ${safeTeacherId} (${teacher.name})`);
   } catch (err: any) {
     console.warn("Firestore save teacher notice:", err?.message || err);
   }
@@ -378,7 +389,209 @@ export async function saveTeacherToFirebase(teacher: Teacher): Promise<boolean> 
     set(rtdbRef, cleanPayload).catch(() => {});
   } catch (e) {}
 
+  // 3. LocalStorage update for instantaneous offline hydration
+  try {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("vsb_crm_teachers");
+      let list: Teacher[] = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(list)) list = [];
+      const idx = list.findIndex((t) => t.id === teacher.id || t.email === teacher.email);
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...cleanPayload };
+      } else {
+        list.unshift(cleanPayload);
+      }
+      localStorage.setItem("vsb_crm_teachers", JSON.stringify(list));
+    }
+  } catch (e) {}
+
+  return firestoreSuccess;
+}
+
+// Delete a Teacher from Firebase Firestore & Realtime Database
+export async function deleteTeacherFromFirebase(teacherId: string): Promise<boolean> {
+  if (!teacherId) return false;
+  const safeTeacherId = teacherId.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+  try {
+    await ensureFirebaseAuth();
+  } catch (e) {}
+
+  try {
+    const docRef = doc(db, "teachers", safeTeacherId);
+    await withTimeout(deleteDoc(docRef), 2500);
+    console.log(`🔥 [Firebase Firestore] Deleted teacher record: ${safeTeacherId}`);
+  } catch (err: any) {
+    console.warn("Firestore delete teacher notice:", err?.message || err);
+  }
+
+  try {
+    const rtdbRef = ref(rtdb, `teachers/${safeTeacherId}`);
+    remove(rtdbRef).catch(() => {});
+  } catch (e) {}
+
+  try {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("vsb_crm_teachers");
+      if (stored) {
+        let list: Teacher[] = JSON.parse(stored);
+        if (Array.isArray(list)) {
+          list = list.filter((t) => t.id !== teacherId && t.id !== safeTeacherId && t.email !== teacherId);
+          localStorage.setItem("vsb_crm_teachers", JSON.stringify(list));
+        }
+      }
+    }
+  } catch (e) {}
+
   return true;
+}
+
+// Fetch all teachers directly from Firebase Firestore
+export async function fetchTeachersFromFirestore(): Promise<Teacher[]> {
+  try {
+    await ensureFirebaseAuth();
+    const querySnapshot = await withTimeout(getDocs(collection(db, "teachers")), 4000);
+    if (!querySnapshot || querySnapshot.empty) return [];
+
+    const list: Teacher[] = [];
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data() as Teacher;
+      list.push({
+        ...data,
+        id: data.id || docSnap.id,
+        phone: formatPhoneWith91(data.phone),
+        coursesAssigned: Array.isArray(data.coursesAssigned)
+          ? data.coursesAssigned
+          : typeof data.coursesAssigned === "string"
+          ? JSON.parse(data.coursesAssigned)
+          : ["B.E. Computer Science"],
+      });
+    });
+    return list;
+  } catch (err: any) {
+    console.warn("Error fetching teachers from Firestore:", err?.message || err);
+    return [];
+  }
+}
+
+// Fetch all teachers directly from Firebase Realtime Database
+export async function fetchTeachersFromRTDB(): Promise<Teacher[]> {
+  try {
+    await ensureFirebaseAuth();
+    const rtdbRef = ref(rtdb);
+    const snapshot = await withTimeout(get(child(rtdbRef, "teachers")), 2500);
+    if (snapshot && snapshot.exists()) {
+      const data = snapshot.val();
+      if (typeof data === "object" && data !== null) {
+        const rawList = Object.values(data) as Teacher[];
+        return rawList.map((t) => ({
+          ...t,
+          phone: formatPhoneWith91(t.phone),
+          coursesAssigned: Array.isArray(t.coursesAssigned)
+            ? t.coursesAssigned
+            : typeof t.coursesAssigned === "string"
+            ? JSON.parse(t.coursesAssigned)
+            : ["B.E. Computer Science"],
+        }));
+      }
+    }
+    return [];
+  } catch (err: any) {
+    console.warn("Error fetching teachers from Realtime DB:", err);
+    return [];
+  }
+}
+
+// Seed initial faculty members to Firebase Firestore and RTDB if empty
+export async function seedInitialTeachersToFirebase(): Promise<Teacher[]> {
+  try {
+    const { MOCK_TEACHERS } = await import("@/lib/mockData");
+    const seededList: Teacher[] = [];
+
+    for (const t of MOCK_TEACHERS) {
+      const formatted: Teacher = {
+        ...t,
+        phone: formatPhoneWith91(t.phone),
+      };
+      await saveTeacherToFirebase(formatted);
+      seededList.push(formatted);
+    }
+    console.log(`🔥 [Firebase Seed] Successfully seeded ${seededList.length} faculty members to Firebase!`);
+    return seededList;
+  } catch (e) {
+    console.warn("Error seeding teachers to Firebase:", e);
+    return [];
+  }
+}
+
+// Fetch all teachers from Firebase with fallback and auto-seed
+export async function fetchTeachersFromFirebase(): Promise<Teacher[]> {
+  let results: Teacher[] = [];
+
+  // 1. Try Firestore first
+  results = await fetchTeachersFromFirestore();
+
+  // 2. Try RTDB if Firestore returned nothing
+  if (results.length === 0) {
+    results = await fetchTeachersFromRTDB();
+  }
+
+  // 3. If still empty, seed initial teachers into Firebase so they are permanently stored in Firebase!
+  if (results.length === 0) {
+    results = await seedInitialTeachersToFirebase();
+  }
+
+  // 4. Update localStorage cache
+  if (typeof window !== "undefined" && results.length > 0) {
+    try {
+      localStorage.setItem("vsb_crm_teachers", JSON.stringify(results));
+    } catch (e) {}
+  }
+
+  return results;
+}
+
+// Real-Time Observer Listener for Firebase Teachers
+export function subscribeToFirebaseTeachers(
+  callback: (teachers: Teacher[]) => void
+): () => void {
+  let unsubscribe: (() => void) | null = null;
+  ensureFirebaseAuth().then(() => {
+    try {
+      const teachersCol = collection(db, "teachers");
+      unsubscribe = onSnapshot(
+        teachersCol,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const liveList: Teacher[] = [];
+            snapshot.forEach((docSnap) => {
+              const data = docSnap.data() as Teacher;
+              liveList.push({
+                ...data,
+                id: data.id || docSnap.id,
+                phone: formatPhoneWith91(data.phone),
+                coursesAssigned: Array.isArray(data.coursesAssigned)
+                  ? data.coursesAssigned
+                  : typeof data.coursesAssigned === "string"
+                  ? JSON.parse(data.coursesAssigned)
+                  : ["B.E. Computer Science"],
+              });
+            });
+            callback(liveList);
+          }
+        },
+        (error) => {
+          console.warn("Real-time teacher observer notice:", error.message);
+        }
+      );
+    } catch (e) {
+      console.warn("Teacher snapshot setup error:", e);
+    }
+  });
+
+  return () => {
+    if (unsubscribe) unsubscribe();
+  };
 }
 
 // Sync Student Lead Redirection / Transfer in Firebase
@@ -719,7 +932,32 @@ export async function normalizeAllFirebasePhones(): Promise<{
     console.warn("Error normalizing applications mobile numbers in Firebase:", err);
   }
 
-  // 3. Update localStorage caches as well
+  try {
+    // 3. Scan and migrate teachers collection in Firestore
+    const teachersSnap = await withTimeout(getDocs(collection(db, "teachers")), 6000);
+    if (teachersSnap && !teachersSnap.empty) {
+      for (const docSnap of teachersSnap.docs) {
+        totalScanned++;
+        const data = docSnap.data();
+        if (data.phone) {
+          const norm = formatPhoneWith91(data.phone);
+          if (norm && norm !== data.phone) {
+            try {
+              await setDoc(doc(db, "teachers", docSnap.id), { phone: norm }, { merge: true });
+              try {
+                await update(ref(rtdb, `teachers/${docSnap.id}`), { phone: norm });
+              } catch (e) {}
+              console.log(`🔥 [Firebase Migration] Converted teacher ${docSnap.id} phone to ${norm}`);
+            } catch (e) {}
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Error normalizing teachers phone numbers in Firebase:", err);
+  }
+
+  // 4. Update localStorage caches as well
   try {
     if (typeof window !== "undefined") {
       const leadsCache = localStorage.getItem("vsb_firebase_leads_cache");
@@ -745,6 +983,18 @@ export async function normalizeAllFirebasePhones(): Promise<{
             registeredMobile: formatPhoneWith91(item.registeredMobile),
           }));
           localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(updated));
+        }
+      }
+
+      const teachersCache = localStorage.getItem("vsb_crm_teachers");
+      if (teachersCache) {
+        const list = JSON.parse(teachersCache);
+        if (Array.isArray(list)) {
+          const updated = list.map((item: any) => ({
+            ...item,
+            phone: formatPhoneWith91(item.phone),
+          }));
+          localStorage.setItem("vsb_crm_teachers", JSON.stringify(updated));
         }
       }
     }
