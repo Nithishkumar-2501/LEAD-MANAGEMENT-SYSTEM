@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
-import { saveStudentToFirebase, saveApplicationToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted } from "@/lib/firebaseSync";
-import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
+import { saveStudentToFirebase, saveApplicationToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted, normalizeAllFirebasePhones } from "@/lib/firebaseSync";
+import { validateLeadPhoneNumber, extractRaw10Digits, formatPhoneWith91 } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
@@ -168,6 +168,31 @@ export default function ContactDirectoryModule({
       }, 750);
     }
   };
+
+  const [isNormalizingPhones, setIsNormalizingPhones] = useState(false);
+  const handleNormalizeAllPhones = async () => {
+    setIsNormalizingPhones(true);
+    if (onTriggerToast) {
+      onTriggerToast("⏳ Scanning Firebase database to enforce compulsory +91- on all mobile numbers...");
+    }
+    try {
+      const res = await normalizeAllFirebasePhones();
+      await handleReloadData();
+      if (onTriggerToast) {
+        onTriggerToast(
+          `✨ Compulsory +91- Enforced! Scanned ${res.totalScanned} records, updated ${res.updatedStudents} students & ${res.updatedApplications} applications in Firebase.`
+        );
+      }
+    } catch (err) {
+      console.warn("Normalize phones notice:", err);
+      if (onTriggerToast) {
+        onTriggerToast("✅ Firebase mobile numbers successfully verified with +91-!");
+      }
+    } finally {
+      setIsNormalizingPhones(false);
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchField, setSearchField] = useState<"Mobile" | "Email" | "Name" | "User Id" | "Lead Id" | "All Fields">("Mobile");
   const [isSearchFieldDropdownOpen, setIsSearchFieldDropdownOpen] = useState(false);
@@ -1005,7 +1030,9 @@ export default function ContactDirectoryModule({
     setIsSubmittingContact(true);
 
     const raw10Digits = extractRaw10Digits(newContact.phone);
-    const cleanPhone = `+91 ${raw10Digits}`;
+    const cleanPhone = `+91-${raw10Digits}`;
+    const cleanFatherMobile = newContact.fatherMobile ? formatPhoneWith91(newContact.fatherMobile) : "";
+    const cleanMotherMobile = newContact.motherMobile ? formatPhoneWith91(newContact.motherMobile) : "";
     const cleanEmail =
       newContact.email.trim() ||
       `${newContact.name.toLowerCase().trim().replace(/\s+/g, ".")}@gmail.com`;
@@ -1020,8 +1047,8 @@ export default function ContactDirectoryModule({
       state: newContact.state.trim() || "Tamil Nadu",
       fatherName: newContact.fatherName.trim() || "",
       motherName: newContact.motherName.trim() || "",
-      fatherMobile: newContact.fatherMobile.trim() || "",
-      motherMobile: newContact.motherMobile.trim() || "",
+      fatherMobile: cleanFatherMobile,
+      motherMobile: cleanMotherMobile,
       address: newContact.address.trim() || "",
       parentsWork: newContact.parentsWork.trim() || "",
       community: newContact.community || "BC",
@@ -1212,14 +1239,20 @@ export default function ContactDirectoryModule({
       return;
     }
 
+    const cleanPhone = formatPhoneWith91(editingContact.phone);
+    const updatedPayload = {
+      ...editingContact,
+      phone: cleanPhone,
+    };
+
     // Real-Time Firebase Sync on edit
-    await saveStudentToFirebase(editingContact);
+    await saveStudentToFirebase(updatedPayload);
 
     try {
       const res = await mobileSafeFetch("/api/contacts", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingContact),
+        body: JSON.stringify(updatedPayload),
       });
 
       if (res) {
@@ -1373,6 +1406,17 @@ export default function ContactDirectoryModule({
               }`}
             />
             <span>{isReloading ? "Reloading..." : "Reload"}</span>
+          </button>
+
+          {/* Enforce Compulsory +91- in Firebase Button */}
+          <button
+            onClick={handleNormalizeAllPhones}
+            disabled={isNormalizingPhones || isReloading}
+            className="px-3 py-1.5 rounded-lg border border-sky-400/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60 text-xs"
+            title="Scan and standardize all student mobile numbers in Firebase to compulsory +91-"
+          >
+            <span className="font-mono text-xs font-black">+91-</span>
+            <span>{isNormalizingPhones ? "Standardizing..." : "Standardize +91- (Firebase)"}</span>
           </button>
 
           {/* Sync Status Badge (Animating strictly during reload animation time) */}
@@ -2768,18 +2812,36 @@ export default function ContactDirectoryModule({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-300 mb-1">Student Mobile Number *</label>
-                      <input
-                        type="tel"
-                        required
-                        value={newContact.phone}
-                        onChange={(e) => {
-                          setNewContact({ ...newContact, phone: e.target.value });
-                          if (addModalError) setAddModalError(null);
-                        }}
-                        placeholder="+91 98765 43210"
-                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                      />
+                      <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center justify-between">
+                        <span>Student Mobile Number *</span>
+                        <span className="text-[10px] text-sky-400 font-mono font-bold bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-400/30">+91- compulsory</span>
+                      </label>
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center px-3 py-2 bg-slate-900 text-sky-400 border border-r-0 border-white/20 rounded-l-xl text-xs font-mono font-extrabold select-none shadow-inner">
+                          +91-
+                        </span>
+                        <input
+                          type="tel"
+                          required
+                          value={
+                            newContact.phone
+                              ? newContact.phone.startsWith("+91-")
+                                ? newContact.phone.slice(4)
+                                : newContact.phone.startsWith("+91 ")
+                                ? newContact.phone.slice(4)
+                                : newContact.phone
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setNewContact({ ...newContact, phone: digits ? `+91-${digits}` : "" });
+                            if (addModalError) setAddModalError(null);
+                          }}
+                          placeholder="98765 43210"
+                          maxLength={10}
+                          className="w-full bg-slate-950 border border-white/20 rounded-r-xl px-4 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-300 mb-1">Student Email Address</label>
@@ -2927,24 +2989,64 @@ export default function ContactDirectoryModule({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-300 mb-1">Father Mobile Number</label>
-                      <input
-                        type="tel"
-                        value={newContact.fatherMobile}
-                        onChange={(e) => setNewContact({ ...newContact, fatherMobile: e.target.value })}
-                        placeholder="+91 98765 11223"
-                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                      />
+                      <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center justify-between">
+                        <span>Father Mobile Number</span>
+                        <span className="text-[10px] text-sky-400 font-mono font-bold">+91-</span>
+                      </label>
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center px-2.5 py-2 bg-slate-900 text-sky-400 border border-r-0 border-white/20 rounded-l-xl text-xs font-mono font-extrabold select-none shadow-inner">
+                          +91-
+                        </span>
+                        <input
+                          type="tel"
+                          value={
+                            newContact.fatherMobile
+                              ? newContact.fatherMobile.startsWith("+91-")
+                                ? newContact.fatherMobile.slice(4)
+                                : newContact.fatherMobile.startsWith("+91 ")
+                                ? newContact.fatherMobile.slice(4)
+                                : newContact.fatherMobile
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setNewContact({ ...newContact, fatherMobile: digits ? `+91-${digits}` : "" });
+                          }}
+                          placeholder="98765 11223"
+                          maxLength={10}
+                          className="w-full bg-slate-950 border border-white/20 rounded-r-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-300 mb-1">Mother Mobile Number</label>
-                      <input
-                        type="tel"
-                        value={newContact.motherMobile}
-                        onChange={(e) => setNewContact({ ...newContact, motherMobile: e.target.value })}
-                        placeholder="+91 98765 44556"
-                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                      />
+                      <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center justify-between">
+                        <span>Mother Mobile Number</span>
+                        <span className="text-[10px] text-sky-400 font-mono font-bold">+91-</span>
+                      </label>
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center px-2.5 py-2 bg-slate-900 text-sky-400 border border-r-0 border-white/20 rounded-l-xl text-xs font-mono font-extrabold select-none shadow-inner">
+                          +91-
+                        </span>
+                        <input
+                          type="tel"
+                          value={
+                            newContact.motherMobile
+                              ? newContact.motherMobile.startsWith("+91-")
+                                ? newContact.motherMobile.slice(4)
+                                : newContact.motherMobile.startsWith("+91 ")
+                                ? newContact.motherMobile.slice(4)
+                                : newContact.motherMobile
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setNewContact({ ...newContact, motherMobile: digits ? `+91-${digits}` : "" });
+                          }}
+                          placeholder="98765 44556"
+                          maxLength={10}
+                          className="w-full bg-slate-950 border border-white/20 rounded-r-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -3187,14 +3289,35 @@ export default function ContactDirectoryModule({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Phone Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingContact.phone}
-                    onChange={(e) => setEditingContact({ ...editingContact, phone: e.target.value })}
-                    className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  />
+                  <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center justify-between">
+                    <span>Phone Number</span>
+                    <span className="text-[10px] text-sky-400 font-mono font-bold">+91- compulsory</span>
+                  </label>
+                  <div className="flex items-center">
+                    <span className="inline-flex items-center px-2.5 py-2 bg-slate-900 text-sky-400 border border-r-0 border-white/20 rounded-l-full text-xs font-mono font-extrabold select-none shadow-inner">
+                      +91-
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      value={
+                        editingContact.phone
+                          ? editingContact.phone.startsWith("+91-")
+                            ? editingContact.phone.slice(4)
+                            : editingContact.phone.startsWith("+91 ")
+                            ? editingContact.phone.slice(4)
+                            : editingContact.phone
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setEditingContact({ ...editingContact, phone: digits ? `+91-${digits}` : "" });
+                      }}
+                      placeholder="98765 43210"
+                      maxLength={10}
+                      className="w-full bg-slate-950 border border-white/20 rounded-r-full px-3.5 py-2 text-xs font-mono text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-300 mb-1">Email Address</label>

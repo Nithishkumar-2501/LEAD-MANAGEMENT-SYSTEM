@@ -11,8 +11,30 @@ export function extractRaw10Digits(phone: string): string {
     digits = digits.slice(2);
   } else if (digits.length === 11 && digits.startsWith("0")) {
     digits = digits.slice(1);
+  } else if (digits.length > 10) {
+    digits = digits.slice(-10);
   }
   return digits;
+}
+
+/**
+ * Normalizes any phone number to the compulsory '+91-XXXXXXXXXX' standard format.
+ * Guarantees '+91-' prefix is attached to the 10-digit mobile number.
+ */
+export function formatPhoneWith91(phone?: string | null): string {
+  if (!phone) return "";
+  const trimmed = phone.trim();
+  const digits = extractRaw10Digits(trimmed);
+  if (digits.length === 10) {
+    return `+91-${digits}`;
+  }
+  if (trimmed.startsWith("+91-") && trimmed.length >= 14) {
+    return trimmed;
+  }
+  if (digits.length > 0) {
+    return `+91-${digits}`;
+  }
+  return trimmed;
 }
 
 /**
@@ -25,13 +47,13 @@ export function validateLeadPhoneNumber(
   currentLeadId?: string
 ): string | null {
   if (!phone || phone.trim() === "") {
-    return "Mobile number is required.";
+    return "Mobile number is required (+91- compulsory).";
   }
 
   const rawDigits = extractRaw10Digits(phone);
 
   if (rawDigits.length !== 10) {
-    return `Mobile number must be exactly 10 digits. Provided: ${rawDigits.length} digits (${phone}).`;
+    return `Mobile number must be exactly 10 digits (+91- compulsory). Provided: ${rawDigits.length} digits (${phone}).`;
   }
 
   if (existingLeads && existingLeads.length > 0) {
@@ -44,9 +66,10 @@ export function validateLeadPhoneNumber(
     });
 
     if (duplicate) {
-      return `Mobile number (${rawDigits}) already belongs to lead "${duplicate.name}". Duplicate numbers are rejected.`;
+      return `Mobile number (+91-${rawDigits}) already belongs to lead "${duplicate.name}". Duplicate numbers are rejected.`;
     }
   }
 
   return null;
 }
+

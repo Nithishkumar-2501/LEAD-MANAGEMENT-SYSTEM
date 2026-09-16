@@ -32,8 +32,10 @@ import {
   saveApplicationToFirebase,
   deleteApplicationFromFirebase,
   fetchApplicationsFromFirebase,
-  subscribeToFirebaseApplications
+  subscribeToFirebaseApplications,
+  normalizeAllFirebasePhones,
 } from "@/lib/firebaseSync";
+import { formatPhoneWith91 } from "@/lib/phoneValidation";
 
 interface ApplicationManagerModuleProps {
   loggedInCampus?: CampusLocation;
@@ -219,11 +221,15 @@ export default function ApplicationManagerModule({
     if (!editingApp) return;
     setIsSaving(true);
     try {
-      await saveApplicationToFirebase(editingApp);
+      const updatedApp: ManagedApplication = {
+        ...editingApp,
+        registeredMobile: formatPhoneWith91(editingApp.registeredMobile),
+      };
+      await saveApplicationToFirebase(updatedApp);
       setApplications((prev) =>
-        prev.map((app) => (app.id === editingApp.id ? editingApp : app))
+        prev.map((app) => (app.id === updatedApp.id ? updatedApp : app))
       );
-      onTriggerToast(`✅ Updated application ${editingApp.applicationNo} (${editingApp.registeredName}) in Firebase!`);
+      onTriggerToast(`✅ Updated application ${updatedApp.applicationNo} (${updatedApp.registeredName}) in Firebase!`);
       setEditingApp(null);
     } catch (err) {
       console.error(err);
@@ -258,13 +264,14 @@ export default function ApplicationManagerModule({
     try {
       const now = new Date();
       const dateFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const cleanMobile = formatPhoneWith91(newApp.registeredMobile);
       const payload: ManagedApplication = {
         id: `app_${Date.now()}`,
         registeredName: newApp.registeredName,
         applicationNo: newApp.applicationNo,
         formName: newApp.formName || "Application Form VSB Karur (Engineering)",
         registeredEmail: newApp.registeredEmail || "",
-        registeredMobile: newApp.registeredMobile || "",
+        registeredMobile: cleanMobile,
         formStatus: (newApp.formStatus as any) || "Incomplete",
         paymentStatus: (newApp.paymentStatus as any) || "Payment Pending",
         paymentMethod: newApp.paymentMethod || "-",
@@ -437,6 +444,22 @@ export default function ApplicationManagerModule({
                 <RefreshCw className={`w-3 h-3 ${isRotating ? "animate-spin text-sky-600" : ""}`} />
               </button>
             </div>
+
+            {/* Standardize All Numbers in Firebase to +91- */}
+            <button
+              type="button"
+              onClick={async () => {
+                onTriggerToast("⏳ Scanning Firebase database to enforce compulsory +91- on all mobile numbers...");
+                const res = await normalizeAllFirebasePhones();
+                await loadData(false);
+                onTriggerToast(`✨ Compulsory +91- Enforced! Scanned ${res.totalScanned} records, updated ${res.updatedStudents} students & ${res.updatedApplications} applications in Firebase.`);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-sky-50 hover:bg-sky-100 border border-sky-300 text-[10px] text-sky-700 font-bold transition-all cursor-pointer shadow-xs"
+              title="Ensure all existing mobile numbers in Firebase have compulsory +91- prefix"
+            >
+              <span className="font-mono font-black">+91-</span>
+              <span>Enforce +91-</span>
+            </button>
           </div>
 
           {/* Right Action Icons & Primary Buttons */}
@@ -1083,16 +1106,35 @@ export default function ApplicationManagerModule({
 
                 {/* Registered Mobile */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Registered Mobile</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingApp.registeredMobile}
-                    onChange={(e) =>
-                      setEditingApp({ ...editingApp, registeredMobile: e.target.value })
-                    }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
+                  <label className="font-extrabold text-slate-700 flex items-center justify-between">
+                    <span>Registered Mobile</span>
+                    <span className="text-[10px] text-sky-600 font-mono font-bold">+91- compulsory</span>
+                  </label>
+                  <div className="flex items-center">
+                    <span className="inline-flex items-center px-2.5 py-1.5 bg-slate-200 text-sky-700 border border-r-0 border-slate-300 rounded-l-lg text-xs font-mono font-extrabold select-none">
+                      +91-
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      value={
+                        editingApp.registeredMobile
+                          ? editingApp.registeredMobile.startsWith("+91-")
+                            ? editingApp.registeredMobile.slice(4)
+                            : editingApp.registeredMobile.startsWith("+91 ")
+                            ? editingApp.registeredMobile.slice(4)
+                            : editingApp.registeredMobile
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setEditingApp({ ...editingApp, registeredMobile: digits ? `+91-${digits}` : "" });
+                      }}
+                      placeholder="98765 43210"
+                      maxLength={10}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-r-lg px-2.5 py-1.5 text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
                 </div>
 
                 {/* Form Name */}
@@ -1257,14 +1299,35 @@ export default function ApplicationManagerModule({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Registered Mobile</label>
-                  <input
-                    type="text"
-                    placeholder="+91 98765 43210"
-                    value={newApp.registeredMobile}
-                    onChange={(e) => setNewApp({ ...newApp, registeredMobile: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
+                  <label className="font-extrabold text-slate-700 flex items-center justify-between">
+                    <span>Registered Mobile</span>
+                    <span className="text-[10px] text-sky-600 font-mono font-bold">+91- compulsory</span>
+                  </label>
+                  <div className="flex items-center">
+                    <span className="inline-flex items-center px-2.5 py-1.5 bg-slate-200 text-sky-700 border border-r-0 border-slate-300 rounded-l-lg text-xs font-mono font-extrabold select-none">
+                      +91-
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      value={
+                        newApp.registeredMobile
+                          ? newApp.registeredMobile.startsWith("+91-")
+                            ? newApp.registeredMobile.slice(4)
+                            : newApp.registeredMobile.startsWith("+91 ")
+                            ? newApp.registeredMobile.slice(4)
+                            : newApp.registeredMobile
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setNewApp({ ...newApp, registeredMobile: digits ? `+91-${digits}` : "" });
+                      }}
+                      placeholder="98765 43210"
+                      maxLength={10}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-r-lg px-2.5 py-1.5 text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
                 </div>
 
                 <div className="sm:col-span-2 space-y-1">

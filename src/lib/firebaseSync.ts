@@ -12,6 +12,7 @@ import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storag
 import { signInAnonymously } from "firebase/auth";
 import { auth, db, rtdb, storage } from "@/lib/firebase";
 import { Lead, Application, Teacher, ManagedApplication } from "@/types/crm";
+import { formatPhoneWith91 } from "@/lib/phoneValidation";
 
 export type StudentRecord = Lead & { application?: Application | null };
 
@@ -53,8 +54,17 @@ function sanitizeForFirebase(obj: any): any {
 // Save or Update a Student in Firebase (Firestore + Realtime Database)
 export async function saveStudentToFirebase(student: StudentRecord): Promise<boolean> {
   const studentId = student.id || `lead_${Date.now()}`;
-  const cleanPayload = sanitizeForFirebase({
+
+  // Ensure compulsory +91- formatting for student mobile and parent numbers
+  const formattedStudent: StudentRecord = {
     ...student,
+    phone: formatPhoneWith91(student.phone),
+    fatherMobile: student.fatherMobile ? formatPhoneWith91(student.fatherMobile) : student.fatherMobile,
+    motherMobile: student.motherMobile ? formatPhoneWith91(student.motherMobile) : student.motherMobile,
+  };
+
+  const cleanPayload = sanitizeForFirebase({
+    ...formattedStudent,
     id: studentId,
     updatedAt: new Date().toISOString(),
   });
@@ -69,7 +79,7 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
     const docRef = doc(db, "students", studentId);
     await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 3000);
     firestoreSuccess = true;
-    console.log(`🔥 [Firebase Firestore] Saved student record: ${studentId} (${student.name})`);
+    console.log(`🔥 [Firebase Firestore] Saved student record with compulsory +91-: ${studentId} (${student.name})`);
   } catch (firestoreErr: any) {
     console.warn("Firestore write notice:", firestoreErr?.message || firestoreErr);
   }
@@ -108,8 +118,19 @@ export async function updateStudentInFirebase(
 ): Promise<boolean> {
   await ensureFirebaseAuth();
 
+  const formattedFields = { ...updatedFields };
+  if (formattedFields.phone) {
+    formattedFields.phone = formatPhoneWith91(formattedFields.phone);
+  }
+  if (formattedFields.fatherMobile) {
+    formattedFields.fatherMobile = formatPhoneWith91(formattedFields.fatherMobile);
+  }
+  if (formattedFields.motherMobile) {
+    formattedFields.motherMobile = formatPhoneWith91(formattedFields.motherMobile);
+  }
+
   const cleanPayload = sanitizeForFirebase({
-    ...updatedFields,
+    ...formattedFields,
     updatedAt: new Date().toISOString(),
   });
 
@@ -142,7 +163,13 @@ export async function fetchStudentsFromFirestore(): Promise<StudentRecord[]> {
     const querySnapshot = await getDocs(collection(db, "students"));
     const list: StudentRecord[] = [];
     querySnapshot.forEach((doc) => {
-      list.push(doc.data() as StudentRecord);
+      const data = doc.data() as StudentRecord;
+      list.push({
+        ...data,
+        phone: formatPhoneWith91(data.phone),
+        fatherMobile: data.fatherMobile ? formatPhoneWith91(data.fatherMobile) : data.fatherMobile,
+        motherMobile: data.motherMobile ? formatPhoneWith91(data.motherMobile) : data.motherMobile,
+      });
     });
     return list;
   } catch (err: any) {
@@ -160,7 +187,13 @@ export async function fetchStudentsFromRTDB(): Promise<StudentRecord[]> {
     if (snapshot.exists()) {
       const data = snapshot.val();
       if (typeof data === "object" && data !== null) {
-        return Object.values(data) as StudentRecord[];
+        const rawList = Object.values(data) as StudentRecord[];
+        return rawList.map((s) => ({
+          ...s,
+          phone: formatPhoneWith91(s.phone),
+          fatherMobile: s.fatherMobile ? formatPhoneWith91(s.fatherMobile) : s.fatherMobile,
+          motherMobile: s.motherMobile ? formatPhoneWith91(s.motherMobile) : s.motherMobile,
+        }));
       }
     }
     return [];
@@ -183,7 +216,13 @@ export function subscribeToFirebaseStudents(
         (snapshot) => {
           const liveList: StudentRecord[] = [];
           snapshot.forEach((doc) => {
-            liveList.push(doc.data() as StudentRecord);
+            const data = doc.data() as StudentRecord;
+            liveList.push({
+              ...data,
+              phone: formatPhoneWith91(data.phone),
+              fatherMobile: data.fatherMobile ? formatPhoneWith91(data.fatherMobile) : data.fatherMobile,
+              motherMobile: data.motherMobile ? formatPhoneWith91(data.motherMobile) : data.motherMobile,
+            });
           });
           // Exclude any tombstoned deleted leads
           const filteredLive = liveList.filter((s) => !isLeadDeleted(s.id));
@@ -403,6 +442,7 @@ export async function saveApplicationToFirebase(app: ManagedApplication): Promis
   const payload: ManagedApplication = {
     ...app,
     id: appId,
+    registeredMobile: formatPhoneWith91(app.registeredMobile),
     updatedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " (Live)",
   };
 
@@ -485,7 +525,11 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
     const snap = await withTimeout(getDocs(collection(db, "managed_applications")), 3500);
     if (snap && !snap.empty) {
       snap.forEach((docSnap) => {
-        results.push(docSnap.data() as ManagedApplication);
+        const item = docSnap.data() as ManagedApplication;
+        results.push({
+          ...item,
+          registeredMobile: formatPhoneWith91(item.registeredMobile),
+        });
       });
     }
   } catch (err: any) {
@@ -498,7 +542,11 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
       const snap = await withTimeout(get(child(ref(rtdb), "managed_applications")), 2000);
       if (snap && snap.exists()) {
         const val = snap.val();
-        results = Object.values(val) as ManagedApplication[];
+        const raw = Object.values(val) as ManagedApplication[];
+        results = raw.map((a) => ({
+          ...a,
+          registeredMobile: formatPhoneWith91(a.registeredMobile),
+        }));
       }
     } catch (e) {}
   }
@@ -518,7 +566,7 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
             applicationNo: `${prefix}${1300 + idx}`,
             formName: `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
             registeredEmail: s.email || `${(s.name || "applicant").toLowerCase().replace(/\s+/g, "")}@gmail.com`,
-            registeredMobile: s.phone || "+91 9876543210",
+            registeredMobile: formatPhoneWith91(s.phone || "+91-9876543210"),
             formStatus: s.status === "ADMITTED" ? "Complete" : "Incomplete",
             paymentStatus: s.status === "ADMITTED" ? "Payment Approved" : "Payment Pending",
             paymentMethod: s.status === "ADMITTED" ? "Online" : "-",
@@ -561,7 +609,11 @@ export function subscribeToFirebaseApplications(
         if (!snapshot.empty) {
           const list: ManagedApplication[] = [];
           snapshot.forEach((docSnap) => {
-            list.push(docSnap.data() as ManagedApplication);
+            const item = docSnap.data() as ManagedApplication;
+            list.push({
+              ...item,
+              registeredMobile: formatPhoneWith91(item.registeredMobile),
+            });
           });
           callback(list);
         }
@@ -575,3 +627,136 @@ export function subscribeToFirebaseApplications(
     return () => {};
   }
 }
+
+/**
+ * Scans all existing documents in Firebase ("students" and "managed_applications")
+ * and migrates any phone numbers without the compulsory '+91-' prefix so that
+ * all existing records conform to '+91-XXXXXXXXXX'.
+ */
+export async function normalizeAllFirebasePhones(): Promise<{
+  updatedStudents: number;
+  updatedApplications: number;
+  totalScanned: number;
+}> {
+  await ensureFirebaseAuth();
+  let updatedStudents = 0;
+  let updatedApplications = 0;
+  let totalScanned = 0;
+
+  try {
+    // 1. Scan and migrate students collection in Firestore
+    const studentsSnap = await withTimeout(getDocs(collection(db, "students")), 6000);
+    if (studentsSnap && !studentsSnap.empty) {
+      for (const docSnap of studentsSnap.docs) {
+        totalScanned++;
+        const data = docSnap.data();
+        let needsUpdate = false;
+        const updates: Record<string, any> = {};
+
+        if (data.phone) {
+          const norm = formatPhoneWith91(data.phone);
+          if (norm && norm !== data.phone) {
+            updates.phone = norm;
+            needsUpdate = true;
+          }
+        }
+
+        if (data.fatherMobile) {
+          const norm = formatPhoneWith91(data.fatherMobile);
+          if (norm && norm !== data.fatherMobile) {
+            updates.fatherMobile = norm;
+            needsUpdate = true;
+          }
+        }
+
+        if (data.motherMobile) {
+          const norm = formatPhoneWith91(data.motherMobile);
+          if (norm && norm !== data.motherMobile) {
+            updates.motherMobile = norm;
+            needsUpdate = true;
+          }
+        }
+
+        if (needsUpdate) {
+          try {
+            await setDoc(doc(db, "students", docSnap.id), updates, { merge: true });
+            try {
+              await update(ref(rtdb, `students/${docSnap.id}`), updates);
+            } catch (e) {}
+            updatedStudents++;
+            console.log(`🔥 [Firebase Migration] Converted student ${docSnap.id} phone to +91-:`, updates);
+          } catch (e) {}
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Error normalizing students phone numbers in Firebase:", err);
+  }
+
+  try {
+    // 2. Scan and migrate managed_applications collection in Firestore
+    const appsSnap = await withTimeout(getDocs(collection(db, "managed_applications")), 6000);
+    if (appsSnap && !appsSnap.empty) {
+      for (const docSnap of appsSnap.docs) {
+        totalScanned++;
+        const data = docSnap.data();
+        if (data.registeredMobile) {
+          const norm = formatPhoneWith91(data.registeredMobile);
+          if (norm && norm !== data.registeredMobile) {
+            try {
+              await setDoc(doc(db, "managed_applications", docSnap.id), { registeredMobile: norm }, { merge: true });
+              try {
+                await update(ref(rtdb, `managed_applications/${docSnap.id}`), { registeredMobile: norm });
+              } catch (e) {}
+              updatedApplications++;
+              console.log(`🔥 [Firebase Migration] Converted application ${docSnap.id} registeredMobile to ${norm}`);
+            } catch (e) {}
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Error normalizing applications mobile numbers in Firebase:", err);
+  }
+
+  // 3. Update localStorage caches as well
+  try {
+    if (typeof window !== "undefined") {
+      const leadsCache = localStorage.getItem("vsb_firebase_leads_cache");
+      if (leadsCache) {
+        const list = JSON.parse(leadsCache);
+        if (Array.isArray(list)) {
+          const updated = list.map((item: any) => ({
+            ...item,
+            phone: formatPhoneWith91(item.phone),
+            fatherMobile: item.fatherMobile ? formatPhoneWith91(item.fatherMobile) : item.fatherMobile,
+            motherMobile: item.motherMobile ? formatPhoneWith91(item.motherMobile) : item.motherMobile,
+          }));
+          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
+        }
+      }
+
+      const appsCache = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
+      if (appsCache) {
+        const list = JSON.parse(appsCache);
+        if (Array.isArray(list)) {
+          const updated = list.map((item: any) => ({
+            ...item,
+            registeredMobile: formatPhoneWith91(item.registeredMobile),
+          }));
+          localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(updated));
+        }
+      }
+    }
+  } catch (e) {}
+
+  return { updatedStudents, updatedApplications, totalScanned };
+}
+
+// Auto-run once in browser background to ensure all existing numbers in Firebase have +91-
+if (typeof window !== "undefined") {
+  setTimeout(() => {
+    normalizeAllFirebasePhones().catch(() => {});
+  }, 2500);
+}
+

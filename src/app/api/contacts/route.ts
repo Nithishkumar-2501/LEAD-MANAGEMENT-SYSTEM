@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Lead, Application } from "@/types/crm";
 import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
-import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
+import { validateLeadPhoneNumber, formatPhoneWith91 } from "@/lib/phoneValidation";
 
 
 
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 
     if (!name || !phone) {
       return NextResponse.json(
-        { error: "Name and Phone number are required fields" },
+        { error: "Name and Phone number are required fields (+91- compulsory)" },
         { status: 400 }
       );
     }
@@ -81,12 +81,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: phoneErr }, { status: 400 });
     }
 
+    const cleanPhone = formatPhoneWith91(phone);
+    const cleanFatherMobile = fatherMobile ? formatPhoneWith91(fatherMobile) : "";
+    const cleanMotherMobile = motherMobile ? formatPhoneWith91(motherMobile) : "";
+
     try {
       const newLead = await prisma.lead.create({
         data: {
           name,
           email: email || "",
-          phone,
+          phone: cleanPhone,
           fatherName: fatherName || null,
           motherName: motherName || null,
           gender: gender || null,
@@ -124,11 +128,11 @@ export async function POST(request: Request) {
         id: `lead_${Date.now()}`,
         name,
         email: email || "",
-        phone,
+        phone: cleanPhone,
         fatherName: fatherName || "",
         motherName: motherName || "",
-        fatherMobile: fatherMobile || "",
-        motherMobile: motherMobile || "",
+        fatherMobile: cleanFatherMobile,
+        motherMobile: cleanMotherMobile,
         parentsWork: parentsWork || "",
         religion: religion || "",
         interestStatus: interestStatus || "Interested",
@@ -192,13 +196,15 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Contact ID is required for editing" }, { status: 400 });
     }
 
+    const cleanPhone = phone ? formatPhoneWith91(phone) : undefined;
+
     try {
       const updated = await prisma.lead.update({
         where: { id },
         data: {
           name,
           email,
-          phone,
+          phone: cleanPhone,
           fatherName,
           motherName,
           gender,

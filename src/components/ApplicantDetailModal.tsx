@@ -53,7 +53,7 @@ import { predictStudentConversion, calculateTneaCutoff } from "@/lib/ai/leadScor
 import { parseMarksheetDocument } from "@/lib/ai/marksheetOcrEngine";
 import { analyzeCallTranscript } from "@/lib/ai/callSentimentEngine";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
-import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
+import { validateLeadPhoneNumber, formatPhoneWith91 } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { getStudentLeadState } from "@/lib/studentLeadState";
@@ -253,17 +253,27 @@ export default function ApplicantDetailModal({
       return;
     }
 
+    const cleanPhone = formatPhoneWith91(formData.phone);
+    const cleanFatherMobile = formData.fatherMobile ? formatPhoneWith91(formData.fatherMobile) : formData.fatherMobile;
+    const cleanMotherMobile = formData.motherMobile ? formatPhoneWith91(formData.motherMobile) : formData.motherMobile;
+    const payloadToSave = {
+      ...formData,
+      phone: cleanPhone,
+      fatherMobile: cleanFatherMobile,
+      motherMobile: cleanMotherMobile,
+    };
+
     setIsSavingFirebase(true);
     try {
       // 1. Direct Save to Firebase Firestore & RTDB
-      await saveStudentToFirebase(formData);
+      await saveStudentToFirebase(payloadToSave);
 
       // 2. Direct Save to SQLite database API
       try {
         await mobileSafeFetch("/api/applications", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payloadToSave),
         });
       } catch (dbErr) {
         console.warn("DB update notice:", dbErr);
@@ -271,7 +281,7 @@ export default function ApplicantDetailModal({
 
       // 3. Notify parent component to update state across the app
       if (onSave) {
-        onSave(formData);
+        onSave(payloadToSave);
       }
 
       setSaveSuccessToast(`🔥 Successfully saved ${formData.name}'s data to Firebase!`);
@@ -1460,16 +1470,35 @@ export default function ApplicantDetailModal({
                       </div>
 
                       <div>
-                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
-                          Mobile Number <span className="text-rose-500">*</span>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+                          <span>Mobile Number <span className="text-rose-500">*</span></span>
+                          <span className="text-[10px] text-sky-600 dark:text-sky-400 font-mono font-bold">+91- compulsory</span>
                         </label>
-                        <input
-                          type="text"
-                          required
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
-                        />
+                        <div className="flex items-center">
+                          <span className="inline-flex items-center px-2.5 py-2 bg-slate-200 dark:bg-slate-900 text-sky-700 dark:text-sky-400 border border-r-0 border-slate-300 dark:border-white/10 rounded-l-xl text-xs font-mono font-extrabold select-none">
+                            +91-
+                          </span>
+                          <input
+                            type="tel"
+                            required
+                            value={
+                              formData.phone
+                                ? formData.phone.startsWith("+91-")
+                                  ? formData.phone.slice(4)
+                                  : formData.phone.startsWith("+91 ")
+                                  ? formData.phone.slice(4)
+                                  : formData.phone
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                              setFormData({ ...formData, phone: digits ? `+91-${digits}` : "" });
+                            }}
+                            placeholder="98765 43210"
+                            maxLength={10}
+                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-r-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          />
+                        </div>
                       </div>
                     </div>
 
