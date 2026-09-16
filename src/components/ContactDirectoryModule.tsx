@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
-import { saveStudentToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted } from "@/lib/firebaseSync";
+import { saveStudentToFirebase, saveApplicationToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import Tooltip from "@/components/Tooltip";
@@ -22,6 +22,7 @@ import {
 import {
   redirectToSms,
   getDefaultAdmissionSmsText,
+  formatSmsNumber,
 } from "@/lib/smsSender";
 import {
   Phone,
@@ -57,7 +58,37 @@ import {
   Flame,
   Zap,
   Snowflake,
+  ArrowRight,
+  ArrowLeft,
+  User,
+  Users,
+  Briefcase,
 } from "lucide-react";
+
+const INDIAN_STATES = [
+  "Tamil Nadu",
+  "Kerala",
+  "Karnataka",
+  "Andhra Pradesh",
+  "Telangana",
+  "Puducherry",
+  "Maharashtra",
+  "Other State",
+];
+
+const COMMUNITY_OPTIONS = ["BC", "MBC", "BCM", "SC", "SCA", "ST", "OC", "Other"];
+const RELIGION_OPTIONS = ["Hindu", "Christian", "Muslim", "Jain", "Sikh", "Buddhist", "Other"];
+const PARENT_OCCUPATIONS = [
+  "Agriculture / Farming",
+  "Business / Self-Employed",
+  "Private Sector Employee",
+  "Government Service",
+  "Teacher / Professor",
+  "Daily Wage / Laborer",
+  "Professional (Doctor / Engineer / Lawyer)",
+  "Homemaker",
+  "Other",
+];
 
 interface ContactDirectoryModuleProps {
   initialContacts: (Lead & { application?: Application | null })[];
@@ -432,19 +463,35 @@ export default function ContactDirectoryModule({
     setCallRecordings((prev) => [rec, ...prev]);
   };
 
-  // Add Contact Modal State
+  // Add Contact Multi-Sheet Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newContactStep, setNewContactStep] = useState<1 | 2 | 3>(1);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const [addModalError, setAddModalError] = useState<string | null>(null);
   const [newContact, setNewContact] = useState({
+    // Sheet 1: Student details
     name: "",
-    phone: "",
     email: "",
+    phone: "",
     school: "",
-    district: "",
+    district: "Karur",
+    state: "Tamil Nadu",
+
+    // Sheet 2: Parent details & address
+    fatherName: "",
+    motherName: "",
+    fatherMobile: "",
+    motherMobile: "",
     address: "",
+    parentsWork: "",
+
+    // Sheet 3: Category, religion & interest
+    community: "BC",
+    religion: "Hindu",
+    interestStatus: "Interested",
     campus: "KARUR" as CampusLocation,
     courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
+
     appliedCounselling: false,
     counsellingAppNo: "",
     tneaCutoff: undefined as number | undefined,
@@ -895,23 +942,56 @@ export default function ContactDirectoryModule({
   // Tamil Nadu Districts list (All 38 Districts)
   const districts = ["ALL", ...TAMIL_NADU_DISTRICTS];
 
-  // Add New Contact Submit Handler
+  // Step Handlers for Multi-Sheet Contact Modal
+  const handleNextStep1 = () => {
+    setAddModalError(null);
+    if (!newContact.name.trim()) {
+      setAddModalError("Please enter the student's name.");
+      return;
+    }
+    if (!newContact.phone.trim()) {
+      setAddModalError("Please enter a 10-digit student mobile number.");
+      return;
+    }
+    const phoneErr = validateLeadPhoneNumber(newContact.phone, contacts as Lead[]);
+    if (phoneErr) {
+      setAddModalError(phoneErr);
+      return;
+    }
+    setNewContactStep(2);
+  };
+
+  const handleNextStep2 = () => {
+    setAddModalError(null);
+    setNewContactStep(3);
+  };
+
+  const handlePrevStep = () => {
+    setAddModalError(null);
+    setNewContactStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2) : 1));
+  };
+
+  // Add New Contact Submit Handler (Executed on Sheet 3)
   const handleCreateContact = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddModalError(null);
 
+    // Sanity validation
     if (!newContact.name.trim()) {
-      setAddModalError("Please enter the candidate's name.");
+      setNewContactStep(1);
+      setAddModalError("Please enter the student's name.");
       return;
     }
 
     if (!newContact.phone.trim()) {
-      setAddModalError("Please enter a 10-digit mobile number.");
+      setNewContactStep(1);
+      setAddModalError("Please enter a 10-digit student mobile number.");
       return;
     }
 
     const phoneErr = validateLeadPhoneNumber(newContact.phone, contacts as Lead[]);
     if (phoneErr) {
+      setNewContactStep(1);
       setAddModalError(phoneErr);
       return;
     }
@@ -929,10 +1009,20 @@ export default function ContactDirectoryModule({
       name: newContact.name.trim(),
       phone: cleanPhone,
       email: cleanEmail,
-      district: newContact.district || "",
-      state: "",
       school: newContact.school.trim() || "",
+      district: newContact.district.trim() || "Karur",
+      state: newContact.state.trim() || "Tamil Nadu",
+      fatherName: newContact.fatherName.trim() || "",
+      motherName: newContact.motherName.trim() || "",
+      fatherMobile: newContact.fatherMobile.trim() || "",
+      motherMobile: newContact.motherMobile.trim() || "",
       address: newContact.address.trim() || "",
+      parentsWork: newContact.parentsWork.trim() || "",
+      community: newContact.community || "BC",
+      religion: newContact.religion || "Hindu",
+      interestStatus: newContact.interestStatus || "Interested",
+      status: (newContact.interestStatus === "Not Interested" ? "CLOSED" : "NEW") as LeadStatus,
+      priorityTier: (newContact.interestStatus === "Interested" ? "HOT" : "WARM") as "HOT" | "WARM" | "COLD",
     };
 
     let createdLead: any = null;
@@ -947,7 +1037,7 @@ export default function ContactDirectoryModule({
       if (res) {
         const data = await res.json();
         if (res.ok && data && !data.error) {
-          createdLead = data;
+          createdLead = { ...payload, ...data };
         } else {
           console.warn("API notice:", data?.error);
         }
@@ -960,17 +1050,8 @@ export default function ContactDirectoryModule({
     if (!createdLead) {
       createdLead = {
         id: `lead_${Date.now()}`,
-        name: payload.name,
-        email: payload.email,
-        phone: payload.phone,
+        ...payload,
         source: "Direct Contact Entry",
-        courseInterest: payload.courseInterest,
-        campus: payload.campus,
-        school: payload.school || "",
-        district: payload.district || "",
-        state: "",
-        address: payload.address || "",
-        status: "NEW",
         createdAt: new Date().toISOString(),
         application: {
           id: `app_${Date.now()}`,
@@ -981,14 +1062,39 @@ export default function ContactDirectoryModule({
           paymentStatus: "PENDING",
         },
       };
+    } else {
+      createdLead = {
+        ...payload,
+        ...createdLead,
+      };
     }
 
-    // Direct permanent Firebase save (Firestore & Realtime Database)
+    // 1. Direct permanent Firebase save (Firestore students collection & Realtime Database)
     try {
       await saveStudentToFirebase(createdLead);
       console.log(`🔥 Successfully saved student ${createdLead.name} to Firebase!`);
     } catch (fbErr) {
       console.warn("Firebase save notice:", fbErr);
+    }
+
+    // 2. Sync to Firebase managed_applications collection so student also appears in Application Manager
+    try {
+      const campusPrefix = createdLead.campus === "COIMBATORE" ? "CTC" : "EC";
+      const appNo = `VSB${campusPrefix}/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+      await saveApplicationToFirebase({
+        id: createdLead.id,
+        registeredName: createdLead.name,
+        applicationNo: appNo,
+        formName: `Application Form VSB ${createdLead.campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
+        registeredEmail: createdLead.email,
+        registeredMobile: createdLead.phone,
+        formStatus: "Complete",
+        paymentStatus: "Payment Pending",
+        paymentMethod: "-",
+        createdAt: new Date().toISOString().split("T")[0],
+      });
+    } catch (appErr) {
+      console.warn("Application sync notice:", appErr);
     }
 
     // Update local table view
@@ -1001,16 +1107,26 @@ export default function ContactDirectoryModule({
 
     setIsSubmittingContact(false);
     setIsAddModalOpen(false);
+    setNewContactStep(1);
 
     setNewContact({
       name: "",
       phone: "",
       email: "",
       school: "",
-      district: "",
+      district: "Karur",
+      state: "Tamil Nadu",
+      fatherName: "",
+      motherName: "",
+      fatherMobile: "",
+      motherMobile: "",
       address: "",
+      parentsWork: "",
+      community: "BC",
+      religion: "Hindu",
+      interestStatus: "Interested",
       campus: "KARUR",
-      courseInterest: "B.E. Computer Science",
+      courseInterest: VSB_DEPARTMENTS_COURSES[0],
       appliedCounselling: false,
       counsellingAppNo: "",
       tneaCutoff: undefined as any,
@@ -1018,7 +1134,7 @@ export default function ContactDirectoryModule({
     });
 
     if (onTriggerToast) {
-      onTriggerToast(`🔥 Successfully saved candidate ${createdLead.name} to Firebase & Database!`);
+      onTriggerToast(`🔥 Successfully saved student ${createdLead.name} to Firebase!`);
     }
   };
 
@@ -2505,161 +2621,482 @@ export default function ContactDirectoryModule({
         </div>
       )}
 
-      {/* ADD NEW CONTACT MODAL */}
+      {/* MULTI-SHEET ADD NEW CANDIDATE CONTACT MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050813]/90 backdrop-blur-xl animate-in fade-in">
-          <div className="bubble-card w-full max-w-lg p-6 border border-white/30 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#050813]/90 backdrop-blur-xl animate-in fade-in overflow-y-auto">
+          <div className="bubble-card w-full max-w-xl p-5 sm:p-7 border border-white/30 shadow-2xl relative my-auto bg-[#050813]/95 backdrop-blur-2xl rounded-3xl text-white">
+            {/* Top Close Button */}
             <button
-              onClick={() => setIsAddModalOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-900 text-slate-400 hover:text-white"
+              type="button"
+              onClick={() => {
+                setIsAddModalOpen(false);
+                setNewContactStep(1);
+                setAddModalError(null);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-full bg-slate-900/90 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer border border-white/10"
+              title="Close"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-base font-black text-white flex items-center gap-2 mb-1">
-              <Plus className="w-5 h-5 text-sky-400" />
-              Add New Candidate Contact
-            </h3>
-            <p className="text-xs text-slate-400 mb-4">
-              Enter candidate phone number, school name, district, and address.
-            </p>
+            {/* Modal Title & Subtitle */}
+            <div className="mb-4 pr-8">
+              <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                <Plus className="w-5 h-5 text-sky-400 shrink-0" />
+                <span>Add New Candidate Contact</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                {newContactStep === 1 && "Sheet 1 of 3: Enter student personal information, contact numbers, and school details."}
+                {newContactStep === 2 && "Sheet 2 of 3: Enter parents' names, mobile numbers, address, and occupation."}
+                {newContactStep === 3 && "Sheet 3 of 3: Enter community, religion, interest status, and target campus."}
+              </p>
+            </div>
 
-            <form onSubmit={handleCreateContact} className="space-y-3">
-              {addModalError && (
-                <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-500 text-rose-200 text-xs font-bold flex items-center gap-2">
-                  <span>⚠️</span>
-                  <span>{addModalError}</span>
+            {/* Interactive Sheet Stepper Tabs */}
+            <div className="mb-5">
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewContactStep(1)}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    newContactStep === 1
+                      ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
+                      : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
+                  }`}
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                    newContactStep === 1 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
+                  }`}>
+                    1
+                  </span>
+                  <span className="truncate">Student</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newContact.name.trim() && newContact.phone.trim()) {
+                      setNewContactStep(2);
+                    } else {
+                      handleNextStep1();
+                    }
+                  }}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    newContactStep === 2
+                      ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
+                      : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
+                  }`}
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                    newContactStep === 2 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
+                  }`}>
+                    2
+                  </span>
+                  <span className="truncate">Parents</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newContact.name.trim() && newContact.phone.trim()) {
+                      setNewContactStep(3);
+                    } else {
+                      handleNextStep1();
+                    }
+                  }}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    newContactStep === 3
+                      ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
+                      : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
+                  }`}
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                    newContactStep === 3 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
+                  }`}>
+                    3
+                  </span>
+                  <span className="truncate">Category</span>
+                </button>
+              </div>
+
+              {/* Progress bar line */}
+              <div className="w-full bg-slate-800/80 h-1.5 rounded-full mt-2.5 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-sky-400 via-indigo-500 to-pink-500 transition-all duration-300"
+                  style={{
+                    width: newContactStep === 1 ? "33.33%" : newContactStep === 2 ? "66.66%" : "100%",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Error Notification */}
+            {addModalError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500 text-rose-200 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                <span className="text-base">⚠️</span>
+                <span>{addModalError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCreateContact}>
+              {/* SHEET 1: STUDENT DETAILS */}
+              {newContactStep === 1 && (
+                <div className="space-y-3.5 animate-in fade-in slide-in-from-right-3 duration-200">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Student Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newContact.name}
+                      onChange={(e) => {
+                        setNewContact({ ...newContact, name: e.target.value });
+                        if (addModalError) setAddModalError(null);
+                      }}
+                      placeholder="e.g. S. Vignesh"
+                      className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Student Mobile Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        value={newContact.phone}
+                        onChange={(e) => {
+                          setNewContact({ ...newContact, phone: e.target.value });
+                          if (addModalError) setAddModalError(null);
+                        }}
+                        placeholder="+91 98765 43210"
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Student Email Address</label>
+                      <input
+                        type="email"
+                        value={newContact.email}
+                        onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                        placeholder="student@gmail.com"
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Student School (Higher Secondary)</label>
+                    <input
+                      type="text"
+                      value={newContact.school}
+                      onChange={(e) => setNewContact({ ...newContact, school: e.target.value })}
+                      placeholder="Govt HSS Karur / St. Joseph Coimbatore"
+                      className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Student District</label>
+                      <select
+                        value={newContact.district}
+                        onChange={(e) => setNewContact({ ...newContact, district: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      >
+                        {districts.filter((d) => d !== "ALL").map((d) => (
+                          <option key={d} value={d} className="bg-slate-900">
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Student State</label>
+                      <select
+                        value={newContact.state}
+                        onChange={(e) => setNewContact({ ...newContact, state: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      >
+                        {INDIAN_STATES.map((s) => (
+                          <option key={s} value={s} className="bg-slate-900">
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Sheet 1 Buttons */}
+                  <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddModalOpen(false)}
+                      className="px-4 py-2 rounded-full bg-slate-900 text-slate-300 text-xs font-bold hover:text-white border border-white/10 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNextStep1}
+                      className="glossy-btn px-6 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 shadow-md shadow-sky-500/30"
+                    >
+                      <span>Next Sheet (Parents)</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Candidate Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={newContact.name}
-                  onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                  placeholder="e.g. S. Vignesh"
-                  className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                />
-              </div>
+              {/* SHEET 2: PARENT DETAILS & ADDRESS */}
+              {newContactStep === 2 && (
+                <div className="space-y-3.5 animate-in fade-in slide-in-from-right-3 duration-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Father Name</label>
+                      <input
+                        type="text"
+                        value={newContact.fatherName}
+                        onChange={(e) => setNewContact({ ...newContact, fatherName: e.target.value })}
+                        placeholder="e.g. M. Sundaram"
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Mother Name</label>
+                      <input
+                        type="text"
+                        value={newContact.motherName}
+                        onChange={(e) => setNewContact({ ...newContact, motherName: e.target.value })}
+                        placeholder="e.g. S. Lakshmi"
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Phone Number *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newContact.phone}
-                    onChange={(e) => {
-                      setNewContact({ ...newContact, phone: e.target.value });
-                      if (addModalError) setAddModalError(null);
-                    }}
-                    placeholder="+91 98765 43210"
-                    className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    value={newContact.email}
-                    onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                    placeholder="candidate@gmail.com"
-                    className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  />
-                </div>
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Father Mobile Number</label>
+                      <input
+                        type="tel"
+                        value={newContact.fatherMobile}
+                        onChange={(e) => setNewContact({ ...newContact, fatherMobile: e.target.value })}
+                        placeholder="+91 98765 11223"
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Mother Mobile Number</label>
+                      <input
+                        type="tel"
+                        value={newContact.motherMobile}
+                        onChange={(e) => setNewContact({ ...newContact, motherMobile: e.target.value })}
+                        placeholder="+91 98765 44556"
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Higher Secondary School</label>
-                  <input
-                    type="text"
-                    value={newContact.school}
-                    onChange={(e) => setNewContact({ ...newContact, school: e.target.value })}
-                    placeholder="Govt HSS Karur / St. Joseph Coimbatore"
-                    className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">District</label>
-                  <select
-                    value={newContact.district}
-                    onChange={(e) => setNewContact({ ...newContact, district: e.target.value })}
-                    className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  >
-                    {districts.filter(d => d !== "ALL").map((d) => (
-                      <option key={d} value={d} className="bg-slate-900">{d}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Student Residential Address</label>
+                    <textarea
+                      rows={2}
+                      value={newContact.address}
+                      onChange={(e) => setNewContact({ ...newContact, address: e.target.value })}
+                      placeholder="Door No, Street Name, Town / City, Pincode"
+                      className="w-full bg-slate-950 border border-white/20 rounded-2xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Residential Address</label>
-                <input
-                  type="text"
-                  value={newContact.address}
-                  onChange={(e) => setNewContact({ ...newContact, address: e.target.value })}
-                  placeholder="Street Address, City/Town, Pincode"
-                  className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                />
-              </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Parents Work / Occupation</label>
+                    <div className="space-y-1.5">
+                      <select
+                        value={newContact.parentsWork}
+                        onChange={(e) => setNewContact({ ...newContact, parentsWork: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      >
+                        <option value="" className="bg-slate-900">Select Parents Work</option>
+                        {PARENT_OCCUPATIONS.map((occ) => (
+                          <option key={occ} value={occ} className="bg-slate-900">
+                            {occ}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newContact.parentsWork}
+                        onChange={(e) => setNewContact({ ...newContact, parentsWork: e.target.value })}
+                        placeholder="Or enter custom occupation (e.g. Textile Merchant, Farmer)"
+                        className="w-full bg-slate-950/80 border border-white/10 rounded-xl sm:rounded-full px-4 py-1.5 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-sky-400"
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Preferred VSB Campus</label>
-                  <select
-                    value={newContact.campus}
-                    onChange={(e) => setNewContact({ ...newContact, campus: e.target.value as CampusLocation })}
-                    className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  >
-                    <option value="KARUR" className="bg-slate-900">KARUR CAMPUS</option>
-                    <option value="COIMBATORE" className="bg-slate-900">COIMBATORE CAMPUS</option>
-                  </select>
+                  {/* Sheet 2 Buttons */}
+                  <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={handlePrevStep}
+                      className="px-4 py-2 rounded-full bg-slate-900 text-slate-300 text-xs font-bold hover:text-white border border-white/10 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Back (Student)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNextStep2}
+                      className="glossy-btn px-6 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 shadow-md shadow-sky-500/30"
+                    >
+                      <span>Next Sheet (Category)</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Course Interest</label>
-                  <select
-                    value={newContact.courseInterest}
-                    onChange={(e) => setNewContact({ ...newContact, courseInterest: e.target.value })}
-                    className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  >
-                    {VSB_DEPARTMENTS_COURSES.map((course) => (
-                      <option key={course} value={course} className="bg-slate-900">
-                        {course}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              )}
 
-              <div className="flex justify-end gap-2 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-full bg-slate-900 text-slate-300 text-xs font-bold hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingContact}
-                  className={`glossy-btn px-5 py-2 text-xs font-bold flex items-center gap-2 ${
-                    isSubmittingContact ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {isSubmittingContact ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      <span>Saving to Firebase...</span>
-                    </>
-                  ) : (
-                    <span>Save New Contact</span>
-                  )}
-                </button>
-              </div>
+              {/* SHEET 3: CATEGORY, RELIGION, INTEREST & SUBMISSION */}
+              {newContactStep === 3 && (
+                <div className="space-y-3.5 animate-in fade-in slide-in-from-right-3 duration-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Student Community</label>
+                      <select
+                        value={newContact.community}
+                        onChange={(e) => setNewContact({ ...newContact, community: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                      >
+                        {COMMUNITY_OPTIONS.map((comm) => (
+                          <option key={comm} value={comm} className="bg-slate-900">
+                            {comm}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Student Religion</label>
+                      <select
+                        value={newContact.religion}
+                        onChange={(e) => setNewContact({ ...newContact, religion: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                      >
+                        {RELIGION_OPTIONS.map((rel) => (
+                          <option key={rel} value={rel} className="bg-slate-900">
+                            {rel}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Student Interested or Not Interested */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1.5">Student Interest Status *</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNewContact({ ...newContact, interestStatus: "Interested" })}
+                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                          newContact.interestStatus === "Interested"
+                            ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-lg shadow-emerald-500/20"
+                            : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
+                        }`}
+                      >
+                        <span className="text-base">🔥</span>
+                        <span className="text-[11px] font-black">Interested</span>
+                        <span className="text-[9px] text-emerald-400/80 font-medium">Hot Lead</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setNewContact({ ...newContact, interestStatus: "Considering" })}
+                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                          newContact.interestStatus === "Considering"
+                            ? "bg-amber-500/20 border-amber-400 text-amber-300 shadow-lg shadow-amber-500/20"
+                            : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
+                        }`}
+                      >
+                        <span className="text-base">⚡</span>
+                        <span className="text-[11px] font-black">Considering</span>
+                        <span className="text-[9px] text-amber-400/80 font-medium">Warm Lead</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setNewContact({ ...newContact, interestStatus: "Not Interested" })}
+                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                          newContact.interestStatus === "Not Interested"
+                            ? "bg-rose-500/20 border-rose-400 text-rose-300 shadow-lg shadow-rose-500/20"
+                            : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
+                        }`}
+                      >
+                        <span className="text-base">❄️</span>
+                        <span className="text-[11px] font-black">Not Interested</span>
+                        <span className="text-[9px] text-rose-400/80 font-medium">Closed</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preferred Campus & Course */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Preferred VSB Campus</label>
+                      <select
+                        value={newContact.campus}
+                        onChange={(e) => setNewContact({ ...newContact, campus: e.target.value as CampusLocation })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      >
+                        <option value="KARUR" className="bg-slate-900">KARUR CAMPUS</option>
+                        <option value="COIMBATORE" className="bg-slate-900">COIMBATORE CAMPUS</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Course Interest</label>
+                      <select
+                        value={newContact.courseInterest}
+                        onChange={(e) => setNewContact({ ...newContact, courseInterest: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      >
+                        {VSB_DEPARTMENTS_COURSES.map((course) => (
+                          <option key={course} value={course} className="bg-slate-900">
+                            {course}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Sheet 3 Buttons (Submission) */}
+                  <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={handlePrevStep}
+                      className="px-4 py-2 rounded-full bg-slate-900 text-slate-300 text-xs font-bold hover:text-white border border-white/10 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Back (Parents)</span>
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingContact}
+                      className={`glossy-btn px-6 py-2.5 text-xs font-extrabold flex items-center gap-2 text-white bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 shadow-xl shadow-pink-500/40 rounded-full cursor-pointer hover:scale-[1.02] active:scale-95 transition-all ${
+                        isSubmittingContact ? "opacity-70 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {isSubmittingContact ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0"></span>
+                          <span>Saving to Firebase...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+                          <span>Submit & Save to Firebase</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>

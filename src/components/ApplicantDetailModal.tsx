@@ -1117,8 +1117,28 @@ export default function ApplicantDetailModal({
                           <span className="col-span-7 font-black text-slate-950">: {formData.fatherName || "NA"}</span>
                         </div>
                         <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Father&apos;s Mobile</span>
+                          <span className="col-span-7 font-mono font-bold text-slate-950">: {formData.fatherMobile || "NA"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                           <span className="col-span-5 font-black text-slate-700">Mother&apos;s Name</span>
                           <span className="col-span-7 font-black text-slate-950">: {formData.motherName || "NA"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Mother&apos;s Mobile</span>
+                          <span className="col-span-7 font-mono font-bold text-slate-950">: {formData.motherMobile || "NA"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Parents&apos; Work</span>
+                          <span className="col-span-7 font-bold text-slate-950">: {formData.parentsWork || "NA"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Student Religion</span>
+                          <span className="col-span-7 font-bold text-slate-950">: {formData.religion || "Hindu"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Interest Status</span>
+                          <span className="col-span-7 font-black text-emerald-800">: {formData.interestStatus || "Interested"}</span>
                         </div>
                         <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                           <span className="col-span-5 font-black text-slate-700">Gender</span>
@@ -1498,6 +1518,82 @@ export default function ApplicantDetailModal({
                           onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
                           className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                         />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Father&apos;s Mobile
+                        </label>
+                        <input
+                          type="tel"
+                          value={formData.fatherMobile || ""}
+                          onChange={(e) => setFormData({ ...formData, fatherMobile: e.target.value })}
+                          placeholder="+91 98765 11223"
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Mother&apos;s Mobile
+                        </label>
+                        <input
+                          type="tel"
+                          value={formData.motherMobile || ""}
+                          onChange={(e) => setFormData({ ...formData, motherMobile: e.target.value })}
+                          placeholder="+91 98765 44556"
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Parents&apos; Work / Occupation
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.parentsWork || ""}
+                          onChange={(e) => setFormData({ ...formData, parentsWork: e.target.value })}
+                          placeholder="e.g. Agriculture / Business"
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Religion
+                        </label>
+                        <select
+                          value={formData.religion || "Hindu"}
+                          onChange={(e) => setFormData({ ...formData, religion: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="Hindu">Hindu</option>
+                          <option value="Christian">Christian</option>
+                          <option value="Muslim">Muslim</option>
+                          <option value="Jain">Jain</option>
+                          <option value="Sikh">Sikh</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Interest Status
+                        </label>
+                        <select
+                          value={formData.interestStatus || "Interested"}
+                          onChange={(e) => setFormData({ ...formData, interestStatus: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                        >
+                          <option value="Interested">Interested (Hot)</option>
+                          <option value="Considering">Considering (Warm)</option>
+                          <option value="Not Interested">Not Interested (Closed)</option>
+                        </select>
                       </div>
                     </div>
 

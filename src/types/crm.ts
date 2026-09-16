@@ -71,6 +71,11 @@ export interface Lead {
   alternatePhone?: string;
   fatherName?: string;
   motherName?: string;
+  fatherMobile?: string;
+  motherMobile?: string;
+  parentsWork?: string;
+  religion?: string;
+  interestStatus?: string;
   gender?: string;
   bloodGroup?: string;
   physicallyDisabled?: string;
