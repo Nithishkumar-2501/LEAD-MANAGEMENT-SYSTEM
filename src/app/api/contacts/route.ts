@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       name,
       email,
       phone,
+      source,
       fatherName,
       motherName,
       fatherMobile,
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
     const cleanPhone = formatPhoneWith91(phone);
     const cleanFatherMobile = fatherMobile ? formatPhoneWith91(fatherMobile) : "";
     const cleanMotherMobile = motherMobile ? formatPhoneWith91(motherMobile) : "";
+    const referralSource = source || body.source || "Social Ads (Instagram / Facebook / YouTube)";
 
     try {
       const newLead = await prisma.lead.create({
@@ -103,7 +105,7 @@ export async function POST(request: Request) {
           district: district || null,
           state: state || null,
           address: address || null,
-          source: "Direct Contact Entry",
+          source: referralSource,
           status: "NEW",
           application: {
             create: {
@@ -148,7 +150,7 @@ export async function POST(request: Request) {
         district: district || "",
         state: state || "",
         address: address || "",
-        source: "Direct Contact Entry",
+        source: referralSource,
         status: "NEW",
         counselorId: "usr_admin_vsb",
         createdAt: new Date().toISOString(),
@@ -178,6 +180,7 @@ export async function PUT(request: Request) {
       name,
       email,
       phone,
+      source,
       fatherName,
       motherName,
       gender,
@@ -205,6 +208,7 @@ export async function PUT(request: Request) {
           name,
           email,
           phone: cleanPhone,
+          source: source || undefined,
           fatherName,
           motherName,
           gender,
@@ -240,7 +244,7 @@ export async function PUT(request: Request) {
         district,
         state,
         address,
-        source: "Direct Contact Entry",
+        source: source || "Direct Contact Entry",
         status: "NEW",
         createdAt: new Date().toISOString(),
         application: {

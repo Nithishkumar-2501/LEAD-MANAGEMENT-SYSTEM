@@ -93,6 +93,18 @@ const PARENT_OCCUPATIONS = [
 const GENDER_OPTIONS = ["Male", "Female", "Other"];
 const BLOOD_GROUP_OPTIONS = ["O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-"];
 
+const REFERRAL_SOURCE_OPTIONS = [
+  { id: "Social Ads", label: "Online Ads (Instagram / Facebook / YouTube)", icon: "📢", shortLabel: "Social Ads" },
+  { id: "WhatsApp", label: "WhatsApp Campaign (Official Chat / Group)", icon: "💬", shortLabel: "WhatsApp" },
+  { id: "Google/Web", label: "Google Search & College Website", icon: "🌐", shortLabel: "Google/Web" },
+  { id: "School Expo", label: "School Visit & Educational Expo", icon: "🏫", shortLabel: "School Expo" },
+  { id: "Friends/Alumni", label: "Friends, Relatives & Alumni Referral", icon: "👥", shortLabel: "Friends/Alumni" },
+  { id: "Newspaper/Media", label: "Newspaper, TV & Outdoor Hoardings", icon: "📰", shortLabel: "Newspaper/Media" },
+  { id: "Walk-in", label: "Direct Campus Walk-in Enquiry", icon: "🚶", shortLabel: "Walk-in" },
+  { id: "TNEA", label: "TNEA Engineering Counselling", icon: "🎓", shortLabel: "TNEA" },
+  { id: "Other", label: "Other / Custom Referral Source", icon: "✨", shortLabel: "Other" },
+];
+
 interface ContactDirectoryModuleProps {
   initialContacts: (Lead & { application?: Application | null })[];
   selectedCampus: CampusLocation;
@@ -336,6 +348,7 @@ export default function ContactDirectoryModule({
     "School Name with Place",
     "Address For communication",
     "Community",
+    "How Known / Source",
     "User Registration Date",
     "Lead Stage",
   ];
@@ -516,10 +529,12 @@ export default function ContactDirectoryModule({
     address: "",
     parentsWork: "",
 
-    // Sheet 3: Category, religion & interest
+    // Sheet 3: Category, religion, interest & discovery source
     community: "BC",
     religion: "Hindu",
     interestStatus: "Interested",
+    source: "Online Ads (Instagram / Facebook / YouTube)",
+    sourceCustom: "",
     campus: "KARUR" as CampusLocation,
     courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
 
@@ -677,6 +692,14 @@ export default function ContactDirectoryModule({
     if (col === "School Name with Place") return <span className="text-slate-800 dark:text-slate-200 font-medium">{contact.school || ""}</span>;
     if (col === "Address For communication") return <span className="text-slate-700 dark:text-slate-300 font-medium">{showAddress ? (contact.address || "") : (contact.address ? "•••••••••••••" : "")}</span>;
     if (col === "Community") return <span className="font-extrabold text-blue-600 dark:text-sky-400">{(contact as any).community || ""}</span>;
+    if (col === "How Known / Source" || col === "Source" || col === "Referral Source") {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/20 whitespace-nowrap inline-flex items-center gap-1">
+          <span>📢</span>
+          <span>{contact.source || "Direct Entry"}</span>
+        </span>
+      );
+    }
     if (col === "User Registration Date") {
       if (!contact.createdAt) return <span></span>;
       const d = new Date(contact.createdAt);
@@ -1037,11 +1060,17 @@ export default function ContactDirectoryModule({
       newContact.email.trim() ||
       `${newContact.name.toLowerCase().trim().replace(/\s+/g, ".")}@gmail.com`;
 
+    const finalSource =
+      newContact.source === "Other" && newContact.sourceCustom?.trim()
+        ? newContact.sourceCustom.trim()
+        : newContact.source || "Online Ads (Instagram / Facebook / YouTube)";
+
     const payload = {
       ...newContact,
       name: newContact.name.trim(),
       phone: cleanPhone,
       email: cleanEmail,
+      source: finalSource,
       school: newContact.school.trim() || "",
       district: newContact.district.trim() || "Karur",
       state: newContact.state.trim() || "Tamil Nadu",
@@ -1070,7 +1099,7 @@ export default function ContactDirectoryModule({
       if (res) {
         const data = await res.json();
         if (res.ok && data && !data.error) {
-          createdLead = { ...payload, ...data };
+          createdLead = { ...payload, ...data, source: finalSource };
         } else {
           console.warn("API notice:", data?.error);
         }
@@ -1084,7 +1113,7 @@ export default function ContactDirectoryModule({
       createdLead = {
         id: `lead_${Date.now()}`,
         ...payload,
-        source: "Direct Contact Entry",
+        source: finalSource,
         createdAt: new Date().toISOString(),
         application: {
           id: `app_${Date.now()}`,
@@ -1099,13 +1128,14 @@ export default function ContactDirectoryModule({
       createdLead = {
         ...payload,
         ...createdLead,
+        source: finalSource,
       };
     }
 
     // 1. Direct permanent Firebase save (Firestore students collection & Realtime Database)
     try {
       await saveStudentToFirebase(createdLead);
-      console.log(`🔥 Successfully saved student ${createdLead.name} to Firebase!`);
+      console.log(`🔥 Successfully saved student ${createdLead.name} to Firebase with source "${finalSource}"!`);
     } catch (fbErr) {
       console.warn("Firebase save notice:", fbErr);
     }
@@ -1161,6 +1191,8 @@ export default function ContactDirectoryModule({
       community: "BC",
       religion: "Hindu",
       interestStatus: "Interested",
+      source: "Online Ads (Instagram / Facebook / YouTube)",
+      sourceCustom: "",
       campus: "KARUR",
       courseInterest: VSB_DEPARTMENTS_COURSES[0],
       appliedCounselling: false,
@@ -2522,6 +2554,15 @@ export default function ContactDirectoryModule({
                       </div>
                     )}
 
+                    {/* How Known / Referral Source Badge */}
+                    {contact.source && (
+                      <div className="flex items-center gap-1.5 pt-1 border-t border-white/10 text-[11px]">
+                        <span className="text-xs">📢</span>
+                        <span className="text-slate-400 font-medium">Source:</span>
+                        <span className="text-sky-300 font-semibold truncate">{contact.source}</span>
+                      </div>
+                    )}
+
                     {/* TNEA Counselling Details Box */}
                     {(contact.counsellingAppNo || contact.tneaCutoff) && (
                       <div className="pt-2 border-t border-white/10 space-y-1">
@@ -3219,6 +3260,83 @@ export default function ContactDirectoryModule({
                     </div>
                   </div>
 
+                  {/* How Did the Student Know About the College? (Referral Channel) */}
+                  <div className="pt-2 border-t border-white/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-black text-sky-300 flex items-center gap-1.5">
+                        <span className="text-sm">📢</span>
+                        <span>How did the student know about the college?</span>
+                      </label>
+                      <span className="text-[10px] text-slate-400 font-medium">Marketing Source (Firebase)</span>
+                    </div>
+
+                    {/* Quick Select Pill Buttons */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                      {REFERRAL_SOURCE_OPTIONS.map((opt) => {
+                        const isSelected =
+                          newContact.source === opt.label ||
+                          (opt.id === "Other" && newContact.source === "Other");
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              setNewContact({
+                                ...newContact,
+                                source: opt.id === "Other" ? "Other" : opt.label,
+                              })
+                            }
+                            className={`px-2.5 py-1.5 rounded-xl border text-left flex items-center gap-1.5 transition-all text-[11px] cursor-pointer ${
+                              isSelected
+                                ? "bg-sky-500/25 border-sky-400 text-sky-200 shadow-md shadow-sky-500/20 font-bold"
+                                : "bg-slate-950/60 border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20 font-medium"
+                            }`}
+                          >
+                            <span className="text-xs">{opt.icon}</span>
+                            <span className="truncate">{opt.shortLabel}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Source Dropdown Selector */}
+                    <div className="pt-0.5">
+                      <select
+                        value={newContact.source}
+                        onChange={(e) =>
+                          setNewContact({ ...newContact, source: e.target.value })
+                        }
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium cursor-pointer"
+                      >
+                        {REFERRAL_SOURCE_OPTIONS.map((opt) => (
+                          <option
+                            key={opt.id}
+                            value={opt.id === "Other" ? "Other" : opt.label}
+                            className="bg-slate-900"
+                          >
+                            {opt.icon} {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Custom Source Input when 'Other' selected */}
+                    {newContact.source === "Other" && (
+                      <div className="animate-in fade-in slide-in-from-top-1 duration-200 pt-1">
+                        <input
+                          type="text"
+                          required
+                          value={newContact.sourceCustom}
+                          onChange={(e) =>
+                            setNewContact({ ...newContact, sourceCustom: e.target.value })
+                          }
+                          placeholder="Please specify referral channel (e.g., Local cable TV, WhatsApp community, Coaching center)..."
+                          className="w-full bg-slate-950/90 border border-sky-400/60 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   {/* Sheet 3 Buttons (Submission) */}
                   <div className="flex justify-between items-center pt-3 border-t border-white/10">
                     <button
@@ -3390,6 +3508,25 @@ export default function ContactDirectoryModule({
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1.5">
+                  <span>📢</span>
+                  <span>How Known / Referral Source</span>
+                </label>
+                <select
+                  value={editingContact.source || "Online Ads (Instagram / Facebook / YouTube)"}
+                  onChange={(e) => setEditingContact({ ...editingContact, source: e.target.value })}
+                  className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium"
+                >
+                  {REFERRAL_SOURCE_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.label} className="bg-slate-900">
+                      {opt.icon} {opt.label}
+                    </option>
+                  ))}
+                  <option value="Direct Contact Entry" className="bg-slate-900">Direct Contact Entry</option>
+                </select>
               </div>
 
               <div className="flex justify-end gap-2 pt-3">
