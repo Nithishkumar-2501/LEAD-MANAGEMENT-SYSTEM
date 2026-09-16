@@ -642,7 +642,8 @@ html.dark .min-h-screen {
 /* Modals & Dialogs in Dark Mode: absolutely no white dialog backgrounds */
 html.dark .fixed .bg-white,
 html.dark .fixed .bg-slate-50,
-html.dark .fixed .bg-slate-100 {
+html.dark .fixed .bg-slate-100,
+html.dark .fixed .bg-slate-200 {
   background-color: #0f172a !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
   color: #f8fafc !important;
@@ -673,24 +674,40 @@ html.dark textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-/* Card & Table containers with bg-white in Dark Mode */
-html.dark .bg-white:not(button):not(input):not(select):not(.badge-status-hot):not(.badge-status-warm):not(.badge-status-cold) {
+/* Card, Button & Table containers with bg-white in Dark Mode - NO WHITE SURFACES */
+html.dark .bg-white:not(input):not(select):not(.badge-status-hot):not(.badge-status-warm):not(.badge-status-cold),
+html.dark button.bg-white {
   background-color: #0f172a !important;
   color: #f8fafc !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Slate-50 background sections in Dark Mode */
+html.dark button.bg-white:hover {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+/* Slate background sections in Dark Mode */
 html.dark .bg-slate-50,
 html.dark .bg-slate-50\/80,
 html.dark .bg-slate-50\/90,
 html.dark .bg-slate-50\/95,
 html.dark .bg-slate-100,
 html.dark .bg-slate-100\/80,
-html.dark .bg-slate-100\/90 {
+html.dark .bg-slate-100\/90,
+html.dark .bg-slate-200,
+html.dark .bg-slate-300,
+html.dark button.bg-slate-100,
+html.dark button.bg-slate-200 {
   background-color: #0b1120 !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
   color: #f1f5f9 !important;
+}
+
+html.dark button.bg-slate-200:hover,
+html.dark button.bg-slate-100:hover {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
 }
 
 /* Text colors in Dark Mode */

@@ -414,12 +414,18 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     setIsFirebaseSyncing(true);
     onTriggerToast("🔥 Syncing all faculty records to Firebase Firestore & RTDB...");
     try {
-      let count = 0;
-      for (const t of teachers) {
-        await saveTeacherToFirebase(t);
-        count++;
-      }
-      onTriggerToast(`✅ Successfully stored and synchronized all ${count} faculty members in Firebase!`);
+      const { MOCK_TEACHERS } = await import("@/lib/mockData");
+      const map = new Map<string, Teacher>();
+      MOCK_TEACHERS.forEach((t) => map.set(t.id, t));
+      teachers.forEach((t) => map.set(t.id, t));
+      const fullList = Array.from(map.values());
+
+      await Promise.allSettled(
+        fullList.map((t) => saveTeacherToFirebase(t))
+      );
+      setTeachers(fullList);
+      saveTeachersList(fullList);
+      onTriggerToast(`✅ Successfully stored and synchronized all ${fullList.length} faculty members in Firebase!`);
     } catch (err) {
       onTriggerToast("⚠️ Some records could not be synced. Please check your connection.");
     } finally {

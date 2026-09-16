@@ -38,6 +38,7 @@ import {
   fetchStudentsFromFirestore,
   fetchStudentsFromRTDB,
   subscribeToFirebaseStudents,
+  fetchTeachersFromFirebase,
   StudentRecord,
 } from "@/lib/firebaseSync";
 
@@ -220,6 +221,11 @@ export default function DashboardPage() {
 
     const unsubscribe = subscribeToFirebaseStudents((liveList) => {
       applyFirebaseLeads(liveList);
+    });
+
+    // Auto-seed and synchronize all faculty records to Firebase Firestore & RTDB on app startup
+    fetchTeachersFromFirebase().catch((err) => {
+      console.warn("Initial Firebase teachers synchronization notice:", err);
     });
 
     return () => {

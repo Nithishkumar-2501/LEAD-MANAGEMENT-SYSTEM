@@ -376,7 +376,7 @@ export async function saveTeacherToFirebase(teacher: Teacher): Promise<boolean> 
   // 1. Firestore sync
   try {
     const docRef = doc(db, "teachers", safeTeacherId);
-    await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 3000);
+    await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 8000);
     firestoreSuccess = true;
     console.log(`🔥 [Firebase Firestore] Saved teacher record: ${safeTeacherId} (${teacher.name})`);
   } catch (err: any) {
@@ -508,14 +508,16 @@ export async function seedInitialTeachersToFirebase(): Promise<Teacher[]> {
     const { MOCK_TEACHERS } = await import("@/lib/mockData");
     const seededList: Teacher[] = [];
 
-    for (const t of MOCK_TEACHERS) {
-      const formatted: Teacher = {
-        ...t,
-        phone: formatPhoneWith91(t.phone),
-      };
-      await saveTeacherToFirebase(formatted);
-      seededList.push(formatted);
-    }
+    await Promise.allSettled(
+      MOCK_TEACHERS.map(async (t) => {
+        const formatted: Teacher = {
+          ...t,
+          phone: formatPhoneWith91(t.phone),
+        };
+        await saveTeacherToFirebase(formatted);
+        seededList.push(formatted);
+      })
+    );
     console.log(`🔥 [Firebase Seed] Successfully seeded ${seededList.length} faculty members to Firebase!`);
     return seededList;
   } catch (e) {
