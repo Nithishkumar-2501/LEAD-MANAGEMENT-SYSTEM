@@ -77,6 +77,8 @@ export interface Lead {
   religion?: string;
   interestStatus?: string;
   gender?: string;
+  dob?: string;
+  dateOfBirth?: string;
   bloodGroup?: string;
   physicallyDisabled?: string;
   community?: string;

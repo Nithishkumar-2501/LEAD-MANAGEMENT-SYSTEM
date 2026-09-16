@@ -90,6 +90,9 @@ const PARENT_OCCUPATIONS = [
   "Other",
 ];
 
+const GENDER_OPTIONS = ["Male", "Female", "Other"];
+const BLOOD_GROUP_OPTIONS = ["O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-"];
+
 interface ContactDirectoryModuleProps {
   initialContacts: (Lead & { application?: Application | null })[];
   selectedCampus: CampusLocation;
@@ -473,6 +476,9 @@ export default function ContactDirectoryModule({
     name: "",
     email: "",
     phone: "",
+    gender: "Male",
+    dob: "",
+    bloodGroup: "O+",
     school: "",
     district: "Karur",
     state: "Tamil Nadu",
@@ -1113,6 +1119,9 @@ export default function ContactDirectoryModule({
       name: "",
       phone: "",
       email: "",
+      gender: "Male",
+      dob: "",
+      bloodGroup: "O+",
       school: "",
       district: "Karur",
       state: "Tamil Nadu",
@@ -2781,6 +2790,49 @@ export default function ContactDirectoryModule({
                         placeholder="student@gmail.com"
                         className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
                       />
+                    </div>
+                  </div>
+
+                  {/* Gender, Student Date of Birth, Student Blood Group */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Gender</label>
+                      <select
+                        value={newContact.gender}
+                        onChange={(e) => setNewContact({ ...newContact, gender: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold"
+                      >
+                        {GENDER_OPTIONS.map((g) => (
+                          <option key={g} value={g} className="bg-slate-900">
+                            {g}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Student Date of Birth</label>
+                      <input
+                        type="date"
+                        value={newContact.dob}
+                        onChange={(e) => setNewContact({ ...newContact, dob: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium scheme-dark"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Student Blood Group</label>
+                      <select
+                        value={newContact.bloodGroup}
+                        onChange={(e) => setNewContact({ ...newContact, bloodGroup: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400 font-bold text-rose-300"
+                      >
+                        {BLOOD_GROUP_OPTIONS.map((bg) => (
+                          <option key={bg} value={bg} className="bg-slate-900">
+                            {bg}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

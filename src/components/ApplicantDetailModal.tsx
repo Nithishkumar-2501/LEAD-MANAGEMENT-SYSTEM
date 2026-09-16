@@ -1145,6 +1145,10 @@ export default function ApplicantDetailModal({
                           <span className="col-span-7 font-black text-slate-950">: {formData.gender || "Male"}</span>
                         </div>
                         <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
+                          <span className="col-span-5 font-black text-slate-700">Date of Birth</span>
+                          <span className="col-span-7 font-black text-slate-950 font-mono">: {formData.dob || formData.dateOfBirth || "NA"}</span>
+                        </div>
+                        <div className="grid grid-cols-12 border-b border-slate-200 py-2.5 items-center">
                           <span className="col-span-5 font-black text-slate-700">Blood Group</span>
                           <span className="col-span-7 font-black text-rose-700 font-mono">: {formData.bloodGroup || "O+"}</span>
                         </div>
@@ -1597,7 +1601,7 @@ export default function ApplicantDetailModal({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5">
                       <div>
                         <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
                           Gender
@@ -1611,6 +1615,18 @@ export default function ApplicantDetailModal({
                           <option value="Female">Female</option>
                           <option value="Other">Other</option>
                         </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          Date of Birth
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.dob || formData.dateOfBirth || ""}
+                          onChange={(e) => setFormData({ ...formData, dob: e.target.value, dateOfBirth: e.target.value })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
                       </div>
 
                       <div>
