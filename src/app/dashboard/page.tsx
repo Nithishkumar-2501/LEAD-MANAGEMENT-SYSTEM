@@ -264,18 +264,30 @@ export default function DashboardPage() {
   // Action Notification State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const [theme, setTheme] = useState<"LIGHT" | "DARK">("LIGHT");
+  const [theme, setTheme] = useState<"LIGHT" | "DARK">("DARK");
 
   useEffect(() => {
-    const savedTheme = (localStorage.getItem("vsb_theme") as "LIGHT" | "DARK") || "LIGHT";
+    const savedTheme = (localStorage.getItem("vsb_theme") as "LIGHT" | "DARK") || "DARK";
     setTheme(savedTheme);
-    document.documentElement.className = savedTheme === "LIGHT" ? "light" : "dark";
+    if (savedTheme === "LIGHT") {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+      document.documentElement.classList.add("dark");
+    }
   }, []);
 
   const handleThemeChange = (newTheme: "LIGHT" | "DARK") => {
     setTheme(newTheme);
     localStorage.setItem("vsb_theme", newTheme);
-    document.documentElement.className = newTheme === "LIGHT" ? "light" : "dark";
+    if (newTheme === "LIGHT") {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+      document.documentElement.classList.add("dark");
+    }
     triggerToast(`Switched theme mode to ${newTheme === "LIGHT" ? "☀️ Light Mode" : "🌙 Dark Mode"}`);
   };
 
@@ -448,7 +460,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen flex font-sans bg-slate-950 text-slate-100 w-full max-w-full overflow-x-hidden relative">
+    <div className="min-h-screen flex font-sans bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 w-full max-w-full overflow-x-hidden relative transition-colors duration-200">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold text-xs px-5 py-3 rounded-full shadow-2xl animate-bounce flex items-center gap-2 border border-white/30 justify-center sm:justify-start">

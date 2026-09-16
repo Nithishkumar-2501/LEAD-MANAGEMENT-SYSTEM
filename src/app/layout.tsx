@@ -34,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${poppins.variable}`}>
-      <body className={`${poppins.className} bg-[#0b0f19] text-slate-100 antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden font-sans`}>
+    <html lang="en" className={`dark ${poppins.variable}`} suppressHydrationWarning>
+      <body className={`${poppins.className} bg-slate-50 text-slate-900 dark:bg-[#070a14] dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden font-sans transition-colors duration-200`}>
         {children}
         <SpeedInsights />
       </body>

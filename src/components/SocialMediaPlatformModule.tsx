@@ -501,20 +501,20 @@ export default function SocialMediaPlatformModule({
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Top Banner & Overview Stat Cards */}
-      <div className="rounded-2xl p-5 border border-slate-200 bg-white text-slate-900 shadow-sm">
+      <div className="rounded-2xl p-5 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white shadow-md">
               <Share2 className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                 <span>Social Media & Contact Platform</span>
-                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300">
+                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                   LIVE MARKETING HUB
                 </span>
               </h2>
-              <p className="text-xs text-slate-600 font-medium mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                 Unified social media ad tracking, WhatsApp broadcasts, Email campaigns, SMS alerts & Project Expo leads
               </p>
             </div>
@@ -540,31 +540,31 @@ export default function SocialMediaPlatformModule({
         </div>
 
         {/* Omnichannel Overview Stat Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-slate-200">
-          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 shadow-xs">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Social Leads Captured</p>
-            <h4 className="text-xl font-black text-sky-600 mt-1">1,840 Candidates</h4>
-            <p className="text-[10px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-slate-200 dark:border-white/10">
+          <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Social Leads Captured</p>
+            <h4 className="text-xl font-black text-sky-600 dark:text-sky-400 mt-1">1,840 Candidates</h4>
+            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
               <TrendingUp className="w-3 h-3" /> +24.8% this week
             </p>
           </div>
 
-          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 shadow-xs">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Active Ad Campaigns</p>
-            <h4 className="text-xl font-black text-indigo-600 mt-1">{campaigns.filter(c => c.status === "ACTIVE").length} Live Campaigns</h4>
-            <p className="text-[10px] text-indigo-600 font-semibold mt-1">Google, Meta, WhatsApp & Expo</p>
+          <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Ad Campaigns</p>
+            <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{campaigns.filter(c => c.status === "ACTIVE").length} Live Campaigns</h4>
+            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold mt-1">Google, Meta, WhatsApp & Expo</p>
           </div>
 
-          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 shadow-xs">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Omnichannel Messages</p>
-            <h4 className="text-xl font-black text-emerald-600 mt-1">24,500 Sent</h4>
-            <p className="text-[10px] text-emerald-600 font-semibold mt-1">98.4% Delivery Rate</p>
+          <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Omnichannel Messages</p>
+            <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">24,500 Sent</h4>
+            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">98.4% Delivery Rate</p>
           </div>
 
-          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 shadow-xs">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Lead Conversion Rate</p>
-            <h4 className="text-xl font-black text-amber-600 mt-1">68.5% Verified</h4>
-            <p className="text-[10px] text-amber-600 font-semibold mt-1">TNEA Counselling Ready</p>
+          <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lead Conversion Rate</p>
+            <h4 className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">68.5% Verified</h4>
+            <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-1">TNEA Counselling Ready</p>
           </div>
         </div>
       </div>
@@ -584,12 +584,12 @@ export default function SocialMediaPlatformModule({
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
                 isSelected
                   ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white border-sky-400 shadow-md scale-[1.02]"
-                  : "bg-white text-slate-700 hover:text-slate-950 border-slate-200 hover:border-slate-300 shadow-xs"
+                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-xs"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{ch.label}</span>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
                 {ch.count}
               </span>
             </button>
@@ -598,21 +598,21 @@ export default function SocialMediaPlatformModule({
       </div>
 
       {/* College Marketing Campaigns Showcase with Uploaded Images */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-white/10 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-white/10">
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200">
+              <span className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                 <Building2 className="w-4 h-4" />
               </span>
-              <h3 className="text-base font-black text-slate-900">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
                 College Marketing Campaigns & Creative Media Assets
               </h3>
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-300">
+              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700">
                 {campaigns.length} Active / Managed
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Upload custom college posters, campus banners, and manage live promotional campaigns across social networks.
             </p>
           </div>
@@ -1077,18 +1077,18 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in overflow-y-auto">
-      <div className="bg-white w-full max-w-3xl rounded-2xl border border-slate-300 shadow-2xl overflow-hidden text-slate-950 flex flex-col max-h-[95vh] my-auto">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl border border-slate-300 dark:border-white/10 shadow-2xl overflow-hidden text-slate-950 dark:text-slate-100 flex flex-col max-h-[95vh] my-auto">
         {/* Header Bar */}
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-indigo-600 text-white shadow-sm">
               {campaign ? <Edit3 className="w-5 h-5" /> : <Play className="w-5 h-5 fill-white" />}
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-950">
+              <h3 className="text-base font-black text-slate-950 dark:text-white">
                 {campaign ? "Edit College Campaign & Ad Creative" : "Launch New College Campaign"}
               </h3>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Upload or edit college campus images, target audience & social media ad specs
               </p>
             </div>
@@ -1097,7 +1097,7 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -1106,30 +1106,30 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
         {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-5 text-xs">
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 font-bold flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 font-bold flex items-center gap-2">
               <X className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {/* SECTION 1: College Image Upload & Selection */}
-          <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div className="space-y-3 bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-white/10">
             <div className="flex items-center justify-between">
-              <label className="font-black text-slate-900 text-xs flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4 text-indigo-600" />
+              <label className="font-black text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1.5">
+                <ImageIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>College Ad Creative / Campus Banner Image</span>
                 <span className="text-rose-600 font-bold">*</span>
               </label>
 
               {/* Source Tabs */}
-              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => setActiveImageSourceTab("UPLOAD")}
                   className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                     activeImageSourceTab === "UPLOAD"
                       ? "bg-indigo-600 text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-950"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
                   }`}
                 >
                   Upload File
@@ -1140,7 +1140,7 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                   className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                     activeImageSourceTab === "PRESETS"
                       ? "bg-indigo-600 text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-950"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
                   }`}
                 >
                   Campus Presets
@@ -1151,7 +1151,7 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                   className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                     activeImageSourceTab === "URL"
                       ? "bg-indigo-600 text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-950"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
                   }`}
                 >
                   Image Link
@@ -1172,16 +1172,16 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
 
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-indigo-300 hover:border-indigo-500 bg-white hover:bg-indigo-50/40 rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group"
+                  className="border-2 border-dashed border-indigo-300 dark:border-indigo-500/40 hover:border-indigo-500 bg-white dark:bg-slate-900 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group"
                 >
-                  <div className="p-3 rounded-full bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform">
+                  <div className="p-3 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
                     <Upload className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-extrabold text-slate-900 text-xs">
+                    <p className="font-extrabold text-slate-900 dark:text-slate-100 text-xs">
                       Click to Browse or Drag & Drop College Image
                     </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       Supports JPG, PNG, WEBP, SVG • Instant preview & automatic resolution optimization
                     </p>
                   </div>
@@ -1204,8 +1204,8 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                       onClick={() => handleSelectPreset(preset)}
                       className={`group relative rounded-xl overflow-hidden border text-left p-1.5 transition-all cursor-pointer ${
                         isChosen
-                          ? "ring-2 ring-indigo-600 border-indigo-500 bg-indigo-50/80"
-                          : "border-slate-200 bg-white hover:border-slate-300"
+                          ? "ring-2 ring-indigo-600 border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/80"
+                          : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-white/20"
                       }`}
                     >
                       <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-900">
@@ -1220,10 +1220,10 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                           </div>
                         )}
                       </div>
-                      <p className="font-extrabold text-slate-900 text-[10px] mt-1.5 truncate">
+                      <p className="font-extrabold text-slate-900 dark:text-slate-100 text-[10px] mt-1.5 truncate">
                         {preset.title}
                       </p>
-                      <span className="text-[9px] text-slate-500 font-semibold">{preset.category}</span>
+                      <span className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">{preset.category}</span>
                     </button>
                   );
                 })}
@@ -1238,7 +1238,7 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://example.com/college-poster.jpg"
-                  className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <button
                   type="button"
@@ -1252,7 +1252,7 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
 
             {/* Active Image Live Preview Card */}
             {imageUrl && (
-              <div className="relative rounded-xl overflow-hidden border border-slate-300 bg-slate-950 aspect-[16/8] max-h-56 mt-2 group/preview">
+              <div className="relative rounded-xl overflow-hidden border border-slate-300 dark:border-white/10 bg-slate-950 aspect-[16/8] max-h-56 mt-2 group/preview">
                 <img
                   src={imageUrl}
                   alt={imageCaption || "Campaign Preview"}
@@ -1293,7 +1293,7 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Campaign Title */}
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="font-extrabold text-slate-800 text-xs flex items-center gap-1">
+              <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1">
                 <span>Campaign Name / Title</span>
                 <span className="text-rose-600 font-bold">*</span>
               </label>
@@ -1302,20 +1302,20 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. VSB Engineering 2026 B.Tech Admissions Drive"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
             </div>
 
             {/* Platform Selection */}
             <div className="space-y-1.5">
-              <label className="font-extrabold text-slate-800 text-xs">
+              <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
                 Target Marketing Platform
               </label>
               <select
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value as any)}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="Google Ads">Google Ads (Search, Display & YouTube)</option>
                 <option value="Facebook">Meta (Facebook & Instagram Feed)</option>
@@ -1328,13 +1328,13 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
 
             {/* Target Department */}
             <div className="space-y-1.5">
-              <label className="font-extrabold text-slate-800 text-xs">
+              <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
                 Target Academic Branch / Department
               </label>
               <select
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="All Engineering Branches">All Engineering Branches (General)</option>
                 <option value="B.Tech Computer Science & AI-DS">B.Tech Computer Science & AI-DS</option>
@@ -1349,7 +1349,7 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
 
             {/* Target Leads Goal */}
             <div className="space-y-1.5">
-              <label className="font-extrabold text-slate-800 text-xs">
+              <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
                 Target Candidate Leads Goal
               </label>
               <input
@@ -1358,13 +1358,13 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                 max="5000"
                 value={targetLeads}
                 onChange={(e) => setTargetLeads(Number(e.target.value))}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             {/* Budget */}
             <div className="space-y-1.5">
-              <label className="font-extrabold text-slate-800 text-xs">
+              <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
                 Campaign Budget (INR)
               </label>
               <input
@@ -1372,19 +1372,19 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 placeholder="e.g. ₹25,000 or ₹1,500/day"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             {/* Campus Selection */}
             <div className="space-y-1.5">
-              <label className="font-extrabold text-slate-800 text-xs">
+              <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
                 Target Campus Location
               </label>
               <select
                 value={campus}
                 onChange={(e) => setCampus(e.target.value as any)}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="ALL">Both Karur & Coimbatore Campuses</option>
                 <option value="KARUR">Karur Main Campus</option>
@@ -1394,20 +1394,20 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
 
             {/* Start Date */}
             <div className="space-y-1.5">
-              <label className="font-extrabold text-slate-800 text-xs">
+              <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
                 Campaign Launch Date
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             {/* Ad Copy / Message Text */}
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="font-extrabold text-slate-800 text-xs">
+              <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
                 Promotional Ad Copy / Caption Text
               </label>
               <textarea
@@ -1415,17 +1415,17 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                 value={adCopy}
                 onChange={(e) => setAdCopy(e.target.value)}
                 placeholder="Enter compelling college highlights, cutoff criteria, placement track record..."
-                className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed font-medium"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed font-medium"
               />
             </div>
           </div>
 
           {/* Footer Action Buttons */}
-          <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold text-xs transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-xs transition-colors cursor-pointer"
             >
               Cancel
             </button>

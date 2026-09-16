@@ -144,11 +144,11 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
       {/* Main Centered Login Card */}
-      <div className="bg-white w-full max-w-md sm:max-w-lg rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden border border-slate-200/80 my-auto p-6 sm:p-10 text-slate-900 animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-md sm:max-w-lg rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden border border-slate-200/80 dark:border-white/10 my-auto p-6 sm:p-10 text-slate-900 dark:text-white animate-in fade-in zoom-in-95 duration-200">
         <div>
           {/* SPHEREX CRM Pill Badge with Official Logo */}
           <div className="flex items-center justify-center gap-2.5 mb-6">
-            <div className="w-9 h-9 rounded-full overflow-hidden bg-black p-0.5 shadow-md border border-slate-300 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-black p-0.5 shadow-md border border-slate-300 dark:border-white/15 flex items-center justify-center shrink-0">
               <Image
                 src="/spherex-logo.png"
                 alt="SPHEREX Official Logo"
@@ -157,8 +157,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="inline-flex items-center px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#edf2f7] border border-slate-300/90 shadow-xs">
-              <span className="text-xs sm:text-sm font-black tracking-wider text-slate-900 uppercase">
+            <div className="inline-flex items-center px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#edf2f7] dark:bg-slate-800 border border-slate-300/90 dark:border-slate-700 shadow-xs">
+              <span className="text-xs sm:text-sm font-black tracking-wider text-slate-900 dark:text-white uppercase">
                 SPHEREX CRM
               </span>
             </div>
@@ -166,18 +166,18 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
           {/* Headline */}
           <div className="mb-6 text-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight">
               Welcome to
             </h1>
-            <p className="text-sm sm:text-base font-bold text-slate-700 tracking-tight mt-1">
+            <p className="text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 tracking-tight mt-1">
               V.S.B. GROUP OF INSTITUTIONS
             </p>
           </div>
 
           {/* Error Notification */}
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
               <span>{error}</span>
             </div>
           )}
@@ -185,8 +185,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
           {/* Form Fields matching Reference Design */}
           <form onSubmit={handleLogin} className="space-y-3.5">
             {/* Email / ID Input */}
-            <div className="bg-[#f4f5f7] rounded-xl px-3.5 pt-2 pb-2.5 border border-transparent focus-within:border-slate-400 focus-within:bg-white transition-all">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="bg-[#f4f5f7] dark:bg-slate-800 rounded-xl px-3.5 pt-2 pb-2.5 border border-transparent focus-within:border-slate-400 dark:focus-within:border-sky-500 focus-within:bg-white dark:focus-within:bg-slate-800/90 transition-all">
+              <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
                 Email
               </label>
               <input
@@ -195,13 +195,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="rowok@gmail.com"
-                className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none placeholder-slate-400 mt-0.5"
+                className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none placeholder-slate-400 dark:placeholder-slate-500 mt-0.5"
               />
             </div>
 
             {/* Password Input with Show/Hide Eye */}
-            <div className="bg-[#f4f5f7] rounded-xl px-3.5 pt-2 pb-2.5 border border-transparent focus-within:border-slate-400 focus-within:bg-white transition-all relative">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="bg-[#f4f5f7] dark:bg-slate-800 rounded-xl px-3.5 pt-2 pb-2.5 border border-transparent focus-within:border-slate-400 dark:focus-within:border-sky-500 focus-within:bg-white dark:focus-within:bg-slate-800/90 transition-all relative">
+              <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
                 Password
               </label>
               <div className="flex items-center justify-between mt-0.5">
@@ -211,12 +211,12 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none placeholder-slate-400 pr-8"
+                  className="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white focus:outline-none placeholder-slate-400 dark:placeholder-slate-500 pr-8"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -230,12 +230,12 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
             {/* Options Row: Remember me + Forgot Password */}
             <div className="flex items-center justify-between text-xs pt-1 pb-1">
-              <label className="flex items-center gap-2 cursor-pointer text-slate-600 font-medium select-none">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400 font-medium select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-slate-300 text-[#4a2545] focus:ring-[#4a2545]"
+                  className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-[#4a2545] focus:ring-[#4a2545]"
                 />
                 <span>Remember me</span>
               </label>
@@ -243,7 +243,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               <button
                 type="button"
                 onClick={() => setShowForgotModal(true)}
-                className="text-slate-900 font-bold hover:underline cursor-pointer"
+                className="text-slate-900 dark:text-white font-bold hover:underline cursor-pointer"
               >
                 Forgot Password?
               </button>
@@ -262,41 +262,41 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
 
           {/* Security Badge */}
-          <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-slate-500 text-[11px]">
+          <div className="mt-5 pt-3 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px]">
             <div className="flex items-center gap-1.5 font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>256-Bit Encrypted Portal</span>
             </div>
-            <span className="font-mono text-emerald-600 font-bold">
+            <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
               ● Live VSB Gateway
             </span>
           </div>
         </div>
 
         {/* Quick 1-Click Credentials Selector for Demo & Faculty Access */}
-        <div className="pt-4 mt-4 border-t border-slate-100">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 text-center">
+        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-white/10">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-2 text-center">
             Quick One-Click Demo Logins:
           </span>
           <div className="flex flex-wrap gap-1.5 text-[11px] justify-center">
             <button
               type="button"
               onClick={() => autoFill("adminkarur@123", "vsbec@123")}
-              className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-900 font-bold border border-purple-200 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/80 text-purple-900 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800 transition-colors"
             >
               👑 Admin (Karur)
             </button>
             <button
               type="button"
               onClick={() => autoFill("admincovai@123", "vsbectc@1213")}
-              className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-900 font-bold border border-sky-200 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/80 text-sky-900 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800 transition-colors"
             >
               🏛️ Admin (Coimbatore)
             </button>
             <button
               type="button"
               onClick={() => autoFill("teacherkarur@123", "vsbteacher@123")}
-              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold border border-emerald-200 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 text-emerald-900 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800 transition-colors"
             >
               🧑‍🏫 Faculty (Karur)
             </button>
@@ -304,10 +304,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         </div>
 
         {/* Department Attribution Footer */}
-        <div className="mt-5 pt-3.5 border-t border-slate-100 text-center">
-          <p className="text-[11px] sm:text-xs font-medium text-slate-500 tracking-wide">
+        <div className="mt-5 pt-3.5 border-t border-slate-100 dark:border-white/10 text-center">
+          <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wide">
             Created by{" "}
-            <span className="text-slate-800 font-bold">
+            <span className="text-slate-800 dark:text-slate-200 font-bold">
               Department of Artificial Intelligence and Data Science
             </span>
           </p>
@@ -317,15 +317,15 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       {/* Forgot Password / Account Help Modal */}
       {showForgotModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-slate-900 border border-slate-200">
-            <h3 className="text-base font-extrabold text-slate-950 flex items-center gap-2 mb-2">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-slate-900 dark:text-white border border-slate-200 dark:border-white/10">
+            <h3 className="text-base font-extrabold text-slate-950 dark:text-white flex items-center gap-2 mb-2">
               <Info className="w-5 h-5 text-[#4a2545]" /> Authorized Credentials
             </h3>
-            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
               For security compliance, user accounts are provisioned by the Central Admissions Directorate. Use the authorized credentials below:
             </p>
 
-            <div className="space-y-2 text-xs font-mono bg-slate-100 p-3 rounded-xl mb-4 border border-slate-200">
+            <div className="space-y-2 text-xs font-mono bg-slate-100 dark:bg-slate-800 p-3 rounded-xl mb-4 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200">
               <div><strong>Admin Karur:</strong> adminkarur@123 / vsbec@123</div>
               <div><strong>Admin Covai:</strong> admincovai@123 / vsbectc@1213</div>
               <div><strong>Faculty:</strong> teacherkarur@123 / vsbteacher@123</div>

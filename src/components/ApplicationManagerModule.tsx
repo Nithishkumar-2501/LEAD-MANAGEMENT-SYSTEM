@@ -395,11 +395,11 @@ export default function ApplicationManagerModule({
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       {/* 1. TOP HEADER BAR (Exact layout from Image 2) */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl p-3 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Left: Title + Select Form + Quick View + Last Synced */}
           <div className="flex items-center flex-wrap gap-2.5 sm:gap-3 text-xs">
-            <h1 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-1.5">
+            <h1 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
               <span>Application Manager</span>
             </h1>
 
@@ -408,7 +408,7 @@ export default function ApplicationManagerModule({
               <select
                 value={selectedFormFilter}
                 onChange={(e) => setSelectedFormFilter(e.target.value)}
-                className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg pl-2.5 pr-6 py-1.5 text-xs font-semibold text-sky-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className="appearance-none bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg pl-2.5 pr-6 py-1.5 text-xs font-semibold text-sky-700 dark:text-sky-300 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
               >
                 <option value="ALL">Select Form ▾</option>
                 <option value="Karur">Application Form VSB Karur</option>
@@ -417,12 +417,12 @@ export default function ApplicationManagerModule({
             </div>
 
             {/* Quick View */}
-            <div className="relative flex items-center gap-1.5 text-slate-600">
+            <div className="relative flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
               <span className="text-[11px] font-medium">Quick View :</span>
               <select
                 value={quickView}
                 onChange={(e) => setQuickView(e.target.value)}
-                className="bg-transparent border-0 text-sky-700 font-bold hover:underline cursor-pointer focus:outline-none text-xs pr-4 py-1"
+                className="bg-transparent border-0 text-sky-700 dark:text-sky-400 font-bold hover:underline cursor-pointer focus:outline-none text-xs pr-4 py-1"
               >
                 <option value="System Default View">System Default View ▾</option>
                 <option value="Complete Applications">Complete Applications</option>
@@ -432,7 +432,7 @@ export default function ApplicationManagerModule({
             </div>
 
             {/* Last Synced Badge */}
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-50 border border-slate-200 text-[10px] text-slate-600 font-medium">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[10px] text-slate-600 dark:text-slate-300 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
               <span>Last synced on: {lastSyncedTime}</span>
               <button
@@ -467,24 +467,24 @@ export default function ApplicationManagerModule({
             {/* Search Input / Toggle */}
             <div className="relative">
               {isSearchOpen ? (
-                <div className="flex items-center bg-slate-100 border border-slate-300 rounded-lg px-2 py-1">
-                  <Search className="w-3.5 h-3.5 text-slate-500 mr-1.5" />
+                <div className="flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1">
+                  <Search className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 mr-1.5" />
                   <input
                     type="text"
                     placeholder="Search candidate, app no, email..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none w-48"
+                    className="bg-transparent text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none w-48"
                     autoFocus
                   />
-                  <button onClick={() => setIsSearchOpen(false)} className="text-slate-400 hover:text-slate-600 ml-1">
+                  <button onClick={() => setIsSearchOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1">
                     <X className="w-3 h-3" />
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={() => setIsSearchOpen(true)}
-                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                  className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
                   title="Search applications"
                 >
                   <Search className="w-4 h-4" />
@@ -495,7 +495,7 @@ export default function ApplicationManagerModule({
             {/* Export CSV Button */}
             <button
               onClick={handleExportCSV}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
               title="Download Applications CSV"
             >
               <Download className="w-4 h-4" />
@@ -506,12 +506,12 @@ export default function ApplicationManagerModule({
               onClick={() => onNavigateSubView?.(subView === "MANAGE" ? "OFFLINE_LOGS" : "MANAGE")}
               className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 subView === "OFFLINE_LOGS"
-                  ? "bg-indigo-50 border-indigo-300 text-indigo-700"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                  ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-500/40 text-indigo-700 dark:text-indigo-300"
+                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750"
               }`}
               title="View Offline Upload Logs"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>{subView === "OFFLINE_LOGS" ? "View Applications" : "Upload Logs"}</span>
             </button>
 
@@ -529,20 +529,20 @@ export default function ApplicationManagerModule({
 
       {/* 2. SUB-VIEW: OFFLINE APPLICATION UPLOAD LOGS */}
       {subView === "OFFLINE_LOGS" ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4 animate-in fade-in">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl p-5 shadow-xs space-y-4 animate-in fade-in text-slate-900 dark:text-slate-100">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
             <div>
-              <h2 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>Offline Application Upload Logs</span>
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Audit logs of offline Excel and CSV batch uploads processed into the central database.
               </p>
             </div>
             <button
               onClick={() => onNavigateSubView?.("MANAGE")}
-              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
             >
               Back to Manage Applications
             </button>
@@ -591,24 +591,24 @@ export default function ApplicationManagerModule({
         </div>
       ) : (
         /* 3. MAIN APPLICATION MANAGER VIEW (Matching Image 2) */
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-xs overflow-hidden">
           {/* FILTER ROW (Exact styling from Image 2) */}
-          <div className="p-3 bg-slate-50/90 border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs">
+          <div className="p-3 bg-slate-50/90 dark:bg-slate-950/80 border-b border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 flex-wrap flex-1">
               {/* Filter funnel badge */}
-              <div className="p-2 rounded-lg bg-sky-50 border border-sky-200 text-sky-600 shadow-xs flex items-center justify-center">
-                <Filter className="w-3.5 h-3.5 text-sky-600" />
+              <div className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-500/30 text-sky-600 dark:text-sky-400 shadow-xs flex items-center justify-center">
+                <Filter className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               </div>
 
               {/* Payment Status Dropdown */}
               <div className="relative min-w-[130px]">
-                <label className="text-[9px] font-extrabold text-slate-400 block uppercase tracking-wider mb-0.5">
+                <label className="text-[9px] font-extrabold text-slate-400 dark:text-slate-400 block uppercase tracking-wider mb-0.5">
                   Payment Status
                 </label>
                 <select
                   value={selectedPaymentStatus}
                   onChange={(e) => setSelectedPaymentStatus(e.target.value)}
-                  className="w-full appearance-none bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="w-full appearance-none bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
                 >
                   <option value="ALL">Select Here ▾</option>
                   <option value="Payment Pending">Payment Pending</option>
@@ -619,13 +619,13 @@ export default function ApplicationManagerModule({
 
               {/* Application Owner Dropdown */}
               <div className="relative min-w-[140px]">
-                <label className="text-[9px] font-extrabold text-slate-400 block uppercase tracking-wider mb-0.5">
+                <label className="text-[9px] font-extrabold text-slate-400 dark:text-slate-400 block uppercase tracking-wider mb-0.5">
                   Application Owner / Te...
                 </label>
                 <select
                   value={selectedOwner}
                   onChange={(e) => setSelectedOwner(e.target.value)}
-                  className="w-full appearance-none bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="w-full appearance-none bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
                 >
                   <option value="ALL">Select Here ▾</option>
                   <option value="Prof. P. Rajesh">Prof. P. Rajesh (Karur)</option>
@@ -636,13 +636,13 @@ export default function ApplicationManagerModule({
 
               {/* Application Stage Dropdown */}
               <div className="relative min-w-[130px]">
-                <label className="text-[9px] font-extrabold text-slate-400 block uppercase tracking-wider mb-0.5">
+                <label className="text-[9px] font-extrabold text-slate-400 dark:text-slate-400 block uppercase tracking-wider mb-0.5">
                   Application Stage
                 </label>
                 <select
                   value={selectedStage}
                   onChange={(e) => setSelectedStage(e.target.value)}
-                  className="w-full appearance-none bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="w-full appearance-none bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
                 >
                   <option value="ALL">Select Here ▾</option>
                   <option value="Inquiry Stage">Inquiry Stage</option>
@@ -655,13 +655,13 @@ export default function ApplicationManagerModule({
 
               {/* Form Status Dropdown */}
               <div className="relative min-w-[120px]">
-                <label className="text-[9px] font-extrabold text-slate-400 block uppercase tracking-wider mb-0.5">
+                <label className="text-[9px] font-extrabold text-slate-400 dark:text-slate-400 block uppercase tracking-wider mb-0.5">
                   Form Status
                 </label>
                 <select
                   value={selectedFormStatus}
                   onChange={(e) => setSelectedFormStatus(e.target.value)}
-                  className="w-full appearance-none bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="w-full appearance-none bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
                 >
                   <option value="ALL">Select Here ▾</option>
                   <option value="Complete">Complete</option>
@@ -685,7 +685,7 @@ export default function ApplicationManagerModule({
                     setSelectedFormFilter("ALL");
                     setSearchQuery("");
                   }}
-                  className="mt-3.5 px-2 py-1 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-bold cursor-pointer transition-colors"
+                  className="mt-3.5 px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-[11px] font-bold cursor-pointer transition-colors"
                 >
                   Clear Filters
                 </button>
@@ -697,9 +697,9 @@ export default function ApplicationManagerModule({
               <button
                 type="button"
                 onClick={() => onTriggerToast("ℹ️ Filter presets applied to current table view.")}
-                className="px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-sky-300 dark:border-sky-500/40 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-sky-600" />
+                <SlidersHorizontal className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                 <span>Advanced Filter</span>
               </button>
             </div>
@@ -708,7 +708,7 @@ export default function ApplicationManagerModule({
           {/* DATA TABLE (Columns matching Image 2) */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse min-w-[1050px]">
-              <thead className="bg-slate-100/90 text-slate-600 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200 select-none">
+              <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-white/10 select-none">
                 <tr>
                   <th className="p-3 w-10 text-center whitespace-nowrap">
                     <input
@@ -796,19 +796,19 @@ export default function ApplicationManagerModule({
                   <th className="p-3 text-center w-12 whitespace-nowrap">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-medium text-slate-800 dark:text-slate-200">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-12 text-slate-500 text-xs">
+                    <td colSpan={10} className="text-center py-12 text-slate-500 dark:text-slate-400 text-xs">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <RefreshCw className="w-5 h-5 text-sky-600 animate-spin" />
-                        <span className="font-semibold text-slate-600">Loading student applications from Firebase...</span>
+                        <span className="font-semibold text-slate-600 dark:text-slate-300">Loading student applications from Firebase...</span>
                       </div>
                     </td>
                   </tr>
                 ) : paginatedApplications.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-10 text-slate-400 text-xs">
+                    <td colSpan={10} className="text-center py-10 text-slate-400 dark:text-slate-500 text-xs">
                       No applications found matching the selected filters.
                     </td>
                   </tr>
@@ -818,8 +818,8 @@ export default function ApplicationManagerModule({
                     return (
                       <tr
                         key={app.id}
-                        className={`transition-colors group hover:bg-sky-50/50 ${
-                          isSelected ? "bg-sky-50/80" : ""
+                        className={`transition-colors group hover:bg-sky-50/50 dark:hover:bg-slate-800/60 ${
+                          isSelected ? "bg-sky-50/80 dark:bg-sky-950/40" : ""
                         }`}
                       >
                         <td className="p-3 text-center whitespace-nowrap">
@@ -827,7 +827,7 @@ export default function ApplicationManagerModule({
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => handleSelectRow(app.id)}
-                            className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                            className="rounded border-slate-300 dark:border-slate-700 text-sky-600 focus:ring-sky-500 cursor-pointer"
                           />
                         </td>
                         {/* Registered Name (clickable to edit) */}
@@ -835,7 +835,7 @@ export default function ApplicationManagerModule({
                           <button
                             type="button"
                             onClick={() => setEditingApp(app)}
-                            className="text-left font-bold text-sky-600 hover:text-sky-800 hover:underline cursor-pointer flex items-center gap-1.5"
+                            className="text-left font-bold text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 hover:underline cursor-pointer flex items-center gap-1.5"
                             title="Click to edit application data"
                           >
                             <span>{app.registeredName}</span>
@@ -848,52 +848,57 @@ export default function ApplicationManagerModule({
                         </td>
 
                         {/* Application No */}
-                        <td className="p-3 font-mono font-bold text-slate-700 text-[11px] whitespace-nowrap">
+                        <td className="p-3 whitespace-nowrap font-mono font-bold text-slate-700 dark:text-slate-300">
                           {app.applicationNo}
                         </td>
 
                         {/* Form Name */}
-                        <td className="p-3 text-slate-700 whitespace-nowrap" title={app.formName}>
+                        <td className="p-3 whitespace-nowrap text-slate-700 dark:text-slate-300 max-w-[200px] truncate" title={app.formName}>
                           {app.formName}
                         </td>
 
                         {/* Registered Email */}
-                        <td className="p-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                          {app.registeredEmail}
+                        <td className="p-3 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                          {app.registeredEmail || "-"}
                         </td>
 
-                        {/* Registered Mobile with Call and WhatsApp */}
-                        <td className="p-3 font-mono text-[11px] text-slate-700 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                              <span>💬</span>
-                              <span>{app.registeredMobile}</span>
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Form Status */}
-                        <td className="p-3 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap leading-none ${
-                              app.formStatus === "Complete"
-                                ? "bg-emerald-50 text-emerald-800 border border-emerald-300"
-                                : "bg-slate-100 text-slate-700 border border-slate-300"
-                            }`}
-                          >
-                            {app.formStatus}
+                        {/* Registered Mobile */}
+                        <td className="p-3 whitespace-nowrap font-mono font-bold text-slate-700 dark:text-slate-300">
+                          <span className="text-sky-600 dark:text-sky-400 font-extrabold">+91-</span>
+                          <span>
+                            {app.registeredMobile
+                              ? app.registeredMobile.startsWith("+91-")
+                                ? app.registeredMobile.slice(4)
+                                : app.registeredMobile.startsWith("+91 ")
+                                ? app.registeredMobile.slice(4)
+                                : app.registeredMobile
+                              : "-"}
                           </span>
                         </td>
 
-                        {/* Payment Status */}
+                        {/* Form Status Badge */}
                         <td className="p-3 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap leading-none shadow-2xs ${
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border flex items-center gap-1 w-fit ${
+                              app.formStatus === "Complete"
+                                ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-600/40"
+                                : "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-600/40"
+                            }`}
+                          >
+                            {app.formStatus === "Complete" ? (
+                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            ) : (
+                              <Clock className="w-3 h-3 text-amber-500" />
+                            )}
+                            <span>{app.formStatus}</span>
+                          </span>
+                        </td>
+
+                        {/* Payment Status Badge */}
+                        <td className="p-3 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border flex items-center gap-1 w-fit ${
                               app.paymentStatus === "Payment Approved"
-                                ? "bg-emerald-50 text-emerald-800 border border-emerald-300"
-                                : app.paymentStatus === "Payment Rejected"
-                                ? "bg-rose-50 text-rose-800 border border-rose-300"
-                                : "bg-amber-50 text-amber-800 border border-amber-300"
                             }`}
                           >
                             <span
@@ -1039,22 +1044,22 @@ export default function ApplicationManagerModule({
 
       {/* 4. EDIT APPLICATION MODAL (Editable Data stored in Firebase) */}
       {editingApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg p-5 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/15 shadow-2xl w-full max-w-lg p-5 space-y-4 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
               <div>
-                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <Edit className="w-4 h-4 text-sky-600" />
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   <span>Edit Application Record</span>
                 </h3>
-                <p className="text-xs text-slate-500 font-mono mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                   ID: {editingApp.id} • App No: {editingApp.applicationNo}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingApp(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1064,7 +1069,7 @@ export default function ApplicationManagerModule({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Registered Name */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Registered Name</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Registered Name</label>
                   <input
                     type="text"
                     required
@@ -1072,13 +1077,13 @@ export default function ApplicationManagerModule({
                     onChange={(e) =>
                       setEditingApp({ ...editingApp, registeredName: e.target.value })
                     }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
                 {/* Application No */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Application Number</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Application Number</label>
                   <input
                     type="text"
                     required
@@ -1086,13 +1091,13 @@ export default function ApplicationManagerModule({
                     onChange={(e) =>
                       setEditingApp({ ...editingApp, applicationNo: e.target.value })
                     }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
                 {/* Registered Email */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Registered Email</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Registered Email</label>
                   <input
                     type="email"
                     required
@@ -1100,18 +1105,18 @@ export default function ApplicationManagerModule({
                     onChange={(e) =>
                       setEditingApp({ ...editingApp, registeredEmail: e.target.value })
                     }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
                 {/* Registered Mobile */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700 flex items-center justify-between">
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                     <span>Registered Mobile</span>
-                    <span className="text-[10px] text-sky-600 font-mono font-bold">+91- compulsory</span>
+                    <span className="text-[10px] text-sky-600 dark:text-sky-400 font-mono font-bold">+91- compulsory</span>
                   </label>
                   <div className="flex items-center">
-                    <span className="inline-flex items-center px-2.5 py-1.5 bg-slate-200 text-sky-700 border border-r-0 border-slate-300 rounded-l-lg text-xs font-mono font-extrabold select-none">
+                    <span className="inline-flex items-center px-2.5 py-1.5 bg-slate-200 dark:bg-slate-700 text-sky-700 dark:text-sky-300 border border-r-0 border-slate-300 dark:border-slate-700 rounded-l-lg text-xs font-mono font-extrabold select-none">
                       +91-
                     </span>
                     <input
@@ -1132,18 +1137,18 @@ export default function ApplicationManagerModule({
                       }}
                       placeholder="98765 43210"
                       maxLength={10}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-r-lg px-2.5 py-1.5 text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-r-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
                 {/* Form Name */}
                 <div className="sm:col-span-2 space-y-1">
-                  <label className="font-extrabold text-slate-700">Form Name</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Form Name</label>
                   <select
                     value={editingApp.formName}
                     onChange={(e) => setEditingApp({ ...editingApp, formName: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Application Form VSB Karur (Engineering)">
                       Application Form VSB Karur (Engineering)
@@ -1156,13 +1161,13 @@ export default function ApplicationManagerModule({
 
                 {/* Form Status */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Form Status</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Form Status</label>
                   <select
                     value={editingApp.formStatus}
                     onChange={(e) =>
                       setEditingApp({ ...editingApp, formStatus: e.target.value as any })
                     }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Incomplete">Incomplete</option>
                     <option value="Complete">Complete</option>
@@ -1171,13 +1176,13 @@ export default function ApplicationManagerModule({
 
                 {/* Payment Status */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Payment Status</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Payment Status</label>
                   <select
                     value={editingApp.paymentStatus}
                     onChange={(e) =>
                       setEditingApp({ ...editingApp, paymentStatus: e.target.value as any })
                     }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Payment Pending">Payment Pending</option>
                     <option value="Payment Approved">Payment Approved</option>
@@ -1187,11 +1192,11 @@ export default function ApplicationManagerModule({
 
                 {/* Payment Method */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Payment Method</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Payment Method</label>
                   <select
                     value={editingApp.paymentMethod || "-"}
                     onChange={(e) => setEditingApp({ ...editingApp, paymentMethod: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="-">- (None / Unpaid)</option>
                     <option value="Online">Online Gateway</option>
@@ -1203,11 +1208,11 @@ export default function ApplicationManagerModule({
 
                 {/* Application Owner */}
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Application Owner (Teacher)</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Application Owner (Teacher)</label>
                   <select
                     value={editingApp.applicationOwner || "Prof. P. Rajesh"}
                     onChange={(e) => setEditingApp({ ...editingApp, applicationOwner: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Prof. P. Rajesh">Prof. P. Rajesh (Karur)</option>
                     <option value="Dr. S. Meenakshi">Dr. S. Meenakshi (Coimbatore)</option>
@@ -1217,11 +1222,11 @@ export default function ApplicationManagerModule({
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setEditingApp(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1241,22 +1246,22 @@ export default function ApplicationManagerModule({
 
       {/* 5. ADD APPLICATION MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg p-5 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 dark:bg-black/80 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/15 shadow-2xl w-full max-w-lg p-5 space-y-4 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
               <div>
-                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-sky-600" />
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   <span>Create New Application</span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Record an incoming candidate application directly into the central database.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1265,46 +1270,46 @@ export default function ApplicationManagerModule({
             <form onSubmit={handleCreateNew} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Registered Name *</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Registered Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Vignesh K"
                     value={newApp.registeredName}
                     onChange={(e) => setNewApp({ ...newApp, registeredName: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Application No *</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Application No *</label>
                   <input
                     type="text"
                     required
                     value={newApp.applicationNo}
                     onChange={(e) => setNewApp({ ...newApp, applicationNo: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Registered Email</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Registered Email</label>
                   <input
                     type="email"
                     placeholder="candidate@gmail.com"
                     value={newApp.registeredEmail}
                     onChange={(e) => setNewApp({ ...newApp, registeredEmail: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700 flex items-center justify-between">
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                     <span>Registered Mobile</span>
-                    <span className="text-[10px] text-sky-600 font-mono font-bold">+91- compulsory</span>
+                    <span className="text-[10px] text-sky-600 dark:text-sky-400 font-mono font-bold">+91- compulsory</span>
                   </label>
                   <div className="flex items-center">
-                    <span className="inline-flex items-center px-2.5 py-1.5 bg-slate-200 text-sky-700 border border-r-0 border-slate-300 rounded-l-lg text-xs font-mono font-extrabold select-none">
+                    <span className="inline-flex items-center px-2.5 py-1.5 bg-slate-200 dark:bg-slate-700 text-sky-700 dark:text-sky-300 border border-r-0 border-slate-300 dark:border-slate-700 rounded-l-lg text-xs font-mono font-extrabold select-none">
                       +91-
                     </span>
                     <input
@@ -1325,17 +1330,17 @@ export default function ApplicationManagerModule({
                       }}
                       placeholder="98765 43210"
                       maxLength={10}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-r-lg px-2.5 py-1.5 text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-r-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
                 <div className="sm:col-span-2 space-y-1">
-                  <label className="font-extrabold text-slate-700">Form Name</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Form Name</label>
                   <select
                     value={newApp.formName}
                     onChange={(e) => setNewApp({ ...newApp, formName: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Application Form VSB Karur (Engineering)">
                       Application Form VSB Karur (Engineering)
@@ -1347,11 +1352,11 @@ export default function ApplicationManagerModule({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Form Status</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Form Status</label>
                   <select
                     value={newApp.formStatus}
                     onChange={(e) => setNewApp({ ...newApp, formStatus: e.target.value as any })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Incomplete">Incomplete</option>
                     <option value="Complete">Complete</option>
@@ -1359,13 +1364,13 @@ export default function ApplicationManagerModule({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-extrabold text-slate-700">Payment Status</label>
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Payment Status</label>
                   <select
                     value={newApp.paymentStatus}
                     onChange={(e) =>
                       setNewApp({ ...newApp, paymentStatus: e.target.value as any })
                     }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Payment Pending">Payment Pending</option>
                     <option value="Payment Approved">Payment Approved</option>
@@ -1374,11 +1379,11 @@ export default function ApplicationManagerModule({
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

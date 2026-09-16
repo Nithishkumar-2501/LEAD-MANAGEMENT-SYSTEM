@@ -627,3 +627,107 @@ html.light .bg-rose-950\/40 {
   background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
 }
+
+/* ========================================================================= */
+/* GLOBAL DARK MODE STYLES & OVERRIDES - ALL AREAS PURE DARK THEME          */
+/* ========================================================================= */
+html.dark,
+html.dark body,
+html.dark main,
+html.dark .min-h-screen {
+  background: #070a14 !important;
+  color: #f8fafc !important;
+}
+
+/* Modals & Dialogs in Dark Mode: absolutely no white dialog backgrounds */
+html.dark .fixed .bg-white,
+html.dark .fixed .bg-slate-50,
+html.dark .fixed .bg-slate-100 {
+  background-color: #0f172a !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Modal Inner Cards & Sections in Dark Mode */
+html.dark .fixed .bg-white .bg-white,
+html.dark .fixed .bg-white .bg-slate-50,
+html.dark .fixed .bg-slate-900 .bg-white,
+html.dark .fixed .bg-slate-900 .bg-slate-50 {
+  background-color: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+}
+
+/* Inputs, Selects & Textareas in Dark Mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Card & Table containers with bg-white in Dark Mode */
+html.dark .bg-white:not(button):not(input):not(select):not(.badge-status-hot):not(.badge-status-warm):not(.badge-status-cold) {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Slate-50 background sections in Dark Mode */
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-50\/90,
+html.dark .bg-slate-50\/95,
+html.dark .bg-slate-100,
+html.dark .bg-slate-100\/80,
+html.dark .bg-slate-100\/90 {
+  background-color: #0b1120 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f1f5f9 !important;
+}
+
+/* Text colors in Dark Mode */
+html.dark .text-slate-950,
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Table borders and hover states in Dark Mode */
+html.dark .border-slate-200,
+html.dark .border-slate-300 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Keep accent colored buttons white text in Dark Mode */
+html.dark button.bg-blue-600,
+html.dark button.bg-indigo-600,
+html.dark button.bg-sky-600,
+html.dark button.bg-emerald-600,
+html.dark button.bg-rose-600,
+html.dark .glossy-btn,
+html.dark button[type="submit"] {
+  color: #ffffff !important;
+}
