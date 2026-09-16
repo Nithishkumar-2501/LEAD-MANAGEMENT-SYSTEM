@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Lead, Application, Task, CampusLocation } from "@/types/crm";
 import GoogleCalendarModal from "@/components/GoogleCalendarModal";
+import BionisDashboardDemo from "@/components/ui/demo";
 import {
   UserCheck,
   PhoneCall,
@@ -183,8 +184,8 @@ export default function UserDashboardView({
   const pendingTasks = tasks.filter((t) => !t.isCompleted);
   const completedTasks = tasks.filter((t) => t.isCompleted);
 
-  // Top Tabs: "MY_DASHBOARD" | "PRODUCTIVITY_REPORT"
-  const [activeDashboardTab, setActiveDashboardTab] = useState<"MY_DASHBOARD" | "PRODUCTIVITY_REPORT">("MY_DASHBOARD");
+  // Top Tabs: "MY_DASHBOARD" | "PRODUCTIVITY_REPORT" | "BIONIS"
+  const [activeDashboardTab, setActiveDashboardTab] = useState<"MY_DASHBOARD" | "PRODUCTIVITY_REPORT" | "BIONIS">("MY_DASHBOARD");
 
   // Data Source Mode Switcher: "DATABASE" (Real Live DB) vs "INSTITUTIONAL" (NoPaperForms 235k baseline)
   const [dataSourceMode, setDataSourceMode] = useState<"DATABASE" | "INSTITUTIONAL">("DATABASE");
@@ -839,6 +840,21 @@ export default function UserDashboardView({
           >
             Productivity Report
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveDashboardTab("BIONIS")}
+            className={`press-spring px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeDashboardTab === "BIONIS"
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>Health & Wellness (Bionis)</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-600 dark:text-emerald-400 font-black">
+              Live
+            </span>
+          </button>
         </div>
 
         {/* Database Mode Switcher */}
@@ -870,10 +886,16 @@ export default function UserDashboardView({
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 1. USER WISE LEAD AND APPLICATION COUNT (IMAGE 2)                         */}
-      {/* ========================================================================= */}
-      <div className="bubble-card card-hover-elevate p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg">
+      {activeDashboardTab === "BIONIS" ? (
+        <div className="rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-2xl bg-white dark:bg-slate-950 min-h-[850px] animate-fadeIn">
+          <BionisDashboardDemo />
+        </div>
+      ) : (
+        <>
+          {/* ========================================================================= */}
+          {/* 1. USER WISE LEAD AND APPLICATION COUNT (IMAGE 2)                         */}
+          {/* ========================================================================= */}
+          <div className="bubble-card card-hover-elevate p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg">
         {/* Header with Title & Legend & Filter Dropdowns */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1849,6 +1871,8 @@ export default function UserDashboardView({
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* ========================================================================= */}
       {/* 6. "VIEW ALL ACTIVITY FEEDS" EXPANDED MODAL                              */}

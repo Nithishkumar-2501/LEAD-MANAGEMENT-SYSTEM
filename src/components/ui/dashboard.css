@@ -1,0 +1,61 @@
+:root {
+  --live: #10b981;
+  --score: #0284c7;
+  --trend: #10b981;
+  --chart-sleep: #6366f1;
+  --chart-sleep-fill: #818cf8;
+  --chart-steps: #0284c7;
+  --chart-recovery: #10b981;
+  --chart-grid: rgba(148, 163, 184, 0.2);
+  --chart-axis: #64748b;
+  --chart-warn: #f59e0b;
+  --chart-warn-bg: rgba(245, 158, 11, 0.12);
+  --chart-period: #6366f1;
+  --chart-period-bg: rgba(99, 102, 241, 0.12);
+  --chart-tooltip-bg: #0f172a;
+  --metric-heart: #ef4444;
+  --metric-steps: #0284c7;
+  --metric-sleep: #8b5cf6;
+  --metric-recovery: #10b981;
+  --metric-vital: #ec4899;
+  --bionis-blue: #0284c7;
+  --insight-prediction: #6366f1;
+  --insight-vitals: #ef4444;
+  --insight-actions: #14b8a6;
+  --prediction-warn: #f59e0b;
+  --prediction-danger: #ef4444;
+  --vital-good: #10b981;
+  --heatmap-low: #93c5fd;
+  --heatmap-med: #3b82f6;
+  --heatmap-high: #1d4ed8;
+  --promo-gradient-from: rgba(99, 102, 241, 0.15);
+  --promo-gradient-to: rgba(59, 130, 246, 0.05);
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-border: rgba(226, 232, 240, 0.8);
+  --sidebar-accent: rgba(241, 245, 249, 0.8);
+  --sidebar-accent-foreground: #0f172a;
+}
+
+.dark {
+  --chart-tooltip-bg: #030712;
+  --chart-grid: rgba(255, 255, 255, 0.08);
+  --sidebar: #020617;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent-foreground: #f8fafc;
+}
+
+.bionis-dashboard {
+  font-family: inherit;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
