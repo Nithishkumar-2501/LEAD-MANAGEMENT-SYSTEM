@@ -684,10 +684,10 @@ export default function ApplicationManagerModule({
 
           {/* DATA TABLE (Columns matching Image 2) */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-xs border-collapse min-w-[1050px]">
               <thead className="bg-slate-100/90 text-slate-600 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200 select-none">
                 <tr>
-                  <th className="p-3 w-10 text-center">
+                  <th className="p-3 w-10 text-center whitespace-nowrap">
                     <input
                       type="checkbox"
                       onChange={handleSelectAll}
@@ -699,7 +699,7 @@ export default function ApplicationManagerModule({
                     />
                   </th>
                   <th
-                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors whitespace-nowrap"
                     onClick={() => handleSort("registeredName")}
                   >
                     <div className="flex items-center gap-1">
@@ -708,7 +708,7 @@ export default function ApplicationManagerModule({
                     </div>
                   </th>
                   <th
-                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors whitespace-nowrap"
                     onClick={() => handleSort("applicationNo")}
                   >
                     <div className="flex items-center gap-1">
@@ -717,7 +717,7 @@ export default function ApplicationManagerModule({
                     </div>
                   </th>
                   <th
-                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors whitespace-nowrap"
                     onClick={() => handleSort("formName")}
                   >
                     <div className="flex items-center gap-1">
@@ -726,7 +726,7 @@ export default function ApplicationManagerModule({
                     </div>
                   </th>
                   <th
-                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors whitespace-nowrap"
                     onClick={() => handleSort("registeredEmail")}
                   >
                     <div className="flex items-center gap-1">
@@ -735,7 +735,7 @@ export default function ApplicationManagerModule({
                     </div>
                   </th>
                   <th
-                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors whitespace-nowrap"
                     onClick={() => handleSort("registeredMobile")}
                   >
                     <div className="flex items-center gap-1">
@@ -744,7 +744,7 @@ export default function ApplicationManagerModule({
                     </div>
                   </th>
                   <th
-                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors whitespace-nowrap"
                     onClick={() => handleSort("formStatus")}
                   >
                     <div className="flex items-center gap-1">
@@ -753,7 +753,7 @@ export default function ApplicationManagerModule({
                     </div>
                   </th>
                   <th
-                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors whitespace-nowrap"
                     onClick={() => handleSort("paymentStatus")}
                   >
                     <div className="flex items-center gap-1">
@@ -762,7 +762,7 @@ export default function ApplicationManagerModule({
                     </div>
                   </th>
                   <th
-                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-slate-200/60 transition-colors whitespace-nowrap"
                     onClick={() => handleSort("paymentMethod")}
                   >
                     <div className="flex items-center gap-1">
@@ -770,7 +770,7 @@ export default function ApplicationManagerModule({
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
-                  <th className="p-3 text-center w-12">Action</th>
+                  <th className="p-3 text-center w-12 whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
@@ -799,7 +799,7 @@ export default function ApplicationManagerModule({
                           isSelected ? "bg-sky-50/80" : ""
                         }`}
                       >
-                        <td className="p-3 text-center">
+                        <td className="p-3 text-center whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -808,7 +808,7 @@ export default function ApplicationManagerModule({
                           />
                         </td>
                         {/* Registered Name (clickable to edit) */}
-                        <td className="p-3">
+                        <td className="p-3 whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setEditingApp(app)}
@@ -825,22 +825,22 @@ export default function ApplicationManagerModule({
                         </td>
 
                         {/* Application No */}
-                        <td className="p-3 font-mono font-bold text-slate-700 text-[11px]">
+                        <td className="p-3 font-mono font-bold text-slate-700 text-[11px] whitespace-nowrap">
                           {app.applicationNo}
                         </td>
 
                         {/* Form Name */}
-                        <td className="p-3 text-slate-700 max-w-[200px] truncate" title={app.formName}>
+                        <td className="p-3 text-slate-700 whitespace-nowrap" title={app.formName}>
                           {app.formName}
                         </td>
 
                         {/* Registered Email */}
-                        <td className="p-3 font-mono text-[11px] text-slate-600">
+                        <td className="p-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
                           {app.registeredEmail}
                         </td>
 
                         {/* Registered Mobile with Call and WhatsApp */}
-                        <td className="p-3 font-mono text-[11px] text-slate-700">
+                        <td className="p-3 font-mono text-[11px] text-slate-700 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <span className="text-emerald-600 font-semibold flex items-center gap-1">
                               <span>💬</span>
@@ -850,12 +850,12 @@ export default function ApplicationManagerModule({
                         </td>
 
                         {/* Form Status */}
-                        <td className="p-3">
+                        <td className="p-3 whitespace-nowrap">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap leading-none ${
                               app.formStatus === "Complete"
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                                : "bg-slate-100 text-slate-700 border border-slate-200"
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-300"
+                                : "bg-slate-100 text-slate-700 border border-slate-300"
                             }`}
                           >
                             {app.formStatus}
@@ -863,24 +863,33 @@ export default function ApplicationManagerModule({
                         </td>
 
                         {/* Payment Status */}
-                        <td className="p-3">
+                        <td className="p-3 whitespace-nowrap">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap leading-none shadow-2xs ${
                               app.paymentStatus === "Payment Approved"
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-300"
                                 : app.paymentStatus === "Payment Rejected"
-                                ? "bg-rose-100 text-rose-800 border border-rose-300"
-                                : "bg-amber-100 text-amber-800 border border-amber-300"
+                                ? "bg-rose-50 text-rose-800 border border-rose-300"
+                                : "bg-amber-50 text-amber-800 border border-amber-300"
                             }`}
                           >
-                            {app.paymentStatus}
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                app.paymentStatus === "Payment Approved"
+                                  ? "bg-emerald-500"
+                                  : app.paymentStatus === "Payment Rejected"
+                                  ? "bg-rose-500"
+                                  : "bg-amber-500 animate-pulse"
+                              }`}
+                            />
+                            <span>{app.paymentStatus}</span>
                           </span>
                         </td>
 
                         {/* Payment Method */}
-                        <td className="p-3 text-slate-600 font-semibold">
+                        <td className="p-3 text-slate-600 font-semibold whitespace-nowrap">
                           {app.paymentMethod && app.paymentMethod !== "-" ? (
-                            <span className="px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-bold text-[10px]">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded bg-sky-100 text-sky-800 font-bold text-[10px] whitespace-nowrap leading-none">
                               {app.paymentMethod}
                             </span>
                           ) : (
@@ -889,7 +898,7 @@ export default function ApplicationManagerModule({
                         </td>
 
                         {/* Row Actions Menu */}
-                        <td className="p-3 text-center relative">
+                        <td className="p-3 text-center relative whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setActiveMenuId(activeMenuId === app.id ? null : app.id)}
