@@ -788,11 +788,11 @@ export function processNoraChatQuery(
         `  1. Profiles for department professors, HoDs, and admission coordinators.\n` +
         `  2. Automatic quota assignment (100 candidate contacts per teacher).\n` +
         `  3. Live tracking of teacher contact milestones and student conversion success.`,
-      specificData: {
+      specificData: currentUserRole === "ADMIN" ? {
         type: "DASHBOARD_NAV",
         targetTab: "TEACHERS",
         targetTabTitle: "Open Teacher Directory",
-      },
+      } : undefined,
       suggestedQueries: ["What is Campus & Courses?", "What is Fee Payment?", "Total leads count"],
       timestamp,
     };

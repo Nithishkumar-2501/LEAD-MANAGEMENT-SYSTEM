@@ -108,7 +108,7 @@ export default function Header({
   ];
 
   const filteredNavItems = currentUserRole === "TEACHER"
-    ? navItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS")
+    ? navItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS" && item.id !== "TEACHERS")
     : navItems;
 
   const handleNavClick = (tab: ActiveTab) => {

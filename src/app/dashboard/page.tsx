@@ -98,6 +98,13 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Ensure teachers cannot access or remain on admin-only modules like TEACHERS
+  useEffect(() => {
+    if (currentUserRole === "TEACHER" && activeTab === "TEACHERS") {
+      setActiveTab("USER_DASHBOARD");
+    }
+  }, [currentUserRole, activeTab]);
+
   // Reusable Firebase and Database sync helper
   const applyFirebaseLeads = useCallback((fbLeads: StudentRecord[]) => {
     if (!fbLeads) return;
@@ -352,6 +359,7 @@ export default function DashboardPage() {
     setIsAuthenticated(true);
 
     if (role === "TEACHER") {
+      setActiveTab("USER_DASHBOARD");
       try {
         const updatedTeacher = await updateTeacherOnlineStatus(username, campus, "ACTIVE");
         if (updatedTeacher) {
@@ -676,8 +684,8 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* TEACHER DIRECTORY MODULE */}
-        {activeTab === "TEACHERS" && (
+        {/* TEACHER DIRECTORY MODULE (ADMIN ONLY) */}
+        {activeTab === "TEACHERS" && currentUserRole === "ADMIN" && (
           <TeacherModule
             loggedInCampus={loggedInCampus}
             currentUserRole={currentUserRole}
@@ -827,18 +835,20 @@ export default function DashboardPage() {
           <span className="text-[10px] tracking-tight">Desk</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("TEACHERS")}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-            activeTab === "TEACHERS"
-              ? "text-sky-400 font-extrabold scale-105"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <BookOpen className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">Faculty</span>
-        </button>
+        {currentUserRole === "ADMIN" && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("TEACHERS")}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+              activeTab === "TEACHERS"
+                ? "text-sky-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <BookOpen className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Faculty</span>
+          </button>
+        )}
       </nav>
       </div>
     </div>

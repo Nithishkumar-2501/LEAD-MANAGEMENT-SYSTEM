@@ -244,7 +244,7 @@ export default function Sidebar({
 
   const filteredSubItems =
     currentUserRole === "TEACHER"
-      ? admissionSubItems.filter((item) => item.id !== "PAYMENTS")
+      ? admissionSubItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "TEACHERS")
       : admissionSubItems;
 
   const handleNavClick = (id: ActiveTab) => {
