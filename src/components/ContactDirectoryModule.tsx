@@ -218,6 +218,9 @@ export default function ContactDirectoryModule({
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [counsellingFilter, setCounsellingFilter] = useState<"ALL" | "COUNSELLING_ONLY" | "GOVT_QUOTA" | "MANAGEMENT_ONLY">("ALL");
+  const [selectedAcquisitionChannel, setSelectedAcquisitionChannel] = useState<string>("ALL");
+  const [isBulkAssignDropdownOpen, setIsBulkAssignDropdownOpen] = useState(false);
+  const [isBulkStageDropdownOpen, setIsBulkStageDropdownOpen] = useState(false);
 
   // Table Column Header Filtering & Sorting State
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
@@ -229,6 +232,8 @@ export default function ContactDirectoryModule({
     if (col === "Registered Name") return c.name || "";
     if (col === "Registered Email") return c.email || "";
     if (col === "Registered Mobile") return c.phone || "";
+    if (col === "Assigned Counselor") return c.assignedTo || "";
+    if (col === "TNEA Cutoff") return (c as any).tneaCutoff ? String((c as any).tneaCutoff) : "";
     if (col === "Registered Country") return (c as any).country || "";
     if (col === "State") return c.state || "";
     if (col === "City") return c.district || "";
@@ -279,6 +284,133 @@ export default function ContactDirectoryModule({
     setSelectedCandidateForModal(fullCand);
   };
 
+  // Export Leads to CSV (Meritto Architecture: Zero Data Loss)
+  const handleExportCSV = () => {
+    const listToExport = selectedRows.length > 0 
+      ? sortedAndFilteredContacts.filter((c) => selectedRows.includes(c.id))
+      : sortedAndFilteredContacts;
+
+    if (listToExport.length === 0) {
+      if (onTriggerToast) onTriggerToast("⚠️ No candidate leads available to export.");
+      return;
+    }
+
+    const headers = [
+      "Lead ID",
+      "Candidate Name",
+      "Mobile Number",
+      "Email Address",
+      "Campus",
+      "Course / Branch",
+      "TNEA Cutoff",
+      "District",
+      "State",
+      "School Name",
+      "Assigned Counselor",
+      "Primary Source",
+      "Lead Stage",
+      "Registration Date"
+    ];
+
+    const rows = listToExport.map((c) => [
+      `"${c.id}"`,
+      `"${(c.name || "").replace(/"/g, '""')}"`,
+      `"${c.phone || ""}"`,
+      `"${c.email || ""}"`,
+      `"${c.campus || ""}"`,
+      `"${(c.courseInterest || "").replace(/"/g, '""')}"`,
+      `"${(c as any).tneaCutoff ?? ""}"`,
+      `"${(c.district || "").replace(/"/g, '""')}"`,
+      `"${(c.state || "").replace(/"/g, '""')}"`,
+      `"${(c.school || "").replace(/"/g, '""')}"`,
+      `"${(c.assignedTo || "").replace(/"/g, '""')}"`,
+      `"${(c.source || "").replace(/"/g, '""')}"`,
+      `"${c.status || ""}"`,
+      `"${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ""}"`
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `VSB_Lead_Management_Export_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (onTriggerToast) {
+      onTriggerToast(`📥 Exported ${listToExport.length} lead(s) to CSV spreadsheet!`);
+    }
+  };
+
+  // Bulk Re-assign Counselor Handler
+  const handleBulkReassignCounselor = async (counselorId: string) => {
+    if (selectedRows.length === 0) return;
+    const faculty = FACULTY_MEMBERS.find((f) => f.id === counselorId || f.name === counselorId);
+    const counselorName = faculty ? faculty.name : counselorId;
+    
+    // Optimistic UI update
+    const updated = contacts.map((c) => {
+      if (selectedRows.includes(c.id)) {
+        return { ...c, assignedTo: counselorId };
+      }
+      return c;
+    });
+    setContacts(updated);
+
+    // Save to Firebase in background
+    const selectedLeads = contacts.filter((c) => selectedRows.includes(c.id));
+    Promise.allSettled(
+      selectedLeads.map((c) => saveStudentToFirebase({ ...c, assignedTo: counselorId }))
+    ).catch((err) => console.warn("Bulk assign sync notice:", err));
+
+    if (onTriggerToast) {
+      onTriggerToast(`👤 Allocated ${selectedRows.length} lead(s) to ${counselorName}!`);
+    }
+    setSelectedRows([]);
+    setIsBulkAssignDropdownOpen(false);
+  };
+
+  // Bulk Update Stage Handler
+  const handleBulkUpdateStage = async (newStage: LeadStatus) => {
+    if (selectedRows.length === 0) return;
+    const updated = contacts.map((c) => {
+      if (selectedRows.includes(c.id)) {
+        return { ...c, status: newStage };
+      }
+      return c;
+    });
+    setContacts(updated);
+
+    const selectedLeads = contacts.filter((c) => selectedRows.includes(c.id));
+    Promise.allSettled(
+      selectedLeads.map((c) => saveStudentToFirebase({ ...c, status: newStage }))
+    ).catch((err) => console.warn("Bulk stage update sync notice:", err));
+
+    if (onTriggerToast) {
+      onTriggerToast(`🏷️ Updated ${selectedRows.length} lead(s) stage to ${newStage}!`);
+    }
+    setSelectedRows([]);
+    setIsBulkStageDropdownOpen(false);
+  };
+
+  // Bulk WhatsApp Broadcast Handler
+  const handleBulkWhatsAppBroadcast = () => {
+    if (selectedRows.length === 0) return;
+    const selectedLeads = contacts.filter((c) => selectedRows.includes(c.id));
+    if (selectedLeads.length === 1) {
+      const single = selectedLeads[0];
+      onActionTrigger("WHATSAPP", single.name);
+      redirectToWhatsApp(single.phone, getDefaultAdmissionWhatsAppText(single));
+    } else {
+      if (onTriggerToast) {
+        onTriggerToast(`💬 Initiated WhatsApp admission broadcast for ${selectedLeads.length} leads!`);
+      }
+      const first = selectedLeads[0];
+      redirectToWhatsApp(first.phone, `V.S.B. Engineering College Admission Desk: Hello prospective candidate, your admission inquiry for Academic Year 2026-27 is currently under review.`);
+    }
+  };
+
   // Meritto Lead Manager View & Filter States (Image 2)
   const [directoryViewMode, setDirectoryViewMode] = useState<"TABLE" | "GRID">("TABLE");
   const [regDateFilter, setRegDateFilter] = useState("Select Here");
@@ -320,23 +452,27 @@ export default function ContactDirectoryModule({
   const [columnSearchQuery, setColumnSearchQuery] = useState("");
   const [selectedColumns, setSelectedColumns] = useState<string[]>([
     "Registered Name",
-    "Registered Email",
     "Registered Mobile",
-    "State",
+    "Campus",
+    "Course",
+    "Assigned Counselor",
     "City",
-    "User Registration Date",
     "Lead Stage",
+    "User Registration Date",
   ]);
 
   const allAvailableColumns = [
     "Registered Name",
-    "Registered Email",
     "Registered Mobile",
-    "Registered Country",
-    "State",
-    "City",
+    "Registered Email",
     "Campus",
     "Course",
+    "Assigned Counselor",
+    "TNEA Cutoff",
+    "Lead Stage",
+    "City",
+    "State",
+    "Registered Country",
     "Specialization",
     "Utm Keyword",
     "Gender",
@@ -350,7 +486,6 @@ export default function ContactDirectoryModule({
     "Community",
     "How Known / Source",
     "User Registration Date",
-    "Lead Stage",
   ];
 
   // Visibility Controls States
@@ -579,44 +714,76 @@ export default function ContactDirectoryModule({
     col: string
   ) => {
     if (col === "Registered Name") {
+      const stateInfo = getStudentLeadState(contact);
+      const isVerified = Boolean(contact.phone && contact.phone.length >= 10);
+      const rawRef = contact.id.startsWith("lead_") ? `VSB-${contact.id.replace("lead_", "").slice(-4)}` : contact.id;
       return (
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
-            <span
-              className="font-extrabold text-blue-600 dark:text-sky-300 hover:text-blue-700 dark:hover:text-sky-200 text-sm hover:underline cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCandidateClick(contact);
-              }}
-            >
-              {contact.name}
-            </span>
-
-            {/* Nora AI Mini Analysis Icon matching Screenshot */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onOpenNoraAi) {
-                  onOpenNoraAi(`Analyze student record for ${contact.name}`);
-                }
-              }}
-              className="p-1 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white transition-all shadow-xs cursor-pointer hover:scale-110"
-              title={`Ask Nora AI to analyze ${contact.name}'s database record`}
-            >
-              <Sparkles className="w-3 h-3 text-purple-600 dark:text-purple-300" />
-            </button>
-          </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCandidateClick(contact);
-            }}
-            className="p-1 rounded text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 opacity-80 group-hover:opacity-100"
-            title="View Lead Details"
+        <div className="flex items-center gap-2.5">
+          {/* Student Initials Avatar with Engagement State Ring */}
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 shadow-sm ${
+              stateInfo.state === "HOT"
+                ? "bg-gradient-to-tr from-rose-500 to-amber-500 ring-2 ring-rose-400/60"
+                : stateInfo.state === "WARM"
+                ? "bg-gradient-to-tr from-amber-500 to-teal-500 ring-2 ring-amber-400/60"
+                : "bg-gradient-to-tr from-sky-500 to-indigo-500 ring-2 ring-sky-400/60"
+            }`}
           >
-            ⋮
-          </button>
+            {contact.name.slice(0, 2).toUpperCase()}
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span
+                className="font-extrabold text-blue-600 dark:text-sky-300 hover:text-blue-700 dark:hover:text-sky-200 text-xs hover:underline cursor-pointer truncate"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCandidateClick(contact);
+                }}
+              >
+                {contact.name}
+              </span>
+
+              {/* Verified Shield Badge */}
+              {isVerified ? (
+                <span
+                  className="inline-flex items-center gap-0.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-400/30"
+                  title="Mobile & Intent Verified"
+                >
+                  <ShieldCheck className="w-2.5 h-2.5" /> Verified
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-white/10"
+                  title="Verification Pending"
+                >
+                  Unverified
+                </span>
+              )}
+
+              {/* Nora AI Mini Analysis Icon */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onOpenNoraAi) {
+                    onOpenNoraAi(`Analyze student record for ${contact.name}`);
+                  }
+                }}
+                className="p-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white transition-all shadow-xs cursor-pointer hover:scale-110"
+                title={`Ask Nora AI to analyze ${contact.name}'s database record`}
+              >
+                <Sparkles className="w-2.5 h-2.5" />
+              </button>
+            </div>
+
+            {/* Candidate Reference ID & Campus */}
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono mt-0.5">
+              <span>{rawRef}</span>
+              <span>•</span>
+              <span className="text-sky-600 dark:text-sky-400 font-semibold">{contact.campus || "KARUR"}</span>
+            </div>
+          </div>
         </div>
       );
     }
@@ -674,6 +841,45 @@ export default function ContactDirectoryModule({
             {showPhone ? contact.phone : "+91 ••••• •••••"}
           </a>
         </div>
+      );
+    }
+    if (col === "Assigned Counselor") {
+      const counselorUsername = contact.assignedTo;
+      const faculty = FACULTY_MEMBERS.find(
+        (f) => f.id === counselorUsername || f.name === counselorUsername
+      );
+      const displayName = faculty ? faculty.name : counselorUsername || "Unassigned";
+      const profileId = faculty ? faculty.id.split("@")[0].toUpperCase() : "UNASSIGNED";
+      const isAssigned = Boolean(counselorUsername);
+
+      return (
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              isAssigned ? "bg-emerald-500 shadow-xs shadow-emerald-400" : "bg-amber-400"
+            }`}
+          />
+          <div className="text-left leading-tight">
+            <p className="font-bold text-xs text-slate-800 dark:text-slate-200">{displayName}</p>
+            <p className="text-[10px] font-mono text-slate-400">{profileId}</p>
+          </div>
+        </div>
+      );
+    }
+    if (col === "TNEA Cutoff") {
+      const cutoff = (contact as any).tneaCutoff ?? (contact as any).cutoff;
+      if (!cutoff) return <span className="text-slate-400 text-xs">-</span>;
+      const isHigh = cutoff >= 175;
+      return (
+        <span
+          className={`px-2.5 py-0.5 rounded-full font-mono text-xs font-black border inline-block ${
+            isHigh
+              ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10"
+          }`}
+        >
+          {cutoff} / 200
+        </span>
       );
     }
     if (col === "Registered Country") return <span className="font-semibold text-slate-800 dark:text-slate-200">{(contact as any).country || ""}</span>;
@@ -881,14 +1087,26 @@ export default function ContactDirectoryModule({
     };
 
     const matchesSelectedView = () => {
-      if (!selectedViewName || selectedViewName === "Default View") return true;
-      if (selectedViewName === "Karur Intake View") {
+      if (!selectedViewName || selectedViewName === "Default View" || selectedViewName === "All Leads" || selectedViewName === "All Enquiries") return true;
+      if (selectedViewName === "Fresh & Untouched" || selectedViewName === "Untouched Leads") {
+        return !c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY";
+      }
+      if (selectedViewName === "Today's Follow-ups" || selectedViewName === "Follow-ups Due") {
+        return c.status === "CONTACTED" || c.status === "IN_REVIEW";
+      }
+      if (selectedViewName === "Hot Prospects" || selectedViewName === "High Intent Leads") {
+        return stateInfo.state === "HOT";
+      }
+      if (selectedViewName === "Karur Intake View" || selectedViewName === "Karur Campus Intake") {
         return (
           c.campus === "KARUR" ||
           (c.district && c.district.toLowerCase().includes("karur")) ||
           (c.address && c.address.toLowerCase().includes("karur")) ||
           (c.school && c.school.toLowerCase().includes("karur"))
         );
+      }
+      if (selectedViewName === "Coimbatore Intake View" || selectedViewName === "Coimbatore Campus Intake") {
+        return c.campus === "COIMBATORE";
       }
       if (selectedViewName === "TNEA Candidates") {
         return (
@@ -898,10 +1116,25 @@ export default function ContactDirectoryModule({
           (c.source && c.source.toLowerCase().includes("tnea"))
         );
       }
-      if (selectedViewName === "High Cutoff Leads") {
-        const cutoff = (c as any).tneaCutoff ?? (c as any).cutoff ?? 180;
+      if (selectedViewName === "High Cutoff Leads" || selectedViewName === "High Cutoff 180+") {
+        const cutoff = (c as any).tneaCutoff ?? (c as any).cutoff ?? 0;
         return cutoff >= 170;
       }
+      if (selectedViewName === "Admitted / Enrolled" || selectedViewName === "Admitted") {
+        return c.status === "ADMITTED" || c.application?.stage === "FEE_PAID";
+      }
+      return true;
+    };
+
+    const matchesAcquisitionChannel = () => {
+      if (!selectedAcquisitionChannel || selectedAcquisitionChannel === "ALL") return true;
+      const src = (c.source || "").toLowerCase();
+      if (selectedAcquisitionChannel === "Google/Web") return src.includes("google") || src.includes("web") || src.includes("site");
+      if (selectedAcquisitionChannel === "WhatsApp") return src.includes("whatsapp") || src.includes("chat");
+      if (selectedAcquisitionChannel === "Social Ads") return src.includes("social") || src.includes("ads") || src.includes("meta") || src.includes("instagram") || src.includes("facebook");
+      if (selectedAcquisitionChannel === "TNEA") return src.includes("tnea") || src.includes("counselling") || Boolean(c.appliedCounselling);
+      if (selectedAcquisitionChannel === "School Expo") return src.includes("school") || src.includes("expo") || src.includes("visit");
+      if (selectedAcquisitionChannel === "Walk-in") return src.includes("walk") || src.includes("direct");
       return true;
     };
 
@@ -970,6 +1203,7 @@ export default function ContactDirectoryModule({
       matchesColumnFilters &&
       matchesRegDate() &&
       matchesSelectedView() &&
+      matchesAcquisitionChannel() &&
       matchesLeadStage() &&
       matchesLeadOwner() &&
       matchesCampaignSource() &&
@@ -1353,6 +1587,77 @@ export default function ContactDirectoryModule({
     ).catch((err) => console.warn("Bulk delete background notice:", err));
   };
 
+  // Real-time Lead Funnel KPI Calculations (Meritto Education CRM Architecture)
+  const totalLeadsCount = contacts.length;
+  const freshLeadsCount = contacts.filter((c) => !c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY").length;
+  const followUpsDueCount = contacts.filter((c) => c.status === "CONTACTED" || c.status === "IN_REVIEW").length;
+  const hotLeadsCount = contacts.filter((c) => getStudentLeadState(c).state === "HOT").length;
+  const verifiedLeadsCount = contacts.filter((c) => c.phone && c.phone.length >= 10).length;
+  const admittedLeadsCount = contacts.filter((c) => c.status === "ADMITTED" || c.application?.stage === "FEE_PAID").length;
+
+  const ACQUISITION_CHANNELS = [
+    { id: "ALL", label: "All Channels", icon: "🌐", count: contacts.length },
+    {
+      id: "Google/Web",
+      label: "Google & Web",
+      icon: "🔍",
+      count: contacts.filter((c) => {
+        const s = (c.source || "").toLowerCase();
+        return s.includes("google") || s.includes("web") || s.includes("site");
+      }).length,
+    },
+    {
+      id: "WhatsApp",
+      label: "WhatsApp Chat",
+      icon: "💬",
+      count: contacts.filter((c) => (c.source || "").toLowerCase().includes("whatsapp")).length,
+    },
+    {
+      id: "Social Ads",
+      label: "Meta & Social Ads",
+      icon: "📢",
+      count: contacts.filter((c) => {
+        const s = (c.source || "").toLowerCase();
+        return s.includes("social") || s.includes("ads") || s.includes("meta") || s.includes("instagram") || s.includes("facebook");
+      }).length,
+    },
+    {
+      id: "TNEA",
+      label: "TNEA Direct",
+      icon: "🎓",
+      count: contacts.filter((c) => (c.source || "").toLowerCase().includes("tnea") || Boolean(c.appliedCounselling)).length,
+    },
+    {
+      id: "School Expo",
+      label: "School Outreach",
+      icon: "🏫",
+      count: contacts.filter((c) => {
+        const s = (c.source || "").toLowerCase();
+        return s.includes("school") || s.includes("expo") || s.includes("visit");
+      }).length,
+    },
+    {
+      id: "Walk-in",
+      label: "Campus Walk-ins",
+      icon: "🚶",
+      count: contacts.filter((c) => {
+        const s = (c.source || "").toLowerCase();
+        return s.includes("walk") || s.includes("direct");
+      }).length,
+    },
+  ];
+
+  const PRESET_VIEWS = [
+    { id: "All Enquiries", label: "All Enquiries", icon: "🌟", count: totalLeadsCount },
+    { id: "Fresh & Untouched", label: "Fresh & Untouched", icon: "🆕", count: freshLeadsCount },
+    { id: "Today's Follow-ups", label: "Follow-ups Due", icon: "📞", count: followUpsDueCount },
+    { id: "Hot Prospects", label: "Hot Prospects (🔥)", icon: "🔥", count: hotLeadsCount },
+    { id: "High Cutoff 180+", label: "High Cutoff 180+", icon: "🎯", count: contacts.filter(c => ((c as any).tneaCutoff ?? (c as any).cutoff ?? 0) >= 170).length },
+    { id: "Karur Intake View", label: "Karur Campus", icon: "🏛️", count: contacts.filter(c => c.campus === "KARUR").length },
+    { id: "Coimbatore Intake View", label: "Coimbatore Campus", icon: "🏢", count: contacts.filter(c => c.campus === "COIMBATORE").length },
+    { id: "Admitted / Enrolled", label: "Admitted", icon: "🎓", count: admittedLeadsCount },
+  ];
+
   return (
     <div className="space-y-6">
 
@@ -1389,47 +1694,55 @@ export default function ContactDirectoryModule({
         </div>
       )}
 
-      {/* MERITTO LEAD MANAGER TOP HEADER BAR (Matching Image 2 Reference) */}
-      <div className="bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white p-3.5 sm:p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs font-sans">
+      {/* V.S.B. EDUCATION CRM LEAD MANAGEMENT TOP COMMAND BAR */}
+      <div className="bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-xs font-sans">
+        {/* Left: Institution Branding & View Selector */}
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-blue-600 dark:text-sky-400" />
-            Lead Manager
-          </h2>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md font-black text-sm">
+              🎓
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                  Lead Management Console
+                </h2>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-sky-400 border border-blue-400/30">
+                  {selectedCampus === "ALL" ? "All Campuses" : `${selectedCampus} Campus`}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Purpose-built Education CRM • Karur & Coimbatore Campuses
+              </p>
+            </div>
+          </div>
 
-          {/* Default View Selector */}
-          <div className="relative">
+          {/* Preset View Dropdown */}
+          <div className="relative ml-1">
             <select
               value={selectedViewName}
               onChange={(e) => {
                 const newView = e.target.value;
                 setSelectedViewName(newView);
                 if (onTriggerToast) {
-                  onTriggerToast(`Applied View Filter: ${newView}`);
+                  onTriggerToast(`Applied View: ${newView}`);
                 }
               }}
-              className="bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/15 rounded-xl px-3 py-1.5 font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-xs"
             >
-              <option value="Default View">Default View ∨</option>
-              <option value="Karur Intake View">Karur Intake View</option>
-              <option value="TNEA Candidates">TNEA Candidates</option>
-              <option value="High Cutoff Leads">High Cutoff Leads</option>
+              {PRESET_VIEWS.map((pv) => (
+                <option key={pv.id} value={pv.id}>
+                  {pv.icon} {pv.label} ({pv.count})
+                </option>
+              ))}
             </select>
           </div>
-
-          {/* Save View Button */}
-          <button
-            onClick={() => onTriggerToast?.("Saved custom view configuration!")}
-            className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-blue-600 font-bold flex items-center gap-1.5 shadow-sm transition-all"
-          >
-            <Save className="w-3.5 h-3.5" /> Save View
-          </button>
 
           {/* Reload / Sync Button with Active Spinning Animation */}
           <button
             onClick={handleReloadData}
             disabled={isReloading}
-            className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-blue-600 dark:text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60"
+            className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-blue-600 dark:text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60"
             title="Reload latest leads from database"
           >
             <RotateCcw
@@ -1437,69 +1750,56 @@ export default function ContactDirectoryModule({
                 isReloading ? "animate-spin text-sky-500" : "transition-transform hover:-rotate-45"
               }`}
             />
-            <span>{isReloading ? "Reloading..." : "Reload"}</span>
+            <span>{isReloading ? "Reloading..." : "Sync"}</span>
           </button>
 
           {/* Enforce Compulsory +91- in Firebase Button */}
           <button
             onClick={handleNormalizeAllPhones}
             disabled={isNormalizingPhones || isReloading}
-            className="px-3 py-1.5 rounded-lg border border-sky-400/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60 text-xs"
+            className="px-3 py-1.5 rounded-xl border border-sky-400/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60 text-xs"
             title="Scan and standardize all student mobile numbers in Firebase to compulsory +91-"
           >
             <span className="font-mono text-xs font-black">+91-</span>
-            <span>{isNormalizingPhones ? "Standardizing..." : "Standardize +91- (Firebase)"}</span>
+            <span>{isNormalizingPhones ? "Standardizing..." : "Standardize +91-"}</span>
           </button>
 
-          {/* Sync Status Badge (Animating strictly during reload animation time) */}
+          {/* Sync Status Badge */}
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10">
             <span
               className={`w-2 h-2 rounded-full ${
                 isReloading ? "bg-amber-400 animate-ping" : "bg-emerald-500"
               }`}
             />
-            <span>{isReloading ? "Reloading database..." : `Last sync at ${lastSyncTime}`}</span>
-            <button
-              onClick={handleReloadData}
-              disabled={isReloading}
-              title="Sync Now"
-              className={`hover:rotate-180 transition-transform ml-1 cursor-pointer ${
-                isReloading ? "animate-spin opacity-80" : ""
-              }`}
-            >
-              🔄
-            </button>
+            <span>{isReloading ? "Syncing Firebase..." : `Live sync: ${lastSyncTime}`}</span>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
-          {/* View Mode Toggle: Table View (Image 2) vs Cards View (Image 1) */}
-          <div className="flex items-center bg-slate-200 p-0.5 rounded-xl border border-slate-300">
+        {/* Right: Primary Action Toolbar */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
+          {/* View Mode Toggle: Table View vs Cards View */}
+          <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-300 dark:border-white/10">
             <button
               onClick={() => setDirectoryViewMode("TABLE")}
-              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${directoryViewMode === "TABLE" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
-                }`}
+              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+                directoryViewMode === "TABLE"
+                  ? "bg-blue-600 text-white shadow"
+                  : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
+              }`}
             >
-              📋 Lead Manager Table
+              📋 Lead Table
             </button>
             <button
               onClick={() => setDirectoryViewMode("GRID")}
-              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${directoryViewMode === "GRID" ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:text-slate-900"
-                }`}
+              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+                directoryViewMode === "GRID"
+                  ? "bg-blue-600 text-white shadow"
+                  : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
+              }`}
             >
               🎴 Cards View
             </button>
           </div>
-
-          {selectedRows.length > 0 && (
-            <button
-              onClick={handleBulkDelete}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/40 border border-rose-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer animate-in fade-in"
-            >
-              <Trash2 className="w-4 h-4 text-white shrink-0" />
-              <span>Delete Selected ({selectedRows.length})</span>
-            </button>
-          )}
 
           <input
             type="file"
@@ -1510,30 +1810,37 @@ export default function ContactDirectoryModule({
           />
           <button
             onClick={() => document.getElementById("csv-file-upload")?.click()}
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-purple-500/40 border border-purple-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+            title="Import Leads from CSV"
           >
-            <Upload className="w-4 h-4 text-white shrink-0" />
-            <span>Import CSV</span>
+            <Upload className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
+            <span>Import</span>
           </button>
 
-          {/* Ask Nora AI Pill Button in Lead Manager */}
+          <button
+            onClick={handleExportCSV}
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+            title="Export Leads to CSV"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Export</span>
+          </button>
+
+          {/* Ask Nora AI Intelligence Button */}
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/40 border border-indigo-300/40 flex items-center gap-2 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
-            title="Ask Nora AI to analyze the student database"
+            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-md shadow-indigo-600/30 border border-indigo-300/30 flex items-center gap-1.5 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
+            title="Ask Nora AI for intelligence analysis"
           >
-            <img
-              src="/nora-logo.png"
-              alt="NORA AI Logo"
-              className="w-5 h-5 rounded-full object-cover ring-1 ring-white/60 shrink-0"
-            />
+            <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
             <span>Ask Nora AI</span>
           </button>
 
+          {/* + Add Lead Primary CTA */}
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold text-xs shadow-lg shadow-pink-500/40 border border-pink-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+            className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md shadow-blue-500/30 border border-blue-300/30 flex items-center gap-1.5 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4 text-white shrink-0" />
             <span>+ Add Lead</span>
@@ -1541,48 +1848,315 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* District & Metric Summary Cards (Image 2 Top) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bubble-card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 flex items-center justify-center font-bold">
-            <UserCheck className="w-5 h-5" />
+      {/* MERITTO-STYLE PRESET VIEW QUICK PILLS BAR */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-sans hide-scrollbar">
+        {PRESET_VIEWS.map((pv) => {
+          const isActive = selectedViewName === pv.id;
+          return (
+            <button
+              key={pv.id}
+              onClick={() => {
+                setSelectedViewName(pv.id);
+                if (onTriggerToast) {
+                  onTriggerToast(`Viewing: ${pv.label}`);
+                }
+              }}
+              className={`px-3.5 py-1.5 rounded-full border transition-all shrink-0 flex items-center gap-1.5 font-bold shadow-xs cursor-pointer ${
+                isActive
+                  ? "bg-blue-600 text-white border-blue-500 shadow-md ring-2 ring-blue-400/40 scale-[1.02]"
+                  : "bg-white dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <span>{pv.icon}</span>
+              <span>{pv.label}</span>
+              <span
+                className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                }`}
+              >
+                {pv.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* LEAD FUNNEL & SUMMARY METRICS RIBBON (6 Actionable KPI Cards) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* Card 1: Total Enquiries */}
+        <div
+          onClick={() => setSelectedViewName("All Enquiries")}
+          className="bubble-card p-3.5 border border-blue-500/30 bg-gradient-to-b from-blue-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-blue-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Total Enquiries
+            </span>
+            <span className="text-base">🌟</span>
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Total Contacts</p>
-            <h4 className="text-lg font-black text-white">{contacts.length}</h4>
+          <div className="mt-2">
+            <h4 className="text-xl font-black text-slate-900 dark:text-white font-mono">
+              {totalLeadsCount}
+            </h4>
+            <p className="text-[10px] text-blue-600 dark:text-sky-400 font-semibold mt-0.5">
+              100% Centralized
+            </p>
           </div>
         </div>
 
-        <div className="bubble-card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center font-bold">
-            <MapPin className="w-5 h-5" />
+        {/* Card 2: Fresh / Untouched */}
+        <div
+          onClick={() => setSelectedViewName("Fresh & Untouched")}
+          className="bubble-card p-3.5 border border-sky-500/30 bg-gradient-to-b from-sky-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-sky-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Fresh & Untouched
+            </span>
+            <span className="text-base">🆕</span>
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Districts Covered</p>
-            <h4 className="text-lg font-black text-white">8 Tamil Nadu Districts</h4>
+          <div className="mt-2">
+            <h4 className="text-xl font-black text-sky-600 dark:text-sky-400 font-mono">
+              {freshLeadsCount}
+            </h4>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+              Ready for Allocation
+            </p>
           </div>
         </div>
 
-        <div className="bubble-card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-pink-500/20 text-pink-300 border border-pink-400/30 flex items-center justify-center font-bold">
-            <School className="w-5 h-5" />
+        {/* Card 3: Follow-ups Due */}
+        <div
+          onClick={() => setSelectedViewName("Today's Follow-ups")}
+          className="bubble-card p-3.5 border border-indigo-500/30 bg-gradient-to-b from-indigo-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-indigo-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Follow-ups Due
+            </span>
+            <span className="text-base">📞</span>
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Schools Tracked</p>
-            <h4 className="text-lg font-black text-white">7 Higher Sec Schools</h4>
+          <div className="mt-2">
+            <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 font-mono">
+              {followUpsDueCount}
+            </h4>
+            <p className="text-[10px] text-indigo-500 font-semibold mt-0.5">
+              Action Required
+            </p>
           </div>
         </div>
 
-        <div className="bubble-card p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold">
-            <Building className="w-5 h-5" />
+        {/* Card 4: Verified Prospects */}
+        <div
+          onClick={() => setSelectedViewName("All Enquiries")}
+          className="bubble-card p-3.5 border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-emerald-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Verified Contacts
+            </span>
+            <span className="text-base">🛡️</span>
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Selected Campus</p>
-            <h4 className="text-lg font-black text-amber-300">{selectedCampus} CAMPUS</h4>
+          <div className="mt-2">
+            <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+              {verifiedLeadsCount}
+            </h4>
+            <p className="text-[10px] text-emerald-500 font-semibold mt-0.5">
+              Phone & Intent Checked
+            </p>
+          </div>
+        </div>
+
+        {/* Card 5: Hot Pipeline */}
+        <div
+          onClick={() => setSelectedViewName("Hot Prospects")}
+          className="bubble-card p-3.5 border border-rose-500/30 bg-gradient-to-b from-rose-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-rose-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Hot Prospects
+            </span>
+            <span className="text-base">🔥</span>
+          </div>
+          <div className="mt-2">
+            <h4 className="text-xl font-black text-rose-600 dark:text-rose-400 font-mono">
+              {hotLeadsCount}
+            </h4>
+            <p className="text-[10px] text-rose-500 font-semibold mt-0.5">
+              High Readiness
+            </p>
+          </div>
+        </div>
+
+        {/* Card 6: Admitted / Enrolled */}
+        <div
+          onClick={() => setSelectedViewName("Admitted / Enrolled")}
+          className="bubble-card p-3.5 border border-teal-500/30 bg-gradient-to-b from-teal-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-teal-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Confirmed Admitted
+            </span>
+            <span className="text-base">🎓</span>
+          </div>
+          <div className="mt-2">
+            <h4 className="text-xl font-black text-teal-600 dark:text-teal-400 font-mono">
+              {admittedLeadsCount}
+            </h4>
+            <p className="text-[10px] text-teal-500 font-semibold mt-0.5">
+              Fee Paid / Enrolled
+            </p>
           </div>
         </div>
       </div>
+
+      {/* MULTI-CHANNEL SOURCE ATTRIBUTION RIBBON ("Zero Lead Leakage") */}
+      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 rounded-2xl p-3.5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans">
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-[10px]">
+            Acquisition Attribution (Zero Leakage):
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto hide-scrollbar">
+          {ACQUISITION_CHANNELS.map((ch) => {
+            const isChActive = selectedAcquisitionChannel === ch.id;
+            return (
+              <button
+                key={ch.id}
+                onClick={() => {
+                  setSelectedAcquisitionChannel(ch.id);
+                  if (onTriggerToast) {
+                    onTriggerToast(`Filtered by channel: ${ch.label}`);
+                  }
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border ${
+                  isChActive
+                    ? "bg-indigo-600 text-white border-indigo-500 shadow-md ring-2 ring-indigo-400/30"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                <span>{ch.icon}</span>
+                <span>{ch.label}</span>
+                <span className="text-[10px] opacity-80">({ch.count})</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* FLOATING / DOCKED BATCH ACTIONS BAR (Meritto Enterprise Workflow) */}
+      {selectedRows.length > 0 && (
+        <div className="sticky top-2 z-40 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3 sm:p-3.5 rounded-2xl shadow-2xl border border-indigo-500/40 flex flex-wrap items-center justify-between gap-3 text-xs font-sans animate-in slide-in-from-top duration-300">
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 rounded-full bg-indigo-500/30 border border-indigo-400/50 text-indigo-200 font-black text-xs flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-indigo-300" />
+              <span>{selectedRows.length} Lead(s) Selected</span>
+            </span>
+            <span className="text-slate-300 hidden sm:inline text-xs font-medium">
+              Choose bulk batch action to execute across selected candidates:
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Bulk Re-assign Counselor */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsBulkAssignDropdownOpen(!isBulkAssignDropdownOpen)}
+                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Assign Counselor ▾</span>
+              </button>
+
+              {isBulkAssignDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-64 bg-slate-900 border border-white/20 rounded-2xl shadow-2xl z-50 p-2 text-xs space-y-1 max-h-60 overflow-y-auto">
+                  <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-2 py-1">
+                    Select Faculty Member:
+                  </p>
+                  {FACULTY_MEMBERS.map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => handleBulkReassignCounselor(f.id)}
+                      className="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-slate-800 text-slate-200 hover:text-white transition-colors flex items-center justify-between"
+                    >
+                      <span className="font-bold truncate">{f.name}</span>
+                      <span className="text-[10px] text-indigo-400 shrink-0 font-mono ml-1">{f.campus}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Bulk WhatsApp Broadcast */}
+            <button
+              onClick={handleBulkWhatsAppBroadcast}
+              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              title="Broadcast WhatsApp Admission Notification"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>WhatsApp</span>
+            </button>
+
+            {/* Bulk Update Stage Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsBulkStageDropdownOpen(!isBulkStageDropdownOpen)}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 transition-all cursor-pointer"
+              >
+                <span>Change Stage ▾</span>
+              </button>
+
+              {isBulkStageDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-44 bg-slate-900 border border-white/20 rounded-2xl shadow-2xl z-50 p-1.5 text-xs space-y-1">
+                  {(["NEW", "CONTACTED", "IN_REVIEW", "ADMITTED"] as LeadStatus[]).map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => handleBulkUpdateStage(st)}
+                      className="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-slate-800 text-slate-200 hover:text-white font-semibold transition-colors"
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Export Selected to CSV */}
+            <button
+              onClick={handleExportCSV}
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 transition-all cursor-pointer"
+              title="Export Selected Records to CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+
+            {/* Bulk Delete */}
+            <button
+              onClick={handleBulkDelete}
+              className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+
+            {/* Deselect All */}
+            <button
+              onClick={() => setSelectedRows([])}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              title="Deselect All"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* V.S.B. TNEA & Lead Stage Icon Filters (Image 2 Bottom) */}
       <div className="bubble-card p-4 space-y-3.5 border border-sky-400/30">
