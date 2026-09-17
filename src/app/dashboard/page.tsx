@@ -685,6 +685,16 @@ export default function DashboardPage() {
           onClose={() => setSelectedApplicant(null)}
           onActionTrigger={handleActionTrigger}
           onSave={handleUpdateApplicant}
+          onStageChange={(updated) => {
+            setApplicants((prev) => {
+              const newList = prev.map((a) => (a.id === updated.id ? updated : a));
+              try {
+                localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(newList));
+              } catch (err) {}
+              return newList;
+            });
+            setSelectedApplicant(updated);
+          }}
           existingLeads={applicants}
         />
       )}

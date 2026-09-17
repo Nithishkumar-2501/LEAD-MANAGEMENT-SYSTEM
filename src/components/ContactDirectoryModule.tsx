@@ -3572,6 +3572,11 @@ export default function ContactDirectoryModule({
             setSelectedCandidateForModal(null);
             onTriggerToast?.(`Updated profile for candidate ${updated.name}`);
           }}
+          onStageChange={(updated) => {
+            setContacts((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+            setSelectedCandidateForModal(updated);
+          }}
+          existingLeads={contacts}
         />
       )}
       {/* SIDE DRAWER 1: FILTER LEADS BY (Image 1 Reference) */}

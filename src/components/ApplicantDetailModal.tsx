@@ -76,6 +76,7 @@ interface ApplicantDetailModalProps {
   onClose: () => void;
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP" | "SMS", name: string) => void;
   onSave?: (updated: Lead & { application: Application }) => void;
+  onStageChange?: (updated: Lead & { application: Application }) => void;
   existingLeads?: Lead[];
 }
 
@@ -109,16 +110,55 @@ const LEAD_SUB_STAGES = [
   "Medical (Not Interested in Engineering)",
 ];
 
+const STAGE_STEPS = [
+  { label: "Unverified", key: "UNVERIFIED" },
+  { label: "Verified", key: "VERIFIED" },
+  { label: "Application Started", key: "APP_STARTED" },
+  { label: "Payment Approved", key: "PAYMENT_APPROVED" },
+  { label: "Application Submitted", key: "APP_SUBMITTED" },
+  { label: "Enrolments", key: "ENROLMENTS" },
+];
+
+const getStageKeyForLead = (lead: (Lead & { application?: Application | null }) | null) => {
+  if (!lead) return "VERIFIED";
+  if (lead.status === "ADMITTED" || lead.application?.stage === "FEE_PAID") return "ENROLMENTS";
+  if (lead.application?.stage === "SUBMITTED") return "APP_SUBMITTED";
+  if (
+    lead.application?.paymentStatus === "Payment Approved" ||
+    lead.application?.paymentStatus === "APPROVED" ||
+    lead.application?.stage === "OFFER_ISSUED"
+  ) {
+    return "PAYMENT_APPROVED";
+  }
+  if (lead.application?.stage === "DOCS_VERIFIED") return "VERIFIED";
+  if (lead.application?.stage === "INQUIRY" && (lead.status === "CONTACTED" || lead.status === "IN_REVIEW")) {
+    return "APP_STARTED";
+  }
+  if (lead.status === "NEW" && (!lead.application || lead.application.stage === "INQUIRY")) {
+    return "UNVERIFIED";
+  }
+  return "VERIFIED";
+};
+
 export default function ApplicantDetailModal({
   applicant,
   currentUserRole,
   onClose,
   onActionTrigger,
   onSave,
+  onStageChange,
   existingLeads = [],
 }: ApplicantDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(applicant);
+  const [currentStageKey, setCurrentStageKey] = useState<string>(() => getStageKeyForLead(applicant));
+
+  useEffect(() => {
+    if (applicant) {
+      setCurrentStageKey(getStageKeyForLead(applicant));
+    }
+  }, [applicant?.id, applicant?.status, applicant?.application?.stage, applicant?.application?.paymentStatus]);
+
   const [editSectionTab, setEditSectionTab] = useState<"PERSONAL" | "ACADEMIC" | "ADMISSION">("PERSONAL");
   const [isSavingFirebase, setIsSavingFirebase] = useState(false);
   const [saveSuccessToast, setSaveSuccessToast] = useState<string | null>(null);
@@ -344,17 +384,66 @@ export default function ApplicantDetailModal({
   };
 
   // 6 Stages matching NoPaperForms / Meritto reference screenshot
-  const stageSteps = [
-    { label: "Unverified", key: "UNVERIFIED" },
-    { label: "Verified", key: "VERIFIED" },
-    { label: "Application Started", key: "APP_STARTED" },
-    { label: "Payment Approved", key: "PAYMENT_APPROVED" },
-    { label: "Application Submitted", key: "APP_SUBMITTED" },
-    { label: "Enrolments", key: "ENROLMENTS" },
-  ];
+  const stageSteps = STAGE_STEPS;
+  const currentStageIdx = Math.max(0, stageSteps.findIndex((s) => s.key === currentStageKey));
 
-  // Stage 1 (Verified) active by default as shown in the provided images
-  const currentStageIdx = 1;
+  const handleStageClick = async (stepKey: string, stepLabel: string) => {
+    setCurrentStageKey(stepKey);
+
+    let updatedAppStage: AppStage = formData?.application?.stage || "INQUIRY";
+    let updatedPaymentStatus = formData?.application?.paymentStatus || "PENDING";
+    let updatedLeadStatus = formData?.status || "NEW";
+
+    if (stepKey === "UNVERIFIED") {
+      updatedAppStage = "INQUIRY";
+      updatedLeadStatus = "NEW";
+    } else if (stepKey === "VERIFIED") {
+      updatedAppStage = "DOCS_VERIFIED";
+      if (updatedLeadStatus === "NEW") updatedLeadStatus = "CONTACTED";
+    } else if (stepKey === "APP_STARTED") {
+      updatedAppStage = "INQUIRY";
+      if (updatedLeadStatus === "NEW") updatedLeadStatus = "IN_REVIEW";
+    } else if (stepKey === "PAYMENT_APPROVED") {
+      updatedAppStage = "OFFER_ISSUED";
+      updatedPaymentStatus = "Payment Approved";
+    } else if (stepKey === "APP_SUBMITTED") {
+      updatedAppStage = "SUBMITTED";
+    } else if (stepKey === "ENROLMENTS") {
+      updatedLeadStatus = "ADMITTED";
+      updatedAppStage = "FEE_PAID";
+      updatedPaymentStatus = "Payment Approved";
+    }
+
+    const updatedApplicant: Lead & { application: Application } = {
+      ...formData!,
+      status: updatedLeadStatus,
+      application: {
+        ...(formData?.application || app),
+        stage: updatedAppStage,
+        paymentStatus: updatedPaymentStatus,
+      },
+    };
+
+    setFormData(updatedApplicant);
+    setSaveSuccessToast(`✅ Pipeline Stage updated to "${stepLabel}"`);
+    setTimeout(() => setSaveSuccessToast(null), 2500);
+
+    try {
+      await saveStudentToFirebase(updatedApplicant);
+      try {
+        await mobileSafeFetch("/api/applications", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedApplicant),
+        });
+      } catch (e) {
+        console.warn("API update note:", e);
+      }
+      onStageChange?.(updatedApplicant);
+    } catch (err) {
+      console.error("Error saving stage change:", err);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-md transition-all duration-300 overflow-y-auto">
@@ -560,25 +649,29 @@ export default function ApplicantDetailModal({
 
           {/* Chevron Stage Tracker Progress Ribbon */}
           <div className="overflow-x-auto pb-1 hide-scrollbar w-full max-w-full">
-            <div className="flex items-center gap-1 min-w-max bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-300 dark:border-white/10 shadow-sm">
+            <div className="flex items-center gap-1.5 min-w-max bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-300 dark:border-white/10 shadow-sm">
               {stageSteps.map((step, idx) => {
-                const isActive = idx === currentStageIdx; // Verified stage active
+                const isActive = idx === currentStageIdx;
                 const isPassed = idx < currentStageIdx;
                 return (
-                  <div
+                  <button
                     key={step.key}
-                    className={`text-center py-1.5 px-3 text-xs font-black transition-all flex items-center justify-center gap-1.5 relative whitespace-nowrap shrink-0 ${isActive
-                        ? "bg-emerald-600 text-white border border-emerald-700 rounded-lg font-black shadow-sm"
+                    type="button"
+                    onClick={() => handleStageClick(step.key, step.label)}
+                    title={`Click to set pipeline stage to "${step.label}"`}
+                    className={`text-center py-1.5 px-3.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 relative whitespace-nowrap shrink-0 cursor-pointer rounded-lg hover:scale-[1.03] active:scale-95 ${
+                      isActive
+                        ? "bg-emerald-600 text-white border border-emerald-700 font-black shadow-md ring-2 ring-emerald-400/40"
                         : isPassed
-                          ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 rounded-lg border border-emerald-300 dark:border-emerald-700 font-black"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-950 dark:text-slate-200 font-black rounded-lg border border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-sm"
-                      }`}
+                          ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-black hover:bg-emerald-200 dark:hover:bg-emerald-900/80"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black border border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-sm"
+                    }`}
                   >
                     {isActive && (
                       <span className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
                     )}
                     <span>{step.label}</span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
