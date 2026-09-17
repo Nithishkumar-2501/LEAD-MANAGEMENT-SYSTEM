@@ -149,6 +149,26 @@ export default function Header({
 
         {/* Right: Controls (Ask Nora AI, Search Icon, Logout, and Menu on Right Side) */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Teacher Profile ID Badge (Prominently displayed for logged in faculty) */}
+          {currentUserRole === "TEACHER" && (
+            <Tooltip text={`Faculty Account Active: Profile ID ${loggedInUsername || "Staff"}`}>
+              <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-emerald-500/15 dark:bg-emerald-500/25 border border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-extrabold text-xs shadow-md backdrop-blur-xl shrink-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400 hidden xs:inline">
+                    Profile ID:
+                  </span>
+                  <span className="font-mono text-[11px] sm:text-xs font-black text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-[190px]">
+                    {loggedInUsername}
+                  </span>
+                </div>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-white uppercase tracking-wider hidden sm:inline">
+                  ACTIVE
+                </span>
+              </div>
+            </Tooltip>
+          )}
+
           {/* Two Campus Icon Selection Bar */}
           <div className="hidden md:flex items-center gap-1.5 bg-slate-200/80 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-300 dark:border-white/20 text-xs font-semibold backdrop-blur-2xl shrink-0">
             {/* Karur Campus Icon Button */}

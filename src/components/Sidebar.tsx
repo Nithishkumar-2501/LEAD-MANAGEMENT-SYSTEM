@@ -1771,8 +1771,15 @@ export default function Sidebar({
                   >
                     {loggedInUsername}
                   </p>
-                  <p className="text-[10px] font-extrabold truncate text-indigo-400">
-                    {currentUserRole === "ADMIN" ? "System Admin" : "Faculty Lead"}
+                  <p className="text-[10px] font-extrabold truncate text-indigo-400 flex items-center gap-1">
+                    {currentUserRole === "ADMIN" ? (
+                      "System Admin"
+                    ) : (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+                        <span className="truncate">Profile ID: {loggedInUsername}</span>
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

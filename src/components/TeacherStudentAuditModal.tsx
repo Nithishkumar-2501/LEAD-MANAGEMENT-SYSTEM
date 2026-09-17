@@ -17,6 +17,7 @@ import {
   Download,
   FileText,
   UserCheck,
+  ShieldCheck,
   AlertCircle,
   Sparkles,
   RefreshCw,
@@ -563,14 +564,16 @@ export default function TeacherStudentAuditModal({
                     )}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => photoInputRef.current?.click()}
-                  className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-slate-900 cursor-pointer active:scale-95 transition-all"
-                  title="Upload Profile Photo to Firebase"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                </button>
+                {currentUserRole === "ADMIN" && (
+                  <button
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-slate-900 cursor-pointer active:scale-95 transition-all"
+                    title="Upload Profile Photo to Firebase (Admin Only)"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <input
                   ref={photoInputRef}
                   type="file"
@@ -588,8 +591,18 @@ export default function TeacherStudentAuditModal({
                   <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
                     {teacher.campus} CAMPUS
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                    🟢 {teacher.status}
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      teacher.status === "ACTIVE"
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
+                        : "bg-amber-500/20 text-amber-300 border-amber-400/40"
+                    }`}
+                  >
+                    {teacher.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}
+                  </span>
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 font-mono flex items-center gap-1 shadow-xs">
+                    <ShieldCheck className="w-3 h-3 text-indigo-300" />
+                    ID: {teacher.id}
                   </span>
                 </div>
                 <p className="text-xs text-indigo-300 font-semibold mt-0.5">

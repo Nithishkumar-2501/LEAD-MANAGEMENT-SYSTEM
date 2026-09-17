@@ -39,6 +39,7 @@ import {
   fetchStudentsFromRTDB,
   subscribeToFirebaseStudents,
   fetchTeachersFromFirebase,
+  updateTeacherOnlineStatus,
   StudentRecord,
 } from "@/lib/firebaseSync";
 
@@ -313,13 +314,33 @@ export default function DashboardPage() {
       }
       if (user) {
         setLoggedInUsername(user);
+        // Automatically ensure teacher status is ACTIVE while authenticated
+        if (role === "TEACHER") {
+          updateTeacherOnlineStatus(user, campus, "ACTIVE").catch(() => {});
+        }
       }
     } else {
       setIsAuthenticated(false);
     }
   }, []);
 
-  const handleLoginSuccess = (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER", username: string) => {
+  // Sync teacher status to ON_LEAVE if the browser tab is closed/unloaded
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const role = sessionStorage.getItem("vsb_logged_in_role");
+      const user = sessionStorage.getItem("vsb_logged_in_user");
+      const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
+      if (role === "TEACHER" && user) {
+        updateTeacherOnlineStatus(user, campus, "ON_LEAVE").catch(() => {});
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  const handleLoginSuccess = async (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER", username: string) => {
     sessionStorage.setItem("vsb_admin_auth", "true");
     sessionStorage.setItem("vsb_logged_in_campus", campus);
     sessionStorage.setItem("vsb_logged_in_role", role);
@@ -329,15 +350,51 @@ export default function DashboardPage() {
     setLoggedInUsername(username);
     setSelectedCampus(campus);
     setIsAuthenticated(true);
+
+    if (role === "TEACHER") {
+      try {
+        const updatedTeacher = await updateTeacherOnlineStatus(username, campus, "ACTIVE");
+        if (updatedTeacher) {
+          triggerToast(`🟢 Welcome ${updatedTeacher.name}! Status: ACTIVE (Profile ID: ${updatedTeacher.id})`);
+        } else {
+          triggerToast(`🟢 Teacher status activated: ACTIVE! (Logged in: ${username})`);
+        }
+      } catch (err) {
+        console.warn("Error setting teacher to active on login:", err);
+      }
+    } else {
+      triggerToast(`👋 Welcome Admin (${campus} Campus)!`);
+    }
   };
 
   const handleLogout = async () => {
+    const role = currentUserRole || (sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER");
+    const user = loggedInUsername || sessionStorage.getItem("vsb_logged_in_user");
+    const campus = loggedInCampus || (sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE");
+
+    // Automatically set teacher status to ON_LEAVE upon logging out
+    if (role === "TEACHER" && user) {
+      try {
+        const updatedTeacher = await updateTeacherOnlineStatus(user, campus, "ON_LEAVE");
+        if (updatedTeacher) {
+          console.log(`🟡 [Teacher Status] ${updatedTeacher.name} is now ON_LEAVE in Firebase`);
+        }
+      } catch (err) {
+        console.warn("Error setting teacher to on leave on logout:", err);
+      }
+    }
+
     await logoutWithRealtimeAuth();
     sessionStorage.removeItem("vsb_admin_auth");
     sessionStorage.removeItem("vsb_logged_in_campus");
     sessionStorage.removeItem("vsb_logged_in_role");
     sessionStorage.removeItem("vsb_logged_in_user");
     setIsAuthenticated(false);
+    triggerToast(
+      role === "TEACHER"
+        ? "🟡 Teacher status updated to ON LEAVE. Logged out successfully."
+        : "Logged out successfully."
+    );
   };
 
   const triggerToast = (msg: string) => {
@@ -659,6 +716,7 @@ export default function DashboardPage() {
             loggedInCampus={selectedCampus}
             onTriggerToast={triggerToast}
             onNavigateTab={setActiveTab}
+            applicants={applicants}
           />
         )}
       </main>

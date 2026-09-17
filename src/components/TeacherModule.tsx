@@ -17,6 +17,7 @@ import {
   deleteTeacherFromFirebase,
   fetchTeachersFromFirebase,
   subscribeToFirebaseTeachers,
+  resolveTeacherByUsername,
 } from "@/lib/firebaseSync";
 import { formatPhoneWith91 } from "@/lib/phoneValidation";
 
@@ -27,6 +28,19 @@ interface TeacherModuleProps {
   onTriggerToast: (msg: string) => void;
   applicants?: (Lead & { application: Application })[];
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
+}
+
+// Helper to determine if a teacher record matches the logged-in teacher account
+export function checkIsSelfTeacher(tch: Teacher, username?: string): boolean {
+  if (!username) return false;
+  const u = username.toLowerCase().trim();
+  const id = (tch.id || "").toLowerCase().trim();
+  const email = (tch.email || "").toLowerCase().trim();
+  if (id === u || email === u) return true;
+  if ((u === "teacherkarur@123" || u === "teacher_rajesh@123") && (id.includes("rajesh") || email.includes("rajesh"))) return true;
+  if (u === "teachercovai@123" && (id.includes("meenakshi") || email.includes("meenakshi"))) return true;
+  if (id.split("@")[0] && u.includes(id.split("@")[0])) return true;
+  return false;
 }
 
 // Helper to guarantee that all department staff samples from MOCK_TEACHERS are always present
@@ -48,7 +62,20 @@ function mergeWithMockTeachers(incomingList: Teacher[]): Teacher[] {
 }
 
 export default function TeacherModule({ loggedInCampus, currentUserRole, loggedInUsername, onTriggerToast, applicants = [], onSelectApplicant }: TeacherModuleProps) {
-  const [teachers, setTeachers] = useState<Teacher[]>(() => mergeWithMockTeachers(MOCK_TEACHERS));
+  const [teachers, setTeachers] = useState<Teacher[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("vsb_crm_teachers");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return mergeWithMockTeachers(parsed);
+          }
+        }
+      } catch (e) {}
+    }
+    return mergeWithMockTeachers(MOCK_TEACHERS);
+  });
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("ALL");
   const [selectedCampusFilter, setSelectedCampusFilter] = useState<"ALL" | "KARUR" | "COIMBATORE">("ALL");
@@ -312,9 +339,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
       .filter((t) => {
         // Faculty Scope Filter: If user toggles "MINE", show only current teacher profile
         if (facultyScope === "MINE" && loggedInUsername) {
-          const isSelf =
-            t.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
-            t.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim();
+          const isSelf = checkIsSelfTeacher(t, loggedInUsername);
           if (!isSelf) return false;
         }
 
@@ -345,12 +370,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
       .sort((a, b) => {
         // Logged-in teacher profile appears at the very top for effortless convenience
         if (loggedInUsername) {
-          const isSelfA =
-            a.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
-            a.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim();
-          const isSelfB =
-            b.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
-            b.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim();
+          const isSelfA = checkIsSelfTeacher(a, loggedInUsername);
+          const isSelfB = checkIsSelfTeacher(b, loggedInUsername);
           if (isSelfA && !isSelfB) return -1;
           if (!isSelfA && isSelfB) return 1;
         }
@@ -407,6 +428,12 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const handleUpdateTeacherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTeacher) return;
+
+    if (currentUserRole === "TEACHER") {
+      onTriggerToast("🔒 Profile editing is disabled for faculty members. Contact Admin for updates.");
+      setEditingTeacher(null);
+      return;
+    }
 
     const teacherToSave: Teacher = {
       ...editingTeacher,
@@ -484,6 +511,11 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const handleEditTeacherPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !editingTeacher) return;
+
+    if (currentUserRole === "TEACHER") {
+      onTriggerToast("🔒 Photo updates are restricted to Administrators.");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -657,13 +689,15 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               <span>📞 Daily Call Analytics & Audio Audit</span>
             </button>
 
-            <button
-              onClick={() => setIsSplitModalOpen(true)}
-              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
-            >
-              <span className="text-base">⚡</span>
-              <span>Split Contacts to Teacher</span>
-            </button>
+            {currentUserRole === "ADMIN" && (
+              <button
+                onClick={() => setIsSplitModalOpen(true)}
+                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
+              >
+                <span className="text-base">⚡</span>
+                <span>Split Contacts to Teacher</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -768,60 +802,69 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               onChange={handleCSVUpload}
             />
 
-            {/* Download Sample CSV Template */}
-            <button
-              onClick={handleDownloadSampleCSV}
-              className="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-              title="Download Faculty CSV Template"
-            >
-              <Download className="w-3.5 h-3.5 text-emerald-400" /> <span>Sample CSV</span>
-            </button>
+            {/* Admin Management Action Buttons */}
+            {currentUserRole === "ADMIN" ? (
+              <>
+                {/* Download Sample CSV Template */}
+                <button
+                  onClick={handleDownloadSampleCSV}
+                  className="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                  title="Download Faculty CSV Template"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-400" /> <span>Sample CSV</span>
+                </button>
 
-            {/* Upload CSV File Button */}
-            <button
-              onClick={() => document.getElementById("teacher-csv-file-upload")?.click()}
-              className="px-3 py-1.5 rounded-xl border border-indigo-400/50 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
-              title="Upload CSV File to Import Faculty Directory"
-            >
-              <Upload className="w-3.5 h-3.5 text-indigo-100" /> <span>Import CSV</span>
-            </button>
+                {/* Upload CSV File Button */}
+                <button
+                  onClick={() => document.getElementById("teacher-csv-file-upload")?.click()}
+                  className="px-3 py-1.5 rounded-xl border border-indigo-400/50 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
+                  title="Upload CSV File to Import Faculty Directory"
+                >
+                  <Upload className="w-3.5 h-3.5 text-indigo-100" /> <span>Import CSV</span>
+                </button>
 
-            {/* Firebase Live Cloud Sync Button */}
-            <button
-              onClick={handleSyncAllToFirebase}
-              disabled={isFirebaseSyncing}
-              className="px-3 py-1.5 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-orange-600/30 cursor-pointer disabled:opacity-50"
-              title="Persist & store all faculty details into Firebase Firestore & RTDB"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isFirebaseSyncing ? "animate-spin" : ""}`} />
-              <span>{isFirebaseSyncing ? "Syncing..." : "🔥 Sync to Firebase"}</span>
-            </button>
+                {/* Firebase Live Cloud Sync Button */}
+                <button
+                  onClick={handleSyncAllToFirebase}
+                  disabled={isFirebaseSyncing}
+                  className="px-3 py-1.5 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-orange-600/30 cursor-pointer disabled:opacity-50"
+                  title="Persist & store all faculty details into Firebase Firestore & RTDB"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isFirebaseSyncing ? "animate-spin" : ""}`} />
+                  <span>{isFirebaseSyncing ? "Syncing..." : "🔥 Sync to Firebase"}</span>
+                </button>
 
-            {/* Live Indicator */}
-            <span className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Firebase Live
-            </span>
+                {/* Live Indicator */}
+                <span className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Firebase Live
+                </span>
 
-            {/* Add Faculty Button (Matches reference image) */}
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-3.5 py-1.5 rounded-xl border border-purple-400/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/30 cursor-pointer"
-              title="Add New Faculty Member"
-            >
-              <Plus className="w-4 h-4" /> <span>Add Faculty</span>
-            </button>
+                {/* Add Faculty Button */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="px-3.5 py-1.5 rounded-xl border border-purple-400/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/30 cursor-pointer"
+                  title="Add New Faculty Member"
+                >
+                  <Plus className="w-4 h-4" /> <span>Add Faculty</span>
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs text-indigo-200 font-semibold shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span>Faculty Directory</span>
+                <span className="text-[10px] text-slate-400 border-l border-slate-700 pl-2">
+                  Read-Only Mode
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Teachers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {paginatedTeachers.map((tch, index) => {
-            const isSelf = Boolean(
-              loggedInUsername &&
-              (tch.email.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
-                tch.id.toLowerCase().trim() === loggedInUsername.toLowerCase().trim())
-            );
+            const isSelf = checkIsSelfTeacher(tch, loggedInUsername);
             const rangeDisplay =
               tch.assignedRangeText ||
               `Contacts #${((index % 10) * 100) + 1} to #${((index % 10) + 1) * 100}`;
@@ -842,17 +885,19 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                           tch.avatar
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingTeacher(tch);
-                        }}
-                        className="absolute -bottom-1 -right-1 p-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-slate-900 cursor-pointer active:scale-90 transition-all opacity-85 group-hover/avatar:opacity-100"
-                        title="Upload/Edit Photo"
-                      >
-                        <Camera className="w-2.5 h-2.5" />
-                      </button>
+                      {currentUserRole === "ADMIN" && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTeacher(tch);
+                          }}
+                          className="absolute -bottom-1 -right-1 p-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-slate-900 cursor-pointer active:scale-90 transition-all opacity-85 group-hover/avatar:opacity-100"
+                          title="Upload/Edit Photo (Admin Only)"
+                        >
+                          <Camera className="w-2.5 h-2.5" />
+                        </button>
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -872,34 +917,62 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                       {tch.campus} CAMPUS
                     </span>
 
-                    {/* Interactive Active / On Leave Status Toggle Switch */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const newStatus: "ACTIVE" | "ON_LEAVE" = tch.status === "ACTIVE" ? "ON_LEAVE" : "ACTIVE";
-                        const updatedTeacher: Teacher = { ...tch, status: newStatus };
-                        const updatedList = teachers.map((t) => (t.id === tch.id || t.email === tch.email ? updatedTeacher : t));
-                        saveTeachersList(updatedList);
-                        saveTeacherToFirebase(updatedTeacher);
-                        onTriggerToast(
-                          `🔄 Status updated for ${tch.name}: ${newStatus === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"} (Saved to Firebase)`
-                        );
-                      }}
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 transition-all cursor-pointer shadow-sm transform hover:scale-105 active:scale-95 ${
-                        tch.status === "ACTIVE"
-                          ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-400/60 hover:bg-emerald-100"
-                          : "bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-400/60 hover:bg-amber-100"
-                      }`}
-                      title="Click to toggle Active vs On Leave availability status (stored in Firebase)"
-                    >
-                      <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
-                      <span>{tch.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}</span>
-                    </button>
+                    {/* Active / On Leave Status Display */}
+                    {currentUserRole === "ADMIN" ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newStatus: "ACTIVE" | "ON_LEAVE" = tch.status === "ACTIVE" ? "ON_LEAVE" : "ACTIVE";
+                          const updatedTeacher: Teacher = { ...tch, status: newStatus };
+                          const updatedList = teachers.map((t) => (t.id === tch.id || t.email === tch.email ? updatedTeacher : t));
+                          saveTeachersList(updatedList);
+                          saveTeacherToFirebase(updatedTeacher);
+                          onTriggerToast(
+                            `🔄 Status updated for ${tch.name}: ${newStatus === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"} (Saved to Firebase)`
+                          );
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 transition-all cursor-pointer shadow-sm transform hover:scale-105 active:scale-95 ${
+                          tch.status === "ACTIVE"
+                            ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-400/60 hover:bg-emerald-100"
+                            : "bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-400/60 hover:bg-amber-100"
+                        }`}
+                        title="Admin control: Click to toggle Active vs On Leave availability status (stored in Firebase)"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+                        <span>{tch.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}</span>
+                      </button>
+                    ) : (
+                      <div
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 shadow-sm ${
+                          tch.status === "ACTIVE"
+                            ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-400/60"
+                            : "bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-400/60"
+                        }`}
+                        title={
+                          isSelf
+                            ? "Status automatically set to ACTIVE while logged in and ON LEAVE upon logging out."
+                            : "Faculty availability status"
+                        }
+                      >
+                        <span className={`w-2 h-2 rounded-full ${tch.status === "ACTIVE" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+                        <span>{tch.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                  {/* Highlighted Faculty Profile ID */}
+                  <div className="flex justify-between items-center bg-indigo-50/80 dark:bg-indigo-950/60 px-2.5 py-1.5 rounded-lg border border-indigo-200/60 dark:border-indigo-800/60">
+                    <span className="font-extrabold text-indigo-700 dark:text-indigo-300 text-[11px] flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span>Profile ID</span>
+                    </span>
+                    <span className="font-mono font-black text-[11px] text-indigo-950 dark:text-indigo-200 select-all tracking-wide truncate max-w-[210px]">
+                      {tch.id}
+                    </span>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-600 dark:text-slate-300">Experience</span>
                     <span className="font-black text-slate-900 dark:text-slate-100">{tch.experienceYears} Years</span>
@@ -1026,7 +1099,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 </div>
 
                 <div className="ml-auto flex items-center gap-1.5">
-                  <Tooltip text={`Edit ${tch.name}`} position="bottom">
+                  <Tooltip text={currentUserRole === "TEACHER" ? `View ${tch.name} Profile` : `Edit ${tch.name}`} position="bottom">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1034,22 +1107,32 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                       }}
                       className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-sky-400 hover:text-slate-900 dark:hover:text-sky-300 font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-xs transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     >
-                      <Edit3 className="w-3.5 h-3.5" /> Edit
+                      {currentUserRole === "TEACHER" ? (
+                        <>
+                          <BookOpen className="w-3.5 h-3.5" /> View Profile
+                        </>
+                      ) : (
+                        <>
+                          <Edit3 className="w-3.5 h-3.5" /> Edit
+                        </>
+                      )}
                     </button>
                   </Tooltip>
 
-                  <Tooltip text={`Delete ${tch.name} from Firebase & Directory`} position="bottom">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteTeacher(tch.id, tch.name);
-                      }}
-                      className="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 font-bold px-2 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 shadow-xs transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                      title="Remove faculty from Firebase & Directory"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </Tooltip>
+                  {currentUserRole === "ADMIN" && (
+                    <Tooltip text={`Delete ${tch.name} from Firebase & Directory`} position="bottom">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTeacher(tch.id, tch.name);
+                        }}
+                        className="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 font-bold px-2 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 shadow-xs transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        title="Remove faculty from Firebase & Directory"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
             </div>
@@ -1264,14 +1347,23 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         </div>
       )}
 
-      {/* Edit Teacher Modal (Admin Only) */}
+      {/* Edit Teacher Modal (Admin Only) / View Profile Modal (Teacher Mode) */}
       {editingTeacher && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
           <div className="glass-card w-full max-w-md rounded-2xl border border-slate-700 p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
               <h3 className="text-lg font-bold text-slate-100 flex items-center gap-1.5">
-                <Edit3 className="w-5 h-5 text-sky-400" />
-                Edit Faculty details
+                {currentUserRole === "TEACHER" ? (
+                  <>
+                    <BookOpen className="w-5 h-5 text-indigo-400" />
+                    <span>Faculty Profile (Read-Only)</span>
+                  </>
+                ) : (
+                  <>
+                    <Edit3 className="w-5 h-5 text-sky-400" />
+                    <span>Edit Faculty Details</span>
+                  </>
+                )}
               </h3>
               <button
                 onClick={() => setEditingTeacher(null)}
@@ -1281,32 +1373,85 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               </button>
             </div>
 
+            {/* Faculty Profile ID Display */}
+            <div className="p-3.5 rounded-2xl bg-indigo-950/50 border border-indigo-500/40 flex items-center justify-between gap-3 shadow-inner">
+              <div className="min-w-0">
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+                  Official Profile ID
+                </span>
+                <span className="font-mono text-sm font-black text-white select-all truncate block mt-0.5">
+                  {editingTeacher.id}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(editingTeacher.id);
+                  onTriggerToast(`📋 Copied Profile ID: ${editingTeacher.id}`);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
+              >
+                <span>Copy ID</span>
+              </button>
+            </div>
+
             {currentUserRole === "TEACHER" && (
               <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-medium flex items-center gap-2">
-                <span>🔒</span>
+                <span className="text-base shrink-0">🔒</span>
                 <span>
-                  <strong>Faculty Profile Scoping:</strong> Name, Email, Department & Quota are managed by College Admin. You are authorized to update your <strong>Active vs. On Leave</strong> status below.
+                  <strong>Profile Editing Restricted:</strong> Faculty profile details cannot be modified in the portal. Your availability status is automatically set to <strong>🟢 ACTIVE</strong> while logged in and turns to <strong>🟡 ON LEAVE</strong> upon logout.
                 </span>
               </div>
             )}
 
             <form onSubmit={handleUpdateTeacherSubmit} className="space-y-3 text-xs">
-              {/* Profile Photo Uploader with Firebase Sync */}
-              <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-700/80 space-y-2.5">
-                <label className="block text-slate-200 font-bold flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Camera className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Faculty Profile Photo (Firebase Storage)</span>
-                  </span>
-                  {editingTeacher.photoUrl && (
-                    <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Saved in Firebase
+              {/* Profile Photo Uploader or Read-Only Display */}
+              {currentUserRole === "ADMIN" ? (
+                <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-700/80 space-y-2.5">
+                  <label className="block text-slate-200 font-bold flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Faculty Profile Photo (Firebase Storage)</span>
                     </span>
-                  )}
-                </label>
+                    {editingTeacher.photoUrl && (
+                      <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Saved in Firebase
+                      </span>
+                    )}
+                  </label>
 
-                <div className="flex items-center gap-3.5">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 shadow-md shrink-0 overflow-hidden relative group">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 shadow-md shrink-0 overflow-hidden relative group">
+                      <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-white font-black text-base overflow-hidden">
+                        {editingTeacher.photoUrl ? (
+                          <img src={editingTeacher.photoUrl} alt={editingTeacher.name} className="w-full h-full object-cover" />
+                        ) : (
+                          editingTeacher.avatar
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 space-y-1">
+                      <label className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer inline-flex transition-all active:scale-95 shadow-sm">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{editingTeacher.photoUrl ? "Change Photo" : "Upload Photo"}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleEditTeacherPhotoUpload(e)}
+                          className="hidden"
+                        />
+                      </label>
+                      <p className="text-[10px] text-slate-400 leading-tight">
+                        Crops to square & saves to Firebase cloud storage bucket.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-700/80 flex items-center gap-3.5">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 shadow-md shrink-0 overflow-hidden">
                     <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-white font-black text-base overflow-hidden">
                       {editingTeacher.photoUrl ? (
                         <img src={editingTeacher.photoUrl} alt={editingTeacher.name} className="w-full h-full object-cover" />
@@ -1315,24 +1460,15 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                       )}
                     </div>
                   </div>
-
-                  <div className="flex-1 space-y-1">
-                    <label className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer inline-flex transition-all active:scale-95 shadow-sm">
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>{editingTeacher.photoUrl ? "Change Photo" : "Upload Photo"}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleEditTeacherPhotoUpload(e)}
-                        className="hidden"
-                      />
-                    </label>
-                    <p className="text-[10px] text-slate-400 leading-tight">
-                      Crops to square & saves to Firebase cloud storage bucket.
-                    </p>
+                  <div>
+                    <h4 className="text-white font-black text-sm">{editingTeacher.name}</h4>
+                    <p className="text-slate-400 text-xs">{editingTeacher.department} • {editingTeacher.campus} Campus</p>
+                    <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                      🟢 {editingTeacher.status}
+                    </span>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Full Name {currentUserRole === "TEACHER" && "(Locked)"}</label>
@@ -1427,11 +1563,18 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1 text-emerald-400">Faculty Status (Editable ✨)</label>
+                  <label className="block text-slate-300 font-semibold mb-1 text-emerald-400">
+                    Faculty Status {currentUserRole === "TEACHER" && "(Automated)"}
+                  </label>
                   <select
+                    disabled={currentUserRole === "TEACHER"}
                     value={editingTeacher.status}
                     onChange={(e) => setEditingTeacher({ ...editingTeacher, status: e.target.value as "ACTIVE" | "ON_LEAVE" })}
-                    className="w-full bg-slate-900 border border-emerald-500/60 rounded-xl px-3 py-2 text-slate-100 font-bold focus:ring-2 focus:ring-emerald-500"
+                    className={`w-full rounded-xl px-3 py-2 font-bold ${
+                      currentUserRole === "TEACHER"
+                        ? "bg-slate-950/80 border-slate-800 text-emerald-400 cursor-not-allowed border"
+                        : "bg-slate-900 border border-emerald-500/60 text-slate-100 focus:ring-2 focus:ring-emerald-500"
+                    }`}
                   >
                     <option value="ACTIVE">🟢 ACTIVE</option>
                     <option value="ON_LEAVE">🟡 ON LEAVE</option>
@@ -1476,20 +1619,37 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setEditingTeacher(null)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold"
-                >
-                  <Save className="w-3.5 h-3.5" /> Save Updates
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+                {currentUserRole === "TEACHER" ? (
+                  <span className="text-[11px] text-slate-400 italic">
+                    Read-only faculty access
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingTeacher(null)}
+                    className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-200"
+                  >
+                    Cancel
+                  </button>
+                )}
+
+                {currentUserRole === "ADMIN" ? (
+                  <button
+                    type="submit"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold cursor-pointer"
+                  >
+                    <Save className="w-3.5 h-3.5" /> Save Updates
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingTeacher(null)}
+                    className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold cursor-pointer"
+                  >
+                    Close
+                  </button>
+                )}
               </div>
             </form>
           </div>

@@ -596,6 +596,119 @@ export function subscribeToFirebaseTeachers(
   };
 }
 
+// Resolve teacher entity by username, email, or campus alias
+export function resolveTeacherByUsername(
+  teachers: Teacher[],
+  username?: string,
+  campus?: "KARUR" | "COIMBATORE"
+): Teacher | undefined {
+  if (!username || !Array.isArray(teachers) || teachers.length === 0) return undefined;
+  const clean = username.toLowerCase().trim();
+
+  // 1. Direct match by id or email
+  let found = teachers.find(
+    (t) => t.id.toLowerCase().trim() === clean || t.email.toLowerCase().trim() === clean
+  );
+  if (found) return found;
+
+  // 2. Known faculty demo / alias logins
+  if (clean === "teacherkarur@123" || clean === "teacher_rajesh@123") {
+    found = teachers.find(
+      (t) => t.id.toLowerCase().includes("rajesh") || t.email.toLowerCase().includes("rajesh")
+    );
+    if (found) return found;
+  }
+  if (clean === "teachercovai@123") {
+    found = teachers.find(
+      (t) => t.id.toLowerCase().includes("meenakshi") || t.email.toLowerCase().includes("meenakshi")
+    );
+    if (found) return found;
+  }
+
+  // 3. Match username prefix (e.g. "rajesh" matches "rajesh.mech@vsbec.in")
+  found = teachers.find(
+    (t) =>
+      clean.includes(t.id.split("@")[0].toLowerCase().trim()) ||
+      t.email.toLowerCase().includes(clean)
+  );
+  if (found) return found;
+
+  // 4. Fallback to first teacher matching campus
+  if (campus) {
+    found = teachers.find((t) => t.campus === campus);
+    if (found) return found;
+  }
+
+  return teachers[0];
+}
+
+// Update Teacher Online Status (ACTIVE on login, ON_LEAVE on logout) with immediate Firebase & LocalStorage sync
+export async function updateTeacherOnlineStatus(
+  username: string,
+  campus?: "KARUR" | "COIMBATORE",
+  status: "ACTIVE" | "ON_LEAVE" = "ACTIVE"
+): Promise<Teacher | null> {
+  if (!username) return null;
+  try {
+    // 1. Get current teachers from Firebase or localStorage
+    let currentTeachers = await fetchTeachersFromFirebase();
+    if (!currentTeachers || currentTeachers.length === 0) {
+      if (typeof window !== "undefined") {
+        try {
+          const cached = localStorage.getItem("vsb_crm_teachers");
+          if (cached) currentTeachers = JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+    if (!currentTeachers || currentTeachers.length === 0) {
+      const { MOCK_TEACHERS } = await import("@/lib/mockData");
+      currentTeachers = [...MOCK_TEACHERS];
+    }
+
+    const matchedTeacher = resolveTeacherByUsername(currentTeachers, username, campus);
+    if (!matchedTeacher) {
+      console.warn(`[updateTeacherOnlineStatus] No matching teacher found for ${username}`);
+      return null;
+    }
+
+    const updatedTeacher: Teacher = {
+      ...matchedTeacher,
+      status,
+    };
+
+    console.log(
+      `🔄 [Firebase Teacher Status] Setting status for ${updatedTeacher.name} (${updatedTeacher.id}) -> ${status}`
+    );
+
+    // Save to Firebase (Firestore, RTDB, and localStorage)
+    await saveTeacherToFirebase(updatedTeacher);
+
+    // Also update memory in localStorage cache immediately
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("vsb_crm_teachers");
+        let list: Teacher[] = stored ? JSON.parse(stored) : [];
+        if (Array.isArray(list)) {
+          const idx = list.findIndex(
+            (t) => t.id === updatedTeacher.id || t.email === updatedTeacher.email
+          );
+          if (idx >= 0) {
+            list[idx] = updatedTeacher;
+          } else {
+            list.unshift(updatedTeacher);
+          }
+          localStorage.setItem("vsb_crm_teachers", JSON.stringify(list));
+        }
+      } catch (e) {}
+    }
+
+    return updatedTeacher;
+  } catch (err) {
+    console.warn("Error updating teacher online status in Firebase:", err);
+    return null;
+  }
+}
+
 // Sync Student Lead Redirection / Transfer in Firebase
 export async function redirectStudentLeadInFirebase(
   leadId: string,

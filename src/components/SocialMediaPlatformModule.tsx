@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Share2,
   Megaphone,
@@ -37,7 +37,14 @@ import {
   Building2,
   Flame,
 } from "lucide-react";
-import { ActiveTab, CampusLocation } from "@/types/crm";
+import { ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
+import {
+  subscribeToFirebaseStudents,
+  fetchStudentsFromFirestore,
+  fetchStudentsFromRTDB,
+  isLeadDeleted,
+  StudentRecord,
+} from "@/lib/firebaseSync";
 import SpecularButton from "@/components/SpecularButton";
 
 export interface CollegeCampaign {
@@ -174,6 +181,7 @@ interface SocialMediaPlatformModuleProps {
   loggedInCampus: CampusLocation;
   onTriggerToast: (msg: string) => void;
   onNavigateTab: (tab: ActiveTab) => void;
+  applicants?: (Lead & { application?: Application | null })[];
 }
 
 export default function SocialMediaPlatformModule({
@@ -181,6 +189,7 @@ export default function SocialMediaPlatformModule({
   loggedInCampus,
   onTriggerToast,
   onNavigateTab,
+  applicants,
 }: SocialMediaPlatformModuleProps) {
   const [selectedSubTab, setSelectedSubTab] = useState<string>(
     activeTab === "SOCIAL_ADS"
@@ -245,210 +254,225 @@ export default function SocialMediaPlatformModule({
     }
   };
 
-  // Mock Social Media Leads
-  const socialLeads = [
-    {
-      id: "soc_1",
-      name: "S. Kausalya",
-      email: "kausalya.tnea2026@gmail.com",
-      phone: "+91 94421 88990",
-      platform: "Google Ads",
-      icon: Megaphone,
-      color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      campaign: "TNEA Engineering Cutoff Search Ad 2026",
-      status: "Verified Lead",
-      time: "10 mins ago",
-      campus: "KARUR",
-    },
-    {
-      id: "soc_1b",
-      name: "A. Vignesh",
-      email: "vignesh.gads@gmail.com",
-      phone: "+91 98432 99001",
-      platform: "Google Ads",
-      icon: Megaphone,
-      color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      campaign: "Google Display Network CSE Campaign",
-      status: "Inquired",
-      time: "18 mins ago",
-      campus: "COIMBATORE",
-    },
-    {
-      id: "soc_1c",
-      name: "M. Harish",
-      email: "harish.ytads@gmail.com",
-      phone: "+91 97891 22334",
-      platform: "Google Ads",
-      icon: Megaphone,
-      color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      campaign: "YouTube Placement Video Campaign",
-      status: "Admitted",
-      time: "32 mins ago",
-      campus: "KARUR",
-    },
-    {
-      id: "soc_2",
-      name: "R. Vigneshwar",
-      email: "vignesh.mech26@gmail.com",
-      phone: "+91 98422 11445",
-      platform: "Facebook",
-      icon: Share2,
-      color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-      campaign: "VSB Campus Virtual Tour FB Lead Form",
-      status: "Inquired",
-      time: "25 mins ago",
-      campus: "COIMBATORE",
-    },
-    {
-      id: "soc_2b",
-      name: "P. Swetha",
-      email: "swetha.fb2026@gmail.com",
-      phone: "+91 99431 88221",
-      platform: "Facebook",
-      icon: Share2,
-      color: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-      campaign: "Facebook Feed Cutoff Calculator Ad",
-      status: "Verified Lead",
-      time: "40 mins ago",
-      campus: "KARUR",
-    },
-    {
-      id: "soc_3",
-      name: "M. Soundarya",
-      email: "soundarya.ece@gmail.com",
-      phone: "+91 97860 33221",
-      platform: "WhatsApp",
-      icon: MessageSquare,
-      color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-      campaign: "Direct WhatsApp Admission Chatbot",
-      status: "Contacted",
-      time: "42 mins ago",
-      campus: "KARUR",
-    },
-    {
-      id: "soc_3b",
-      name: "K. Dinesh",
-      email: "dinesh.wa2026@gmail.com",
-      phone: "+91 98941 77665",
-      platform: "WhatsApp",
-      icon: MessageSquare,
-      color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-      campaign: "WhatsApp Official Broadcast Alert",
-      status: "Admitted",
-      time: "55 mins ago",
-      campus: "COIMBATORE",
-    },
-    {
-      id: "soc_4",
-      name: "K. Pravin Kumar",
-      email: "pravin.cse2026@gmail.com",
-      phone: "+91 99430 77889",
-      platform: "X (Twitter)",
-      icon: Send,
-      color: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-      campaign: "VSB TNEA Rank Predictor Tweet",
-      status: "Applied",
-      time: "1 hour ago",
-      campus: "KARUR",
-    },
-    {
-      id: "soc_4b",
-      name: "T. Ramya",
-      email: "ramya.twitter@gmail.com",
-      phone: "+91 97511 44332",
-      platform: "X (Twitter)",
-      icon: Send,
-      color: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-      campaign: "Twitter Engineering Placement Trend",
-      status: "Inquired",
-      time: "1.5 hours ago",
-      campus: "COIMBATORE",
-    },
-    {
-      id: "soc_5",
-      name: "A. Deepa Lakshmi",
-      email: "deepa.it2026@gmail.com",
-      phone: "+91 94433 66554",
-      platform: "E-mail",
-      icon: Mail,
-      color: "bg-rose-500/20 text-rose-400 border-rose-500/30",
-      campaign: "12th Result Cutoff Email Newsletter",
-      status: "Verified Lead",
-      time: "2 hours ago",
-      campus: "COIMBATORE",
-    },
-    {
-      id: "soc_6",
-      name: "T. Karthikeyan",
-      email: "karthik.ai2026@gmail.com",
-      phone: "+91 97877 22110",
-      platform: "SMS",
-      icon: MessageCircle,
-      color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-      campaign: "SMS Cutoff Alert Broadcast",
-      status: "Inquired",
-      time: "3 hours ago",
-      campus: "KARUR",
-    },
-    {
-      id: "soc_7",
-      name: "P. Nithya Shree",
-      email: "nithya.bme2026@gmail.com",
-      phone: "+91 98431 55443",
-      platform: "Campaign",
-      icon: Sparkles,
-      color: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-      campaign: "Mega Engineering Admission Drive",
-      status: "Admitted",
-      time: "5 hours ago",
-      campus: "COIMBATORE",
-    },
-    {
-      id: "soc_8",
-      name: "G. Naveen Raj",
-      email: "naveen.expo2026@gmail.com",
-      phone: "+91 99420 88112",
-      platform: "Project Expo",
-      icon: Award,
-      color: "bg-teal-500/20 text-teal-400 border-teal-500/30",
-      campaign: "National Level School Project Expo 2026",
-      status: "Spot Registered",
-      time: "6 hours ago",
-      campus: "KARUR",
-    },
-  ];
-
-  const channels = [
-    { id: "ALL", label: "All Social Media", icon: Share2, count: "1,840 Students" },
-    { id: "ADS", label: "Google & Social Ads", icon: Megaphone, count: "520 Students" },
-    { id: "FACEBOOK", label: "Facebook", icon: Share2, count: "340 Students" },
-    { id: "TWITTER", label: "X (Twitter)", icon: Send, count: "180 Students" },
-    { id: "WHATSAPP", label: "WhatsApp Business", icon: MessageSquare, count: "410 Students" },
-    { id: "EMAIL", label: "E-mail Portal", icon: Mail, count: "210 Students" },
-    { id: "SMS", label: "SMS Gateway", icon: MessageCircle, count: "140 Students" },
-    { id: "CAMPAIGN", label: "Campaign Hub", icon: Sparkles, count: `${campaigns.length} Campaigns` },
-    { id: "EXPO", label: "Project Expo", icon: Award, count: "250 Students" },
-  ];
-
-  const filteredLeads = socialLeads.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.campaign.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesChannel =
-      selectedSubTab === "ALL" ||
-      (selectedSubTab === "ADS" && item.platform === "Google Ads") ||
-      (selectedSubTab === "FACEBOOK" && item.platform === "Facebook") ||
-      (selectedSubTab === "TWITTER" && item.platform === "X (Twitter)") ||
-      (selectedSubTab === "WHATSAPP" && item.platform === "WhatsApp") ||
-      (selectedSubTab === "EMAIL" && item.platform === "E-mail") ||
-      (selectedSubTab === "SMS" && item.platform === "SMS") ||
-      (selectedSubTab === "CAMPAIGN" && (item.platform === "Campaign" || item.platform === "Google Ads")) ||
-      (selectedSubTab === "EXPO" && item.platform === "Project Expo");
-
-    return matchesSearch && matchesChannel;
+  // Live Firebase Students State
+  const [firebaseStudents, setFirebaseStudents] = useState<StudentRecord[]>(() => {
+    if (applicants && applicants.length > 0) return applicants;
+    try {
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem("vsb_firebase_leads_cache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.filter((item: any) => !isLeadDeleted(item.id));
+          }
+        }
+      }
+    } catch (e) {}
+    return [];
   });
+
+  // Synchronize when applicants prop updates from parent dashboard
+  useEffect(() => {
+    if (applicants && applicants.length > 0) {
+      setFirebaseStudents(applicants.filter((item) => !isLeadDeleted(item.id)));
+    }
+  }, [applicants]);
+
+  // Real-time observer directly from Firebase Firestore & Realtime Database
+  useEffect(() => {
+    const unsub = subscribeToFirebaseStudents((liveList) => {
+      if (liveList && liveList.length > 0) {
+        setFirebaseStudents(liveList);
+      }
+    });
+
+    fetchStudentsFromFirestore().then((list) => {
+      if (list && list.length > 0) {
+        setFirebaseStudents(list);
+      } else {
+        fetchStudentsFromRTDB().then((rtdbList) => {
+          if (rtdbList && rtdbList.length > 0) {
+            setFirebaseStudents(rtdbList);
+          }
+        });
+      }
+    });
+
+    return () => {
+      if (unsub) unsub();
+    };
+  }, []);
+
+  // Map each student's source to its marketing channel ID
+  const getLeadChannel = (source?: string): string => {
+    const src = (source || "").toLowerCase();
+    if (src.includes("google") || src.includes("ad") || src.includes("search")) return "ADS";
+    if (src.includes("facebook") || src.includes("fb") || src.includes("meta") || src.includes("instagram")) return "FACEBOOK";
+    if (src.includes("twitter") || src.includes("x (") || src === "x") return "TWITTER";
+    if (src.includes("whatsapp") || src.includes("wa")) return "WHATSAPP";
+    if (src.includes("email") || src.includes("e-mail") || src.includes("mail")) return "EMAIL";
+    if (src.includes("sms") || src.includes("message")) return "SMS";
+    if (src.includes("expo") || src.includes("fair") || src.includes("walkin")) return "EXPO";
+    if (src.includes("campaign")) return "CAMPAIGN";
+    return "OTHER";
+  };
+
+  // Calculate live student counts from Firebase
+  const channelCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      ALL: firebaseStudents.length,
+      ADS: 0,
+      FACEBOOK: 0,
+      TWITTER: 0,
+      WHATSAPP: 0,
+      EMAIL: 0,
+      SMS: 0,
+      CAMPAIGN: 0,
+      EXPO: 0,
+    };
+
+    firebaseStudents.forEach((student) => {
+      const ch = getLeadChannel(student.source);
+      if (counts[ch] !== undefined) {
+        counts[ch]++;
+      }
+    });
+
+    return counts;
+  }, [firebaseStudents]);
+
+  // Dynamic Navigation Channels matching Real Firebase Student Count
+  const channels = [
+    {
+      id: "ALL",
+      label: "All Social Media",
+      icon: Share2,
+      count: `${channelCounts.ALL.toLocaleString()} ${channelCounts.ALL === 1 ? "Student" : "Students"}`,
+    },
+    {
+      id: "ADS",
+      label: "Google & Social Ads",
+      icon: Megaphone,
+      count: `${channelCounts.ADS.toLocaleString()} ${channelCounts.ADS === 1 ? "Student" : "Students"}`,
+    },
+    {
+      id: "FACEBOOK",
+      label: "Facebook",
+      icon: Share2,
+      count: `${channelCounts.FACEBOOK.toLocaleString()} ${channelCounts.FACEBOOK === 1 ? "Student" : "Students"}`,
+    },
+    {
+      id: "TWITTER",
+      label: "X (Twitter)",
+      icon: Send,
+      count: `${channelCounts.TWITTER.toLocaleString()} ${channelCounts.TWITTER === 1 ? "Student" : "Students"}`,
+    },
+    {
+      id: "WHATSAPP",
+      label: "WhatsApp Business",
+      icon: MessageSquare,
+      count: `${channelCounts.WHATSAPP.toLocaleString()} ${channelCounts.WHATSAPP === 1 ? "Student" : "Students"}`,
+    },
+    {
+      id: "EMAIL",
+      label: "E-mail Portal",
+      icon: Mail,
+      count: `${channelCounts.EMAIL.toLocaleString()} ${channelCounts.EMAIL === 1 ? "Student" : "Students"}`,
+    },
+    {
+      id: "SMS",
+      label: "SMS Gateway",
+      icon: MessageCircle,
+      count: `${channelCounts.SMS.toLocaleString()} ${channelCounts.SMS === 1 ? "Student" : "Students"}`,
+    },
+    {
+      id: "CAMPAIGN",
+      label: "Campaign Hub",
+      icon: Sparkles,
+      count: channelCounts.CAMPAIGN > 0 ? `${channelCounts.CAMPAIGN.toLocaleString()} Students` : `${campaigns.length} Campaigns`,
+    },
+    {
+      id: "EXPO",
+      label: "Project Expo",
+      icon: Award,
+      count: `${channelCounts.EXPO.toLocaleString()} ${channelCounts.EXPO === 1 ? "Student" : "Students"}`,
+    },
+  ];
+
+  // Map real Firebase students to social media table items
+  const socialLeads = useMemo(() => {
+    return firebaseStudents.map((s) => {
+      const ch = getLeadChannel(s.source);
+      let platform = s.source || "Official Portal";
+      let icon = Share2;
+      let color = "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
+
+      if (ch === "ADS") {
+        platform = "Google Ads";
+        icon = Megaphone;
+        color = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      } else if (ch === "FACEBOOK") {
+        platform = "Facebook";
+        icon = Share2;
+        color = "bg-sky-500/20 text-sky-400 border-sky-500/30";
+      } else if (ch === "TWITTER") {
+        platform = "X (Twitter)";
+        icon = Send;
+        color = "bg-slate-500/20 text-slate-300 border-slate-500/30";
+      } else if (ch === "WHATSAPP") {
+        platform = "WhatsApp";
+        icon = MessageSquare;
+        color = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      } else if (ch === "EMAIL") {
+        platform = "E-mail";
+        icon = Mail;
+        color = "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      } else if (ch === "SMS") {
+        platform = "SMS";
+        icon = MessageCircle;
+        color = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+      } else if (ch === "EXPO") {
+        platform = "Project Expo";
+        icon = Award;
+        color = "bg-teal-500/20 text-teal-400 border-teal-500/30";
+      } else if (ch === "CAMPAIGN") {
+        platform = "Campaign";
+        icon = Sparkles;
+        color = "bg-pink-500/20 text-pink-400 border-pink-500/30";
+      }
+
+      return {
+        id: s.id,
+        name: s.name,
+        email: s.email || "student@vsb.ac.in",
+        phone: s.phone || "+91 94421 88990",
+        platform,
+        channelKey: ch,
+        icon,
+        color,
+        campaign: s.courseInterest || s.source || "Engineering Admission 2026",
+        status: s.status === "ADMITTED" ? "Admitted" : s.status === "IN_REVIEW" ? "Under Review" : s.status === "CONTACTED" ? "Contacted" : "Verified Lead",
+        time: s.createdAt ? new Date(s.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "Recently",
+        campus: s.campus || "ALL",
+      };
+    });
+  }, [firebaseStudents]);
+
+  const filteredLeads = useMemo(() => {
+    return socialLeads.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.campaign.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.phone.includes(searchQuery);
+
+      const matchesChannel =
+        selectedSubTab === "ALL" ||
+        item.channelKey === selectedSubTab;
+
+      return matchesSearch && matchesChannel;
+    });
+  }, [socialLeads, searchQuery, selectedSubTab]);
 
   // Open modal in create mode
   const handleOpenNewCampaignModal = (channelName?: string) => {
@@ -542,10 +566,10 @@ export default function SocialMediaPlatformModule({
         {/* Omnichannel Overview Stat Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-slate-200 dark:border-white/10">
           <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
-            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Social Leads Captured</p>
-            <h4 className="text-xl font-black text-sky-600 dark:text-sky-400 mt-1">1,840 Candidates</h4>
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Students in Firebase</p>
+            <h4 className="text-xl font-black text-sky-600 dark:text-sky-400 mt-1">{firebaseStudents.length.toLocaleString()} Students</h4>
             <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> +24.8% this week
+              <TrendingUp className="w-3 h-3" /> Live Synced from Firebase
             </p>
           </div>
 
@@ -798,7 +822,7 @@ export default function SocialMediaPlatformModule({
             <h3 className="text-base font-extrabold text-slate-100 flex flex-wrap items-center gap-2">
               <span>Student Candidates Registered via {channels.find((c) => c.id === selectedSubTab)?.label || "Social Platforms"}</span>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40 font-black">
-                {channels.find((c) => c.id === selectedSubTab)?.count || "1,840 Students"}
+                {channels.find((c) => c.id === selectedSubTab)?.count || `${firebaseStudents.length.toLocaleString()} Students`}
               </span>
             </h3>
             <p className="text-xs text-slate-400">
