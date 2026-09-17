@@ -12,6 +12,15 @@
   *, ::before, ::after, body, html, input, select, textarea, button, table, td, th, span, div, p, h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', var(--font-poppins), system-ui, -apple-system, sans-serif !important;
   }
+
+  input, select, textarea, button {
+    font-size: inherit;
+  }
+}
+
+html {
+  font-size: 80% !important;
+  -webkit-text-size-adjust: 100%;
 }
 
 html, body {
@@ -19,8 +28,13 @@ html, body {
   width: 100%;
   overflow-x: hidden;
   position: relative;
-  -webkit-text-size-adjust: 100%;
 }
+
+/* Hardcoded pixel text sizes scaled down to 80% */
+.text-\[8px\] { font-size: 6.4px !important; }
+.text-\[9px\] { font-size: 7.2px !important; }
+.text-\[10px\] { font-size: 8px !important; }
+.text-\[11px\] { font-size: 8.8px !important; }
 
 body {
   background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
