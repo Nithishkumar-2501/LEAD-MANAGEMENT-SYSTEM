@@ -2448,12 +2448,15 @@ export default function ApplicantDetailModal({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
                         <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
-                          Assigned Counselor / Owner
+                          Assigned Counselor / Owner {currentUserRole === "TEACHER" && "(Locked)"}
                         </label>
                         <select
                           value={formData.assignedTo || COUNSELOR_OPTIONS[0]}
                           onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                          disabled={currentUserRole === "TEACHER"}
+                          className={`w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                            currentUserRole === "TEACHER" ? "opacity-70 cursor-not-allowed bg-slate-100 dark:bg-slate-900" : "cursor-pointer"
+                          }`}
                         >
                           {COUNSELOR_OPTIONS.map((counselor) => (
                             <option key={counselor} value={counselor}>

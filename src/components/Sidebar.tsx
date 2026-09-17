@@ -42,6 +42,7 @@ import {
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
 import { NoiseBackground } from "@/components/ui/noise-background";
+import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
 
 interface SidebarProps {
   user: User;
@@ -131,9 +132,12 @@ export default function Sidebar({
   }, []);
 
   const trimmedQuery = menuSearchQuery.trim().toLowerCase();
+  const visibleApplicants = currentUserRole === "TEACHER"
+    ? (applicants || []).filter((a) => isLeadAssignedToTeacher(a, loggedInUsername, loggedInCampus))
+    : (applicants || []);
   const matchingApplicants =
-    trimmedQuery.length > 0 && applicants
-      ? applicants
+    trimmedQuery.length > 0 && visibleApplicants
+      ? visibleApplicants
           .filter(
             (app) =>
               app.name.toLowerCase().includes(trimmedQuery) ||
@@ -155,7 +159,7 @@ export default function Sidebar({
     if (onCloseMobile) onCloseMobile();
   };
 
-  const dashboardSubItems = [
+  const rawDashboardSubItems = [
     {
       id: "ADMIN_DASHBOARD" as ActiveTab,
       label: "Admin Dashboard",
@@ -164,15 +168,17 @@ export default function Sidebar({
       color: "from-sky-500 to-blue-600",
       activeBorder: "border-sky-400",
       activeGlow: "shadow-sky-500/30",
+      roles: ["ADMIN"],
     },
     {
       id: "USER_DASHBOARD" as ActiveTab,
-      label: "User Dashboard",
-      sublabel: "Counselor Lead Tasks",
+      label: "Lead Dashboard",
+      sublabel: "Assigned Leads & Follow-ups",
       icon: UserCheck,
       color: "from-indigo-500 to-purple-600",
       activeBorder: "border-indigo-400",
       activeGlow: "shadow-indigo-500/30",
+      roles: ["TEACHER"],
     },
     {
       id: "MARKETING_DASHBOARD" as ActiveTab,
@@ -182,6 +188,7 @@ export default function Sidebar({
       color: "from-purple-500 to-pink-600",
       activeBorder: "border-purple-400",
       activeGlow: "shadow-purple-500/30",
+      roles: ["ADMIN"],
     },
     {
       id: "ECHO_DASHBOARD" as ActiveTab,
@@ -191,6 +198,7 @@ export default function Sidebar({
       color: "from-emerald-500 to-teal-600",
       activeBorder: "border-emerald-400",
       activeGlow: "shadow-emerald-500/30",
+      roles: ["ADMIN", "TEACHER"],
     },
     {
       id: "AI_INTELLIGENCE" as ActiveTab,
@@ -200,8 +208,13 @@ export default function Sidebar({
       color: "from-fuchsia-500 to-indigo-600",
       activeBorder: "border-fuchsia-400",
       activeGlow: "shadow-fuchsia-500/30",
+      roles: ["ADMIN", "TEACHER"],
     },
   ];
+
+  const dashboardSubItems = rawDashboardSubItems.filter((item) =>
+    item.roles.includes(currentUserRole)
+  );
 
   const admissionSubItems = [
     {
@@ -391,7 +404,7 @@ export default function Sidebar({
         setIsSocialPlatformOpen(false);
         setIsAppManagerOpen(false);
         if (!dashboardSubItems.some((item) => item.id === activeTab)) {
-          onTabChange("ADMIN_DASHBOARD");
+          onTabChange(currentUserRole === "TEACHER" ? "USER_DASHBOARD" : "ADMIN_DASHBOARD");
         }
       }
       return next;

@@ -16,9 +16,11 @@ import {
   Menu,
   X,
   Lock,
+  ShieldCheck,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
+import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
 
 interface HeaderProps {
   user: User;
@@ -66,9 +68,12 @@ export default function Header({
   const [showSearchResults, setShowSearchResults] = useState(true);
 
   const trimmedQuery = searchQuery.trim().toLowerCase();
+  const visibleApplicants = currentUserRole === "TEACHER"
+    ? (applicants || []).filter((item) => isLeadAssignedToTeacher(item, loggedInUsername, loggedInCampus))
+    : (applicants || []);
   const searchResults =
-    trimmedQuery.length > 0 && applicants
-      ? applicants
+    trimmedQuery.length > 0 && visibleApplicants
+      ? visibleApplicants
           .filter((item) => {
             return (
               item.name.toLowerCase().includes(trimmedQuery) ||
@@ -99,17 +104,18 @@ export default function Header({
   };
 
   const navItems = [
-    { id: "ADMISSIONS" as ActiveTab, label: "Admissions CRM", icon: GraduationCap },
-    { id: "CONTACTS" as ActiveTab, label: "Lead Manager", icon: UserCheck },
-    { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen },
-    { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2 },
-    { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard },
-    { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings },
+    { id: "ADMIN_DASHBOARD" as ActiveTab, label: "Admin Dashboard", icon: ShieldCheck, roles: ["ADMIN"] },
+    { id: "USER_DASHBOARD" as ActiveTab, label: "Lead Dashboard", icon: UserCheck, roles: ["TEACHER"] },
+    { id: "CONTACTS" as ActiveTab, label: "Lead Manager", icon: UserCheck, roles: ["ADMIN", "TEACHER"] },
+    { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen, roles: ["ADMIN"] },
+    { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2, roles: ["ADMIN", "TEACHER"] },
+    { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard, roles: ["ADMIN"] },
+    { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings, roles: ["ADMIN"] },
   ];
 
-  const filteredNavItems = currentUserRole === "TEACHER"
-    ? navItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "SETTINGS" && item.id !== "TEACHERS")
-    : navItems;
+  const filteredNavItems = navItems.filter((item) =>
+    item.roles.includes(currentUserRole)
+  );
 
   const handleNavClick = (tab: ActiveTab) => {
     onTabChange(tab);

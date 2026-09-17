@@ -901,6 +901,40 @@ export default function UserDashboardView({
 
   return (
     <div className="space-y-6 animate-fadeIn text-slate-900 dark:text-slate-100">
+      {/* Teacher Lead Dashboard Banner */}
+      {currentUserRole === "TEACHER" && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border border-indigo-500/40 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-lg shadow-md">
+              📊
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-black text-white tracking-tight flex items-center gap-1.5">
+                  Faculty Lead Dashboard
+                </h2>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                  Assigned Workspace
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Faculty: <strong className="text-white font-bold">{loggedInUsername}</strong> • Showing analytics & tasks exclusively for your assigned student contacts.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <div className="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-white/10 text-right">
+              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">My Leads</span>
+              <span className="text-sm font-black text-emerald-400">{effectiveApplicants.length} Active</span>
+            </div>
+            <div className="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-white/10 text-right">
+              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Pending Tasks</span>
+              <span className="text-sm font-black text-amber-400">{pendingTasks.length} Tasks</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ========================================================================= */}
       {/* 0. TOP TABS & WORKSPACE BANNER                                            */}
       {/* ========================================================================= */}

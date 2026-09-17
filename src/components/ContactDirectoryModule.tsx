@@ -24,6 +24,7 @@ import {
   getDefaultAdmissionSmsText,
   formatSmsNumber,
 } from "@/lib/smsSender";
+import { isLeadAssignedToTeacher, getTeacherDisplayName } from "@/lib/teacherAssignment";
 import {
   Phone,
   Mail,
@@ -140,8 +141,16 @@ export default function ContactDirectoryModule({
   const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
 
   useEffect(() => {
-    setContacts(initialContacts);
-  }, [initialContacts]);
+    if (currentUserRole === "TEACHER") {
+      setContacts(
+        (initialContacts || []).filter((c) =>
+          isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus)
+        )
+      );
+    } else {
+      setContacts(initialContacts);
+    }
+  }, [initialContacts, currentUserRole, loggedInUsername, selectedCampus]);
 
   const handleReloadData = async () => {
     setInternalIsReloading(true);
@@ -156,7 +165,10 @@ export default function ContactDirectoryModule({
             const valid = (data.leads as (Lead & { application?: Application | null })[]).filter(
               (l) => !isLeadDeleted(l.id)
             );
-            setContacts(valid);
+            const filtered = currentUserRole === "TEACHER"
+              ? valid.filter((c) => isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus))
+              : valid;
+            setContacts(filtered);
           }
         }
       }
@@ -1052,13 +1064,7 @@ export default function ContactDirectoryModule({
     const matchesTeacherAssignment =
       currentUserRole === "ADMIN"
         ? true
-        : Boolean(
-            c.assignedTo &&
-              (c.assignedTo.toLowerCase().trim() === loggedInUsername.toLowerCase().trim() ||
-                (c.assignedTo === "teacher_rajesh@123" && loggedInUsername.includes("rajesh")) ||
-                (c.assignedTo === "teacherkarur@123" && loggedInUsername.includes("arul")) ||
-                (c.assignedTo === "teachercovai@123" && loggedInUsername.includes("meenakshi")))
-          );
+        : isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus);
 
     const matchesDrawerRules =
       filterRules.length === 0
@@ -1699,11 +1705,11 @@ export default function ContactDirectoryModule({
             </div>
             <h3 className="text-lg font-black text-white flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-emerald-400" />
-              Faculty Portal: <span className="text-emerald-300 font-black">{FACULTY_MEMBERS.find((f) => f.id === loggedInUsername || f.id.toLowerCase() === loggedInUsername.toLowerCase())?.name || loggedInUsername} ({loggedInUsername})</span>
+              Faculty Portal: <span className="text-emerald-300 font-black">{getTeacherDisplayName(loggedInUsername)} ({loggedInUsername})</span>
             </h3>
             <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>You have exclusive permission to view, edit & update your assigned 100 contacts. The remaining 900 database contacts are protected and restricted to Admin view.</span>
+              <span>You have exclusive permission to view, edit & update your assigned contacts. Other faculty contacts are restricted to Admin view.</span>
             </p>
           </div>
 
@@ -2088,35 +2094,37 @@ export default function ContactDirectoryModule({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Bulk Re-assign Counselor */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsBulkAssignDropdownOpen(!isBulkAssignDropdownOpen)}
-                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Assign Counselor ▾</span>
-              </button>
+            {/* Bulk Re-assign Counselor (ADMIN ONLY) */}
+            {currentUserRole === "ADMIN" && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkAssignDropdownOpen(!isBulkAssignDropdownOpen)}
+                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>Assign Counselor ▾</span>
+                </button>
 
-              {isBulkAssignDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-64 bg-slate-900 border border-white/20 rounded-2xl shadow-2xl z-50 p-2 text-xs space-y-1 max-h-60 overflow-y-auto">
-                  <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-2 py-1">
-                    Select Faculty Member:
-                  </p>
-                  {FACULTY_MEMBERS.map((f) => (
-                    <button
-                      key={f.id}
-                      onClick={() => handleBulkReassignCounselor(f.id)}
-                      className="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-slate-800 text-slate-200 hover:text-white transition-colors flex items-center justify-between"
-                    >
-                      <span className="font-bold truncate">{f.name}</span>
-                      <span className="text-[10px] text-indigo-400 shrink-0 font-mono ml-1">{f.campus}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                {isBulkAssignDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 w-64 bg-slate-900 border border-white/20 rounded-2xl shadow-2xl z-50 p-2 text-xs space-y-1 max-h-60 overflow-y-auto">
+                    <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-2 py-1">
+                      Select Faculty Member:
+                    </p>
+                    {FACULTY_MEMBERS.map((f) => (
+                      <button
+                        key={f.id}
+                        onClick={() => handleBulkReassignCounselor(f.id)}
+                        className="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-slate-800 text-slate-200 hover:text-white transition-colors flex items-center justify-between"
+                      >
+                        <span className="font-bold truncate">{f.name}</span>
+                        <span className="text-[10px] text-indigo-400 shrink-0 font-mono ml-1">{f.campus}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Bulk WhatsApp Broadcast */}
             <button

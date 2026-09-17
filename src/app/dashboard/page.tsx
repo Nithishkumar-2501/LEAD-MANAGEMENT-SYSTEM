@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck } from "lucide-react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import MetricCards from "@/components/MetricCards";
@@ -42,6 +42,7 @@ import {
   updateTeacherOnlineStatus,
   StudentRecord,
 } from "@/lib/firebaseSync";
+import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
 
 import {
   User,
@@ -98,10 +99,24 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Ensure teachers cannot access or remain on admin-only modules like TEACHERS
+  // Ensure strict separation: Teachers get Lead Dashboard (USER_DASHBOARD), Admin gets Admin Dashboard (ADMIN_DASHBOARD)
   useEffect(() => {
-    if (currentUserRole === "TEACHER" && activeTab === "TEACHERS") {
-      setActiveTab("USER_DASHBOARD");
+    if (currentUserRole === "TEACHER") {
+      if (
+        activeTab === "TEACHERS" ||
+        activeTab === "ADMIN_DASHBOARD" ||
+        activeTab === "ADMISSIONS" ||
+        activeTab === "MARKETING_DASHBOARD" ||
+        activeTab === "APPLICATION_MANAGER" ||
+        activeTab === "PAYMENTS" ||
+        activeTab === "SETTINGS"
+      ) {
+        setActiveTab("USER_DASHBOARD");
+      }
+    } else if (currentUserRole === "ADMIN") {
+      if (activeTab === "USER_DASHBOARD") {
+        setActiveTab("ADMIN_DASHBOARD");
+      }
     }
   }, [currentUserRole, activeTab]);
 
@@ -264,9 +279,14 @@ export default function DashboardPage() {
     REJECTED: activeCampusLeads.filter(c => c.status === "REJECTED").length || 1,
   };
 
-  // Filter tasks dynamically based on campus of the associated lead
+  // Filter tasks dynamically based on campus of the associated lead and teacher ownership
   const filteredTasks = tasks.filter((t) => {
     const lead = applicants.find((l) => l.id === t.leadId);
+    if (currentUserRole === "TEACHER") {
+      if (!lead || !isLeadAssignedToTeacher(lead, loggedInUsername, loggedInCampus)) {
+        return false;
+      }
+    }
     if (!lead) return true;
     if (selectedCampus === "ALL") return true;
     return lead.campus === selectedCampus;
@@ -411,11 +431,18 @@ export default function DashboardPage() {
   };
 
   const handleSelectApplicant = (applicant: Lead & { application: Application }) => {
-    setActiveTab("CONTACTS");
+    if (currentUserRole === "TEACHER" && !isLeadAssignedToTeacher(applicant, loggedInUsername, loggedInCampus)) {
+      triggerToast("🔒 Access Restricted: You can only view and edit leads assigned to your profile.");
+      return;
+    }
     setSelectedApplicant(applicant);
   };
 
   const handleUpdateApplicant = async (updated: Lead & { application: Application }) => {
+    if (currentUserRole === "TEACHER" && !isLeadAssignedToTeacher(updated, loggedInUsername, loggedInCampus)) {
+      triggerToast("🔒 Access Restricted: You can only edit leads assigned to your profile.");
+      return;
+    }
     await saveStudentToFirebase(updated);
     setApplicants((prev) => {
       const newList = prev.map((a) => (a.id === updated.id ? updated : a));
@@ -519,8 +546,13 @@ export default function DashboardPage() {
     return <LoginModal onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Filter applicants by selected campus and stage filter
+  // Filter applicants by selected campus and stage filter (strictly scoped to current teacher for TEACHER role)
   const filteredApplicants = applicants.filter((item) => {
+    if (currentUserRole === "TEACHER") {
+      if (!isLeadAssignedToTeacher(item, loggedInUsername, loggedInCampus)) {
+        return false;
+      }
+    }
     if (selectedCampus !== "ALL" && item.campus !== selectedCampus) {
       return false;
     }
@@ -585,8 +617,8 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 p-3 sm:p-6 pb-28 sm:pb-6 w-full max-w-full space-y-4 sm:space-y-6 overflow-x-hidden">
-        {/* ADMISSIONS & ADMIN DASHBOARD MODULE */}
-        {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && (
+        {/* ADMISSIONS & ADMIN DASHBOARD MODULE (ADMIN ONLY) */}
+        {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && currentUserRole === "ADMIN" && (
           <AdminDashboardView
             metrics={dynamicMetrics}
             statusCounts={dynamicStatusCounts}
@@ -612,8 +644,8 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* USER DASHBOARD MODULE */}
-        {activeTab === "USER_DASHBOARD" && (
+        {/* LEAD DASHBOARD MODULE (TEACHER ONLY) */}
+        {activeTab === "USER_DASHBOARD" && currentUserRole === "TEACHER" && (
           <UserDashboardView
             loggedInUsername={loggedInUsername}
             currentUserRole={currentUserRole}
@@ -822,18 +854,33 @@ export default function DashboardPage() {
           <Plus className="w-6 h-6" />
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("USER_DASHBOARD")}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-            activeTab === "USER_DASHBOARD"
-              ? "text-sky-400 font-extrabold scale-105"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <BarChart3 className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">Desk</span>
-        </button>
+        {currentUserRole === "ADMIN" ? (
+          <button
+            type="button"
+            onClick={() => setActiveTab("ADMIN_DASHBOARD")}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+              activeTab === "ADMIN_DASHBOARD"
+                ? "text-sky-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <ShieldCheck className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Admin</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setActiveTab("USER_DASHBOARD")}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+              activeTab === "USER_DASHBOARD"
+                ? "text-sky-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Lead Desk</span>
+          </button>
+        )}
 
         {currentUserRole === "ADMIN" && (
           <button
