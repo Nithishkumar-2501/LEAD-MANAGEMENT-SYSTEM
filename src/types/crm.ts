@@ -163,6 +163,24 @@ export interface CallRecording {
   autoDeleted?: boolean;
 }
 
+export interface TimelineActivity {
+  id: string;
+  leadId: string;
+  type: "CALL" | "REASSIGNED" | "REGISTERED" | "STAGE_CHANGE" | "NOTE" | "WHATSAPP" | "EMAIL" | "SMS";
+  title: string;
+  timestamp: string; // e.g. "17 Sep 2026, 06:45 PM"
+  rawDate: string; // ISO date "YYYY-MM-DD"
+  durationText?: string; // e.g. "02 min 34 sec"
+  durationSeconds?: number;
+  description: string;
+  authorName: string;
+  authorRole?: string;
+  authorId?: string;
+  scoreDelta?: number;
+  status?: string;
+  callRecording?: CallRecording;
+}
+
 export interface Teacher {
   id: string;
   name: string;

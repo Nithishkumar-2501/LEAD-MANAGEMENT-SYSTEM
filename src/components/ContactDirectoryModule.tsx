@@ -637,6 +637,32 @@ export default function ContactDirectoryModule({
 
   const handleSaveCallRecording = (rec: CallRecording) => {
     setCallRecordings((prev) => [rec, ...prev]);
+    try {
+      const storedRecsRaw = localStorage.getItem(`vsb_call_recordings_${rec.leadId}`);
+      const existingRecs = storedRecsRaw ? JSON.parse(storedRecsRaw) : [];
+      localStorage.setItem(`vsb_call_recordings_${rec.leadId}`, JSON.stringify([rec, ...existingRecs]));
+
+      const storedActsRaw = localStorage.getItem(`vsb_timeline_activities_${rec.leadId}`);
+      const existingActs = storedActsRaw ? JSON.parse(storedActsRaw) : [];
+      const newAct = {
+        id: `act_${rec.leadId}_call_${Date.now()}`,
+        leadId: rec.leadId,
+        type: "CALL",
+        title: `Outgoing Follow-up Call (${rec.durationText})`,
+        timestamp: `${rec.recordingDate} ${rec.timestamp}`,
+        rawDate: rec.recordingDate,
+        durationText: rec.durationText,
+        durationSeconds: rec.durationSeconds,
+        status: "CONNECTED",
+        authorName: rec.teacherName,
+        authorId: rec.teacherId,
+        description: `Faculty ${rec.teacherName} completed follow-up call (${rec.durationText}). Status: ${rec.studentInterestStatus}. Notes: ${rec.teacherNotes}`,
+        callRecording: rec,
+      };
+      localStorage.setItem(`vsb_timeline_activities_${rec.leadId}`, JSON.stringify([newAct, ...existingActs]));
+    } catch (e) {
+      console.warn("Storage sync notice:", e);
+    }
   };
 
   // Add Contact Multi-Sheet Modal State
