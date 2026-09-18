@@ -1693,33 +1693,33 @@ export default function ContactDirectoryModule({
   return (
     <div className="space-y-6">
 
-      {/* Teacher Quota & Strict Scoping Banner */}
+      {/* Teacher Quota & Scoping Banner */}
       {currentUserRole === "TEACHER" && (
-        <div className="bubble-card p-4 sm:p-5 border border-emerald-500/40 bg-gradient-to-r from-emerald-950/70 via-slate-900 to-indigo-950/70 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl animate-in fade-in">
+        <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                 Faculty Lead Allocation Portal
               </span>
-              <span className="text-xs text-slate-300 font-bold">Assigned by Admin</span>
+              <span className="text-xs text-slate-500 font-medium">Assigned by Admin</span>
             </div>
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-emerald-400" />
-              Faculty Portal: <span className="text-emerald-300 font-black">{getTeacherDisplayName(loggedInUsername)} ({loggedInUsername})</span>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              Faculty Portal: <span className="text-emerald-700 dark:text-emerald-300 font-bold">{getTeacherDisplayName(loggedInUsername)} ({loggedInUsername})</span>
             </h3>
-            <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-normal">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>You have exclusive permission to view, edit & update your assigned contacts. Other faculty contacts are restricted to Admin view.</span>
             </p>
           </div>
 
-          <div className="w-full md:w-64 bg-slate-950/90 p-3.5 rounded-2xl border border-white/10 space-y-1.5 text-xs">
-            <div className="flex justify-between font-bold">
-              <span className="text-slate-400">Assigned Batch Progress</span>
-              <span className="text-emerald-400 font-extrabold">14 / 100 (14%)</span>
+          <div className="w-full md:w-64 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-1.5 text-xs">
+            <div className="flex justify-between font-medium">
+              <span className="text-slate-500 dark:text-slate-400">Assigned Batch Progress</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">14 / 100 (14%)</span>
             </div>
-            <div className="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden border border-white/10">
-              <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-[14%]" />
+            <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+              <div className="h-full bg-emerald-500 rounded-full w-[14%]" />
             </div>
             <p className="text-[10px] text-slate-400 text-right">86 Assigned Leads Remaining</p>
           </div>
@@ -1727,19 +1727,19 @@ export default function ContactDirectoryModule({
       )}
 
       {/* V.S.B. EDUCATION CRM LEAD MANAGEMENT TOP COMMAND BAR */}
-      <div className="bg-white dark:bg-slate-900/90 text-slate-900 dark:text-white p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-xs font-sans">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-xs font-sans">
         {/* Left: Institution Branding & View Selector */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md font-black text-sm">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
               🎓
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
                   Lead Management Console
                 </h2>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-sky-400 border border-blue-400/30">
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
                   {selectedCampus === "ALL" ? "All Campuses" : `${selectedCampus} Campus`}
                 </span>
               </div>

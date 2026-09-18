@@ -97,34 +97,34 @@ export default function ApplicantsTable({
   const stagesList = ["ALL", "HOT", "WARM", "COLD", "INQUIRY", "SUBMITTED", "DOCS_VERIFIED", "OFFER_ISSUED", "FEE_PAID"];
 
   return (
-    <div className="bubble-card p-3 sm:p-6 border border-white/20 flex-1 flex flex-col justify-between w-full max-w-full min-w-0 overflow-hidden">
+    <div className="bubble-card p-3 sm:p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-1 flex flex-col justify-between w-full max-w-full min-w-0 overflow-hidden shadow-xs">
       <div className="w-full max-w-full min-w-0">
         {/* Header Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-white/10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-sky-400" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Recent Applicants
             </h3>
-            <p className="text-xs text-slate-400">TNEA & Management intake candidates at V.S.B.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">TNEA & Management intake candidates at V.S.B.</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             {onOpenQuickLeadModal && (
               <button
                 onClick={onOpenQuickLeadModal}
-                className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs shadow-lg shadow-pink-500/40 border border-pink-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <Plus className="w-4 h-4 text-white shrink-0" />
-                <span>+ Add Quick Lead</span>
+                <Plus className="w-3.5 h-3.5 text-white shrink-0" />
+                <span>Add Quick Lead</span>
               </button>
             )}
 
             <button
               onClick={onOpenCreateModal}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-blue-700 text-white font-black text-xs shadow-lg shadow-sky-500/40 border border-sky-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-white shrink-0" />
+              <Plus className="w-3.5 h-3.5 text-white shrink-0" />
               <span>New Application</span>
             </button>
 
@@ -151,22 +151,22 @@ export default function ApplicantsTable({
             />
             <button
               onClick={() => document.getElementById("csv-dashboard-upload")?.click()}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-purple-500/40 border border-purple-300/40 flex items-center gap-1.5 transition-all transform hover:scale-[1.03] active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-300 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Upload className="w-4 h-4 text-white shrink-0" />
+              <Upload className="w-3.5 h-3.5 shrink-0" />
               <span>Import CSV</span>
             </button>
 
-            {/* Bubble Stage Control Pills */}
-            <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 text-xs font-semibold backdrop-blur-md overflow-x-auto hide-scrollbar max-w-full">
+            {/* Stage Control Pills */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-xs font-medium overflow-x-auto hide-scrollbar max-w-full">
               {stagesList.map((st) => (
                 <button
                   key={st}
                   onClick={() => setSelectedStage(st)}
-                  className={`px-3 py-1 rounded-full transition-all duration-300 whitespace-nowrap shrink-0 transform hover:-translate-y-1 hover:scale-110 active:scale-95 ${
+                  className={`px-2.5 py-1 rounded-md transition-all whitespace-nowrap shrink-0 text-xs ${
                     selectedStage === st
-                      ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md shadow-sky-500/40 scale-[1.05]"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-white/10"
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   {st.replace("_", " ")}
@@ -177,41 +177,41 @@ export default function ApplicantsTable({
         </div>
 
         {/* Data Table */}
-        <div className="overflow-x-auto w-full max-w-full rounded-xl border border-white/10">
-          <table className="w-full min-w-[580px] sm:min-w-full text-left text-xs text-slate-200">
-            <thead className="bg-slate-950/80 text-sky-300/80 uppercase font-bold text-[10px] tracking-wider border-y border-white/10">
+        <div className="overflow-x-auto w-full max-w-full rounded-lg border border-slate-200 dark:border-slate-800">
+          <table className="w-full min-w-[580px] sm:min-w-full text-left text-xs text-slate-800 dark:text-slate-200">
+            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase font-semibold text-[11px] tracking-wider border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="py-3 px-4">Applicant Name</th>
-                <th className="py-3 px-4">Applied Program</th>
-                <th className="py-3 px-4 hidden sm:table-cell">Campus</th>
-                <th className="py-3 px-4">State & Stage</th>
-                <th className="py-3 px-4 hidden md:table-cell">TNEA Cutoff & Counselling</th>
-                <th className="py-3 px-4 hidden sm:table-cell">12th Marks</th>
-                <th className="py-3 px-4 text-right">Quick Actions</th>
+                <th className="py-2.5 px-3.5">Applicant Name</th>
+                <th className="py-2.5 px-3.5">Applied Program</th>
+                <th className="py-2.5 px-3.5 hidden sm:table-cell">Campus</th>
+                <th className="py-2.5 px-3.5">State & Stage</th>
+                <th className="py-2.5 px-3.5 hidden md:table-cell">TNEA Cutoff & Counselling</th>
+                <th className="py-2.5 px-3.5 hidden sm:table-cell">12th Marks</th>
+                <th className="py-2.5 px-3.5 text-right">Quick Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {paginatedApplicants.length > 0 ? (
                 paginatedApplicants.map((item) => (
                   <tr
                     key={item.id}
                     onClick={() => onSelectApplicant(item)}
-                    className="hover:bg-slate-800/80 transition-all cursor-pointer group"
+                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
                   >
                     {/* Applicant Info */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md transform group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                    <td className="py-3 px-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center shrink-0">
                           {item.name
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
                         </div>
                         <div>
-                          <div className="font-extrabold text-slate-100 dark:text-slate-100 group-hover:text-blue-400 transition-colors text-sm">
+                          <div className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-xs">
                             {item.name}
                           </div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             {item.email}
                           </div>
                         </div>
@@ -219,17 +219,17 @@ export default function ApplicantsTable({
                     </td>
 
                     {/* Applied Program */}
-                    <td className="py-3.5 px-4 font-medium text-slate-300">
+                    <td className="py-3 px-3.5 text-slate-700 dark:text-slate-300 font-medium">
                       {item.courseInterest}
                     </td>
 
                     {/* Campus Badge */}
-                    <td className="py-3.5 px-4 hidden sm:table-cell">
+                    <td className="py-3 px-3.5 hidden sm:table-cell">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider transform group-hover:scale-105 transition-transform inline-block ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold border uppercase tracking-wider inline-block ${
                           item.campus === "KARUR"
-                            ? "bg-sky-500/20 text-sky-300 border-sky-400/30"
-                            : "bg-pink-500/20 text-pink-300 border-pink-400/30"
+                            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/50"
+                            : "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/50"
                         }`}
                       >
                         {item.campus || "KARUR"} Campus

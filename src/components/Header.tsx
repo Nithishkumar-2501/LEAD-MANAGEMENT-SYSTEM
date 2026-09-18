@@ -123,102 +123,102 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full liquid-glass border-b border-slate-200 dark:border-white/20 px-2.5 sm:px-6 py-2.5 flex flex-col gap-2 sm:gap-3.5 shadow-2xl">
+    <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 px-3 sm:px-6 py-2.5 flex flex-col gap-2 sm:gap-3 shadow-xs">
       {/* Top Bar: Brand, Campus Selector & Right Navigation Controls */}
       <div className="flex items-center justify-between gap-1.5 sm:gap-4 min-w-0">
         {/* Left: Official College Brand */}
-        <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 shrink">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
           {/* Official V.S.B. Engineering College Logo Emblem */}
-          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-amber-400 shadow-lg bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shadow-xs bg-white shrink-0 flex items-center justify-center p-0.5">
             <Image
               src="/vsb-logo.png"
               alt="V.S.B. Engineering College Official Logo"
-              width={44}
-              height={44}
+              width={40}
+              height={40}
               className="w-full h-full object-contain rounded-full"
             />
           </div>
           <div className="min-w-0">
-            <h1 className="font-extrabold text-xs sm:text-base md:text-lg text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 sm:gap-2 truncate">
-              <span className="truncate text-slate-900 dark:text-white font-black hidden sm:inline">V.S.B. ENGINEERING COLLEGE</span>
-              <span className="truncate text-slate-900 dark:text-white font-black sm:hidden">V.S.B. COLLEGE</span>
-              <span className="hidden md:inline-flex items-center text-[10px] font-black text-black dark:text-sky-200 bg-sky-200 dark:bg-sky-500/20 border border-sky-400 dark:border-sky-400/40 px-2.5 py-0.5 rounded-full shrink-0">
+            <h1 className="font-bold text-xs sm:text-sm md:text-base text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 sm:gap-2 truncate">
+              <span className="truncate text-slate-900 dark:text-white font-extrabold hidden sm:inline">V.S.B. ENGINEERING COLLEGE</span>
+              <span className="truncate text-slate-900 dark:text-white font-extrabold sm:hidden">V.S.B. COLLEGE</span>
+              <span className="hidden md:inline-flex items-center text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-2 py-0.5 rounded-md shrink-0">
                 SPHEREX CRM
               </span>
             </h1>
-            <p className="text-[9px] sm:text-xs text-slate-600 dark:text-sky-200 flex items-center gap-1 font-extrabold truncate">
-              <MapPin className="w-3 h-3 text-pink-600 dark:text-pink-400 shrink-0" />
-              <span className="truncate">KARUR & COIMBATORE</span>
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 font-medium truncate">
+              <MapPin className="w-3 h-3 text-rose-500 shrink-0" />
+              <span className="truncate">Karur & Coimbatore</span>
             </p>
           </div>
         </div>
 
-        {/* Right: Controls (Ask Nora AI, Search Icon, Logout, and Menu on Right Side) */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Right: Controls (Campus Selector, Ask Nora AI, Search, Logout) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Teacher Profile ID Badge (Prominently displayed for logged in faculty) */}
           {currentUserRole === "TEACHER" && (
             <Tooltip text={`Faculty Account Active: Profile ID ${loggedInUsername || "Staff"}`}>
-              <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-emerald-500/15 dark:bg-emerald-500/25 border border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-extrabold text-xs shadow-md backdrop-blur-xl shrink-0">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-semibold text-xs shadow-xs shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400 hidden xs:inline">
-                    Profile ID:
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 hidden xs:inline">
+                    ID:
                   </span>
-                  <span className="font-mono text-[11px] sm:text-xs font-black text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-[190px]">
+                  <span className="font-mono text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-[190px]">
                     {loggedInUsername}
                   </span>
                 </div>
-                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-white uppercase tracking-wider hidden sm:inline">
-                  ACTIVE
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white uppercase tracking-wider hidden sm:inline">
+                  Active
                 </span>
               </div>
             </Tooltip>
           )}
 
-          {/* Two Campus Icon Selection Bar */}
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-200/80 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-300 dark:border-white/20 text-xs font-semibold backdrop-blur-2xl shrink-0">
-            {/* Karur Campus Icon Button */}
+          {/* Clean Segmented Campus Selector */}
+          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-xs shrink-0">
+            {/* Karur Campus */}
             {loggedInCampus === "KARUR" ? (
               <Tooltip text="Active Session: V.S.B. Karur Campus">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/40 transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-600 text-white font-semibold shadow-xs transition-all cursor-default"
                   disabled
                 >
-                  <Building2 className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
+                  <Building2 className="w-3.5 h-3.5" />
                   <span>Karur Campus</span>
                 </button>
               </Tooltip>
             ) : (
               <Tooltip text="Access restricted to Karur Admin">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-500 font-bold cursor-not-allowed opacity-60 hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60"
                   disabled
                 >
-                  <Lock className="w-4 h-4 text-slate-700 dark:text-slate-500" />
-                  <span>Karur Campus</span>
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Karur</span>
                 </button>
               </Tooltip>
             )}
 
-            {/* Coimbatore Campus Icon Button */}
+            {/* Coimbatore Campus */}
             {loggedInCampus === "COIMBATORE" ? (
               <Tooltip text="Active Session: V.S.B. Coimbatore Campus">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg shadow-pink-500/40 transform hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-600 text-white font-semibold shadow-xs transition-all cursor-default"
                   disabled
                 >
-                  <GraduationCap className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
+                  <GraduationCap className="w-3.5 h-3.5" />
                   <span>Coimbatore Campus</span>
                 </button>
               </Tooltip>
             ) : (
               <Tooltip text="Access restricted to Coimbatore Admin">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-500 font-bold cursor-not-allowed opacity-60 hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60"
                   disabled
                 >
-                  <Lock className="w-4 h-4 text-slate-700 dark:text-slate-500" />
-                  <span>Coimbatore Campus</span>
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Coimbatore</span>
                 </button>
               </Tooltip>
             )}
@@ -226,7 +226,7 @@ export default function Header({
 
           {/* Search bar — desktop */}
           <div className="relative hidden lg:block w-64 shrink-0">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
@@ -237,7 +237,7 @@ export default function Header({
               onFocus={() => setShowSearchResults(true)}
               onKeyDown={handleKeyDown}
               placeholder="Search candidate applications..."
-              className="w-full bg-slate-100 dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 rounded-full pl-9 pr-3.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50 backdrop-blur-xl font-bold"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium transition-all"
             />
 
             {/* Dropdown Search Results Overlay */}
@@ -299,25 +299,25 @@ export default function Header({
             )}
           </div>
 
-          {/* Ask Nora AI Pill Button matching Reference Design */}
+          {/* Ask Nora AI Button */}
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="press-spring flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-indigo-400/40 shrink-0"
+            className="press-spring flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs transition-all duration-150 cursor-pointer shrink-0"
             title="Ask Nora AI to analyze the live student database"
           >
             <img
               src="/nora-logo.png"
               alt="NORA AI Logo"
-              className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover ring-1 ring-white/60 shrink-0"
+              className="w-4 h-4 rounded-full object-cover shrink-0"
             />
-            <span className="tracking-wide text-xs whitespace-nowrap">Ask Nora AI</span>
+            <span className="text-xs whitespace-nowrap">Ask Nora AI</span>
           </button>
 
-          {/* Search Icon — mobile/tablet (Moved to the Right Side of Ask Nora AI) */}
+          {/* Search Icon — mobile/tablet */}
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            className="press-spring lg:hidden p-2 sm:p-2 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:border-sky-400 text-slate-700 dark:text-sky-200 transition-all shadow-md shrink-0 flex items-center justify-center cursor-pointer"
+            className="press-spring lg:hidden p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex items-center justify-center cursor-pointer"
             aria-label="Search"
             title="Search Candidate Applications"
           >
@@ -328,17 +328,17 @@ export default function Header({
           <Tooltip text="Logout of V.S.B. Portal">
             <button
               onClick={onLogout}
-              className="p-2 sm:p-2 rounded-full bg-white dark:bg-slate-900/70 border border-slate-300 dark:border-white/20 hover:bg-rose-950/80 hover:border-rose-500/50 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 transition-all shadow-md shrink-0 flex items-center justify-center cursor-pointer"
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
               aria-label="Logout"
             >
               <LogOut className="w-4 h-4" />
             </button>
           </Tooltip>
 
-          {/* Menu / Hamburger Icon — Moved to FAR RIGHT SIDE */}
+          {/* Menu / Hamburger Icon */}
           <button
             onClick={() => onToggleMobileSidebar ? onToggleMobileSidebar() : setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 sm:p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/20 text-slate-700 dark:text-sky-300 hover:text-sky-600 dark:hover:text-white transition-all shadow-md flex items-center justify-center cursor-pointer shrink-0"
+            className="lg:hidden p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:text-blue-600 transition-colors flex items-center justify-center cursor-pointer shrink-0"
             aria-label="Toggle navigation sidebar"
             title="Menu"
           >

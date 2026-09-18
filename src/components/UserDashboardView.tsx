@@ -903,50 +903,50 @@ export default function UserDashboardView({
     <div className="space-y-6 animate-fadeIn text-slate-900 dark:text-slate-100">
       {/* Teacher Lead Dashboard Banner */}
       {currentUserRole === "TEACHER" && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border border-indigo-500/40 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-lg shadow-md">
+        <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg shrink-0">
               📊
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-white tracking-tight flex items-center gap-1.5">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
                   Faculty Lead Dashboard
                 </h2>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                   Assigned Workspace
                 </span>
               </div>
-              <p className="text-xs text-slate-300 mt-0.5">
-                Faculty: <strong className="text-white font-bold">{loggedInUsername}</strong> • Showing analytics & tasks exclusively for your assigned student contacts.
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Faculty: <strong className="text-slate-700 dark:text-slate-200 font-semibold">{loggedInUsername}</strong> • Showing analytics & tasks exclusively for your assigned student contacts.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            <div className="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-white/10 text-right">
-              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">My Leads</span>
-              <span className="text-sm font-black text-emerald-400">{effectiveApplicants.length} Active</span>
+          <div className="flex items-center gap-2.5 self-end sm:self-auto">
+            <div className="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-right">
+              <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">My Leads</span>
+              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{effectiveApplicants.length} Active</span>
             </div>
-            <div className="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-white/10 text-right">
-              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Pending Tasks</span>
-              <span className="text-sm font-black text-amber-400">{pendingTasks.length} Tasks</span>
+            <div className="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-right">
+              <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Pending Tasks</span>
+              <span className="text-sm font-bold text-amber-600 dark:text-amber-400">{pendingTasks.length} Tasks</span>
             </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 0. TOP TABS & WORKSPACE BANNER                                            */}
+      {/* 0. TOP TABS & WORKSPACE CONTROLS                                          */}
       {/* ========================================================================= */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Navigation Tabs matching Image 2 */}
-        <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-200/70 dark:bg-slate-900/80 border border-slate-300 dark:border-white/10 w-fit">
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 w-fit">
           <button
             type="button"
             onClick={() => setActiveDashboardTab("MY_DASHBOARD")}
-            className={`press-spring px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               activeDashboardTab === "MY_DASHBOARD"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-sky-400 shadow-sm"
+                ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -955,9 +955,9 @@ export default function UserDashboardView({
           <button
             type="button"
             onClick={() => setActiveDashboardTab("PRODUCTIVITY_REPORT")}
-            className={`press-spring px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               activeDashboardTab === "PRODUCTIVITY_REPORT"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-sky-400 shadow-sm"
+                ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -967,24 +967,24 @@ export default function UserDashboardView({
 
         {/* Database Mode Switcher */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-white/10">
+          <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800/60 p-1 border border-slate-200 dark:border-slate-700/60">
             <button
               onClick={() => setDataSourceMode("DATABASE")}
-              className={`press-spring px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 isDbMode
-                  ? "bg-sky-600 text-white shadow-sm"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Main Database ({applicants.length})
             </button>
             <button
               onClick={() => setDataSourceMode("INSTITUTIONAL")}
-              className={`press-spring px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                 !isDbMode
-                  ? "bg-sky-600 text-white shadow-sm"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <Globe className="w-3.5 h-3.5" />
