@@ -564,12 +564,20 @@ export default function Sidebar({
                     }
                   }}
                   placeholder="Search Menu or Application..."
-                  className="w-full bg-slate-900/90 border border-slate-800 focus:border-indigo-500 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none shadow-inner"
+                  className={`w-full ${
+                    isLight
+                      ? "bg-slate-100 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-500"
+                      : "bg-slate-100 dark:bg-slate-900/90 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-sky-500 dark:focus:border-indigo-500"
+                  } border rounded-lg pl-8 pr-7 py-1.5 text-xs focus:outline-none shadow-inner`}
                 />
                 {menuSearchQuery && (
                   <button
                     onClick={() => setMenuSearchQuery("")}
-                    className="absolute right-2 top-2 text-slate-400 hover:text-white"
+                    className={`absolute right-2 top-2 ${
+                      isLight
+                        ? "text-slate-400 hover:text-slate-700"
+                        : "text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                    }`}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -578,8 +586,18 @@ export default function Sidebar({
 
               {/* CANDIDATE APPLICATIONS SEARCH RESULTS */}
               {trimmedQuery.length > 0 && (
-                <div className="space-y-1.5 p-2 rounded-xl bg-slate-900/90 border border-sky-500/40 shadow-xl animate-in fade-in duration-150">
-                  <div className="text-[10px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center justify-between px-1">
+                <div
+                  className={`space-y-1.5 p-2 rounded-xl border shadow-xl animate-in fade-in duration-150 ${
+                    isLight
+                      ? "bg-white border-sky-400/60 shadow-sky-100/50"
+                      : "bg-white dark:bg-slate-900/95 border-sky-400/60 dark:border-sky-500/40 shadow-sky-100/50 dark:shadow-xl"
+                  }`}
+                >
+                  <div
+                    className={`text-[10px] font-black uppercase tracking-wider flex items-center justify-between px-1 ${
+                      isLight ? "text-sky-600" : "text-sky-600 dark:text-sky-400"
+                    }`}
+                  >
                     <span>Matching Applications ({matchingApplicants.length})</span>
                   </div>
                   {matchingApplicants.length > 0 ? (
@@ -588,24 +606,50 @@ export default function Sidebar({
                         <div
                           key={app.id}
                           onClick={() => handleSelectApplication(app)}
-                          className="p-2 rounded-lg bg-slate-950/90 hover:bg-sky-950/90 border border-slate-800 hover:border-sky-500/50 cursor-pointer transition-all flex items-center justify-between group"
+                          className={`p-2 rounded-lg cursor-pointer transition-all flex items-center justify-between group border ${
+                            isLight
+                              ? "bg-white hover:bg-sky-50 border-slate-200 hover:border-sky-300 shadow-xs"
+                              : "bg-white hover:bg-sky-50 border-slate-200 hover:border-sky-300 shadow-xs dark:bg-slate-800/90 dark:hover:bg-sky-950/80 dark:border-slate-700 dark:hover:border-sky-500/50"
+                          }`}
                         >
                           <div className="min-w-0 pr-1">
-                            <div className="font-extrabold text-xs text-white group-hover:text-sky-300 truncate">
+                            <div
+                              className={`font-black text-xs truncate ${
+                                isLight
+                                  ? "text-black group-hover:text-sky-600"
+                                  : "text-black dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-300"
+                              }`}
+                            >
                               {app.name}
                             </div>
-                            <div className="text-[10px] text-slate-400 truncate font-mono">
+                            <div
+                              className={`text-[10px] truncate font-mono font-medium ${
+                                isLight
+                                  ? "text-slate-600 group-hover:text-slate-800"
+                                  : "text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-300"
+                              }`}
+                            >
                               {app.phone} • {app.campus}
                             </div>
                           </div>
-                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-800 shrink-0">
+                          <span
+                            className={`text-[9px] font-black px-1.5 py-0.5 rounded border shrink-0 transition-colors ${
+                              isLight
+                                ? "bg-sky-50 text-sky-600 border-sky-200 group-hover:bg-sky-600 group-hover:text-white"
+                                : "bg-sky-50 text-sky-600 border-sky-200 group-hover:bg-sky-600 group-hover:text-white dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800 dark:group-hover:bg-sky-900"
+                            }`}
+                          >
                             View App →
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-[11px] text-slate-400 py-1 text-center font-medium">
+                    <div
+                      className={`text-[11px] py-1 text-center font-medium ${
+                        isLight ? "text-slate-500" : "text-slate-500 dark:text-slate-400"
+                      }`}
+                    >
                       No applications found
                     </div>
                   )}

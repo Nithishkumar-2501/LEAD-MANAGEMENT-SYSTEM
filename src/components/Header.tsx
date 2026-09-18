@@ -242,14 +242,14 @@ export default function Header({
 
             {/* Dropdown Search Results Overlay */}
             {trimmedQuery.length > 0 && showSearchResults && (
-              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-slate-950/95 border border-sky-500/40 p-3 shadow-2xl z-50 backdrop-blur-2xl text-xs space-y-2 animate-in fade-in duration-150">
-                <div className="flex items-center justify-between px-2 pb-1.5 border-b border-slate-800">
-                  <span className="text-[11px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-sky-400" /> Search Applications ({searchResults.length})
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-950/95 border border-slate-200 dark:border-sky-500/40 p-3 shadow-2xl z-50 backdrop-blur-2xl text-xs space-y-2 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between px-2 pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-[11px] font-extrabold text-sky-600 dark:text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" /> Search Applications ({searchResults.length})
                   </span>
                   <button
                     onClick={() => setShowSearchResults(false)}
-                    className="p-1 rounded text-slate-400 hover:text-white"
+                    className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -261,29 +261,29 @@ export default function Header({
                       <div
                         key={applicant.id}
                         onClick={() => handleResultClick(applicant)}
-                        className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-sky-950/70 border border-slate-800 hover:border-sky-500/40 transition-all cursor-pointer flex items-center justify-between group"
+                        className="p-2.5 rounded-xl bg-slate-50 hover:bg-sky-50/80 dark:bg-slate-900/90 dark:hover:bg-sky-950/70 border border-slate-200 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-500/40 transition-all cursor-pointer flex items-center justify-between group shadow-xs"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shrink-0 shadow-md">
                             {applicant.name.slice(0, 1).toUpperCase()}
                           </div>
                           <div className="min-w-0 space-y-0.5">
-                            <div className="font-bold text-white group-hover:text-sky-300 transition-colors truncate">
+                            <div className="font-black text-slate-950 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors truncate">
                               {applicant.name}
                             </div>
-                            <div className="text-[11px] text-slate-400 truncate flex items-center gap-1.5">
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5">
                               <span>{applicant.phone}</span>
                               <span>•</span>
-                              <span className="text-sky-400 font-semibold">{applicant.campus}</span>
+                              <span className="text-sky-600 dark:text-sky-400 font-semibold">{applicant.campus}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-950 text-sky-300 border border-sky-800">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800">
                             {applicant.application?.stage || applicant.status || "INQUIRY"}
                           </span>
-                          <span className="text-[10px] text-sky-400 group-hover:underline font-bold flex items-center gap-0.5">
+                          <span className="text-[10px] text-sky-600 dark:text-sky-400 group-hover:underline font-bold flex items-center gap-0.5">
                             Open App →
                           </span>
                         </div>
@@ -291,8 +291,9 @@ export default function Header({
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 text-center text-slate-400 text-xs">
-                    No candidate applications matching &quot;{searchQuery}&quot;.
+                  <div className="text-center py-6 text-slate-500 dark:text-slate-400 space-y-1">
+                    <p className="font-semibold">No candidates found</p>
+                    <p className="text-[10px]">Try searching by student name, phone, school, or course.</p>
                   </div>
                 )}
               </div>
