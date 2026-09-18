@@ -1628,19 +1628,19 @@ export default function UserDashboardView({
                       {/* Active Indicator Pin Above Selected Day Bar */}
                       {isHighlighted && (
                         <div className="absolute -top-7 z-20 flex flex-col items-center pointer-events-none">
-                          <span className="px-1.5 py-0.5 rounded-md bg-blue-600 text-white font-black text-[9px] shadow-lg animate-pulse whitespace-nowrap border border-white/40">
+                          <span className="px-1.5 py-0.5 rounded-md bg-red-600 text-white font-black text-[9px] shadow-lg animate-pulse whitespace-nowrap border border-white/40">
                             {pt.shortDate}
                           </span>
-                          <span className="w-1.5 h-1.5 bg-blue-600 rotate-45 -mt-1" />
+                          <span className="w-1.5 h-1.5 bg-red-600 rotate-45 -mt-1" />
                         </div>
                       )}
 
-                      {/* Blue Bar for Total Allocated */}
+                      {/* Bar for Total Allocated: RED when selected date, BLUE for all other dates */}
                       <div
                         style={{ height: `${barHeightPercent}%` }}
                         className={`w-full max-w-[14px] rounded-t-sm transition-all duration-300 shadow-sm ${
                           isHighlighted
-                            ? "bg-sky-400 dark:bg-sky-400 ring-2 ring-white scale-y-105 shadow-lg shadow-sky-500/60 z-10"
+                            ? "bg-red-600 dark:bg-red-500 ring-2 ring-red-400 scale-y-105 shadow-lg shadow-red-500/60 z-10"
                             : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-400"
                         }`}
                       />
@@ -1925,7 +1925,7 @@ export default function UserDashboardView({
                       }}
                       className={`h-11 border-r border-b border-slate-200 dark:border-white/10 p-1 flex flex-col justify-between transition-colors cursor-pointer select-none relative ${
                         isSelected
-                          ? "bg-blue-600 text-white font-bold"
+                          ? "bg-red-600 text-white font-bold ring-2 ring-red-400 shadow-md shadow-red-500/30"
                           : cell.isCurrentMonth
                           ? "bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-900 dark:text-slate-200"
                           : "bg-slate-50/50 dark:bg-slate-950/40 text-slate-400 dark:text-slate-600 cursor-default"
