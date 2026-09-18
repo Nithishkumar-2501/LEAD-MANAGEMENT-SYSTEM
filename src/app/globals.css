@@ -297,157 +297,241 @@ body.light .bubble-card:hover {
 /* GLOBAL LIGHT MODE STYLES & OVERRIDES - PURE LIGHT CANVAS & HIGH-CONTRAST TEXT */
 html.light, 
 html.light body, 
+/* ========================================================================= */
+/* GLOBAL LIGHT MODE STYLES: PURE BLACK & WHITE MONOCHROME THEME            */
+/* (NO COLORS IN LIGHT MODE; NORA AI COLOR IS STRICTLY PRESERVED)            */
+/* ========================================================================= */
+html.light, 
+html.light body, 
 html.light main, 
 html.light .min-h-screen, 
 .light-mode {
-  background: #f8fafc !important;
-  color: #0f172a !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
 html.light aside, .light-mode aside {
   background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
-  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.05) !important;
+  border-color: #e5e5e5 !important;
+  color: #000000 !important;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.04) !important;
 }
 
-html.light .liquid-glass, .light-mode .liquid-glass {
+html.light .liquid-glass, .light-mode .liquid-glass,
+html.light header, .light-mode header {
   background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-  color: #0f172a !important;
+  border-color: #e5e5e5 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05) !important;
+  color: #000000 !important;
 }
 
-html.light .bubble-card, .light-mode .bubble-card, html.light .glass-card, .light-mode .glass-card {
+html.light .bubble-card, .light-mode .bubble-card,
+html.light .glass-card, .light-mode .glass-card,
+html.light .glass-morphic-elevated {
   background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
-  color: #0f172a !important;
+  border-color: #e5e5e5 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  color: #000000 !important;
 }
 
 html.light .bubble-card:hover, .light-mode .bubble-card:hover {
-  border-color: #0ea5e9 !important;
-  box-shadow: 0 8px 30px -4px rgba(14, 165, 233, 0.2) !important;
+  border-color: #000000 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 html.light .bubble-pill, .light-mode .bubble-pill {
-  background: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+  background: #f5f5f5 !important;
+  border-color: #d4d4d4 !important;
+  color: #000000 !important;
 }
 
-html.light header, .light-mode header {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-/* Modals & Dialogs in Light Mode */
+/* Modals & Dialogs in Light Mode: Pure White Surface */
 html.light .fixed .bg-\[\#0f172a\],
 html.light .fixed .bg-slate-900,
 html.light .fixed .bg-slate-950 {
   background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2) !important;
+  border-color: #d4d4d4 !important;
+  color: #000000 !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Inputs, Selects & Textareas in Light Mode */
+/* Inputs, Selects & Textareas in Light Mode: Crisp Black & White */
 html.light input:not([type="checkbox"]):not([type="radio"]),
 html.light select,
 html.light textarea {
   background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
+  color: #000000 !important;
+  border: 1px solid #d4d4d4 !important;
   font-weight: 600 !important;
+}
+
+html.light input:focus, html.light select:focus, html.light textarea:focus {
+  border-color: #000000 !important;
+  outline: 1px solid #000000 !important;
 }
 
 html.light input::placeholder,
 html.light textarea::placeholder {
-  color: #475569 !important;
+  color: #737373 !important;
   font-weight: 500 !important;
 }
 
-/* Clean, High-Contrast Typography Hierarchy in Light Mode */
-html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
-html.light .text-slate-950,
-html.light .text-slate-900,
-html.light .text-slate-800 {
-  color: #0f172a !important;
+/* ========================================================================= */
+/* PURE BLACK & WHITE BUTTONS IN LIGHT MODE (EXCEPT NORA AI)                 */
+/* ========================================================================= */
+html.light button:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
 }
 
-html.light .text-slate-700,
-html.light .text-slate-600 {
-  color: #334155 !important;
+html.light button:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *):hover {
+  background-color: #262626 !important;
+  color: #ffffff !important;
+  border-color: #262626 !important;
 }
 
-html.light .text-slate-500 {
-  color: #64748b !important;
+/* White / Outline Buttons in Light Mode */
+html.light button.btn-secondary,
+html.light button.btn-outline,
+html.light button.bg-slate-100,
+html.light button.bg-slate-200,
+html.light button.bg-white,
+html.light button.border-slate-300,
+html.light button.border-slate-200,
+html.light div.bg-slate-100 button,
+html.light div.bg-slate-200 button {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #d4d4d4 !important;
 }
 
-html.light .text-slate-400,
-html.light .text-slate-300 {
-  color: #94a3b8 !important;
+html.light button.btn-secondary:hover,
+html.light button.btn-outline:hover,
+html.light button.bg-slate-100:hover,
+html.light button.bg-slate-200:hover,
+html.light button.bg-white:hover {
+  background-color: #f5f5f5 !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
 }
 
-/* STUDENT NAME & CREDENTIALS HIGH-CONTRAST READABILITY */
-html.light td div .font-bold,
-html.light td div .font-black,
-html.light tr td,
-html.light tr td span,
-html.light tr td .font-bold,
-html.light tr td .font-extrabold,
-html.light tr td .font-black,
-html.light tr th,
-html.light tr th span,
-html.light .student-name {
-  color: #0f172a !important;
-  font-weight: 700;
-}
-
-/* Pure White Text Preservation ONLY for Solid Filled Color Buttons in Light Mode */
-html.light button.bg-blue-600,
-html.light button.bg-indigo-600,
-html.light button.bg-emerald-600,
-html.light button.bg-rose-600,
+/* Submit and Action Buttons in Light Mode */
 html.light .glossy-btn,
-html.light button[type="submit"] {
+html.light button[type="submit"]:not(.nora-ai-btn) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+html.light .glossy-btn:hover,
+html.light button[type="submit"]:not(.nora-ai-btn):hover {
+  background-color: #262626 !important;
   color: #ffffff !important;
 }
 
-/* Vibrant High-Contrast Accents in Light Mode */
-html.light .text-sky-300,
-html.light .text-sky-400,
-html.light .text-sky-600,
-html.light .text-sky-700 {
-  color: #0284c7 !important;
+/* ========================================================================= */
+/* EXPLICIT COLOR PRESERVATION FOR NORA AI IN LIGHT MODE                     */
+/* ========================================================================= */
+html.light .nora-ai-btn,
+html.light [data-nora-ai="true"],
+html.light button.nora-ai-btn,
+html.light button[data-nora-ai="true"] {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(165, 180, 252, 0.6) !important;
+  box-shadow: 0 4px 14px -1px rgba(99, 102, 241, 0.4) !important;
 }
 
-html.light .text-indigo-300,
-html.light .text-indigo-400,
-html.light .text-indigo-600 {
-  color: #4338ca !important;
+html.light .nora-ai-btn:hover,
+html.light [data-nora-ai="true"]:hover,
+html.light button.nora-ai-btn:hover,
+html.light button[data-nora-ai="true"]:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #be185d 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5) !important;
 }
 
-html.light .text-emerald-300,
-html.light .text-emerald-400,
-html.light .text-emerald-600 {
-  color: #059669 !important;
+html.light .nora-ai-btn *,
+html.light [data-nora-ai="true"] * {
+  color: #ffffff !important;
 }
 
-html.light .text-amber-300,
-html.light .text-amber-400,
-html.light .text-amber-600 {
-  color: #d97706 !important;
+/* ========================================================================= */
+/* PURE BLACK & WHITE BADGES & STATUS INDICATORS IN LIGHT MODE               */
+/* ========================================================================= */
+html.light .badge-status-hot,
+html.light .badge-status-warm,
+html.light .badge-status-cold,
+html.light [class*="badge-"] {
+  background: #f5f5f5 !important;
+  border: 1px solid #000000 !important;
+  color: #000000 !important;
+  box-shadow: none !important;
 }
 
-html.light .text-pink-300,
-html.light .text-pink-400,
-html.light .text-pink-600 {
-  color: #db2777 !important;
+html.light .badge-status-hot *,
+html.light .badge-status-warm *,
+html.light .badge-status-cold * {
+  color: #000000 !important;
 }
 
-/* Background surfaces in Light Mode - ABSOLUTELY NO BLACK OR DARK BACKGROUNDS */
+/* ========================================================================= */
+/* NO COLOUR COMBINATIONS IN LIGHT MODE (SOLID BLACK, WHITE & NEUTRAL GRAY)  */
+/* ========================================================================= */
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
+html.light .text-slate-950,
+html.light .text-slate-900,
+html.light .text-slate-800,
+html.light .text-slate-700,
+html.light .text-slate-600 {
+  color: #000000 !important;
+}
+
+html.light .text-slate-500,
+html.light .text-slate-400 {
+  color: #525252 !important;
+}
+
+/* Strip Colored Texts in Light Mode (except Nora AI) */
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-sky-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-blue-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-indigo-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-purple-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-emerald-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-green-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-amber-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-yellow-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-rose-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-pink-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-teal-"],
+html.light *:not(.nora-ai-btn):not([data-nora-ai]):not([data-nora-ai] *):not(.nora-ai-btn *) > [class*="text-cyan-"],
+html.light .text-sky-300, html.light .text-sky-400, html.light .text-sky-500, html.light .text-sky-600, html.light .text-sky-700,
+html.light .text-indigo-300, html.light .text-indigo-400, html.light .text-indigo-500, html.light .text-indigo-600,
+html.light .text-emerald-300, html.light .text-emerald-400, html.light .text-emerald-500, html.light .text-emerald-600,
+html.light .text-amber-300, html.light .text-amber-400, html.light .text-amber-500, html.light .text-amber-600,
+html.light .text-pink-300, html.light .text-pink-400, html.light .text-pink-500, html.light .text-pink-600,
+html.light .text-rose-300, html.light .text-rose-400, html.light .text-rose-500, html.light .text-rose-600 {
+  color: #000000 !important;
+}
+
+/* Strip Colored Backgrounds in Light Mode (except Nora AI) */
+html.light .bg-sky-50, html.light .bg-sky-100, html.light .bg-sky-500, html.light .bg-sky-600,
+html.light .bg-blue-50, html.light .bg-blue-100,
+html.light .bg-indigo-50, html.light .bg-indigo-100,
+html.light .bg-purple-50, html.light .bg-purple-100,
+html.light .bg-emerald-50, html.light .bg-emerald-100,
+html.light .bg-green-50, html.light .bg-green-100,
+html.light .bg-amber-50, html.light .bg-amber-100,
+html.light .bg-rose-50, html.light .bg-rose-100,
+html.light .bg-pink-50, html.light .bg-pink-100,
+html.light .bg-teal-50, html.light .bg-teal-100 {
+  background-color: #f5f5f5 !important;
+  color: #000000 !important;
+  border-color: #d4d4d4 !important;
+}
+
+/* Strip Dark/Colored Fallback Overrides in Light Mode */
 html.light [class*="dark:bg-slate-"],
 html.light [class*="dark:bg-indigo-"],
 html.light [class*="dark:bg-sky-"],
@@ -467,148 +551,49 @@ html.light .bg-[#0b0f19],
 html.light .bg-[#050813],
 html.light .bg-[#070a14],
 html.light .bg-[#0f172a] {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #e5e5e5 !important;
 }
 
-html.light [class*="dark:text-slate-"],
-html.light [class*="dark:text-white"] {
-  color: #0f172a !important;
+/* Tables in Light Mode: Pure Monochrome */
+html.light thead,
+html.light thead tr,
+html.light thead th {
+  background-color: #f5f5f5 !important;
+  color: #000000 !important;
+  border-color: #e5e5e5 !important;
+  font-weight: 700 !important;
 }
 
-html.light .bg-slate-900\/80,
-html.light .bg-slate-900\/90,
-html.light .bg-slate-900\/70,
-html.light .bg-slate-950\/60,
-html.light .bg-slate-950\/70,
-html.light .bg-slate-950\/80,
-html.light .bg-slate-950\/90,
-html.light .bg-slate-950\/95 {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+html.light tbody tr:hover {
+  background-color: #f5f5f5 !important;
 }
 
-html.light .bg-slate-800,
-html.light .bg-slate-800\/80,
-html.light .bg-slate-800\/90 {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-html.light .bg-indigo-950\/40,
-html.light .bg-indigo-950\/60,
-html.light .bg-indigo-950\/70,
-html.light .bg-indigo-950\/80,
-html.light .bg-indigo-950\/90,
-html.light .bg-indigo-950 {
-  background-color: #eff6ff !important;
-  border-color: #bfdbfe !important;
-  color: #1e40af !important;
-}
-
-html.light .bg-sky-950\/40,
-html.light .bg-sky-950\/60,
-html.light .bg-sky-950\/80,
-html.light .bg-sky-950 {
-  background-color: #f0f9ff !important;
-  border-color: #bae6fd !important;
-  color: #0369a1 !important;
-}
-
-html.light .bg-purple-950\/40,
-html.light .bg-purple-950\/60,
-html.light .bg-purple-950\/80,
-html.light .bg-purple-950 {
-  background-color: #faf5ff !important;
-  border-color: #e9d5ff !important;
-  color: #7e22ce !important;
-}
-
-html.light .bg-emerald-950\/40,
-html.light .bg-emerald-950\/60,
-html.light .bg-emerald-950\/80,
-html.light .bg-emerald-950 {
-  background-color: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
-  color: #047857 !important;
-}
-
-html.light .bg-amber-950\/40,
-html.light .bg-amber-950\/60,
-html.light .bg-amber-950\/80,
-html.light .bg-amber-950 {
-  background-color: #fffbeb !important;
-  border-color: #fde68a !important;
-  color: #b45309 !important;
-}
-
-html.light .bg-rose-950\/40,
-html.light .bg-rose-950\/60,
-html.light .bg-rose-950\/80,
-html.light .bg-rose-950 {
-  background-color: #fff1f2 !important;
-  border-color: #fecdd3 !important;
-  color: #be123c !important;
-}
-
-/* Borders in Light Mode */
-html.light .border-slate-800,
+html.light td, html.light th,
+html.light .border-slate-200,
+html.light .border-slate-300,
 html.light .border-slate-700,
-html.light .border-slate-700\/80,
+html.light .border-slate-800,
 html.light .border-white\/10,
 html.light .border-white\/15,
-html.light .border-white\/20,
-html.light .border-white\/30,
-html.light .border-slate-850 {
-  border-color: #e2e8f0 !important;
+html.light .border-white\/20 {
+  border-color: #e5e5e5 !important;
 }
 
-/* Modal Backdrops & Overlays in Light Mode */
-html.light .fixed.inset-0,
-html.light .bg-slate-950\/85,
-html.light .bg-slate-950\/90,
-html.light .bg-\[\#050813\]\/90 {
-  background-color: rgba(15, 23, 42, 0.45) !important;
-}
-
-/* Modal Card Surfaces in Light Mode */
-html.light .fixed .bg-\[\#0f172a\],
-html.light .fixed .bg-slate-900,
-html.light .fixed .bg-slate-950 {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.18) !important;
-}
-
-/* Chevron Stage Tracker Pipeline in Light Mode */
-html.light .bg-slate-950\/50,
-html.light .bg-slate-850,
-html.light .bg-slate-800\/90 {
-  background-color: #e2e8f0 !important;
-  border-color: #cbd5e1 !important;
-  color: #475569 !important;
-}
-
-/* Lead Strength & Score Widgets in Light Mode */
-html.light .bg-slate-950\/60,
-html.light .bg-slate-950\/70,
-html.light .bg-slate-950\/80 {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
-}
-
-/* Quick Action Circle Buttons in Light Mode */
-html.light .bg-indigo-950\/60,
-html.light .bg-teal-950\/60,
-html.light .bg-emerald-950\/60,
-html.light .bg-amber-950\/60,
-html.light .bg-rose-950\/40 {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
+/* Student Names & Table Values: Solid Black in Light Mode */
+html.light td div .font-bold,
+html.light td div .font-black,
+html.light tr td,
+html.light tr td span,
+html.light tr td .font-bold,
+html.light tr td .font-extrabold,
+html.light tr td .font-black,
+html.light tr th,
+html.light tr th span,
+html.light .student-name {
+  color: #000000 !important;
+  font-weight: 700 !important;
 }
 
 /* ========================================================================= */
