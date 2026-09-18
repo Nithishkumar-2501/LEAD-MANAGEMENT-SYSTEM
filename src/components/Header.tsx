@@ -299,20 +299,19 @@ export default function Header({
             )}
           </div>
 
-          {/* Ask Nora AI Button (Color explicitly preserved in all themes) */}
+          {/* Ask Nora AI Button */}
           <button
             type="button"
-            data-nora-ai="true"
             onClick={() => onOpenNoraAi?.()}
-            className="nora-ai-btn press-spring flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-semibold text-xs shadow-md shadow-indigo-500/25 transition-all duration-150 cursor-pointer shrink-0 border border-indigo-400/40"
+            className="press-spring flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs transition-all duration-150 cursor-pointer shrink-0"
             title="Ask Nora AI to analyze the live student database"
           >
             <img
               src="/nora-logo.png"
               alt="NORA AI Logo"
-              className="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-white/60"
+              className="w-4 h-4 rounded-full object-cover shrink-0"
             />
-            <span className="text-xs whitespace-nowrap text-white font-bold">Ask Nora AI</span>
+            <span className="text-xs whitespace-nowrap">Ask Nora AI</span>
           </button>
 
           {/* Search Icon — mobile/tablet */}
