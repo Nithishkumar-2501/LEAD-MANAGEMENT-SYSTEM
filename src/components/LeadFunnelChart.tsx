@@ -150,10 +150,10 @@ export default function LeadFunnelChart({
             <PieChart className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-extrabold text-white flex items-center gap-2 truncate">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2 truncate">
               VSB TNEA Lead Conversion Funnel
             </h3>
-            <p className="text-xs text-slate-400 font-medium truncate">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
               Filter stage options and view candidates one by one
             </p>
           </div>
@@ -161,13 +161,13 @@ export default function LeadFunnelChart({
 
         {/* View Mode Toggle & Total Counter */}
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-          <div className="flex flex-wrap items-center bg-slate-950/80 p-1 rounded-xl border border-white/15 text-[11px] font-bold max-w-full">
+          <div className="flex flex-wrap items-center bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-200 dark:border-white/15 text-[11px] font-bold max-w-full">
             <button
               onClick={() => setViewMode("SINGLE")}
               className={`px-3 py-1 rounded-lg transition-all ${
                 viewMode === "SINGLE"
                   ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               One by One View
@@ -177,7 +177,7 @@ export default function LeadFunnelChart({
               className={`px-3 py-1 rounded-lg transition-all ${
                 viewMode === "ALL"
                   ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Show All Grid
@@ -187,24 +187,24 @@ export default function LeadFunnelChart({
               className={`px-3 py-1 rounded-lg transition-all ${
                 viewMode === "SEGREGATION"
                   ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Stage Segregation Chart 📊
             </button>
           </div>
 
-          <div className="text-xs text-slate-200 bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-white/15 backdrop-blur-xl shrink-0">
-            <span className="text-slate-400">Total Pipeline:</span>{" "}
-            <strong className="text-white font-bold">{total}</strong>
+          <div className="text-xs text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-white/15 backdrop-blur-xl shrink-0">
+            <span className="text-slate-500 dark:text-slate-400">Total Pipeline:</span>{" "}
+            <strong className="text-slate-900 dark:text-white font-bold">{total}</strong>
           </div>
         </div>
       </div>
 
       {/* FILTER OPTIONS PILLS BAR (ALL + 5 STAGES) */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 hide-scrollbar w-full max-w-full">
-        <span className="text-xs font-bold text-slate-400 flex items-center gap-1 shrink-0 mr-1">
-          <Filter className="w-3.5 h-3.5 text-sky-400" /> Filter Stage:
+        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 shrink-0 mr-1">
+          <Filter className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" /> Filter Stage:
         </span>
 
         {/* ALL Option Pill */}
@@ -212,12 +212,12 @@ export default function LeadFunnelChart({
           onClick={() => handleStageSelect(null)}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
             activeStageKey === null
-              ? "bg-sky-500 text-slate-950 shadow-lg shadow-sky-500/30 ring-2 ring-sky-300/50 font-black"
-              : "bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800 border border-white/10"
+              ? "bg-sky-500 text-white shadow-lg shadow-sky-500/30 ring-2 ring-sky-300/50 font-black"
+              : "bg-slate-100 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/10"
           }`}
         >
           <span>All Stages</span>
-          <span className="text-[10px] bg-slate-950/40 px-1.5 py-0.5 rounded-full font-mono">
+          <span className="text-[10px] bg-slate-200 dark:bg-slate-950/40 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded-full font-mono">
             {total}
           </span>
         </button>
@@ -232,12 +232,12 @@ export default function LeadFunnelChart({
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                 isSelected
                   ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-lg shadow-sky-500/30 ring-2 ring-white/40 font-black"
-                  : "bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800 border border-white/10"
+                  : "bg-slate-100 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/10"
               }`}
             >
               <span className={`w-2 h-2 rounded-full ${stage.color}`} />
               <span>{stage.label}</span>
-              <span className="text-[10px] bg-slate-950/40 px-1.5 py-0.5 rounded-full font-mono text-white">
+              <span className="text-[10px] bg-slate-200 dark:bg-slate-950/40 text-slate-700 dark:text-slate-200 px-1.5 py-0.5 rounded-full font-mono">
                 {stage.count}
               </span>
             </button>
@@ -247,7 +247,7 @@ export default function LeadFunnelChart({
         {activeStageKey !== null && (
           <button
             onClick={() => handleStageSelect(null)}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-300 hover:text-rose-200 bg-rose-950/40 border border-rose-500/30 shrink-0 flex items-center gap-1"
+            className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-200 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/30 shrink-0 flex items-center gap-1"
           >
             <RefreshCw className="w-3 h-3" /> Reset Filter
           </button>
@@ -255,7 +255,7 @@ export default function LeadFunnelChart({
       </div>
 
       {/* Multi-segment Liquid Capsule Bar */}
-      <div className="w-full h-3 bg-slate-950/80 rounded-full overflow-hidden flex gap-0.5 p-0.5 border border-white/20 mb-5 shadow-inner">
+      <div className="w-full h-3 bg-slate-200 dark:bg-slate-950/80 rounded-full overflow-hidden flex gap-0.5 p-0.5 border border-slate-300 dark:border-white/20 mb-5 shadow-inner">
         {stages.map((stage) => {
           const pct = ((stage.count / total) * 100).toFixed(1);
           const isSelected = activeStageKey === stage.key;
@@ -265,7 +265,7 @@ export default function LeadFunnelChart({
               onClick={() => handleStageSelect(isSelected ? null : stage.key)}
               style={{ width: `${Math.max(Number(pct), 4)}%` }}
               className={`h-full bg-gradient-to-r ${stage.bar} rounded-full transition-all duration-300 cursor-pointer shadow-sm ${
-                isSelected ? "ring-2 ring-white scale-y-125 z-10 opacity-100" : "opacity-75 hover:opacity-100"
+                isSelected ? "ring-2 ring-sky-500 dark:ring-white scale-y-125 z-10 opacity-100" : "opacity-75 hover:opacity-100"
               }`}
               title={`${stage.label}: ${stage.count} (${pct}%)`}
             />
@@ -282,11 +282,11 @@ export default function LeadFunnelChart({
             {/* Top Stepper Badge & Navigation Controls */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-sky-400 bg-sky-950/80 px-3 py-1 rounded-full border border-sky-400/30">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-sky-700 dark:text-sky-400 bg-sky-100 dark:bg-sky-950/80 px-3 py-1 rounded-full border border-sky-300 dark:border-sky-400/30">
                   Stage {activeSingleIndex + 1} of {stages.length}
                 </span>
                 {activeStageKey === currentStage.key && (
-                  <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                  <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" /> Active Table Filter
                   </span>
                 )}
@@ -297,20 +297,20 @@ export default function LeadFunnelChart({
                 <button
                   type="button"
                   onClick={handlePrevStage}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900/90 dark:bg-slate-900/90 border border-white/15 text-white hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/15 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"
                   title="Previous Stage"
                 >
-                  <ChevronLeft className="w-4 h-4 text-sky-400" />
+                  <ChevronLeft className="w-4 h-4 text-sky-500 dark:text-sky-400" />
                   <span className="hidden sm:inline">Previous</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleNextStage}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900/90 dark:bg-slate-900/90 border border-white/15 text-white hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/15 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"
                   title="Next Stage"
                 >
                   <span className="hidden sm:inline">Next</span>
-                  <ChevronRight className="w-4 h-4 text-sky-400" />
+                  <ChevronRight className="w-4 h-4 text-sky-500 dark:text-sky-400" />
                 </button>
               </div>
             </div>
@@ -320,30 +320,30 @@ export default function LeadFunnelChart({
               {/* Left Column: Stage Identity */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className={`w-3.5 h-3.5 rounded-full ${currentStage.color} shadow-lg ring-4 ring-white/10`} />
-                  <h4 className="text-lg font-black text-white">{currentStage.label}</h4>
+                  <span className={`w-3.5 h-3.5 rounded-full ${currentStage.color} shadow-lg ring-4 ring-black/5 dark:ring-white/10`} />
+                  <h4 className="text-lg font-black text-slate-900 dark:text-white">{currentStage.label}</h4>
                 </div>
-                <p className="text-xs text-white/90 font-medium leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-white/90 font-medium leading-relaxed">
                   {currentStage.desc}
                 </p>
                 <div className="pt-2">
-                  <span className="text-[11px] font-mono text-slate-200 bg-slate-950/80 font-bold px-2.5 py-1 rounded-lg border border-white/15 shadow-sm">
+                  <span className="text-[11px] font-mono text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-950/80 font-bold px-2.5 py-1 rounded-lg border border-slate-300 dark:border-white/15 shadow-sm">
                     Filter Key: {currentStage.key}
                   </span>
                 </div>
               </div>
 
               {/* Center Column: Big Metrics Display */}
-              <div className="bg-slate-950/90 border border-white/15 rounded-2xl p-4 text-center space-y-1 backdrop-blur-xl shadow-xl">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              <div className="bg-white dark:bg-slate-950/90 border border-slate-200 dark:border-white/15 rounded-2xl p-4 text-center space-y-1 shadow-md dark:shadow-xl">
+                <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
                   Total Stage Candidates
                 </span>
-                <div className="text-4xl font-black text-white tracking-tight flex items-center justify-center gap-1">
+                <div className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-1">
                   <span>{currentStage.count}</span>
-                  <span className="text-xs text-slate-400 font-bold">leads</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400 font-bold">leads</span>
                 </div>
                 <div className="pt-1">
-                  <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-900/90 border border-white/10 ${currentStage.text}`}>
+                  <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 ${currentStage.text} shadow-2xs`}>
                     {Math.round((currentStage.count / total) * 100)}% of pipeline
                   </span>
                 </div>
@@ -352,13 +352,13 @@ export default function LeadFunnelChart({
               {/* Right Column: Progress & Action Button */}
               <div className="space-y-4">
                 <div>
-                  <div className="flex items-center justify-between text-xs text-white font-bold mb-1.5">
+                  <div className="flex items-center justify-between text-xs text-slate-800 dark:text-white font-bold mb-1.5">
                     <span>Funnel Share</span>
                     <span className={currentStage.text}>
                       {((currentStage.count / total) * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <div className="w-full h-3 bg-slate-950/90 rounded-full overflow-hidden p-0.5 border border-white/15">
+                  <div className="w-full h-3 bg-slate-200 dark:bg-slate-950/90 rounded-full overflow-hidden p-0.5 border border-slate-300 dark:border-white/15">
                     <div
                       style={{ width: `${((currentStage.count / total) * 100).toFixed(1)}%` }}
                       className={`h-full bg-gradient-to-r ${currentStage.bar} rounded-full transition-all duration-500`}
@@ -405,26 +405,26 @@ export default function LeadFunnelChart({
                 onClick={() => handleStageSelect(isSelected ? null : stage.key)}
                 className={`border rounded-2xl p-4 flex flex-col justify-between transform hover:-translate-y-1 transition-all duration-300 cursor-pointer backdrop-blur-md group ${
                   isSelected
-                    ? `${stage.activeBg} shadow-xl ${stage.glow} ring-2 ring-white/50 scale-105`
-                    : "bg-slate-900/60 border-white/15 hover:border-sky-400/60"
+                    ? `${stage.activeBg} shadow-xl ${stage.glow} ring-2 ring-sky-400/50 dark:ring-white/50 scale-105`
+                    : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/15 hover:border-sky-400/60 shadow-xs"
                 }`}
               >
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${stage.color} shadow-sm`} />
-                    <span className="text-xs text-slate-200 font-extrabold group-hover:text-white transition-colors">
+                    <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                       {stage.label}
                     </span>
                   </div>
                   {isSelected && (
-                    <span className="text-[9px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded-full font-bold border border-sky-400/30 inline-block mb-2">
+                    <span className="text-[9px] bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 px-2 py-0.5 rounded-full font-bold border border-sky-300 dark:border-sky-400/30 inline-block mb-2">
                       Active Filter
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-baseline justify-between mt-2">
-                  <span className="text-2xl font-black text-white group-hover:text-sky-300 transition-colors">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors">
                     {stage.count}
                   </span>
                   <span className={`text-xs font-black ${stage.text}`}>{pct}%</span>
