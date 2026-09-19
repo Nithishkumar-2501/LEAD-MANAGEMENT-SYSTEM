@@ -465,18 +465,36 @@ function MessageModal({
           }),
         });
         if (res) {
-          const data = await res.json();
-          onLogSuccess(
-            "EMAIL",
-            data?.testMode
-              ? `Dispatched Email to ${contact.email} (testing copy sent to ${data.deliveredTo})`
-              : `Dispatched Email ("${emailSubject}") to ${contact.email}`
-          );
+          const contentType = res.headers?.get("content-type") || "";
+          let data: any = null;
+          if (contentType.includes("application/json")) {
+            try {
+              data = await res.json();
+            } catch {
+              data = null;
+            }
+          }
+          if (res.ok && data?.success) {
+            onLogSuccess(
+              "EMAIL",
+              data?.testMode
+                ? `Dispatched Email to ${contact.email} (testing copy sent to ${data.deliveredTo})`
+                : `Dispatched Email ("${emailSubject}") to ${contact.email}`
+            );
+          } else {
+            const mailtoUrl = `mailto:${encodeURIComponent(contact.email)}?subject=${encodeURIComponent(emailSubject || `V.S.B. Admission Update for ${contact.name}`)}&body=${encodeURIComponent(messageText)}`;
+            window.open(mailtoUrl, "_blank");
+            onLogSuccess("EMAIL", `Opened email client for ${contact.email} ("${emailSubject}")`);
+          }
         } else {
-          onLogSuccess("EMAIL", `Dispatched Email ("${emailSubject}") to ${contact.email}`);
+          const mailtoUrl = `mailto:${encodeURIComponent(contact.email)}?subject=${encodeURIComponent(emailSubject || `V.S.B. Admission Update for ${contact.name}`)}&body=${encodeURIComponent(messageText)}`;
+          window.open(mailtoUrl, "_blank");
+          onLogSuccess("EMAIL", `Opened email client for ${contact.email} ("${emailSubject}")`);
         }
       } catch (err) {
-        onLogSuccess("EMAIL", `Dispatched Email ("${emailSubject}") to ${contact.email}`);
+        const mailtoUrl = `mailto:${encodeURIComponent(contact.email)}?subject=${encodeURIComponent(emailSubject || `V.S.B. Admission Update for ${contact.name}`)}&body=${encodeURIComponent(messageText)}`;
+        window.open(mailtoUrl, "_blank");
+        onLogSuccess("EMAIL", `Opened email client for ${contact.email} ("${emailSubject}")`);
       }
       setTimeout(() => onClose(), 800);
     }
@@ -821,9 +839,18 @@ function EmailModal({
       });
 
       if (res) {
-        const data = await res.json();
+        let data: any = null;
+        const contentType = res.headers?.get("content-type") || "";
 
-        if (res.ok && data.success) {
+        if (contentType.includes("application/json")) {
+          try {
+            data = await res.json();
+          } catch {
+            data = null;
+          }
+        }
+
+        if (res.ok && data?.success) {
           if (data.testMode) {
             setStatusBanner({
               type: "info",
@@ -844,23 +871,47 @@ function EmailModal({
           setTimeout(() => {
             onClose();
           }, 2200);
-        } else {
+        } else if (data?.error) {
           setStatusBanner({
             type: "error",
-            text: `❌ ${data.error || "Failed to deliver email through Resend."}`,
+            text: `❌ ${data.error}`,
           });
+        } else {
+          // If server returned non-JSON / HTML / 404, fall back to launching native email client
+          const mailtoUrl = `mailto:${encodeURIComponent(contact.email)}?subject=${encodeURIComponent(subject.trim())}&body=${encodeURIComponent(emailBody.trim())}`;
+          window.open(mailtoUrl, "_blank");
+
+          onLogSuccess(
+            "EMAIL",
+            `Opened email client for ${contact.email} ("${subject.trim()}")`
+          );
+
+          setStatusBanner({
+            type: "info",
+            text: `📧 Server email route unavailable. Opened your device's email client for ${contact.email} to send directly.`,
+          });
+
+          setTimeout(() => {
+            onClose();
+          }, 2500);
         }
       } else {
-        // Mobile mode: no server, show success
-        onLogSuccess("EMAIL", `Email "${subject}" queued for ${contact.email}`);
-        setStatusBanner({ type: "success", text: `✅ Email queued for ${contact.email}` });
-        setTimeout(() => { onClose(); }, 1500);
+        // Mobile mode (no server): open device email client
+        const mailtoUrl = `mailto:${encodeURIComponent(contact.email)}?subject=${encodeURIComponent(subject.trim())}&body=${encodeURIComponent(emailBody.trim())}`;
+        window.open(mailtoUrl, "_blank");
+        onLogSuccess("EMAIL", `Opened email client for ${contact.email}`);
+        setStatusBanner({ type: "success", text: `📧 Opened email client for ${contact.email}` });
+        setTimeout(() => { onClose(); }, 1800);
       }
     } catch (err: any) {
+      const mailtoUrl = `mailto:${encodeURIComponent(contact.email)}?subject=${encodeURIComponent(subject.trim())}&body=${encodeURIComponent(emailBody.trim())}`;
+      window.open(mailtoUrl, "_blank");
+      onLogSuccess("EMAIL", `Opened email client for ${contact.email} ("${subject.trim()}")`);
       setStatusBanner({
-        type: "error",
-        text: `❌ Network error while dispatching email: ${err?.message || err}`,
+        type: "info",
+        text: `📧 Opened your email client for ${contact.email}.`,
       });
+      setTimeout(() => { onClose(); }, 2000);
     } finally {
       setIsSending(false);
     }
