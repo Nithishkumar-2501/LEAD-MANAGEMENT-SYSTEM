@@ -6,7 +6,7 @@ import { MOCK_TEACHERS } from "@/lib/mockData";
 import { parseCSVToTeachers } from "@/lib/csvParser";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import TeacherStudentAuditModal from "@/components/TeacherStudentAuditModal";
-import { UserCheck, BookOpen, GraduationCap, Mail, Phone, PhoneCall, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download, Camera, Image as ImageIcon, Trash2, RefreshCw } from "lucide-react";
+import { UserCheck, BookOpen, GraduationCap, Mail, Phone, PhoneCall, Plus, Search, CheckCircle2, Award, Edit3, Save, X, ShieldCheck, Upload, FileSpreadsheet, Download, Camera, Image as ImageIcon, Trash2, RefreshCw, Wrench, Laptop, Radio, Globe, Bot, Zap, HeartPulse, Building2, Shield, Cpu, FlaskConical, Plane, Dna, Layers, ChevronRight, Filter } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
@@ -61,6 +61,149 @@ function mergeWithMockTeachers(incomingList: Teacher[]): Teacher[] {
   return Array.from(map.values());
 }
 
+// Helper to resolve Department visual iconography, emojis, and theme tags
+export function getDepartmentMeta(deptName: string) {
+  const d = (deptName || "").toLowerCase().trim();
+  if (d.includes("mech")) {
+    return {
+      icon: Wrench,
+      emoji: "⚙️",
+      color: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/30",
+      badgeColor: "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/40",
+    };
+  }
+  if (d.includes("computer science") || d.includes("cse")) {
+    return {
+      icon: Laptop,
+      emoji: "💻",
+      color: "text-sky-600 dark:text-sky-400",
+      bg: "bg-sky-500/10",
+      border: "border-sky-500/30",
+      badgeColor: "bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-500/40",
+    };
+  }
+  if (d.includes("electronics") || d.includes("ece")) {
+    return {
+      icon: Radio,
+      emoji: "📡",
+      color: "text-rose-600 dark:text-rose-400",
+      bg: "bg-rose-500/10",
+      border: "border-rose-500/30",
+      badgeColor: "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/40",
+    };
+  }
+  if (d.includes("information technology") || d.includes("it")) {
+    return {
+      icon: Globe,
+      emoji: "🌐",
+      color: "text-cyan-600 dark:text-cyan-400",
+      bg: "bg-cyan-500/10",
+      border: "border-cyan-500/30",
+      badgeColor: "bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/40",
+    };
+  }
+  if (d.includes("artificial intelligence") || d.includes("ai") || d.includes("data science")) {
+    return {
+      icon: Bot,
+      emoji: "🤖",
+      color: "text-purple-600 dark:text-purple-400",
+      bg: "bg-purple-500/10",
+      border: "border-purple-500/30",
+      badgeColor: "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/40",
+    };
+  }
+  if (d.includes("electrical") || d.includes("eee")) {
+    return {
+      icon: Zap,
+      emoji: "⚡",
+      color: "text-yellow-600 dark:text-yellow-400",
+      bg: "bg-yellow-500/10",
+      border: "border-yellow-500/30",
+      badgeColor: "bg-yellow-50 dark:bg-yellow-950/60 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-500/40",
+    };
+  }
+  if (d.includes("biomedical") || d.includes("bme")) {
+    return {
+      icon: HeartPulse,
+      emoji: "🩺",
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/30",
+      badgeColor: "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/40",
+    };
+  }
+  if (d.includes("civil")) {
+    return {
+      icon: Building2,
+      emoji: "🏗️",
+      color: "text-orange-600 dark:text-orange-400",
+      bg: "bg-orange-500/10",
+      border: "border-orange-500/30",
+      badgeColor: "bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-500/40",
+    };
+  }
+  if (d.includes("cyber")) {
+    return {
+      icon: Shield,
+      emoji: "🛡️",
+      color: "text-red-600 dark:text-red-400",
+      bg: "bg-red-500/10",
+      border: "border-red-500/30",
+      badgeColor: "bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/40",
+    };
+  }
+  if (d.includes("robotics")) {
+    return {
+      icon: Cpu,
+      emoji: "🦾",
+      color: "text-indigo-600 dark:text-indigo-400",
+      bg: "bg-indigo-500/10",
+      border: "border-indigo-500/30",
+      badgeColor: "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/40",
+    };
+  }
+  if (d.includes("chemical")) {
+    return {
+      icon: FlaskConical,
+      emoji: "🧪",
+      color: "text-teal-600 dark:text-teal-400",
+      bg: "bg-teal-500/10",
+      border: "border-teal-500/30",
+      badgeColor: "bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-500/40",
+    };
+  }
+  if (d.includes("aero")) {
+    return {
+      icon: Plane,
+      emoji: "✈️",
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/30",
+      badgeColor: "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/40",
+    };
+  }
+  if (d.includes("biotech")) {
+    return {
+      icon: Dna,
+      emoji: "🧬",
+      color: "text-lime-600 dark:text-lime-400",
+      bg: "bg-lime-500/10",
+      border: "border-lime-500/30",
+      badgeColor: "bg-lime-50 dark:bg-lime-950/60 text-lime-700 dark:text-lime-300 border-lime-200 dark:border-lime-500/40",
+    };
+  }
+  return {
+    icon: GraduationCap,
+    emoji: "🎓",
+    color: "text-indigo-600 dark:text-indigo-400",
+    bg: "bg-indigo-500/10",
+    border: "border-indigo-500/30",
+    badgeColor: "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/40",
+  };
+}
+
 export default function TeacherModule({ loggedInCampus, currentUserRole, loggedInUsername, onTriggerToast, applicants = [], onSelectApplicant }: TeacherModuleProps) {
   const [teachers, setTeachers] = useState<Teacher[]>(() => {
     if (typeof window !== "undefined") {
@@ -77,7 +220,9 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     return mergeWithMockTeachers(MOCK_TEACHERS);
   });
   const [search, setSearch] = useState("");
-  const [selectedDept, setSelectedDept] = useState("ALL");
+  // Default to Mechanical Engineering so the user immediately gets their requested department view
+  const [selectedDept, setSelectedDept] = useState("Mechanical Engineering");
+  const [deptSearch, setDeptSearch] = useState("");
   const [selectedCampusFilter, setSelectedCampusFilter] = useState<"ALL" | "KARUR" | "COIMBATORE">("ALL");
   const [facultyScope, setFacultyScope] = useState<"ALL" | "MINE">("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -325,14 +470,38 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     setNewTeacher((prev) => ({ ...prev, campus: loggedInCampus }));
   }, [loggedInCampus]);
 
-  // Dynamically extract all unique academic departments present across faculty records
+  // Dynamically extract all unique academic departments present across faculty records (Mechanical Engineering prioritized)
   const departments = useMemo(() => {
     const set = new Set<string>();
+    set.add("Mechanical Engineering");
     teachers.forEach((t) => {
       if (t.department) set.add(t.department.trim());
     });
-    return ["ALL", ...Array.from(set).sort()];
+    return Array.from(set).sort((a, b) => {
+      if (a === "Mechanical Engineering") return -1;
+      if (b === "Mechanical Engineering") return 1;
+      return a.localeCompare(b);
+    });
   }, [teachers]);
+
+  // Live teacher count for every academic department
+  const departmentCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    teachers.forEach((t) => {
+      if (t.department) {
+        const d = t.department.trim();
+        map.set(d, (map.get(d) || 0) + 1);
+      }
+    });
+    return map;
+  }, [teachers]);
+
+  // Filtered departments list for search input in department side navigation
+  const filteredDeptList = useMemo(() => {
+    const q = deptSearch.toLowerCase().trim();
+    if (!q) return departments;
+    return departments.filter((d) => d.toLowerCase().includes(q));
+  }, [departments, deptSearch]);
 
   const filteredTeachers = useMemo(() => {
     return teachers
@@ -702,168 +871,366 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         </div>
       )}
 
-      {/* Main Faculty Directory Card */}
-      <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
-          <div>
-            <h3 className="text-lg font-bold text-slate-100">Teacher & Faculty Directory</h3>
-            <p className="text-xs text-slate-400">View faculty allocations, department leads, and contact information</p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="relative w-full sm:w-56">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="Search teacher, department..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+      {/* Master-Detail Faculty Directory Container */}
+      <div className="flex flex-col lg:flex-row items-start gap-6">
+        {/* LEFT COLUMN: Academic Departments Order Navigation Panel */}
+        <aside className="w-full lg:w-80 shrink-0 space-y-4">
+          <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-lg sticky top-20">
+            {/* Header of Departments Panel */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20">
+                  <GraduationCap className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">Departments</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    Click to view faculty by department
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                {departments.length}
+              </span>
             </div>
 
-            {/* Academic Department Dropdown Filter */}
-            <select
-              value={selectedDept}
-              onChange={(e) => {
-                setSelectedDept(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-medium max-w-[200px]"
-              title="Filter by Academic Department"
-            >
-              {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-
-            {/* Campus Selector Filter */}
-            <select
-              value={selectedCampusFilter}
-              onChange={(e) => {
-                setSelectedCampusFilter(e.target.value as "ALL" | "KARUR" | "COIMBATORE");
-                setCurrentPage(1);
-              }}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-medium"
-              title="Filter by Campus"
-            >
-              <option value="ALL">All Campuses</option>
-              <option value="KARUR">Karur Campus</option>
-              <option value="COIMBATORE">Coimbatore Campus</option>
-            </select>
-
-            {/* Scope Toggle: All Staff vs My Profile */}
-            {loggedInUsername && (
-              <div className="flex items-center p-0.5 bg-slate-900 border border-slate-700 rounded-xl">
+            {/* Search Departments Filter */}
+            <div className="relative mb-3">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="text"
+                value={deptSearch}
+                onChange={(e) => setDeptSearch(e.target.value)}
+                placeholder="Filter departments..."
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-7 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+              />
+              {deptSearch && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setFacultyScope("ALL");
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    facultyScope === "ALL"
-                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                      : "text-slate-400 hover:text-slate-200"
+                  onClick={() => setDeptSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Department Navigation List */}
+            <div className="space-y-1.5 max-h-[calc(100vh-300px)] overflow-y-auto pr-1 custom-scrollbar">
+              {/* All Departments Option */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDept("ALL");
+                  setCurrentPage(1);
+                }}
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all text-left group cursor-pointer ${
+                  selectedDept === "ALL"
+                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-md shadow-indigo-600/30 ring-2 ring-indigo-400/50 scale-[1.01]"
+                    : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-400/40"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className={`p-1.5 rounded-lg shrink-0 ${
+                      selectedDept === "ALL"
+                        ? "bg-white/20 text-white"
+                        : "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20"
+                    }`}
+                  >
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div className="truncate">
+                    <span className="font-extrabold truncate block">All Departments</span>
+                    <span className={`text-[10px] block ${selectedDept === "ALL" ? "text-indigo-100" : "text-slate-400"}`}>
+                      Full college faculty
+                    </span>
+                  </div>
+                </div>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[11px] font-black shrink-0 ${
+                    selectedDept === "ALL"
+                      ? "bg-white text-indigo-900 shadow-xs"
+                      : "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200"
                   }`}
-                  title="View all department staff members"
                 >
-                  All Staff ({teachers.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFacultyScope("MINE");
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    facultyScope === "MINE"
-                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                  title="View only my assigned profile"
-                >
-                  My Profile
-                </button>
-              </div>
-            )}
-
-            {/* Hidden File Input for CSV Upload */}
-            <input
-              id="teacher-csv-file-upload"
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={handleCSVUpload}
-            />
-
-            {/* Admin Management Action Buttons */}
-            {currentUserRole === "ADMIN" ? (
-              <>
-                {/* Download Sample CSV Template */}
-                <button
-                  onClick={handleDownloadSampleCSV}
-                  className="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-                  title="Download Faculty CSV Template"
-                >
-                  <Download className="w-3.5 h-3.5 text-emerald-400" /> <span>Sample CSV</span>
-                </button>
-
-                {/* Upload CSV File Button */}
-                <button
-                  onClick={() => document.getElementById("teacher-csv-file-upload")?.click()}
-                  className="px-3 py-1.5 rounded-xl border border-indigo-400/50 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
-                  title="Upload CSV File to Import Faculty Directory"
-                >
-                  <Upload className="w-3.5 h-3.5 text-indigo-100" /> <span>Import CSV</span>
-                </button>
-
-                {/* Firebase Live Cloud Sync Button */}
-                <button
-                  onClick={handleSyncAllToFirebase}
-                  disabled={isFirebaseSyncing}
-                  className="px-3 py-1.5 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-orange-600/30 cursor-pointer disabled:opacity-50"
-                  title="Persist & store all faculty details into Firebase Firestore & RTDB"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isFirebaseSyncing ? "animate-spin" : ""}`} />
-                  <span>{isFirebaseSyncing ? "Syncing..." : "🔥 Sync to Firebase"}</span>
-                </button>
-
-                {/* Live Indicator */}
-                <span className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Firebase Live
+                  {teachers.length}
                 </span>
+              </button>
 
-                {/* Add Faculty Button */}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="px-3.5 py-1.5 rounded-xl border border-purple-400/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/30 cursor-pointer"
-                  title="Add New Faculty Member"
-                >
-                  <Plus className="w-4 h-4" /> <span>Add Faculty</span>
-                </button>
-              </>
-            ) : (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs text-indigo-200 font-semibold shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span>Faculty Directory</span>
-                <span className="text-[10px] text-slate-400 border-l border-slate-700 pl-2">
-                  Read-Only Mode
-                </span>
-              </div>
-            )}
+              {/* Department Buttons */}
+              {filteredDeptList.map((deptName) => {
+                const isSelected = selectedDept.toLowerCase().trim() === deptName.toLowerCase().trim();
+                const count = departmentCounts.get(deptName) || 0;
+                const meta = getDepartmentMeta(deptName);
+                const IconComp = meta.icon;
+
+                return (
+                  <button
+                    key={deptName}
+                    type="button"
+                    onClick={() => {
+                      setSelectedDept(deptName);
+                      setCurrentPage(1);
+                    }}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all text-left group cursor-pointer ${
+                      isSelected
+                        ? "bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white border-transparent shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50 scale-[1.02]"
+                        : "bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-400/40"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <div
+                        className={`p-1.5 rounded-lg shrink-0 ${
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : `${meta.bg} ${meta.color} border ${meta.border}`
+                        }`}
+                      >
+                        <IconComp className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <div className="flex items-center gap-1 truncate">
+                          <span className="text-xs">{meta.emoji}</span>
+                          <span className="font-extrabold truncate block leading-tight">
+                            {deptName}
+                          </span>
+                        </div>
+                        <span className={`text-[10px] block ${isSelected ? "text-indigo-100" : "text-slate-400"}`}>
+                          {count} {count === 1 ? "Teacher" : "Teachers"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[11px] font-black shrink-0 ${
+                        isSelected
+                          ? "bg-white text-indigo-900 shadow-xs"
+                          : count > 0
+                          ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50"
+                          : "bg-slate-200 dark:bg-slate-800 text-slate-400"
+                      }`}
+                      title={`${count} teachers in ${deptName}`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </aside>
 
-        {/* Teachers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {paginatedTeachers.map((tch, index) => {
+        {/* RIGHT COLUMN: Faculty in Selected Department */}
+        <section className="flex-1 min-w-0 w-full space-y-4">
+          <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-sm">
+            {/* Top Department Banner & Filter Controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                    Department Faculty Directory
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">
+                    {selectedDept === "ALL" ? "All Academic Departments" : selectedDept}
+                  </span>
+                </div>
+
+                <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                  {(() => {
+                    if (selectedDept === "ALL") {
+                      return (
+                        <>
+                          <Layers className="w-5 h-5 text-indigo-500" />
+                          <span>All Academic Departments</span>
+                        </>
+                      );
+                    }
+                    const meta = getDepartmentMeta(selectedDept);
+                    const IconC = meta.icon;
+                    return (
+                      <>
+                        <IconC className={`w-5 h-5 ${meta.color}`} />
+                        <span>{selectedDept}</span>
+                      </>
+                    );
+                  })()}
+                  <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
+                    {filteredTeachers.length} {filteredTeachers.length === 1 ? "Teacher" : "Teachers"}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {selectedDept === "ALL"
+                    ? `Showing all ${teachers.length} faculty across all academic departments.`
+                    : `Showing faculty members, assigned contact quotas, and calling performance in ${selectedDept}.`}
+                </p>
+              </div>
+
+              {/* Action Controls & Filters */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Search Teacher in Department */}
+                <div className="relative w-full sm:w-52">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder={`Search in ${selectedDept === "ALL" ? "faculty" : selectedDept}...`}
+                    className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  />
+                </div>
+
+                {/* Campus Filter */}
+                <select
+                  value={selectedCampusFilter}
+                  onChange={(e) => {
+                    setSelectedCampusFilter(e.target.value as "ALL" | "KARUR" | "COIMBATORE");
+                    setCurrentPage(1);
+                  }}
+                  className="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-bold"
+                  title="Filter by Campus"
+                >
+                  <option value="ALL">All Campuses</option>
+                  <option value="KARUR">Karur Campus</option>
+                  <option value="COIMBATORE">Coimbatore Campus</option>
+                </select>
+
+                {/* Scope Toggle */}
+                {loggedInUsername && (
+                  <div className="flex items-center p-0.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFacultyScope("ALL");
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        facultyScope === "ALL"
+                          ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                      }`}
+                      title="View all department staff members"
+                    >
+                      All Staff
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFacultyScope("MINE");
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        facultyScope === "MINE"
+                          ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                      }`}
+                      title="View only my assigned profile"
+                    >
+                      My Profile
+                    </button>
+                  </div>
+                )}
+
+                {/* Hidden File Input for CSV Upload */}
+                <input
+                  id="teacher-csv-file-upload"
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={handleCSVUpload}
+                />
+
+                {/* Admin Management Action Buttons */}
+                {currentUserRole === "ADMIN" ? (
+                  <>
+                    <button
+                      onClick={handleDownloadSampleCSV}
+                      className="px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                      title="Download Faculty CSV Template"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-500" /> <span>Sample</span>
+                    </button>
+
+                    <button
+                      onClick={() => document.getElementById("teacher-csv-file-upload")?.click()}
+                      className="px-3 py-1.5 rounded-xl border border-indigo-400/50 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
+                      title="Upload CSV File to Import Faculty Directory"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-indigo-100" /> <span>Import</span>
+                    </button>
+
+                    <button
+                      onClick={handleSyncAllToFirebase}
+                      disabled={isFirebaseSyncing}
+                      className="px-3 py-1.5 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-orange-600/30 cursor-pointer disabled:opacity-50"
+                      title="Persist & store all faculty details into Firebase Firestore & RTDB"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isFirebaseSyncing ? "animate-spin" : ""}`} />
+                      <span>{isFirebaseSyncing ? "Syncing..." : "Sync"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (selectedDept !== "ALL") {
+                          setNewTeacher((prev) => ({ ...prev, department: selectedDept }));
+                        }
+                        setShowAddModal(true);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl border border-purple-400/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/30 cursor-pointer"
+                      title={`Add New Faculty Member to ${selectedDept === "ALL" ? "Directory" : selectedDept}`}
+                    >
+                      <Plus className="w-4 h-4" /> <span>Add Faculty</span>
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs text-indigo-200 font-semibold shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span>Faculty Directory</span>
+                    <span className="text-[10px] text-slate-400 border-l border-slate-700 pl-2">
+                      Read-Only Mode
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Empty State if No Faculty in Selected Department */}
+            {filteredTeachers.length === 0 ? (
+              <div className="py-16 text-center rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-800 p-8 space-y-3">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center border border-indigo-500/20">
+                  <GraduationCap className="w-7 h-7" />
+                </div>
+                <h4 className="text-base font-black text-slate-900 dark:text-white">
+                  No Faculty Members Found in {selectedDept === "ALL" ? "Directory" : selectedDept}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  {search
+                    ? `No faculty matched your search query "${search}". Try clearing the search.`
+                    : `There are currently no faculty members registered under ${selectedDept}. Click below to add a teacher.`}
+                </p>
+                {currentUserRole === "ADMIN" && (
+                  <button
+                    onClick={() => {
+                      if (selectedDept !== "ALL") {
+                        setNewTeacher((prev) => ({ ...prev, department: selectedDept }));
+                      }
+                      setShowAddModal(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Faculty to {selectedDept === "ALL" ? "Department" : selectedDept}</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Teachers Grid in Department */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {paginatedTeachers.map((tch, index) => {
             const isSelf = checkIsSelfTeacher(tch, loggedInUsername);
             const rangeDisplay =
               tch.assignedRangeText ||
@@ -1232,6 +1599,10 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
             </select>
           </div>
         </div>
+      </>
+    )}
+          </div>
+        </section>
       </div>
 
       {/* Add Teacher Modal */}
