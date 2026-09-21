@@ -29,56 +29,56 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
       case "CALL":
         return {
           icon: Phone,
-          color: "bg-emerald-500/20 text-emerald-300 border-emerald-400/40",
+          color: "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-400/40",
         };
       case "EMAIL":
         return {
           icon: Mail,
-          color: "bg-indigo-500/20 text-indigo-300 border-indigo-400/40",
+          color: "bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-400/40",
         };
       case "WHATSAPP":
         return {
           icon: MessageSquare,
-          color: "bg-teal-500/20 text-teal-300 border-teal-400/40",
+          color: "bg-teal-50 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 border-teal-300 dark:border-teal-400/40",
         };
       case "SMS":
       default:
         return {
           icon: Send,
-          color: "bg-indigo-500/20 text-indigo-300 border-indigo-400/40",
+          color: "bg-violet-50 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-400/40",
         };
     }
   };
 
   return (
-    <aside className="bubble-card p-4 sm:p-6 border border-white/20 w-full lg:w-96 flex flex-col justify-between">
+    <aside className="bubble-card p-4 sm:p-6 border border-slate-200 dark:border-white/20 w-full lg:w-96 flex flex-col justify-between bg-white dark:bg-slate-900/90 shadow-lg">
       <div>
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/30 ring-2 ring-white/20">
               <CalendarCheck className="w-5 h-5 text-white font-bold" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-white">Today&apos;s Reminders</h3>
-              <p className="text-xs text-slate-400 font-medium">Counselor Follow-up Panel</p>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">Today&apos;s Reminders</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Counselor Follow-up Panel</p>
             </div>
           </div>
-          <span className="text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/40 px-3 py-1 rounded-full backdrop-blur-md">
+          <span className="text-xs font-black bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/40 px-3 py-1 rounded-full backdrop-blur-md">
             {pendingCount} Pending
           </span>
         </div>
 
         {/* Bubble Filter Pills */}
-        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-white/20 mb-4 text-xs font-bold backdrop-blur-md">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/80 p-1 rounded-full border border-slate-200 dark:border-white/20 mb-4 text-xs font-bold backdrop-blur-md">
           {(["PENDING", "ALL", "COMPLETED"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`flex-1 py-1 rounded-full transition-all ${
+              className={`flex-1 py-1 rounded-full transition-all cursor-pointer ${
                 filter === tab
-                  ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-black shadow-md shadow-sky-500/40 scale-[1.02]"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-black shadow-md shadow-sky-500/40 scale-[1.02]"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               {tab.charAt(0) + tab.slice(1).toLowerCase()}
@@ -98,54 +98,59 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
                   key={task.id}
                   className={`p-4 rounded-2xl border transition-all ${
                     task.isCompleted
-                      ? "bg-slate-950/40 border-white/5 opacity-50"
-                      : "bg-slate-950/80 border-white/15 hover:border-sky-400/40 shadow-md backdrop-blur-md"
+                      ? "bg-slate-50/60 dark:bg-slate-950/40 border-slate-200 dark:border-white/5 opacity-60"
+                      : "bg-white dark:bg-slate-950/80 border-slate-200 dark:border-white/15 hover:border-sky-400/40 shadow-sm dark:shadow-md backdrop-blur-md"
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <button
                       onClick={() => onToggleTask(task.id)}
-                      className="mt-0.5 text-sky-400 hover:text-sky-300 transition-colors"
+                      className="mt-0.5 text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 transition-colors cursor-pointer"
                       title={task.isCompleted ? "Mark as Pending" : "Mark as Completed"}
                     >
                       {task.isCompleted ? (
-                        <CheckSquare className="w-4 h-4 text-emerald-400" />
+                        <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       ) : (
-                        <Square className="w-4 h-4" />
+                        <Square className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                       )}
                     </button>
 
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
                         <span
-                          className={`text-[10px] font-black px-3 py-0.5 rounded-full border flex items-center gap-1.5 ${typeInfo.color}`}
+                          className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${typeInfo.color}`}
                         >
-                          <TypeIcon className="w-3 h-3" />
+                          <TypeIcon className="w-3 h-3 shrink-0" />
                           {task.type}
                         </span>
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
-                          <Clock className="w-3 h-3 text-sky-400" /> Today
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-semibold">
+                          <Clock className="w-3 h-3 text-sky-500 shrink-0" /> Today
                         </span>
                       </div>
 
                       <p
-                        className={`text-xs font-bold leading-relaxed mb-1 ${
-                          task.isCompleted ? "line-through text-slate-500" : "text-white"
+                        className={`text-xs font-bold leading-relaxed mb-1.5 break-words ${
+                          task.isCompleted
+                            ? "line-through text-slate-400 dark:text-slate-500"
+                            : "text-slate-900 dark:text-white"
                         }`}
                       >
                         {task.title}
                       </p>
 
                       {task.lead && (
-                        <p className="text-[11px] text-sky-300 font-medium">
-                          Candidate: <strong className="text-white font-bold">{task.lead.name}</strong>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                          Candidate:{" "}
+                          <strong className="text-slate-950 dark:text-white font-extrabold">
+                            {task.lead.name}
+                          </strong>
                         </p>
                       )}
                     </div>
                   </div>
 
                   {task.lead && !task.isCompleted && (
-                    <div className="flex items-center justify-end gap-1.5 mt-3 pt-2.5 border-t border-white/10">
+                    <div className="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t border-slate-200 dark:border-white/10">
                       <a
                         href={getCleanTelUri(task.lead?.phone)}
                         onClick={(e) => {
@@ -153,16 +158,17 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
                           onActionTrigger("CALL", task.lead!.name);
                           if (task.lead?.phone) redirectToDialPad(task.lead.phone);
                         }}
-                        className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="py-1 px-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-300 dark:border-emerald-400/40 text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer truncate shadow-xs"
                         title={`Call ${task.lead?.name || "Candidate"} via Dial Pad`}
                       >
-                        <Phone className="w-3 h-3" /> Call
+                        <Phone className="w-3 h-3 shrink-0" /> Call
                       </a>
                       <button
                         onClick={() => onActionTrigger("EMAIL", task.lead!.name)}
-                        className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 text-[11px] font-bold transition-all flex items-center gap-1"
+                        className="py-1 px-1 rounded-lg bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-300 dark:border-indigo-400/40 text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer truncate shadow-xs"
+                        title={`Send Email to ${task.lead?.name || "Candidate"}`}
                       >
-                        <Mail className="w-3 h-3" /> Email
+                        <Mail className="w-3 h-3 shrink-0" /> Email
                       </button>
                       <button
                         onClick={(e) => {
@@ -176,14 +182,13 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
                                 courseInterest: task.lead.courseInterest,
                                 campus: (task.lead as any).campus,
                               })
-
                             );
                           }
                         }}
-                        className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="py-1 px-1 rounded-lg bg-teal-50 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 hover:bg-teal-600 hover:text-white border border-teal-300 dark:border-teal-400/40 text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer truncate shadow-xs"
                         title={`Open WhatsApp chat with ${task.lead?.name || "Candidate"}`}
                       >
-                        <MessageSquare className="w-3 h-3" /> WhatsApp
+                        <MessageSquare className="w-3 h-3 shrink-0" /> WhatsApp
                       </button>
                       <button
                         onClick={(e) => {
@@ -200,10 +205,10 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
                             );
                           }
                         }}
-                        className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="py-1 px-1 rounded-lg bg-violet-50 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 hover:bg-violet-600 hover:text-white border border-violet-300 dark:border-violet-400/40 text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer truncate shadow-xs"
                         title={`Open native SMS app to text ${task.lead?.name || "Candidate"}`}
                       >
-                        <Send className="w-3 h-3" /> SMS
+                        <Send className="w-3 h-3 shrink-0" /> SMS
                       </button>
                     </div>
                   )}
@@ -218,9 +223,9 @@ export default function TaskSidebar({ tasks, onToggleTask, onActionTrigger }: Ta
         </div>
       </div>
 
-      <div className="mt-5 p-4 rounded-3xl bg-slate-900/80 border border-white/20 flex items-center gap-3 backdrop-blur-xl">
-        <Sparkles className="w-5 h-5 text-sky-400 shrink-0" />
-        <p className="text-[11px] text-slate-300 leading-snug font-medium">
+      <div className="mt-5 p-4 rounded-3xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-white/20 flex items-center gap-3 backdrop-blur-xl">
+        <Sparkles className="w-5 h-5 text-sky-500 dark:text-sky-400 shrink-0" />
+        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-snug font-medium">
           Liquid Tip: High priority TNEA candidates respond 40% faster on WhatsApp.
         </p>
       </div>
