@@ -64,6 +64,7 @@ import {
   User,
   Users,
   Briefcase,
+  Smartphone,
 } from "lucide-react";
 
 const INDIAN_STATES = [
@@ -746,6 +747,30 @@ export default function ContactDirectoryModule({
     }
   };
 
+  // Column min-widths ensuring table layout never compresses candidate name, mobile, etc.
+  const getColumnWidthClass = (columnName: string) => {
+    switch (columnName) {
+      case "Registered Name":
+        return "min-w-[270px]";
+      case "Registered Mobile":
+        return "min-w-[250px]";
+      case "Registered Email":
+        return "min-w-[220px]";
+      case "Assigned Counselor":
+        return "min-w-[190px]";
+      case "Lead Stage":
+        return "min-w-[160px]";
+      case "City":
+        return "min-w-[140px]";
+      case "Campus":
+        return "min-w-[130px]";
+      case "State":
+        return "min-w-[130px]";
+      default:
+        return "min-w-[120px]";
+    }
+  };
+
   // Render Helper for Dynamic Table Columns (Image 2 Customize Column)
   const renderCellContent = (
     contact: Lead & { application?: Application | null },
@@ -754,12 +779,23 @@ export default function ContactDirectoryModule({
     if (col === "Registered Name") {
       const stateInfo = getStudentLeadState(contact);
       const isVerified = Boolean(contact.phone && contact.phone.length >= 10);
-      const rawRef = contact.id.startsWith("lead_") ? `VSB-${contact.id.replace("lead_", "").slice(-4)}` : contact.id;
+      const getDisplayCandidateId = (c: typeof contact) => {
+        if (c.counsellingAppNo) return c.counsellingAppNo;
+        const idStr = c.id || "";
+        if (idStr.startsWith("lead_")) {
+          const suffix = idStr.replace("lead_", "");
+          if (/^\d+$/.test(suffix)) return `VSB-${suffix}`;
+          return `VSB-${suffix.toUpperCase()}`;
+        }
+        return idStr.toUpperCase();
+      };
+      const candidateId = getDisplayCandidateId(contact);
+
       return (
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3 min-w-[260px]">
           {/* Student Initials Avatar with Engagement State Ring */}
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 shadow-sm ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 shadow-sm ${
               stateInfo.state === "HOT"
                 ? "bg-gradient-to-tr from-rose-500 to-amber-500 ring-2 ring-rose-400/60"
                 : stateInfo.state === "WARM"
@@ -770,14 +806,16 @@ export default function ContactDirectoryModule({
             {contact.name.slice(0, 2).toUpperCase()}
           </div>
 
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="min-w-0 flex flex-col justify-center gap-0.5">
+            {/* Row 1: Student Name + Verified Shield Badge + Nora AI Sparkle */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
               <span
-                className="font-extrabold text-blue-600 dark:text-sky-300 hover:text-blue-700 dark:hover:text-sky-200 text-xs hover:underline cursor-pointer truncate"
+                className="font-extrabold text-slate-900 dark:text-sky-300 hover:text-blue-600 dark:hover:text-sky-200 text-[13px] hover:underline cursor-pointer truncate max-w-[140px]"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCandidateClick(contact);
                 }}
+                title={contact.name}
               >
                 {contact.name}
               </span>
@@ -785,14 +823,14 @@ export default function ContactDirectoryModule({
               {/* Verified Shield Badge */}
               {isVerified ? (
                 <span
-                  className="inline-flex items-center gap-0.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-400/30"
-                  title="Mobile & Intent Verified"
+                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 shrink-0 whitespace-nowrap"
+                  title="Mobile & Identity Verified"
                 >
-                  <ShieldCheck className="w-2.5 h-2.5" /> Verified
+                  <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Verified
                 </span>
               ) : (
                 <span
-                  className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-white/10"
+                  className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-white/10 shrink-0 whitespace-nowrap"
                   title="Verification Pending"
                 >
                   Unverified
@@ -808,64 +846,77 @@ export default function ContactDirectoryModule({
                     onOpenNoraAi(`Analyze student record for ${contact.name}`);
                   }
                 }}
-                className="p-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white transition-all shadow-xs cursor-pointer hover:scale-110"
+                className="p-1 rounded-full bg-purple-50 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-200 dark:border-purple-500/30 transition-all shadow-xs cursor-pointer hover:scale-110 shrink-0"
                 title={`Ask Nora AI to analyze ${contact.name}'s database record`}
               >
-                <Sparkles className="w-2.5 h-2.5" />
+                <Sparkles className="w-3 h-3" />
               </button>
             </div>
 
-            {/* Candidate Reference ID & Campus */}
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono mt-0.5">
-              <span>{rawRef}</span>
-              <span>•</span>
-              <span className="text-sky-600 dark:text-sky-400 font-semibold">{contact.campus || "KARUR"}</span>
+            {/* Row 2: Candidate Reference ID & Campus */}
+            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{candidateId}</span>
+              <span className="text-slate-400 dark:text-slate-600">•</span>
+              <span className="text-blue-600 dark:text-sky-400 font-bold uppercase tracking-wider">{contact.campus || "KARUR"}</span>
             </div>
           </div>
         </div>
       );
     }
     if (col === "Registered Email") {
-      return <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200 font-medium">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
+      return <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
     }
     if (col === "Registered Mobile") {
-      return (
-        <div className="flex items-center gap-1.5 font-mono font-semibold text-slate-800 dark:text-slate-200">
-          <a
-            href={getCleanTelUri(contact.phone)}
-            onClick={(e) => {
-              e.stopPropagation();
-              onActionTrigger("CALL", contact.name);
-              redirectToDialPad(contact.phone);
-            }}
-            className="p-1 rounded bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 hover:bg-sky-600 hover:text-white border border-sky-300 dark:border-sky-500/30 transition-all cursor-pointer inline-flex items-center"
-            title={`Call ${contact.name} via Phone Dial Pad`}
-          >
-            <Phone className="w-3 h-3" />
-          </a>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onActionTrigger("WHATSAPP", contact.name);
-              redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
-            }}
-            className="p-1 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-300 dark:border-emerald-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
-            title={`Direct WhatsApp Chat with ${contact.name}`}
-          >
-            💬
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onActionTrigger("SMS", contact.name);
-              redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
-            }}
-            className="p-1 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-300 dark:border-indigo-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
-            title={`Direct Native SMS with ${contact.name}`}
-          >
-            📱
-          </button>
+      const cleanPhone = (contact.phone || "").trim();
+      const rawDigits = cleanPhone.replace(/\D/g, "");
+      const tenDigits = rawDigits.slice(-10);
+      const formattedDisplayPhone = showPhone
+        ? (tenDigits.length === 10 ? `+91 ${tenDigits.slice(0, 5)} ${tenDigits.slice(5)}` : cleanPhone.replace(/-/g, " "))
+        : "+91 ••••• •••••";
 
+      return (
+        <div className="flex items-center gap-2.5 whitespace-nowrap min-w-[240px]">
+          {/* Communication Action Buttons Group */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <a
+              href={getCleanTelUri(contact.phone)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onActionTrigger("CALL", contact.name);
+                redirectToDialPad(contact.phone);
+              }}
+              className="w-7 h-7 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:border-blue-400 dark:hover:text-sky-400 hover:bg-blue-50 dark:hover:bg-sky-500/10 transition-all flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+              title={`Call ${contact.name} via Phone Dial Pad`}
+            >
+              <Phone className="w-3.5 h-3.5" />
+            </a>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onActionTrigger("WHATSAPP", contact.name);
+                redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
+              }}
+              className="w-7 h-7 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:border-emerald-400 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+              title={`Direct WhatsApp Chat with ${contact.name}`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onActionTrigger("SMS", contact.name);
+                redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
+              }}
+              className="w-7 h-7 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-600 hover:border-purple-400 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+              title={`Direct Native SMS with ${contact.name}`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Non-Breaking Phone Number Link */}
           <a
             href={getCleanTelUri(contact.phone)}
             onClick={(e) => {
@@ -873,10 +924,10 @@ export default function ContactDirectoryModule({
               onActionTrigger("CALL", contact.name);
               redirectToDialPad(contact.phone);
             }}
-            className="hover:underline hover:text-sky-500 transition-colors"
+            className="text-[13px] font-mono font-bold tracking-tight hover:underline hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap select-all text-slate-800 dark:text-slate-100"
             title="Click to dial on phone"
           >
-            {showPhone ? contact.phone : "+91 ••••• •••••"}
+            {formattedDisplayPhone}
           </a>
         </div>
       );
@@ -2602,7 +2653,10 @@ export default function ContactDirectoryModule({
                   {selectedColumns.map((col) => {
                     const isSortedThisCol = sortColumn === col;
                     return (
-                      <th key={col} className="p-3 font-extrabold text-blue-600 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap">
+                      <th
+                        key={col}
+                        className={`p-3 font-extrabold text-blue-600 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap ${getColumnWidthClass(col)}`}
+                      >
                         <span
                           onClick={() => {
                             if (sortColumn === col) {
@@ -2641,7 +2695,7 @@ export default function ContactDirectoryModule({
                     const filterVal = columnFilters[col] || "";
                     if (col === "City") {
                       return (
-                        <td key={`filter_${col}`} className="p-1.5">
+                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2661,7 +2715,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Lead Stage") {
                       return (
-                        <td key={`filter_${col}`} className="p-1.5">
+                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2684,7 +2738,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Campus") {
                       return (
-                        <td key={`filter_${col}`} className="p-1.5">
+                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2701,7 +2755,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "State") {
                       return (
-                        <td key={`filter_${col}`} className="p-1.5">
+                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2717,7 +2771,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Community") {
                       return (
-                        <td key={`filter_${col}`} className="p-1.5">
+                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2737,7 +2791,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Gender") {
                       return (
-                        <td key={`filter_${col}`} className="p-1.5">
+                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2753,7 +2807,7 @@ export default function ContactDirectoryModule({
                       );
                     }
                     return (
-                      <td key={`filter_${col}`} className="p-1.5">
+                      <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
                         <div className="relative flex items-center">
                           <input
                             type="text"
@@ -2851,8 +2905,9 @@ export default function ContactDirectoryModule({
                     {selectedColumns.map((col) => (
                       <td
                         key={col}
-                        className={`p-3 ${col === "Registered Name" ? "font-bold text-blue-600 dark:text-sky-400 hover:underline" : ""
-                          }`}
+                        className={`p-3 align-middle ${getColumnWidthClass(col)} ${
+                          col === "Registered Name" ? "font-bold text-blue-600 dark:text-sky-400 hover:underline" : ""
+                        }`}
                       >
                         {renderCellContent(contact, col)}
                       </td>
