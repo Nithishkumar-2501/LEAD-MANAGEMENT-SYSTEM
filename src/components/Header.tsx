@@ -430,11 +430,11 @@ export default function Header({
 
       {/* Mobile Campus Selector — shown below top bar on small screens */}
       <div className="md:hidden overflow-x-auto hide-scrollbar -mx-1">
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold w-max shadow-xs">
+        <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/20 text-[11px] font-semibold backdrop-blur-2xl w-max">
           {/* Karur Campus */}
           {loggedInCampus === "KARUR" ? (
             <button
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow-xs whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md whitespace-nowrap"
               disabled
             >
               <Building2 className="w-3.5 h-3.5" />
@@ -442,10 +442,10 @@ export default function Header({
             </button>
           ) : (
             <button
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
               disabled
             >
-              <Lock className="w-3.5 h-3.5" />
+              <Lock className="w-3 h-3" />
               <span>Karur Campus</span>
             </button>
           )}
@@ -453,7 +453,7 @@ export default function Header({
           {/* Coimbatore Campus */}
           {loggedInCampus === "COIMBATORE" ? (
             <button
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow-xs whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-md whitespace-nowrap"
               disabled
             >
               <GraduationCap className="w-3.5 h-3.5" />
@@ -461,10 +461,10 @@ export default function Header({
             </button>
           ) : (
             <button
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-slate-400 dark:text-slate-500 opacity-60 cursor-not-allowed whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
               disabled
             >
-              <Lock className="w-3.5 h-3.5" />
+              <Lock className="w-3 h-3" />
               <span>Coimbatore Campus</span>
             </button>
           )}
@@ -473,7 +473,7 @@ export default function Header({
 
       {/* Mobile Full Navigation Menu — slide-down panel */}
       {mobileMenuOpen && (
-        <div className="sm:hidden flex flex-col gap-1 pb-1 border-t border-slate-200 dark:border-white/10 pt-2 animate-in slide-in-from-top duration-200">
+        <div className="sm:hidden flex flex-col gap-1.5 pb-1 border-t border-white/15 pt-2 animate-in slide-in-from-top duration-200">
           {filteredNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -481,10 +481,10 @@ export default function Header({
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`flex items-center gap-3 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 ${
                   isActive
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100"
+                    ? "glossy-btn"
+                    : "bg-slate-900/60 border border-white/10 text-slate-300 active:bg-white/10"
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />

@@ -13,11 +13,10 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
       title: "Total TNEA Leads",
       value: metrics.totalLeads.toLocaleString(),
       trend: `+${metrics.leadsTrend}%`,
-      subtitle: "vs last cycle",
+      subtitle: "vs last intake",
       icon: Users,
-      badgeStyle: "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/60",
-      barColor: "bg-indigo-600",
-      iconStyle: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/50",
+      color: "from-sky-400 to-indigo-500",
+      sphereGlow: "from-sky-400 via-indigo-500 to-purple-500",
       progress: 82,
     },
     {
@@ -26,80 +25,77 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
       trend: `+${metrics.docsVerifiedTrend}%`,
       subtitle: "10th & 12th Cutoffs",
       icon: FileCheck2,
-      badgeStyle: "bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/60",
-      barColor: "bg-sky-500",
-      iconStyle: "bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 border-sky-200 dark:border-sky-800/50",
+      color: "from-amber-400 to-orange-500",
+      sphereGlow: "from-amber-400 via-orange-500 to-pink-500",
       progress: 68,
     },
     {
       title: "Confirmed Enrolment",
       value: metrics.seatsFilled.toLocaleString(),
       trend: `+${metrics.seatsFilledTrend}%`,
-      subtitle: "Seats Filled",
+      subtitle: "VSB Seats Filled",
       icon: GraduationCap,
-      badgeStyle: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60",
-      barColor: "bg-emerald-600",
-      iconStyle: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50",
+      color: "from-emerald-400 to-teal-500",
+      sphereGlow: "from-emerald-400 via-teal-500 to-cyan-500",
       progress: 54,
     },
     {
       title: "Total Fee Receipts",
       value: `₹${metrics.totalRevenue.toLocaleString("en-IN")}`,
       trend: `+${metrics.revenueTrend}%`,
-      subtitle: "Tuition Yield",
+      subtitle: "Tuition Revenue",
       icon: DollarSign,
-      badgeStyle: "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60",
-      barColor: "bg-amber-500",
-      iconStyle: "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 border-amber-200 dark:border-amber-800/50",
+      color: "from-pink-500 to-rose-500",
+      sphereGlow: "from-pink-500 via-rose-500 to-purple-600",
       progress: 90,
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {cards.map((card, idx) => {
         const IconComponent = card.icon;
         return (
           <div
             key={idx}
-            className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-white/10 p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all duration-200 group cursor-pointer flex flex-col justify-between"
+            className="bubble-card card-hover-elevate press-spring p-4 sm:p-6 relative overflow-hidden group border border-white/10 dark:border-white/10 shadow-lg cursor-pointer"
           >
-            <div>
-              {/* Header: Title & Clean Icon Container */}
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  {card.title}
-                </span>
-                <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${card.iconStyle}`}>
-                  <IconComponent className="w-4 h-4" />
-                </div>
-              </div>
+            {/* Top Gloss Accent with Shimmer */}
+            <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${card.color} shimmer-sweep`} />
+            
+            {/* Ambient Background Glow on Hover */}
+            <div className={`absolute -right-8 -top-8 w-28 h-28 rounded-full bg-gradient-to-br ${card.sphereGlow} opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500 pointer-events-none`} />
 
-              {/* Metric Value */}
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-['Plus_Jakarta_Sans',sans-serif]">
-                {card.value}
-              </h3>
+            <div className="flex items-start justify-between mb-4 relative z-10">
+              <div>
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  {card.title}
+                </p>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-sky-300 transition-colors">{card.value}</h3>
+              </div>
+              <div className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${card.sphereGlow} flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 ring-2 ring-white/30 backdrop-blur-md transform group-hover:scale-115 group-hover:rotate-6 transition-all duration-300`}>
+                <IconComponent className="w-5 h-5" />
+              </div>
             </div>
 
-            {/* Footer: Soft Pastel Trend Tag & Progress Bar */}
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${card.badgeStyle}`}>
-                  <TrendingUp className="w-3 h-3" />
-                  <span>{card.trend}</span>
-                </div>
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                  {card.subtitle}
-                </span>
+            {/* Bubble Trend Indicator */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 dark:border-white/10 relative z-10">
+              <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shadow-xs">
+                <TrendingUp className="w-3.5 h-3.5 animate-pulse" />
+                <span>{card.trend}</span>
+                <span className="text-slate-600 dark:text-slate-400 font-normal ml-1">{card.subtitle}</span>
               </div>
+              <div className="w-7 h-7 rounded-full bg-sky-500/10 dark:bg-sky-400/10 flex items-center justify-center group-hover:bg-sky-500/20 transition-colors">
+                <ArrowUpRight className="w-4 h-4 text-sky-600 dark:text-sky-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
+              </div>
+            </div>
 
-              {/* Clean Minimal Progress Bar */}
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${card.barColor} rounded-full transition-all duration-500`}
-                  style={{ width: `${card.progress}%` }}
-                />
-              </div>
+            {/* Glossy Progress Pill Capsule */}
+            <div className="w-full bg-slate-100 dark:bg-slate-950/70 h-2 rounded-full mt-3 overflow-hidden border border-slate-200 dark:border-white/10 p-0.5">
+              <div
+                className={`h-full bg-gradient-to-r ${card.color} rounded-full transition-all duration-700 shadow-sm`}
+                style={{ width: `${card.progress}%` }}
+              />
             </div>
           </div>
         );
