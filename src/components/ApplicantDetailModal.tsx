@@ -1043,66 +1043,27 @@ export default function ApplicantDetailModal({
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-slate-900 dark:text-slate-100 gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={getCleanTelUri(formData.phone || "+91-6380270912")}
-                        onClick={(e) => {
-                          onActionTrigger("CALL", formData.name);
-                          redirectToDialPad(formData.phone || "+91-6380270912");
-                        }}
-                        className="flex items-center gap-1.5 group hover:text-emerald-600 transition-colors text-left cursor-pointer"
-                        title="Click to dial on phone"
-                      >
-                        <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center group-hover:bg-emerald-200 transition-colors shrink-0">
-                          <Phone className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
-                        </div>
-                        <strong className="text-slate-950 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 font-black font-mono underline decoration-dotted decoration-slate-400 text-xs">
-                          {formatDisplayPhone(formData.phone || "+91-6380270912")}
-                        </strong>
-                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700">
-                          Dial 📞
-                        </span>
-                      </a>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onActionTrigger("WHATSAPP", formData.name);
-                          redirectToWhatsApp(formData.phone, getDefaultAdmissionWhatsAppText(formData));
-                        }}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
-                        title={`Open WhatsApp chat with ${formData.name}`}
-                      >
-                        <MessageSquare className="w-3 h-3" /> WhatsApp
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onActionTrigger("SMS", formData.name);
-                          redirectToSms(formData.phone, getDefaultAdmissionSmsText(formData));
-                        }}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
-                        title={`Open native SMS application for ${formData.name}`}
-                      >
-                        <Send className="w-3 h-3" /> SMS
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsMessageModalOpen(true);
-                        }}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-600 hover:bg-teal-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
-                        title={`Open Message Composer for ${formData.name}`}
-                      >
-                        <FileText className="w-3 h-3" /> Compose
-                      </button>
-                    </div>
+                  {/* Phone Contact Row with Verification Icon */}
+                  <div className="flex items-center justify-between text-slate-900 dark:text-slate-100">
+                    <a
+                      href={getCleanTelUri(formData.phone || "+91-6380270912")}
+                      onClick={(e) => {
+                        onActionTrigger("CALL", formData.name);
+                        redirectToDialPad(formData.phone || "+91-6380270912");
+                      }}
+                      className="flex items-center gap-1.5 group hover:text-emerald-600 transition-colors text-left cursor-pointer"
+                      title="Click to dial on phone"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center group-hover:bg-emerald-200 transition-colors shrink-0">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                      </div>
+                      <strong className="text-slate-950 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 font-black font-mono underline decoration-dotted decoration-slate-400 text-xs whitespace-nowrap">
+                        {formatDisplayPhone(formData.phone || "+91-6380270912")}
+                      </strong>
+                      <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700 whitespace-nowrap shrink-0">
+                        Dial 📞
+                      </span>
+                    </a>
 
                     <span
                       title="Verified"
@@ -1110,6 +1071,47 @@ export default function ApplicantDetailModal({
                     >
                       ✓
                     </span>
+                  </div>
+
+                  {/* Quick Action Buttons (WhatsApp, SMS, Compose) */}
+                  <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onActionTrigger("WHATSAPP", formData.name);
+                        redirectToWhatsApp(formData.phone, getDefaultAdmissionWhatsAppText(formData));
+                      }}
+                      className="flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-95 whitespace-nowrap"
+                      title={`Open WhatsApp chat with ${formData.name}`}
+                    >
+                      <MessageSquare className="w-3 h-3 shrink-0" /> WhatsApp
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onActionTrigger("SMS", formData.name);
+                        redirectToSms(formData.phone, getDefaultAdmissionSmsText(formData));
+                      }}
+                      className="flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-95 whitespace-nowrap"
+                      title={`Open native SMS application for ${formData.name}`}
+                    >
+                      <Send className="w-3 h-3 shrink-0" /> SMS
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMessageModalOpen(true);
+                      }}
+                      className="flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-teal-600 hover:bg-teal-500 text-white font-black text-[10px] shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-95 whitespace-nowrap"
+                      title={`Open Message Composer for ${formData.name}`}
+                    >
+                      <FileText className="w-3 h-3 shrink-0" /> Compose
+                    </button>
                   </div>
                 </div>
 
