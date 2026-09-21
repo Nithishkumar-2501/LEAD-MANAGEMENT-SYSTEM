@@ -16,7 +16,16 @@ export const VSB_DEPARTMENTS_COURSES = [
   "B.E Mechanical Engineering",
 ] as const;
 
-export type LeadStatus = "NEW" | "CONTACTED" | "IN_REVIEW" | "ADMITTED" | "REJECTED";
+export type LeadStatus =
+  | "NEW"
+  | "CONTACTED"
+  | "IN_REVIEW"
+  | "ADMITTED"
+  | "REJECTED"
+  | "INQUIRY"
+  | "INTERESTED"
+  | "NOT_INTERESTED"
+  | "CLOSED";
 
 export type AppStage = "INQUIRY" | "SUBMITTED" | "DOCS_VERIFIED" | "OFFER_ISSUED" | "FEE_PAID";
 

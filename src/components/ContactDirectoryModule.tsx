@@ -65,6 +65,9 @@ import {
   Users,
   Briefcase,
   Smartphone,
+  Copy,
+  ExternalLink,
+  Check,
 } from "lucide-react";
 
 const INDIAN_STATES = [
@@ -747,6 +750,128 @@ export default function ContactDirectoryModule({
     }
   };
 
+  // Admission Success Celebration & Multi-Channel Dispatch Modal State
+  const [admissionModalData, setAdmissionModalData] = useState<{
+    contact: Lead & { application?: Application | null };
+    applicationLink: string;
+    emailSent: boolean;
+  } | null>(null);
+  const [isUpdatingStatusId, setIsUpdatingStatusId] = useState<string | null>(null);
+  const [hasCopiedLink, setHasCopiedLink] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+
+  // Status Change Handler with multi-channel application link dispatch on ADMITTED
+  const handleLeadStatusChange = async (
+    contact: Lead & { application?: Application | null },
+    newStatus: LeadStatus
+  ) => {
+    const oldStatus = contact.status;
+    if (oldStatus === newStatus) return;
+
+    // Optimistic UI update
+    setContacts((prev) =>
+      prev.map((c) => (c.id === contact.id ? { ...c, status: newStatus } : c))
+    );
+
+    setIsUpdatingStatusId(contact.id);
+
+    try {
+      // Sync to API
+      await mobileSafeFetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: contact.id,
+          name: contact.name,
+          phone: contact.phone,
+          email: contact.email,
+          status: newStatus,
+          campus: contact.campus,
+          department: contact.courseInterest || (contact as any).department,
+        }),
+      });
+
+      // Sync to Firebase
+      saveStudentToFirebase({
+        ...contact,
+        status: newStatus,
+      }).catch((e) => console.warn("Firebase sync notice:", e));
+
+      if (onTriggerToast) {
+        onTriggerToast(`Updated ${contact.name}'s status to ${newStatus}`);
+      }
+
+      // If transition to ADMITTED, dispatch application link through Email, WhatsApp, and SMS!
+      if (newStatus === "ADMITTED") {
+        const origin =
+          typeof window !== "undefined" && window.location.origin
+            ? window.location.origin
+            : "http://localhost:3000";
+        const applicationLink = `${origin}/dashboard?tab=APPLICATION_MANAGER&studentId=${encodeURIComponent(
+          contact.id
+        )}&leadName=${encodeURIComponent(contact.name)}`;
+
+        // 1. Send Email automatically via /api/email/send
+        let emailDispatched = false;
+        if (contact.email && contact.email.includes("@")) {
+          try {
+            const emailRes = await mobileSafeFetch("/api/email/send", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                to: contact.email,
+                studentName: contact.name,
+                applicationLink: applicationLink,
+                department:
+                  contact.courseInterest ||
+                  (contact as any).department ||
+                  "Engineering & Technology",
+                campus: contact.campus || "KARUR",
+              }),
+            });
+            if (emailRes && emailRes.ok) {
+              emailDispatched = true;
+            }
+          } catch (err) {
+            console.warn("Auto email dispatch error:", err);
+          }
+        }
+
+        // 2. Pre-fill WhatsApp message & trigger
+        const waText = `🎉 *CONGRATULATIONS ${contact.name.toUpperCase()}!* 🎉\n\nYou are provisionally offered admission at *V.S.B. Engineering College* (${contact.campus || "Karur"} Campus) for *${contact.courseInterest || "B.E. Engineering"}*!\n\n📋 *Complete Your Official Student Application Form:* \n${applicationLink}\n\nFor queries, contact V.S.B. Admissions Office: +91 95662 07732.`;
+        redirectToWhatsApp(contact.phone, waText);
+
+        // 3. Pre-fill SMS & trigger
+        const smsText = `Congratulations ${contact.name}! You are provisionally admitted to VSB Engineering College. Complete your application form: ${applicationLink} - VSB Admissions`;
+        redirectToSms(contact.phone, smsText);
+
+        // 4. Open Admission Celebration Modal with full controls
+        setAdmissionModalData({
+          contact: { ...contact, status: newStatus },
+          applicationLink,
+          emailSent: emailDispatched,
+        });
+
+        if (onTriggerToast) {
+          onTriggerToast(
+            `🎓 ${contact.name} marked as Admitted! Application link sent via Email, WhatsApp & SMS.`
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      // Revert on error
+      setContacts((prev) =>
+        prev.map((c) => (c.id === contact.id ? { ...c, status: oldStatus } : c))
+      );
+      if (onTriggerToast) {
+        onTriggerToast("❌ Failed to update lead stage. Please retry.");
+      }
+    } finally {
+      setIsUpdatingStatusId(null);
+    }
+  };
+
   // Column min-widths ensuring table layout never compresses candidate name, mobile, etc.
   const getColumnWidthClass = (columnName: string) => {
     switch (columnName) {
@@ -759,7 +884,7 @@ export default function ContactDirectoryModule({
       case "Assigned Counselor":
         return "min-w-[190px]";
       case "Lead Stage":
-        return "min-w-[160px]";
+        return "min-w-[200px]";
       case "City":
         return "min-w-[140px]";
       case "Campus":
@@ -1002,31 +1127,77 @@ export default function ContactDirectoryModule({
       return <span className="text-slate-800 dark:text-slate-200 font-mono text-[11px] font-medium">{formattedDate}</span>;
     }
     if (col === "Lead Stage") {
-      const stateInfo = getStudentLeadState(contact);
+      const rawStatus = (contact.status || "").toUpperCase();
+      let currentVal: "INQUIRY" | "INTERESTED" | "ADMITTED" | "NOT_INTERESTED" = "INQUIRY";
 
-      if (stateInfo.state === "HOT") {
-        return (
-          <span className="px-3 py-1 rounded-full text-[11px] font-black border inline-flex items-center gap-1.5 whitespace-nowrap bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border-rose-300 dark:border-rose-500/40 shadow-sm">
-            <Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse shrink-0" />
-            <span>HOT (Admitted)</span>
-          </span>
-        );
+      if (rawStatus === "ADMITTED" || rawStatus === "HOT") {
+        currentVal = "ADMITTED";
+      } else if (rawStatus === "NOT_INTERESTED" || rawStatus === "COLD" || rawStatus === "REJECTED") {
+        currentVal = "NOT_INTERESTED";
+      } else if (
+        rawStatus === "INTERESTED" ||
+        rawStatus === "WARM" ||
+        rawStatus === "READY_TO_ADMIT" ||
+        rawStatus === "CONTACTED" ||
+        rawStatus === "IN_REVIEW"
+      ) {
+        currentVal = "INTERESTED";
+      } else {
+        currentVal = "INQUIRY";
       }
 
-      if (stateInfo.state === "WARM") {
-        return (
-          <span className="px-3 py-1 rounded-full text-[11px] font-extrabold border inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 shadow-sm">
-            <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            <span>WARM (Ready to Admit)</span>
-          </span>
-        );
+      const isBusy = isUpdatingStatusId === contact.id;
+
+      // Dynamic color theme based on stage
+      let themeClasses = "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-500/40 focus:border-sky-400";
+      if (currentVal === "ADMITTED") {
+        themeClasses = "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.15)]";
+      } else if (currentVal === "INTERESTED") {
+        themeClasses = "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.15)]";
+      } else if (currentVal === "NOT_INTERESTED") {
+        themeClasses = "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-500/40";
       }
 
       return (
-        <span className="px-3 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1.5 whitespace-nowrap bg-sky-50 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-500/40 shadow-sm">
-          <Snowflake className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-          <span>COLD (Not Interested)</span>
-        </span>
+        <div
+          className="relative inline-flex items-center"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <select
+            value={currentVal}
+            disabled={isBusy}
+            onChange={(e) => {
+              e.stopPropagation();
+              const nextVal = e.target.value as LeadStatus;
+              handleLeadStatusChange(contact, nextVal);
+            }}
+            className={`appearance-none cursor-pointer pl-2.5 pr-7 py-1 rounded-full text-[11px] font-bold border transition-all duration-200 outline-none focus:ring-2 focus:ring-sky-500/40 shadow-sm ${themeClasses} ${
+              isBusy ? "opacity-60 cursor-not-allowed" : ""
+            }`}
+            title={`Lead Stage: ${currentVal}. Click to update stage.`}
+          >
+            <option value="INQUIRY" className="bg-slate-900 text-sky-300 font-bold">
+              📋 Inquiry
+            </option>
+            <option value="INTERESTED" className="bg-slate-900 text-amber-300 font-bold">
+              ⚡ Interested
+            </option>
+            <option value="ADMITTED" className="bg-slate-900 text-emerald-300 font-black">
+              🎓 Admitted
+            </option>
+            <option value="NOT_INTERESTED" className="bg-slate-900 text-rose-300 font-bold">
+              🚫 Not Interested
+            </option>
+          </select>
+          <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 flex items-center text-current opacity-70">
+            {isBusy ? (
+              <RefreshCw className="w-3 h-3 animate-spin" />
+            ) : (
+              <ChevronDown className="w-3 h-3" />
+            )}
+          </div>
+        </div>
       );
     }
     return <span></span>;
@@ -1129,10 +1300,21 @@ export default function ContactDirectoryModule({
       const actual = getFieldValueForCol(c, col).toLowerCase();
       const filter = filterVal.toLowerCase().trim();
       if (col === "Lead Stage") {
-        if (filter === "hot") return stateInfo.state === "HOT";
-        if (filter === "warm") return stateInfo.state === "WARM";
-        if (filter === "cold") return stateInfo.state === "COLD";
-        return actual === filter || (c.status || "").toLowerCase() === filter;
+        const rawStatus = (c.status || "").toUpperCase();
+        let normalizedStatus = "INQUIRY";
+        if (rawStatus === "ADMITTED" || rawStatus === "HOT") normalizedStatus = "ADMITTED";
+        else if (rawStatus === "NOT_INTERESTED" || rawStatus === "COLD" || rawStatus === "REJECTED") normalizedStatus = "NOT_INTERESTED";
+        else if (rawStatus === "INTERESTED" || rawStatus === "WARM" || rawStatus === "READY_TO_ADMIT" || rawStatus === "CONTACTED" || rawStatus === "IN_REVIEW") normalizedStatus = "INTERESTED";
+
+        if (filter === "inquiry") return normalizedStatus === "INQUIRY";
+        if (filter === "interested") return normalizedStatus === "INTERESTED";
+        if (filter === "admitted") return normalizedStatus === "ADMITTED";
+        if (filter === "not_interested") return normalizedStatus === "NOT_INTERESTED";
+
+        if (filter === "hot") return stateInfo.state === "HOT" || normalizedStatus === "ADMITTED";
+        if (filter === "warm") return stateInfo.state === "WARM" || normalizedStatus === "INTERESTED";
+        if (filter === "cold") return stateInfo.state === "COLD" || normalizedStatus === "NOT_INTERESTED";
+        return actual === filter || (c.status || "").toLowerCase() === filter || normalizedStatus.toLowerCase() === filter;
       }
       if (col === "Campus" || col === "Gender" || col === "Community" || col === "State") {
         return actual === filter;
@@ -2723,15 +2905,11 @@ export default function ContactDirectoryModule({
                             }
                             className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
                           >
-                            <option value="ALL">All States & Stages</option>
-                            <option value="HOT">🔥 HOT (Admitted)</option>
-                            <option value="WARM">⚡ WARM (Ready to Admit)</option>
-                            <option value="COLD">❄️ COLD (Not Interested)</option>
-                            <option value="NEW">NEW</option>
-                            <option value="CONTACTED">CONTACTED</option>
-                            <option value="IN_REVIEW">IN_REVIEW</option>
-                            <option value="ADMITTED">ADMITTED</option>
-                            <option value="REJECTED">REJECTED</option>
+                            <option value="ALL">All Stages</option>
+                            <option value="INQUIRY">📋 Inquiry</option>
+                            <option value="INTERESTED">⚡ Interested</option>
+                            <option value="ADMITTED">🎓 Admitted</option>
+                            <option value="NOT_INTERESTED">🚫 Not Interested</option>
                           </select>
                         </td>
                       );
@@ -5269,6 +5447,237 @@ export default function ContactDirectoryModule({
                 className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs cursor-pointer transition-all"
               >
                 Close Audit Panel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admission Success & Multi-Channel Dispatch Modal */}
+      {admissionModalData && (
+        <div
+          className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+          onClick={() => setAdmissionModalData(null)}
+        >
+          <div
+            className="relative w-full max-w-xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-slate-100 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Banner */}
+            <div className="relative bg-gradient-to-br from-emerald-600 via-teal-600 to-sky-700 p-6 text-white">
+              <button
+                onClick={() => setAdmissionModalData(null)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner shrink-0">
+                  🎓
+                </div>
+                <div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/25 text-white inline-block mb-1">
+                    Admission Confirmed
+                  </span>
+                  <h3 className="text-xl font-black tracking-tight leading-tight">
+                    Provisional Admission Offered!
+                  </h3>
+                </div>
+              </div>
+              <p className="text-xs text-white/90 leading-relaxed font-medium">
+                Lead status moved to <span className="font-bold underline">Admitted</span>. Official Student Application Link was generated and dispatched via E-mail, WhatsApp & SMS.
+              </p>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Student Details Card */}
+              <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1 min-w-[200px]">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Student Name</p>
+                  <p className="text-base font-extrabold text-white flex items-center gap-2">
+                    <User className="w-4 h-4 text-emerald-400" />
+                    {admissionModalData.contact.name}
+                  </p>
+                  <p className="text-xs text-slate-400 font-mono">
+                    {admissionModalData.contact.phone}
+                    {admissionModalData.contact.email ? ` • ${admissionModalData.contact.email}` : ""}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    {admissionModalData.contact.campus || "KARUR"} CAMPUS
+                  </span>
+                  <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                    {admissionModalData.contact.courseInterest || (admissionModalData.contact as any).department || "B.E. Engineering"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Student Application Form Link */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <span>📄 Official Student Application Form Link</span>
+                  </label>
+                  <span className="text-[11px] text-emerald-400 font-semibold">Live URL</span>
+                </div>
+                <div className="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl p-2.5">
+                  <input
+                    type="text"
+                    readOnly
+                    value={admissionModalData.applicationLink}
+                    className="w-full bg-transparent text-xs font-mono text-slate-200 outline-none select-all"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(admissionModalData.applicationLink);
+                      setHasCopiedLink(true);
+                      setTimeout(() => setHasCopiedLink(false), 2500);
+                      if (onTriggerToast) onTriggerToast("📋 Application link copied to clipboard!");
+                    }}
+                    className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      hasCopiedLink
+                        ? "bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                        : "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600"
+                    }`}
+                  >
+                    {hasCopiedLink ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" /> Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" /> Copy
+                      </>
+                    )}
+                  </button>
+                  <a
+                    href={admissionModalData.applicationLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition-colors"
+                    title="Open Application Form"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Multi-Channel Auto-Dispatch Grid */}
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Dispatched Channels:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* E-mail Card */}
+                  <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-3 flex flex-col justify-between gap-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-white">E-mail</p>
+                        <p className="text-[10px] text-slate-400 truncate max-w-[120px]">
+                          {admissionModalData.contact.email || "No email"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>{admissionModalData.emailSent ? "Email Sent" : "Relay Triggered"}</span>
+                    </div>
+                    <button
+                      disabled={isResendingEmail || !admissionModalData.contact.email}
+                      onClick={async () => {
+                        setIsResendingEmail(true);
+                        try {
+                          await mobileSafeFetch("/api/email/send", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              to: admissionModalData.contact.email,
+                              studentName: admissionModalData.contact.name,
+                              applicationLink: admissionModalData.applicationLink,
+                              department: admissionModalData.contact.courseInterest || (admissionModalData.contact as any).department || "Engineering",
+                              campus: admissionModalData.contact.campus || "KARUR",
+                            }),
+                          });
+                          if (onTriggerToast) onTriggerToast("📧 Admission email resent successfully!");
+                        } catch (e) {
+                          console.warn(e);
+                        } finally {
+                          setIsResendingEmail(false);
+                        }
+                      }}
+                      className="w-full py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 text-[11px] font-bold transition-all disabled:opacity-50 cursor-pointer text-center"
+                    >
+                      {isResendingEmail ? "Sending..." : "Resend Email"}
+                    </button>
+                  </div>
+
+                  {/* WhatsApp Card */}
+                  <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-3 flex flex-col justify-between gap-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                        <MessageSquare className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-white">WhatsApp</p>
+                        <p className="text-[10px] text-slate-400">Direct Chat</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Link Prepared</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const waText = `🎉 *CONGRATULATIONS ${admissionModalData.contact.name.toUpperCase()}!* 🎉\n\nYou are provisionally offered admission at *V.S.B. Engineering College* (${admissionModalData.contact.campus || "Karur"} Campus) for *${admissionModalData.contact.courseInterest || "B.E. Engineering"}*!\n\n📋 *Complete Your Official Student Application Form:* \n${admissionModalData.applicationLink}\n\nFor queries, contact V.S.B. Admissions Office: +91 95662 07732.`;
+                        redirectToWhatsApp(admissionModalData.contact.phone, waText);
+                      }}
+                      className="w-full py-1.5 px-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold transition-all cursor-pointer text-center"
+                    >
+                      Open WhatsApp
+                    </button>
+                  </div>
+
+                  {/* SMS Card */}
+                  <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-3 flex flex-col justify-between gap-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+                        <Smartphone className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-white">SMS</p>
+                        <p className="text-[10px] text-slate-400">Native SMS</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-cyan-400">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>SMS Prepared</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const smsText = `Congratulations ${admissionModalData.contact.name}! You are provisionally admitted to VSB Engineering College. Complete your application form: ${admissionModalData.applicationLink} - VSB Admissions`;
+                        redirectToSms(admissionModalData.contact.phone, smsText);
+                      }}
+                      className="w-full py-1.5 px-2 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-300 text-[11px] font-bold transition-all cursor-pointer text-center"
+                    >
+                      Send SMS
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-end">
+              <button
+                onClick={() => setAdmissionModalData(null)}
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-lg shadow-emerald-900/30 transition-all"
+              >
+                Done & Return to Leads
               </button>
             </div>
           </div>
