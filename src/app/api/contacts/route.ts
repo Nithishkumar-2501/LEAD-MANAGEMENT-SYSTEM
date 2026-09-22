@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Lead, Application } from "@/types/crm";
-import { saveStudentToFirebase, deleteStudentFromFirebase } from "@/lib/firebaseSync";
+import { saveStudentToFirebase, deleteStudentFromFirebase, getNextNumericLeadId } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, formatPhoneWith91 } from "@/lib/phoneValidation";
 
 
@@ -87,9 +87,13 @@ export async function POST(request: Request) {
     const cleanMotherMobile = motherMobile ? formatPhoneWith91(motherMobile) : "";
     const referralSource = source || body.source || "Social Ads (Instagram / Facebook / YouTube)";
 
+    // Generate live sequential numeric lead ID (1, 2, 3...)
+    const numericId = await getNextNumericLeadId();
+
     try {
       const newLead = await prisma.lead.create({
         data: {
+          id: numericId,
           name,
           email: email || "",
           phone: cleanPhone,
@@ -127,7 +131,7 @@ export async function POST(request: Request) {
     } catch (dbErr) {
       // Mock Fallback
       const mockNewContact = {
-        id: `lead_${Date.now()}`,
+        id: numericId,
         name,
         email: email || "",
         phone: cleanPhone,
@@ -155,8 +159,8 @@ export async function POST(request: Request) {
         counselorId: "usr_admin_vsb",
         createdAt: new Date().toISOString(),
         application: {
-          id: `app_${Date.now()}`,
-          leadId: `lead_${Date.now()}`,
+          id: `app_${numericId}`,
+          leadId: numericId,
           stage: "INQUIRY" as const,
           marks10th: Number(marks10th) || 0,
           marks12th: Number(marks12th) || 0,

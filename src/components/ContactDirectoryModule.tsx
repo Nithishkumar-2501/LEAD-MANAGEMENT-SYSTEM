@@ -906,13 +906,14 @@ export default function ContactDirectoryModule({
       const isVerified = Boolean(contact.phone && contact.phone.length >= 10);
       const getDisplayCandidateId = (c: typeof contact) => {
         if (c.counsellingAppNo) return c.counsellingAppNo;
-        const idStr = c.id || "";
+        const idStr = String(c.id || "").trim();
+        if (/^\d+$/.test(idStr)) return `Lead #${idStr}`;
         if (idStr.startsWith("lead_")) {
           const suffix = idStr.replace("lead_", "");
-          if (/^\d+$/.test(suffix)) return `VSB-${suffix}`;
-          return `VSB-${suffix.toUpperCase()}`;
+          if (/^\d+$/.test(suffix)) return `Lead #${suffix}`;
+          return `Lead #${suffix.toUpperCase()}`;
         }
-        return idStr.toUpperCase();
+        return idStr ? (idStr.startsWith("Lead #") ? idStr : `Lead #${idStr}`) : "";
       };
       const candidateId = getDisplayCandidateId(contact);
 
@@ -1244,7 +1245,11 @@ export default function ContactDirectoryModule({
     const matchesSearch = (() => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase().trim();
+      const numQuery = q.replace(/^(lead\s*#?|#)/i, "").trim();
       return (
+        (numQuery && String(c.id || "").toLowerCase() === numQuery) ||
+        String(c.id || "").toLowerCase().includes(numQuery || q) ||
+        (c.counsellingAppNo && c.counsellingAppNo.toLowerCase().includes(q)) ||
         c.name.toLowerCase().includes(q) ||
         c.email.toLowerCase().includes(q) ||
         c.phone.includes(q) ||
@@ -1607,16 +1612,23 @@ export default function ContactDirectoryModule({
       console.warn("Network notice on POST /api/contacts:", apiErr);
     }
 
-    // If API failed or was offline, construct standard lead object
+    // If API failed or was offline, construct standard lead object with next sequential numeric ID
     if (!createdLead) {
+      let maxNum = 0;
+      contacts.forEach((c) => {
+        const num = parseInt(String(c.id).replace(/\D/g, ""), 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      });
+      const nextNumId = String(maxNum > 0 ? maxNum + 1 : 1);
+
       createdLead = {
-        id: `lead_${Date.now()}`,
+        id: nextNumId,
         ...payload,
         source: finalSource,
         createdAt: new Date().toISOString(),
         application: {
-          id: `app_${Date.now()}`,
-          leadId: `lead_${Date.now()}`,
+          id: `app_${nextNumId}`,
+          leadId: nextNumId,
           stage: "INQUIRY",
           marks10th: 0,
           marks12th: 0,

@@ -981,9 +981,22 @@ export default function ApplicantDetailModal({
                   </div>
 
                   <div className="space-y-1 min-w-0">
-                    <h3 className="text-sm font-black text-slate-950 dark:text-slate-100 tracking-tight truncate uppercase">
-                      {formData.name}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm font-black text-slate-950 dark:text-slate-100 tracking-tight truncate uppercase">
+                        {formData.name}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50 text-[11px] font-black font-mono shadow-xs">
+                        {(() => {
+                          const idStr = String(formData.id || "");
+                          if (/^\d+$/.test(idStr)) return `Lead #${idStr}`;
+                          if (idStr.startsWith("lead_")) {
+                            const suffix = idStr.replace("lead_", "");
+                            if (/^\d+$/.test(suffix)) return `Lead #${suffix}`;
+                          }
+                          return `Lead #${idStr}`;
+                        })()}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1.5 text-[11px] text-slate-700 dark:text-slate-300 font-extrabold flex-wrap">
                       <span>Student State:</span>
                       {(() => {

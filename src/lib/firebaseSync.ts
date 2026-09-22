@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -51,13 +52,82 @@ function sanitizeForFirebase(obj: any): any {
   return cleanObj;
 }
 
+// Atomic Sequential Numeric Lead ID Generator (1, 2, 3...)
+export async function getNextNumericLeadId(): Promise<string> {
+  await ensureFirebaseAuth();
+  try {
+    const counterRef = doc(db, "counters", "leads");
+    const counterSnap = await withTimeout(getDoc(counterRef), 3000);
+    if (counterSnap && counterSnap.exists()) {
+      const data = counterSnap.data();
+      const current = typeof data.lastLeadId === "number" ? data.lastLeadId : 41;
+      const nextId = current + 1;
+      await setDoc(counterRef, {
+        lastLeadId: nextId,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+      return String(nextId);
+    }
+  } catch (err) {
+    console.warn("Error reading lead counter from Firestore:", err);
+  }
+
+  // Fallback: scan students collection to find max numeric ID
+  try {
+    const studentsSnap = await withTimeout(getDocs(collection(db, "students")), 3000);
+    let maxId = 0;
+    if (studentsSnap && !studentsSnap.empty) {
+      studentsSnap.forEach((docSnap) => {
+        const idNum = parseInt(docSnap.id, 10);
+        if (!isNaN(idNum) && idNum > maxId) {
+          maxId = idNum;
+        }
+      });
+    }
+    const nextId = maxId > 0 ? maxId + 1 : 1;
+    try {
+      await setDoc(doc(db, "counters", "leads"), {
+        lastLeadId: nextId,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (e) {}
+    return String(nextId);
+  } catch (e) {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("vsb_firebase_leads_cache");
+      if (cached) {
+        try {
+          const list = JSON.parse(cached);
+          if (Array.isArray(list)) {
+            let maxId = 0;
+            list.forEach((item: any) => {
+              const num = parseInt(String(item.id || ""), 10);
+              if (!isNaN(num) && num > maxId) maxId = num;
+            });
+            return String(maxId + 1);
+          }
+        } catch (err) {}
+      }
+    }
+    return String(Date.now() % 100000);
+  }
+}
+
 // Save or Update a Student in Firebase (Firestore + Realtime Database)
 export async function saveStudentToFirebase(student: StudentRecord): Promise<boolean> {
-  const studentId = student.id || `lead_${Date.now()}`;
+  // Check if student.id is already a clean sequential numeric string (e.g. "1", "2", "41")
+  let studentId = student.id ? String(student.id).trim() : "";
+  const isNumeric = /^\d+$/.test(studentId);
+
+  if (!isNumeric || !studentId) {
+    studentId = await getNextNumericLeadId();
+    student.id = studentId;
+  }
 
   // Ensure compulsory +91- formatting for student mobile and parent numbers
   const formattedStudent: StudentRecord = {
     ...student,
+    id: studentId,
     phone: formatPhoneWith91(student.phone),
     fatherMobile: student.fatherMobile ? formatPhoneWith91(student.fatherMobile) : student.fatherMobile,
     motherMobile: student.motherMobile ? formatPhoneWith91(student.motherMobile) : student.motherMobile,
@@ -66,6 +136,8 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
   const cleanPayload = sanitizeForFirebase({
     ...formattedStudent,
     id: studentId,
+    leadId: studentId,
+    numericId: Number(studentId),
     updatedAt: new Date().toISOString(),
   });
 
@@ -79,7 +151,7 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
     const docRef = doc(db, "students", studentId);
     await withTimeout(setDoc(docRef, cleanPayload, { merge: true }), 3000);
     firestoreSuccess = true;
-    console.log(`🔥 [Firebase Firestore] Saved student record with compulsory +91-: ${studentId} (${student.name})`);
+    console.log(`🔥 [Firebase Firestore] Saved student record #${studentId}: ${student.name}`);
   } catch (firestoreErr: any) {
     console.warn("Firestore write notice:", firestoreErr?.message || firestoreErr);
   }
@@ -87,7 +159,7 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
   // 2. Write to Firebase Realtime Database with strict timeout so it never hangs
   try {
     const rtdbRef = ref(rtdb, `students/${studentId}`);
-    await withTimeout(set(rtdbRef, cleanPayload), 1500);
+    await withTimeout(set(rtdbRef, cleanPayload), 1000);
   } catch (rtdbErr: any) {
     // Non-blocking: Realtime DB may not be provisioned in all projects
   }
@@ -98,7 +170,7 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
       const cached = localStorage.getItem("vsb_firebase_leads_cache");
       let currentList: any[] = cached ? JSON.parse(cached) : [];
       if (!Array.isArray(currentList)) currentList = [];
-      const idx = currentList.findIndex((item: any) => item.id === studentId);
+      const idx = currentList.findIndex((item: any) => String(item.id) === studentId);
       if (idx >= 0) {
         currentList[idx] = { ...currentList[idx], ...cleanPayload };
       } else {
