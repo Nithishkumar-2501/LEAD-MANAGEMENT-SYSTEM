@@ -74,6 +74,8 @@ export interface User {
 
 export interface Lead {
   id: string;
+  leadId?: string;
+  numericId?: number;
   name: string;
   email: string;
   phone: string;

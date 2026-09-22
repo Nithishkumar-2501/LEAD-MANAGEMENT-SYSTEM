@@ -53,10 +53,16 @@ export default function ApplicantsTable({
   };
 
   const filteredApplicants = applicants.filter((item) => {
+    const q = (searchQuery || "").toLowerCase().trim();
+    const numQ = q.replace(/^(lead\s*#?|#)/i, "").trim();
     const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.courseInterest.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchQuery.toLowerCase());
+      !q ||
+      (numQ && String(item.id || "").toLowerCase() === numQ) ||
+      String(item.id || "").toLowerCase().includes(numQ || q) ||
+      (item.name || "").toLowerCase().includes(q) ||
+      (item.courseInterest || "").toLowerCase().includes(q) ||
+      (item.email || "").toLowerCase().includes(q) ||
+      (item.phone || "").includes(q);
 
     const stateInfo = getStudentLeadState(item);
     const matchesStage = (() => {
@@ -64,7 +70,7 @@ export default function ApplicantsTable({
       if (selectedStage === "HOT") return stateInfo.state === "HOT";
       if (selectedStage === "WARM") return stateInfo.state === "WARM";
       if (selectedStage === "COLD") return stateInfo.state === "COLD";
-      return item.application.stage === selectedStage;
+      return (item.application?.stage || "INQUIRY") === selectedStage;
     })();
 
     return matchesSearch && matchesStage;
@@ -202,14 +208,16 @@ export default function ApplicantsTable({
                     <td className="py-3 px-3.5">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center shrink-0">
-                          {item.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+                          {((item.name || "S").trim().slice(0, 2)).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-xs">
-                            {item.name}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-xs">
+                              {item.name}
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50 text-[10px] font-mono font-bold">
+                              Lead #{item.id}
+                            </span>
                           </div>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             {item.email}
@@ -262,10 +270,10 @@ export default function ApplicantsTable({
                             )}
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-medium border inline-flex items-center gap-1 ${getStageBadge(
-                                item.application.stage
+                                (item.application?.stage || "INQUIRY") as AppStage
                               )}`}
                             >
-                              {item.application.stage.replace("_", " ")}
+                              {(item.application?.stage || "INQUIRY").replace("_", " ")}
                             </span>
                           </div>
                         );

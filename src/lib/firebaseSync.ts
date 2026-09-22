@@ -25,15 +25,10 @@ function withTimeout<T>(promise: Promise<T>, ms = 3000): Promise<T | null> {
   ]);
 }
 
-// Ensure client is authenticated with Firebase Auth to pass Firestore/RTDB security rules
+// Ensure client is authenticated with Firebase Auth if available
 export async function ensureFirebaseAuth() {
-  try {
-    if (!auth.currentUser) {
-      await withTimeout(signInAnonymously(auth), 1500);
-    }
-  } catch (err: any) {
-    // Non-blocking: Firestore security rules may allow public read/write
-  }
+  // Direct access is enabled for Firestore in this project. Anonymous auth is disabled by project admin.
+  return;
 }
 
 // Remove undefined values recursively (Firestore rejects undefined)
@@ -231,17 +226,27 @@ export async function updateStudentInFirebase(
 // Fetch all students directly from Firebase Firestore
 export async function fetchStudentsFromFirestore(): Promise<StudentRecord[]> {
   try {
-    await ensureFirebaseAuth();
     const querySnapshot = await getDocs(collection(db, "students"));
     const list: StudentRecord[] = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data() as StudentRecord;
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data() as StudentRecord;
+      const docId = docSnap.id;
       list.push({
         ...data,
+        id: docId,
+        leadId: docId,
+        numericId: /^\d+$/.test(docId) ? Number(docId) : (data as any).numericId,
         phone: formatPhoneWith91(data.phone),
         fatherMobile: data.fatherMobile ? formatPhoneWith91(data.fatherMobile) : data.fatherMobile,
         motherMobile: data.motherMobile ? formatPhoneWith91(data.motherMobile) : data.motherMobile,
       });
+    });
+    // Sort numerically 1, 2, 3...
+    list.sort((a, b) => {
+      const numA = parseInt(a.id, 10);
+      const numB = parseInt(b.id, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return String(a.id).localeCompare(String(b.id));
     });
     return list;
   } catch (err: any) {
@@ -279,39 +284,45 @@ export async function fetchStudentsFromRTDB(): Promise<StudentRecord[]> {
 export function subscribeToFirebaseStudents(
   callback: (students: StudentRecord[]) => void
 ): () => void {
-  let unsubscribe: (() => void) | null = null;
-  ensureFirebaseAuth().then(() => {
-    try {
-      const studentsCol = collection(db, "students");
-      unsubscribe = onSnapshot(
-        studentsCol,
-        (snapshot) => {
-          const liveList: StudentRecord[] = [];
-          snapshot.forEach((doc) => {
-            const data = doc.data() as StudentRecord;
-            liveList.push({
-              ...data,
-              phone: formatPhoneWith91(data.phone),
-              fatherMobile: data.fatherMobile ? formatPhoneWith91(data.fatherMobile) : data.fatherMobile,
-              motherMobile: data.motherMobile ? formatPhoneWith91(data.motherMobile) : data.motherMobile,
-            });
+  try {
+    const studentsCol = collection(db, "students");
+    const unsubscribe = onSnapshot(
+      studentsCol,
+      (snapshot) => {
+        const liveList: StudentRecord[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data() as StudentRecord;
+          const docId = docSnap.id;
+          liveList.push({
+            ...data,
+            id: docId,
+            leadId: docId,
+            numericId: /^\d+$/.test(docId) ? Number(docId) : (data as any).numericId,
+            phone: formatPhoneWith91(data.phone),
+            fatherMobile: data.fatherMobile ? formatPhoneWith91(data.fatherMobile) : data.fatherMobile,
+            motherMobile: data.motherMobile ? formatPhoneWith91(data.motherMobile) : data.motherMobile,
           });
-          // Exclude any tombstoned deleted leads
-          const filteredLive = liveList.filter((s) => !isLeadDeleted(s.id));
-          callback(filteredLive);
-        },
-        (error) => {
-          console.warn("Real-time snapshot observer notice:", error.message);
-        }
-      );
-    } catch (e) {
-      console.warn("Snapshot setup error:", e);
-    }
-  });
-
-  return () => {
-    if (unsubscribe) unsubscribe();
-  };
+        });
+        // Sort numerically 1, 2, 3...
+        liveList.sort((a, b) => {
+          const numA = parseInt(a.id, 10);
+          const numB = parseInt(b.id, 10);
+          if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+          return String(a.id).localeCompare(String(b.id));
+        });
+        // Exclude any tombstoned deleted leads
+        const filteredLive = liveList.filter((s) => !isLeadDeleted(s.id));
+        callback(filteredLive);
+      },
+      (error) => {
+        console.warn("Real-time snapshot observer notice:", error.message);
+      }
+    );
+    return unsubscribe;
+  } catch (e) {
+    console.warn("Snapshot setup error:", e);
+    return () => {};
+  }
 }
 
 // Check if a lead has been permanently deleted

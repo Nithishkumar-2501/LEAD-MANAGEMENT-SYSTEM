@@ -88,13 +88,17 @@ export default function DashboardPage() {
     setIsNoraModalOpen(true);
   };
 
-  // Synchronize activeTab from URL search params (e.g. ?tab=USER_DASHBOARD)
+  // Synchronize activeTab from URL search params (e.g. ?tab=CONTACT_DIRECTORY or ?tab=CONTACTS)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get("tab");
       if (tabParam) {
-        setActiveTab(tabParam as ActiveTab);
+        if (tabParam === "CONTACT_DIRECTORY" || tabParam === "LEADS") {
+          setActiveTab("CONTACTS");
+        } else {
+          setActiveTab(tabParam as ActiveTab);
+        }
       }
     }
   }, []);
@@ -122,13 +126,13 @@ export default function DashboardPage() {
 
   // Reusable Firebase and Database sync helper
   const applyFirebaseLeads = useCallback((fbLeads: StudentRecord[]) => {
-    if (!fbLeads) return;
+    if (!fbLeads || fbLeads.length === 0) return;
 
     const activeFbLeads = fbLeads.filter((fb) => fb.id && !isLeadDeleted(fb.id));
 
     setApplicants((prev) => {
       const map = new Map<string, Lead & { application: Application }>();
-      // Only keep existing leads that are NOT deleted
+      // Keep existing leads that are NOT deleted
       prev.filter((p) => !isLeadDeleted(p.id)).forEach((item) => map.set(item.id, item));
 
       activeFbLeads.forEach((fb) => {
@@ -138,20 +142,34 @@ export default function DashboardPage() {
             id: `app_${fb.id}`,
             leadId: fb.id,
             stage: "INQUIRY",
-            marks10th: (fb as any).marks10th || existing?.application?.marks10th || 0,
-            marks12th: (fb as any).marks12th || existing?.application?.marks12th || 0,
+            marks10th: (fb as any).marks10th || existing?.application?.marks10th || 85,
+            marks12th: (fb as any).marks12th || existing?.application?.marks12th || 85,
             paymentStatus: "PENDING",
           };
           const app = (fb.application || existing?.application || defaultApp) as Application;
           map.set(fb.id, {
             ...existing,
             ...fb,
+            id: fb.id,
+            leadId: fb.id,
+            campus: fb.campus || "KARUR",
+            courseInterest: fb.courseInterest || "B.E. Computer Science and Engineering",
+            status: fb.status || "NEW",
             application: app,
           } as Lead & { application: Application });
         }
       });
 
       const merged = Array.from(map.values());
+      // Sort numerically (1, 2, 3...)
+      merged.sort((a, b) => {
+        const numA = parseInt(a.id, 10);
+        const numB = parseInt(b.id, 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        if (!isNaN(numA)) return -1;
+        if (!isNaN(numB)) return 1;
+        return a.name.localeCompare(b.name);
+      });
       try {
         localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
       } catch (err) {}
@@ -257,26 +275,26 @@ export default function DashboardPage() {
   }, [isAuthenticated, applyFirebaseLeads]);
 
   // Dynamic calculations based on selected campus
-  const activeCampusLeads = applicants.filter((item) => selectedCampus === "ALL" || item.campus === selectedCampus);
-  const totalLeadCount = activeCampusLeads.length > 0 ? activeCampusLeads.length : 28;
+  const activeCampusLeads = applicants.filter((item) => selectedCampus === "ALL" || !item.campus || item.campus === selectedCampus);
+  const totalLeadCount = activeCampusLeads.length > 0 ? activeCampusLeads.length : applicants.length;
 
   const dynamicMetrics: SummaryMetrics = {
     totalLeads: totalLeadCount,
     leadsTrend: 14.2,
-    applicationsVerified: activeCampusLeads.filter(a => a.status === "ADMITTED" || a.status === "IN_REVIEW").length || 10,
+    applicationsVerified: activeCampusLeads.filter(a => a.status === "ADMITTED" || a.status === "IN_REVIEW").length || Math.min(10, totalLeadCount),
     docsVerifiedTrend: 8.5,
-    seatsFilled: activeCampusLeads.filter(a => a.status === "ADMITTED").length || 5,
+    seatsFilled: activeCampusLeads.filter(a => a.status === "ADMITTED").length || Math.min(5, totalLeadCount),
     seatsFilledTrend: 18.0,
-    totalRevenue: (activeCampusLeads.filter(a => a.status === "ADMITTED").length || 5) * 95000,
+    totalRevenue: (activeCampusLeads.filter(a => a.status === "ADMITTED").length || Math.min(5, totalLeadCount)) * 95000,
     revenueTrend: 12.4,
   };
 
   const dynamicStatusCounts: LeadStatusCounts = {
-    NEW: activeCampusLeads.filter(c => c.status === "NEW").length || 11,
-    CONTACTED: activeCampusLeads.filter(c => c.status === "CONTACTED").length || 6,
-    IN_REVIEW: activeCampusLeads.filter(c => c.status === "IN_REVIEW").length || 5,
-    ADMITTED: activeCampusLeads.filter(c => c.status === "ADMITTED").length || 5,
-    REJECTED: activeCampusLeads.filter(c => c.status === "REJECTED").length || 1,
+    NEW: activeCampusLeads.filter(c => c.status === "NEW").length,
+    CONTACTED: activeCampusLeads.filter(c => c.status === "CONTACTED").length,
+    IN_REVIEW: activeCampusLeads.filter(c => c.status === "IN_REVIEW").length,
+    ADMITTED: activeCampusLeads.filter(c => c.status === "ADMITTED").length,
+    REJECTED: activeCampusLeads.filter(c => c.status === "REJECTED").length,
   };
 
   // Filter tasks dynamically based on campus of the associated lead and teacher ownership
@@ -553,7 +571,7 @@ export default function DashboardPage() {
         return false;
       }
     }
-    if (selectedCampus !== "ALL" && item.campus !== selectedCampus) {
+    if (selectedCampus !== "ALL" && item.campus && item.campus !== selectedCampus) {
       return false;
     }
     if (selectedStageFilter && item.status !== selectedStageFilter) {
@@ -682,7 +700,7 @@ export default function DashboardPage() {
         )}
 
         {/* LEAD MANAGER MODULE (MERGED CONTACT DIRECTORY & STUDENT APPLICATIONS) */}
-        {(activeTab === "CONTACTS" || activeTab === "STUDENTS") && (
+        {(activeTab === "CONTACTS" || activeTab === "STUDENTS" || (activeTab as string) === "CONTACT_DIRECTORY" || (activeTab as string) === "LEADS") && (
           <ContactDirectoryModule
             initialContacts={filteredApplicants}
             selectedCampus={selectedCampus}
