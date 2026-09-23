@@ -459,12 +459,19 @@ export default function SocialMediaPlatformModule({
   }, [firebaseStudents]);
 
   const filteredLeads = useMemo(() => {
+    const q = (searchQuery || "").toLowerCase();
     return socialLeads.filter((item) => {
+      const name = (item.name || "").toLowerCase();
+      const email = (item.email || "").toLowerCase();
+      const campaign = (item.campaign || "").toLowerCase();
+      const phone = (item.phone || "").toLowerCase();
+
       const matchesSearch =
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.campaign.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.phone.includes(searchQuery);
+        !q ||
+        name.includes(q) ||
+        email.includes(q) ||
+        campaign.includes(q) ||
+        phone.includes(q);
 
       const matchesChannel =
         selectedSubTab === "ALL" ||

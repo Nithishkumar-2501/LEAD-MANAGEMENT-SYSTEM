@@ -138,16 +138,27 @@ export default function Sidebar({
   const matchingApplicants =
     trimmedQuery.length > 0 && visibleApplicants
       ? visibleApplicants
-          .filter(
-            (app) =>
-              app.name.toLowerCase().includes(trimmedQuery) ||
-              app.email.toLowerCase().includes(trimmedQuery) ||
-              app.phone.toLowerCase().includes(trimmedQuery) ||
-              (app.courseInterest && app.courseInterest.toLowerCase().includes(trimmedQuery)) ||
-              (app.campus && app.campus.toLowerCase().includes(trimmedQuery)) ||
-              (app.district && app.district.toLowerCase().includes(trimmedQuery)) ||
-              (app.school && app.school.toLowerCase().includes(trimmedQuery))
-          )
+          .filter((app) => {
+            const name = (app.name || "").toLowerCase();
+            const email = (app.email || "").toLowerCase();
+            const phone = (app.phone || "").toLowerCase();
+            const course = (app.courseInterest || "").toLowerCase();
+            const campus = (app.campus || "").toLowerCase();
+            const district = (app.district || "").toLowerCase();
+            const school = (app.school || "").toLowerCase();
+            const leadId = (app.id || "").toLowerCase();
+
+            return (
+              name.includes(trimmedQuery) ||
+              email.includes(trimmedQuery) ||
+              phone.includes(trimmedQuery) ||
+              course.includes(trimmedQuery) ||
+              campus.includes(trimmedQuery) ||
+              district.includes(trimmedQuery) ||
+              school.includes(trimmedQuery) ||
+              leadId.includes(trimmedQuery)
+            );
+          })
           .slice(0, 5)
       : [];
 

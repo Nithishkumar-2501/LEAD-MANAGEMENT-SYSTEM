@@ -75,16 +75,28 @@ export default function Header({
     trimmedQuery.length > 0 && visibleApplicants
       ? visibleApplicants
           .filter((item) => {
+            const name = (item.name || "").toLowerCase();
+            const email = (item.email || "").toLowerCase();
+            const phone = (item.phone || "").toLowerCase();
+            const course = (item.courseInterest || "").toLowerCase();
+            const campus = (item.campus || "").toLowerCase();
+            const school = (item.school || "").toLowerCase();
+            const district = (item.district || "").toLowerCase();
+            const stage = (item.application?.stage || "").toLowerCase();
+            const status = (item.status || "").toLowerCase();
+            const leadId = (item.id || "").toLowerCase();
+
             return (
-              item.name.toLowerCase().includes(trimmedQuery) ||
-              item.email.toLowerCase().includes(trimmedQuery) ||
-              item.phone.toLowerCase().includes(trimmedQuery) ||
-              (item.courseInterest && item.courseInterest.toLowerCase().includes(trimmedQuery)) ||
-              (item.campus && item.campus.toLowerCase().includes(trimmedQuery)) ||
-              (item.school && item.school.toLowerCase().includes(trimmedQuery)) ||
-              (item.district && item.district.toLowerCase().includes(trimmedQuery)) ||
-              (item.application?.stage && item.application.stage.toLowerCase().includes(trimmedQuery)) ||
-              (item.status && item.status.toLowerCase().includes(trimmedQuery))
+              name.includes(trimmedQuery) ||
+              email.includes(trimmedQuery) ||
+              phone.includes(trimmedQuery) ||
+              course.includes(trimmedQuery) ||
+              campus.includes(trimmedQuery) ||
+              school.includes(trimmedQuery) ||
+              district.includes(trimmedQuery) ||
+              stage.includes(trimmedQuery) ||
+              status.includes(trimmedQuery) ||
+              leadId.includes(trimmedQuery)
             );
           })
           .slice(0, 6)

@@ -152,12 +152,13 @@ export default function ApplicationManagerModule({
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchName = app.registeredName.toLowerCase().includes(q);
-        const matchAppNo = app.applicationNo.toLowerCase().includes(q);
-        const matchEmail = app.registeredEmail.toLowerCase().includes(q);
-        const matchMobile = app.registeredMobile.toLowerCase().includes(q);
-        const matchForm = app.formName.toLowerCase().includes(q);
-        if (!matchName && !matchAppNo && !matchEmail && !matchMobile && !matchForm) {
+        const matchName = (app.registeredName || "").toLowerCase().includes(q);
+        const matchAppNo = (app.applicationNo || "").toLowerCase().includes(q);
+        const matchEmail = (app.registeredEmail || "").toLowerCase().includes(q);
+        const matchMobile = (app.registeredMobile || "").toLowerCase().includes(q);
+        const matchForm = (app.formName || "").toLowerCase().includes(q);
+        const matchId = (app.id || "").toLowerCase().includes(q);
+        if (!matchName && !matchAppNo && !matchEmail && !matchMobile && !matchForm && !matchId) {
           return false;
         }
       }

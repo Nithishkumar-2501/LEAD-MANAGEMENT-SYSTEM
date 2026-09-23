@@ -445,12 +445,12 @@ export default function TeacherStudentAuditModal({
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const matchesName = s.studentName.toLowerCase().includes(q);
-        const matchesPhone = s.phone.includes(q);
-        const matchesDistrict = s.district.toLowerCase().includes(q);
-        const matchesSchool = s.school.toLowerCase().includes(q);
-        const matchesNumber = s.leadNumber.toString().includes(q);
-        const matchesCourse = s.courseInterest.toLowerCase().includes(q);
+        const matchesName = (s.studentName || "").toLowerCase().includes(q);
+        const matchesPhone = (s.phone || "").toLowerCase().includes(q);
+        const matchesDistrict = (s.district || "").toLowerCase().includes(q);
+        const matchesSchool = (s.school || "").toLowerCase().includes(q);
+        const matchesNumber = (s.leadNumber ? s.leadNumber.toString() : "").includes(q);
+        const matchesCourse = (s.courseInterest || "").toLowerCase().includes(q);
         return matchesName || matchesPhone || matchesDistrict || matchesSchool || matchesNumber || matchesCourse;
       }
 

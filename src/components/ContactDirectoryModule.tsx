@@ -1246,19 +1246,30 @@ export default function ContactDirectoryModule({
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase().trim();
       const numQuery = q.replace(/^(lead\s*#?|#)/i, "").trim();
+
+      const name = (c.name || "").toLowerCase();
+      const email = (c.email || "").toLowerCase();
+      const phone = (c.phone || "").toLowerCase();
+      const course = (c.courseInterest || "").toLowerCase();
+      const school = (c.school || "").toLowerCase();
+      const district = (c.district || "").toLowerCase();
+      const address = (c.address || "").toLowerCase();
+      const appNo = (c.counsellingAppNo || "").toLowerCase();
+      const leadId = String(c.id || "").toLowerCase();
+
       return (
-        (numQuery && String(c.id || "").toLowerCase() === numQuery) ||
-        String(c.id || "").toLowerCase().includes(numQuery || q) ||
-        (c.counsellingAppNo && c.counsellingAppNo.toLowerCase().includes(q)) ||
-        c.name.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q) ||
-        c.phone.includes(q) ||
-        (c.courseInterest && c.courseInterest.toLowerCase().includes(q)) ||
-        (c.school && c.school.toLowerCase().includes(q)) ||
-        (c.district && c.district.toLowerCase().includes(q)) ||
-        (c.address && c.address.toLowerCase().includes(q)) ||
-        stateInfo.detailedLabel.toLowerCase().includes(q) ||
-        stateInfo.state.toLowerCase() === q
+        (numQuery && leadId === numQuery) ||
+        leadId.includes(numQuery || q) ||
+        appNo.includes(q) ||
+        name.includes(q) ||
+        email.includes(q) ||
+        phone.includes(q) ||
+        course.includes(q) ||
+        school.includes(q) ||
+        district.includes(q) ||
+        address.includes(q) ||
+        (stateInfo.detailedLabel || "").toLowerCase().includes(q) ||
+        (stateInfo.state || "").toLowerCase() === q
       );
     })();
 
