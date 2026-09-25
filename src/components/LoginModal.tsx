@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, type Variants } from "motion/react";
-import { Eye, EyeOff, AlertCircle, Info, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Info, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 import { loginWithRealtimeAuth } from "@/lib/authService";
 
 
@@ -597,8 +597,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               </span>
             </motion.div>
 
-            {/* Login Button - High Contrast Bold White Pill with Black Text */}
-            <motion.div variants={itemVariants} style={{ marginTop: "8px" }}>
+            {/* Login Button - High Contrast Bold White Pill with Black Text & Arrow */}
+            <motion.div variants={itemVariants} style={{ marginTop: "10px" }}>
               <button
                 type="submit"
                 disabled={loading}
@@ -607,20 +607,56 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                   borderRadius: "9999px",
                   backgroundColor: "#ffffff",
                   color: "#000000",
-                  padding: "14px 20px",
+                  padding: "14px 24px",
                   fontSize: "14px",
                   fontWeight: 700,
                   border: "none",
-                  boxShadow: "0 4px 25px rgba(255, 255, 255, 0.15)",
+                  boxShadow: "0 4px 25px rgba(255, 255, 255, 0.18)",
                   cursor: loading ? "not-allowed" : "pointer",
-                  opacity: loading ? 0.6 : 1,
+                  opacity: loading ? 0.75 : 1,
                   transition: "all 0.2s ease",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  gap: "10px",
                 }}
               >
-                {loading ? "Authenticating..." : "Login"}
+                {loading ? (
+                  <>
+                    <Loader2
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        color: "#000000",
+                        animation: "spin 1s linear infinite",
+                      }}
+                    />
+                    <span style={{ color: "#000000", fontWeight: 700, fontSize: "14px" }}>
+                      Authenticating...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span
+                      style={{
+                        color: "#000000",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
+                      Login
+                    </span>
+                    <ArrowRight
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        color: "#000000",
+                        strokeWidth: 2.5,
+                      }}
+                    />
+                  </>
+                )}
               </button>
             </motion.div>
           </form>

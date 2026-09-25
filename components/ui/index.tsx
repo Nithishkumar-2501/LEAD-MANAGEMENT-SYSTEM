@@ -114,13 +114,15 @@ export default function Auth11() {
               />
             </motion.div>
 
-            {/* Sign Up Button */}
+            {/* Login Button */}
             <motion.div variants={itemVariants} className="mt-4">
               <button
                 type="submit"
-                className="w-full rounded-full bg-[#EAEAEA] py-3.5 text-sm font-medium text-black shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-transform hover:bg-white active:scale-[0.96]"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3.5 text-sm font-bold text-black shadow-[0_4px_25px_rgba(255,255,255,0.18)] transition-all hover:bg-neutral-100 active:scale-[0.97]"
+                style={{ color: "#000000" }}
               >
-                Create account
+                <span style={{ color: "#000000" }}>Login</span>
+                <span aria-hidden="true" style={{ color: "#000000", fontSize: "16px", fontWeight: "bold" }}>&rarr;</span>
               </button>
             </motion.div>
           </form>
