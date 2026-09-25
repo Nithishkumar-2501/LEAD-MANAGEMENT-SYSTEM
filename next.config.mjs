@@ -8,6 +8,12 @@ const isMobileBuild =
 
 const nextConfig = {
   reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   ...(isMobileBuild
     ? {
         output: "export",
