@@ -1,0 +1,43 @@
+:root {
+  --live: #10b981;
+  --score: #0284c7;
+  --trend: #10b981;
+  --bionis-blue: #0284c7;
+  --chart-period: #0284c7;
+  --chart-period-bg: rgba(2, 132, 199, 0.1);
+  --chart-warn: #f59e0b;
+  --chart-warn-bg: rgba(245, 158, 11, 0.12);
+  --prediction-warn: #f59e0b;
+  --prediction-danger: #ef4444;
+  --vital-good: #10b981;
+  --insight-prediction: #6366f1;
+  --insight-vitals: #f43f5e;
+  --insight-actions: #0d9488;
+  --metric-heart: #f43f5e;
+  --metric-steps: #0284c7;
+  --metric-sleep: #6366f1;
+  --metric-recovery: #10b981;
+  --metric-vital: #0d9488;
+  --chart-steps: #06b6d4;
+  --chart-sleep: #6366f1;
+  --chart-sleep-fill: rgba(99, 102, 241, 0.4);
+  --chart-recovery: #8b5cf6;
+  --chart-grid: rgba(148, 163, 184, 0.2);
+  --chart-axis: #64748b;
+  --chart-tooltip-bg: #0f172a;
+  --heatmap-low: rgba(2, 132, 199, 0.25);
+  --heatmap-med: #0284c7;
+  --heatmap-high: #38bdf8;
+  --promo-gradient-from: rgba(99, 102, 241, 0.15);
+  --promo-gradient-to: rgba(14, 165, 233, 0.05);
+}
+
+.dark {
+  --chart-grid: rgba(255, 255, 255, 0.08);
+  --chart-axis: #94a3b8;
+  --chart-tooltip-bg: #0b0f19;
+}
+
+.bionis-dashboard {
+  font-family: inherit;
+}
