@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic } from "lucide-react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import MetricCards from "@/components/MetricCards";
@@ -26,6 +26,8 @@ import EchoDashboardView from "@/components/EchoDashboardView";
 import AiIntelligenceModule from "@/components/AiIntelligenceModule";
 import ApplicationManagerModule from "@/components/ApplicationManagerModule";
 import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
+import VoiceAccessModal from "@/components/VoiceAccessModal";
+import TeacherStudentAuditModal from "@/components/TeacherStudentAuditModal";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
@@ -50,6 +52,7 @@ import {
   Application,
   Task,
   Payment,
+  Teacher,
   SummaryMetrics,
   LeadStatusCounts,
   ActiveTab,
@@ -61,6 +64,7 @@ import {
   MOCK_ADMIN_USER,
   MOCK_TODAYS_TASKS,
   MOCK_PAYMENTS,
+  MOCK_TEACHERS,
 } from "@/lib/mockData";
 
 export default function DashboardPage() {
@@ -82,11 +86,31 @@ export default function DashboardPage() {
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
   const [isNoraModalOpen, setIsNoraModalOpen] = useState(false);
   const [noraInitialQuery, setNoraInitialQuery] = useState("");
+  const [isVoiceAccessModalOpen, setIsVoiceAccessModalOpen] = useState(false);
+  const [voiceInitialQuery, setVoiceInitialQuery] = useState("");
+  const [selectedTeacherForAudit, setSelectedTeacherForAudit] = useState<Teacher | null>(null);
 
   const handleOpenNora = (query?: string) => {
     setNoraInitialQuery(query || "");
     setIsNoraModalOpen(true);
   };
+
+  const handleOpenVoiceAccess = (query?: string) => {
+    setVoiceInitialQuery(query || "");
+    setIsVoiceAccessModalOpen(true);
+  };
+
+  // Global hotkey: Ctrl+M or Alt+V opens Voice Access Assistant anywhere
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey && e.key.toLowerCase() === "m") || (e.altKey && e.key.toLowerCase() === "v")) {
+        e.preventDefault();
+        setIsVoiceAccessModalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Synchronize activeTab from URL search params (e.g. ?tab=CONTACT_DIRECTORY or ?tab=CONTACTS)
   useEffect(() => {
@@ -607,6 +631,7 @@ export default function DashboardPage() {
         applicants={applicants}
         onSelectApplicant={handleSelectApplicant}
         onOpenNoraAi={() => handleOpenNora()}
+        onOpenVoiceAccessModal={handleOpenVoiceAccess}
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}
@@ -631,6 +656,7 @@ export default function DashboardPage() {
           applicants={applicants}
           onSelectApplicant={handleSelectApplicant}
           onOpenNoraAi={handleOpenNora}
+          onOpenVoiceAccessModal={handleOpenVoiceAccess}
         />
 
         {/* Main Content Area */}
@@ -833,6 +859,60 @@ export default function DashboardPage() {
         currentUserRole={currentUserRole}
         initialQuery={noraInitialQuery}
       />
+
+      {/* VOICE ACCESS MODEL (STUDENT LEADS & FACULTY VOICE SEARCH) */}
+      <VoiceAccessModal
+        isOpen={isVoiceAccessModalOpen}
+        onClose={() => setIsVoiceAccessModalOpen(false)}
+        applicants={applicants}
+        teachers={MOCK_TEACHERS}
+        onSelectApplicant={(student) => {
+          setIsVoiceAccessModalOpen(false);
+          handleSelectApplicant(student);
+        }}
+        onSelectTeacher={(teacher) => {
+          setIsVoiceAccessModalOpen(false);
+          setSelectedTeacherForAudit(teacher);
+        }}
+        onTriggerToast={triggerToast}
+        initialQuery={voiceInitialQuery}
+      />
+
+      {/* TEACHER STUDENT AUDIT MODAL FROM VOICE ACCESS */}
+      {selectedTeacherForAudit && (
+        <TeacherStudentAuditModal
+          teacher={selectedTeacherForAudit}
+          isOpen={!!selectedTeacherForAudit}
+          onClose={() => setSelectedTeacherForAudit(null)}
+          currentUserRole={currentUserRole}
+          onTriggerToast={triggerToast}
+          allLeads={applicants}
+          teachersList={MOCK_TEACHERS}
+        />
+      )}
+
+      {/* GLOBAL FLOATING VOICE ACCESS ASSISTANT TRIGGER */}
+      <div className="fixed bottom-6 right-6 z-40 hidden sm:flex items-center">
+        <button
+          type="button"
+          onClick={() => handleOpenVoiceAccess()}
+          className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 border border-white/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
+          title="Voice Access Model (Ctrl+M) — Search student leads & faculty by voice"
+          aria-label="Voice Access Model"
+        >
+          <div className="relative flex items-center justify-center">
+            <Mic className="w-4 h-4 animate-pulse" />
+            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+          </div>
+          <span className="tracking-wide">Voice Access</span>
+          <span className="px-1.5 py-0.5 rounded bg-black/20 text-[10px] font-mono opacity-80 group-hover:opacity-100">
+            Ctrl+M
+          </span>
+        </button>
+      </div>
 
       {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">

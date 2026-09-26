@@ -17,6 +17,7 @@ import {
   X,
   Lock,
   ShieldCheck,
+  Mic,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -42,6 +43,7 @@ interface HeaderProps {
   applicants?: (Lead & { application: Application })[];
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
   onOpenNoraAi?: (initialQuery?: string) => void;
+  onOpenVoiceAccessModal?: (initialQuery?: string) => void;
 }
 
 export default function Header({
@@ -63,6 +65,7 @@ export default function Header({
   applicants = [],
   onSelectApplicant,
   onOpenNoraAi,
+  onOpenVoiceAccessModal,
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -257,6 +260,7 @@ export default function Header({
                 onSearchChange(transcript);
                 setShowSearchResults(true);
               }}
+              onOpenVoiceModal={() => onOpenVoiceAccessModal?.()}
             />
 
             {/* Dropdown Search Results Overlay */}
@@ -334,6 +338,17 @@ export default function Header({
             <span className="text-xs whitespace-nowrap">Ask Nora AI</span>
           </button>
 
+          {/* Voice Access Model Button */}
+          <button
+            type="button"
+            onClick={() => onOpenVoiceAccessModal?.()}
+            className="press-spring flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs shadow-xs shadow-orange-500/20 transition-all duration-150 cursor-pointer shrink-0"
+            title="Voice Access Model (Find students and faculty by speech)"
+          >
+            <Mic className="w-3.5 h-3.5" />
+            <span className="text-xs whitespace-nowrap hidden sm:inline">Voice Access</span>
+          </button>
+
           {/* Search Icon — mobile/tablet */}
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
@@ -389,6 +404,7 @@ export default function Header({
               onSearchChange(transcript);
               setShowSearchResults(true);
             }}
+            onOpenVoiceModal={() => onOpenVoiceAccessModal?.()}
           />
 
           {/* Mobile Dropdown Search Results Overlay */}
