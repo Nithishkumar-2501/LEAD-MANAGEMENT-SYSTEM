@@ -22,22 +22,11 @@ import {
   currentUser,
   notifications,
 } from '../../data';
+import VoiceSearchBar from '@/components/VoiceSearchBar';
 import { cn } from '@/lib/utils';
 
 export function DashboardTopbar() {
   const [searchQuery, setSearchQuery] = useState('');
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 px-4 md:px-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md">
@@ -47,17 +36,15 @@ export function DashboardTopbar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <InputGroup className="hidden sm:flex h-9 w-64">
-          <InputGroupAddon>
-            <SearchIcon className="size-3.5" />
-          </InputGroupAddon>
-          <InputGroupInput
-            ref={searchInputRef}
-            placeholder="Search applicants, cutoffs... (Ctrl+K)"
+        <div className="hidden sm:block w-72">
+          <VoiceSearchBar
+            id="topbar-executive-search"
+            placeholder="Search applicants, cutoffs..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(val) => setSearchQuery(val)}
+            onClear={() => setSearchQuery('')}
           />
-        </InputGroup>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

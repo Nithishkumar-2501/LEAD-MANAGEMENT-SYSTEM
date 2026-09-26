@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
+import VoiceSearchBar from "@/components/VoiceSearchBar";
 import { NoiseBackground } from "@/components/ui/noise-background";
 import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
 
@@ -563,37 +564,20 @@ export default function Sidebar({
           {/* Search For Menu & Applications Input Bar */}
           {!isCollapsed && (
             <div className="space-y-2">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                <input
-                  type="text"
-                  value={menuSearchQuery}
-                  onChange={(e) => setMenuSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && matchingApplicants.length > 0) {
-                      handleSelectApplication(matchingApplicants[0]);
-                    }
-                  }}
-                  placeholder="Search Menu or Application..."
-                  className={`w-full ${
-                    isLight
-                      ? "bg-slate-100 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-sky-500"
-                      : "bg-slate-100 dark:bg-slate-900/90 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-sky-500 dark:focus:border-indigo-500"
-                  } border rounded-lg pl-8 pr-7 py-1.5 text-xs focus:outline-none shadow-inner`}
-                />
-                {menuSearchQuery && (
-                  <button
-                    onClick={() => setMenuSearchQuery("")}
-                    className={`absolute right-2 top-2 ${
-                      isLight
-                        ? "text-slate-400 hover:text-slate-700"
-                        : "text-slate-400 hover:text-slate-700 dark:hover:text-white"
-                    }`}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
+              <VoiceSearchBar
+                id="sidebar-menu-search"
+                value={menuSearchQuery}
+                onChange={(val) => setMenuSearchQuery(val)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && matchingApplicants.length > 0) {
+                    handleSelectApplication(matchingApplicants[0]);
+                  }
+                }}
+                placeholder="Search Menu or Application..."
+                onClear={() => setMenuSearchQuery("")}
+                onVoiceSearchEnd={(transcript) => setMenuSearchQuery(transcript)}
+                className="w-full"
+              />
 
               {/* CANDIDATE APPLICATIONS SEARCH RESULTS */}
               {trimmedQuery.length > 0 && (
