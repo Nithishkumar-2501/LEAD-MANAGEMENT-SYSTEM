@@ -2897,7 +2897,7 @@ export default function ContactDirectoryModule({
                       </th>
                     );
                   })}
-                  <th className="p-3 font-extrabold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap text-center w-28">
+                  <th className="p-3 font-extrabold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap text-center sticky right-0 z-20 min-w-[200px] w-52 bg-slate-200 dark:bg-slate-950 border-l border-slate-300 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                     Actions
                   </th>
                 </tr>
@@ -3047,7 +3047,7 @@ export default function ContactDirectoryModule({
                       </td>
                     );
                   })}
-                  <td className="p-1.5 text-center text-[10px] text-slate-400 font-bold">
+                  <td className="p-1.5 text-center text-[10px] text-slate-400 font-bold sticky right-0 z-20 min-w-[200px] w-52 bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                     -
                   </td>
                 </tr>
@@ -3081,8 +3081,10 @@ export default function ContactDirectoryModule({
                           />
                         </td>
                       ))}
-                      <td className="p-3 text-center">
+                      <td className="p-3 text-center sticky right-0 z-10 min-w-[200px] w-52 bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                         <div className="flex items-center justify-center gap-1.5 opacity-60">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
                           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
                           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
                           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
@@ -3125,9 +3127,12 @@ export default function ContactDirectoryModule({
                       </td>
                     ))}
 
-                    {/* Actions Column with Delete Icon matching Image 1 */}
-                    <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1.5">
+                    {/* Actions Column with Sticky Pinning to Right */}
+                    <td
+                      className="p-3 text-center sticky right-0 z-10 min-w-[200px] w-52 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-center gap-1.5 min-w-[185px]">
                         <Tooltip text={`Send Official Email to ${contact.name}`} position="left">
                           <button
                             onClick={() =>
@@ -3149,7 +3154,7 @@ export default function ContactDirectoryModule({
                                 status: contact.status,
                               })
                             }
-                            className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Send Email to ${contact.name}`}
                           >
                             <Mail className="w-3.5 h-3.5" />
@@ -3161,7 +3166,7 @@ export default function ContactDirectoryModule({
                               onActionTrigger("WHATSAPP", contact.name);
                               redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
                             }}
-                            className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`WhatsApp Chat with ${contact.name}`}
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
@@ -3173,7 +3178,7 @@ export default function ContactDirectoryModule({
                               onActionTrigger("SMS", contact.name);
                               redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
                             }}
-                            className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Send Native SMS to ${contact.name}`}
                           >
                             <Send className="w-3.5 h-3.5" />
@@ -3182,7 +3187,7 @@ export default function ContactDirectoryModule({
                         <Tooltip text={`Edit ${contact.name}`} position="left">
                           <button
                             onClick={() => setEditingContact(contact)}
-                            className="p-1.5 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 hover:bg-sky-200 border border-sky-200 dark:border-sky-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 hover:bg-sky-200 border border-sky-200 dark:border-sky-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Edit ${contact.name}`}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -3191,7 +3196,7 @@ export default function ContactDirectoryModule({
                         <Tooltip text={`Delete ${contact.name}`} position="left">
                           <button
                             onClick={() => handleDeleteContact(contact.id, contact.name)}
-                            className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 hover:bg-rose-200 border border-rose-200 dark:border-rose-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 hover:bg-rose-200 border border-rose-200 dark:border-rose-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Delete ${contact.name}`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -3207,9 +3212,9 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* TABLE FOOTER CONTROLS BAR WITH FULL PAGINATION matching Image 1 */}
-          <div className="bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200 dark:border-white/10 p-3.5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-700 dark:text-slate-300 font-sans shadow-inner">
+          <div className="bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200 dark:border-white/10 p-3.5 flex flex-col lg:flex-row items-center justify-between gap-3.5 text-xs text-slate-700 dark:text-slate-300 font-sans shadow-inner">
             {/* Left: Classic View & Record Range Indicator */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
               <button
                 onClick={() => setDirectoryViewMode("GRID")}
                 className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-white font-bold shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all text-xs"
@@ -3222,7 +3227,7 @@ export default function ContactDirectoryModule({
             </div>
 
             {/* Center: Full Page Navigation Pills */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
               <button
                 disabled={safeCurrentPage === 1}
                 onClick={() => setCurrentPage(1)}
@@ -3292,7 +3297,7 @@ export default function ContactDirectoryModule({
             </div>
 
             {/* Right: Show Rows Selector & Voice Access matching Image 1 */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
               <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-white">
                 <span className="text-xs text-slate-500 font-medium">Show Rows:</span>
                 <select

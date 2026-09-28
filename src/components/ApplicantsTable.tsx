@@ -421,7 +421,7 @@ export default function ApplicantsTable({
                 </TableHead>
 
                 {/* Quick Actions */}
-                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right pr-4">
+                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center sticky right-0 z-20 min-w-[200px] w-52 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm border-l border-slate-200 dark:border-slate-800 shadow-[-6px_0_12px_rgba(0,0,0,0.06)] dark:shadow-[-6px_0_12px_rgba(0,0,0,0.3)]">
                   Quick Actions
                 </TableHead>
               </TableRow>
@@ -538,14 +538,17 @@ export default function ApplicantsTable({
                       </TableCell>
 
                       {/* Quick Actions Circular Buttons matching Image 2 */}
-                      <TableCell className="py-3 px-3.5 text-right pr-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1.5">
+                      <TableCell
+                        className="py-3 px-3.5 text-center sticky right-0 z-10 min-w-[200px] w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-slate-50/95 dark:group-hover:bg-slate-800/95 transition-colors border-l border-slate-200 dark:border-slate-800 shadow-[-6px_0_12px_rgba(0,0,0,0.06)] dark:shadow-[-6px_0_12px_rgba(0,0,0,0.3)] whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-center gap-1.5 min-w-[185px]">
                           {/* View Detail */}
                           <Tooltip text={`View ${item.name} Details`}>
                             <button
                               type="button"
                               onClick={() => onSelectApplicant(item)}
-                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer"
+                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </button>
@@ -560,7 +563,7 @@ export default function ApplicantsTable({
                                 onActionTrigger("CALL", item.name);
                                 redirectToDialPad(item.phone);
                               }}
-                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer"
+                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             >
                               <Phone className="w-3.5 h-3.5" />
                             </a>
@@ -589,7 +592,7 @@ export default function ApplicantsTable({
                                   status: item.status,
                                 })
                               }
-                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer"
+                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             >
                               <Mail className="w-3.5 h-3.5" />
                             </button>
@@ -604,7 +607,7 @@ export default function ApplicantsTable({
                                 onActionTrigger("WHATSAPP", item.name);
                                 redirectToWhatsApp(item.phone, getDefaultAdmissionWhatsAppText(item));
                               }}
-                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer"
+                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
                             </button>
@@ -621,7 +624,7 @@ export default function ApplicantsTable({
                                   fetch(`/api/contacts?id=${item.id}`, { method: "DELETE" });
                                 }
                               }}
-                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer"
+                              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                               title={`Delete ${item.name}`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
