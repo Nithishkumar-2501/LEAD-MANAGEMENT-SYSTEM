@@ -892,29 +892,6 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* GLOBAL FLOATING VOICE ACCESS ASSISTANT TRIGGER */}
-      <div className="fixed bottom-6 right-6 z-40 hidden sm:flex items-center">
-        <button
-          type="button"
-          onClick={() => handleOpenVoiceAccess()}
-          className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 border border-white/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
-          title="Voice Access Model (Ctrl+M) — Search student leads & faculty by voice"
-          aria-label="Voice Access Model"
-        >
-          <div className="relative flex items-center justify-center">
-            <Mic className="w-4 h-4 animate-pulse" />
-            <span className="absolute -top-1 -right-1 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-            </span>
-          </div>
-          <span className="tracking-wide">Voice Access</span>
-          <span className="px-1.5 py-0.5 rounded bg-black/20 text-[10px] font-mono opacity-80 group-hover:opacity-100">
-            Ctrl+M
-          </span>
-        </button>
-      </div>
-
       {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
         <button

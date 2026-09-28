@@ -3309,21 +3309,6 @@ export default function ContactDirectoryModule({
                   <option value={100}>100 rows</option>
                 </select>
               </div>
-
-              {onOpenVoiceAccessModal && (
-                <button
-                  type="button"
-                  onClick={() => onOpenVoiceAccessModal()}
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 active:scale-95 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Open Voice Access Model (Ctrl+M)"
-                >
-                  <Mic className="w-3.5 h-3.5 text-white" />
-                  <span>Voice Access</span>
-                  <span className="bg-black/20 text-white text-[10px] px-1 py-0.2 rounded font-mono font-normal">
-                    Ctrl+M
-                  </span>
-                </button>
-              )}
             </div>
           </div>
         </div>
