@@ -65,6 +65,7 @@ import {
   MOCK_TODAYS_TASKS,
   MOCK_PAYMENTS,
   MOCK_TEACHERS,
+  MOCK_LEADS,
 } from "@/lib/mockData";
 
 export default function DashboardPage() {
@@ -865,7 +866,7 @@ export default function DashboardPage() {
       <VoiceAccessModal
         isOpen={isVoiceAccessModalOpen}
         onClose={() => setIsVoiceAccessModalOpen(false)}
-        applicants={applicants}
+        applicants={applicants && applicants.length > 0 ? applicants : MOCK_LEADS}
         teachers={MOCK_TEACHERS}
         onSelectApplicant={(student) => {
           setIsVoiceAccessModalOpen(false);

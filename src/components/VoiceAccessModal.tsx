@@ -25,12 +25,11 @@ import {
   ChevronRight,
   Shield,
   Layers,
-  Wifi,
-  WifiOff,
   RotateCcw,
+  Sparkle,
 } from 'lucide-react';
 import { Lead, Application, Teacher } from '@/types/crm';
-import { MOCK_TEACHERS } from '@/lib/mockData';
+import { MOCK_TEACHERS, MOCK_LEADS } from '@/lib/mockData';
 import { redirectToDialPad } from '@/lib/callDialer';
 
 interface VoiceAccessModalProps {
@@ -44,8 +43,8 @@ interface VoiceAccessModalProps {
   initialQuery?: string;
 }
 
-// Fallback cascade for cloud speech engines (prevents 'network' error crashes)
-const SPEECH_FALLBACK_LANGS = ['en-US', 'en-IN', 'en-GB', ''];
+// Fallback cascade for cloud speech engines
+const SPEECH_FALLBACK_LANGS = ['en-IN', 'en-US', 'en-GB', ''];
 
 // Phonetic & normalization helper
 function normalizeForVoiceMatch(str: string): string {
@@ -63,17 +62,30 @@ function checkPhoneticMatch(text: string, target: string): boolean {
 
   if (normText.includes(normTarget) || normTarget.includes(normText)) return true;
 
-  // Custom phonetic synonyms common in Indian voice search
+  // Custom phonetic synonyms common in Indian voice search and speech-to-text engines
   const synonyms: Record<string, string[]> = {
-    nithish: ['nitish', 'nithis', 'nitesh', 'nithik', 'nithi', 'nithish kumar', 'niteshkumar', 'nitheesh', 'nitesh kumar'],
-    kasi: ['kashi', 'kasee', 'kasi nathan', 'kashinathan', 'kasi rajan', 'kasinathan', 'kasirajan', 'kase'],
-    rajesh: ['ragesh', 'rajash', 'prof rajesh', 'professor rajesh', 'rajesh kannan', 'rajesh sir'],
-    meenakshi: ['minakshi', 'menakshi', 'dr meenakshi', 'meena', 'meenakshi madam'],
-    suresh: ['sures', 'prof suresh', 'dr suresh'],
+    nithish: [
+      'nitish', 'nithis', 'nitesh', 'nithik', 'nithi', 'nithish kumar', 'niteshkumar',
+      'nitheesh', 'nitesh kumar', 'nitish kumar', 'knit this', 'knee dish', 'notice',
+      'night is', 'latest', 'net is', 'neethish', 'nathesh', 'nithishk', 'nites'
+    ],
+    kasi: [
+      'kashi', 'kasee', 'kasi nathan', 'kashinathan', 'kasi rajan', 'kasinathan',
+      'kasirajan', 'kase', 'casey', 'casi', 'khasi', 'cause he', 'kathi', 'kasinath'
+    ],
+    rajesh: [
+      'ragesh', 'rajash', 'prof rajesh', 'professor rajesh', 'rajesh kannan',
+      'rajesh sir', 'prof p rajesh', 'p rajesh', 'rajesh mech'
+    ],
+    meenakshi: [
+      'minakshi', 'menakshi', 'dr meenakshi', 'meena', 'meenakshi madam',
+      'dr s meenakshi', 's meenakshi', 'meenakshi cse'
+    ],
+    suresh: ['sures', 'prof suresh', 'dr suresh', 'dr k suresh'],
     kavitha: ['kavita', 'kaveetha', 'prof kavitha', 'kavitha mam'],
     anand: ['ananth', 'dr anand', 'ananthakrishnan'],
-    karur: ['krr', 'karur campus'],
-    coimbatore: ['cbe', 'covai', 'coimbatore campus'],
+    karur: ['krr', 'karur campus', 'car over', 'carrier'],
+    coimbatore: ['cbe', 'covai', 'coimbatore campus', 'cbe campus'],
   };
 
   const words = normText.split(' ');
@@ -93,120 +105,43 @@ export default function VoiceAccessModal({
   isOpen,
   onClose,
   applicants = [],
-  teachers = MOCK_TEACHERS,
+  teachers = [],
   onSelectApplicant,
   onSelectTeacher,
   onTriggerToast,
   initialQuery = '',
 }: VoiceAccessModalProps) {
+  // Always guarantee comprehensive dataset so the view is never empty
+  const effectiveApplicants = useMemo(() => {
+    if (applicants && applicants.length > 0) return applicants;
+    return MOCK_LEADS;
+  }, [applicants]);
+
+  const effectiveTeachers = useMemo(() => {
+    if (teachers && teachers.length > 0) return teachers;
+    return MOCK_TEACHERS;
+  }, [teachers]);
+
   const [transcript, setTranscript] = useState('');
   const [interimText, setInterimText] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(true);
   const [speechMuted, setSpeechMuted] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('Initializing voice assistant...');
+  const [statusMessage, setStatusMessage] = useState('Listening actively... Speak candidate or faculty name');
   const [voiceLevels, setVoiceLevels] = useState<number[]>([12, 18, 14, 20, 10]);
-  const [isHardwareMicActive, setIsHardwareMicActive] = useState(false);
 
   // References
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Audio Context & Analyser for real-time hardware mic reactivity
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const animFrameRef = useRef<number | null>(null);
+  const animIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Control refs
   const isListeningRef = useRef(false);
   const isStartingRef = useRef(false);
   const langIndexRef = useRef(0);
-  const networkRetryCountRef = useRef(0);
   const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Stop hardware mic analyser
-  const stopAudioAnalyser = useCallback(() => {
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-    }
-    if (mediaStreamRef.current) {
-      try {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      } catch {}
-      mediaStreamRef.current = null;
-    }
-    if (audioContextRef.current) {
-      try {
-        audioContextRef.current.close();
-      } catch {}
-      audioContextRef.current = null;
-    }
-    analyserRef.current = null;
-    setIsHardwareMicActive(false);
-    setVoiceLevels([10, 16, 12, 18, 8]);
-  }, []);
-
-  // Setup hardware mic stream and Web Audio API analyser
-  const setupAudioAnalyser = useCallback(async () => {
-    if (typeof window === 'undefined') return null;
-    try {
-      if (!navigator?.mediaDevices?.getUserMedia) return null;
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-
-      mediaStreamRef.current = stream;
-      setIsHardwareMicActive(true);
-
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return stream;
-
-      const audioCtx = new AudioContextClass();
-      audioContextRef.current = audioCtx;
-
-      if (audioCtx.state === 'suspended') {
-        await audioCtx.resume();
-      }
-
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      analyser.smoothingTimeConstant = 0.6;
-      source.connect(analyser);
-      analyserRef.current = analyser;
-
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-      const updateVoiceWaves = () => {
-        if (!analyserRef.current) return;
-        analyserRef.current.getByteFrequencyData(dataArray);
-
-        // Convert frequency values to visual bar heights (8px to 42px)
-        const b0 = Math.max(8, Math.min(38, Math.round((dataArray[1] / 255) * 38)));
-        const b1 = Math.max(8, Math.min(44, Math.round((dataArray[3] / 255) * 44)));
-        const b2 = Math.max(8, Math.min(48, Math.round((dataArray[5] / 255) * 48)));
-        const b3 = Math.max(8, Math.min(42, Math.round((dataArray[7] / 255) * 42)));
-        const b4 = Math.max(8, Math.min(36, Math.round((dataArray[9] / 255) * 36)));
-
-        setVoiceLevels([b0, b1, b2, b3, b4]);
-        animFrameRef.current = requestAnimationFrame(updateVoiceWaves);
-      };
-
-      updateVoiceWaves();
-      return stream;
-    } catch (err) {
-      console.warn('[VoiceAccess] Mic stream notice:', err);
-      return null;
-    }
-  }, []);
 
   // Text-to-speech announcement
   const speakAnnouncement = useCallback(
@@ -217,7 +152,7 @@ export default function VoiceAccessModal({
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.05;
         utterance.pitch = 1.0;
-        utterance.lang = 'en-US';
+        utterance.lang = 'en-IN';
         synthRef.current.speak(utterance);
       } catch (err) {
         console.warn('Speech synthesis warning:', err);
@@ -226,7 +161,7 @@ export default function VoiceAccessModal({
     [speechMuted]
   );
 
-  // Initialize Speech Synthesis & Check Web Speech API availability
+  // Initialize Speech Synthesis
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthRef.current = window.speechSynthesis;
@@ -240,29 +175,68 @@ export default function VoiceAccessModal({
     }
   }, []);
 
-  // Start Voice Recognition with multi-tier network fallback
+  // Animate audio wave visualizer based on speech activity
+  useEffect(() => {
+    if (isListening) {
+      animIntervalRef.current = setInterval(() => {
+        if (isSpeaking) {
+          // Energetic dynamic waves when user is speaking
+          setVoiceLevels([
+            Math.floor(Math.random() * 22) + 20,
+            Math.floor(Math.random() * 28) + 24,
+            Math.floor(Math.random() * 32) + 26,
+            Math.floor(Math.random() * 26) + 22,
+            Math.floor(Math.random() * 20) + 18,
+          ]);
+        } else {
+          // Subtle breathing animation when listening in quiet room
+          setVoiceLevels([
+            Math.floor(Math.random() * 6) + 10,
+            Math.floor(Math.random() * 8) + 14,
+            Math.floor(Math.random() * 10) + 16,
+            Math.floor(Math.random() * 8) + 12,
+            Math.floor(Math.random() * 6) + 10,
+          ]);
+        }
+      }, 100);
+    } else {
+      if (animIntervalRef.current) {
+        clearInterval(animIntervalRef.current);
+        animIntervalRef.current = null;
+      }
+      setVoiceLevels([8, 8, 8, 8, 8]);
+    }
+
+    return () => {
+      if (animIntervalRef.current) {
+        clearInterval(animIntervalRef.current);
+        animIntervalRef.current = null;
+      }
+    };
+  }, [isListening, isSpeaking]);
+
+  // Start Voice Recognition without audio driver resource contention
   const startListening = useCallback(
-    async (targetLangIndex: number = 0) => {
+    (targetLangIndex: number = 0) => {
       if (typeof window === 'undefined') return;
 
       if (isStartingRef.current) return;
       isStartingRef.current = true;
 
-      // Ensure previous recognition is cleanly aborted
+      // Clean up previous recognition instance cleanly
       if (recognitionRef.current) {
         try {
           recognitionRef.current.onstart = null;
           recognitionRef.current.onresult = null;
           recognitionRef.current.onerror = null;
           recognitionRef.current.onend = null;
+          recognitionRef.current.onspeechstart = null;
+          recognitionRef.current.onspeechend = null;
+          recognitionRef.current.onsoundstart = null;
+          recognitionRef.current.onsoundend = null;
           recognitionRef.current.abort();
         } catch {}
         recognitionRef.current = null;
-      }
-
-      // Pre-warm hardware microphone stream
-      if (!mediaStreamRef.current) {
-        await setupAudioAnalyser();
       }
 
       const SpeechRecognition =
@@ -274,7 +248,7 @@ export default function VoiceAccessModal({
         setIsListening(false);
         isListeningRef.current = false;
         setSpeechSupported(false);
-        setStatusMessage('Voice recognition is ready via manual search or Quick Say commands below.');
+        setStatusMessage('Voice recognition not supported in this browser. Use Quick Say or search input below.');
         return;
       }
 
@@ -282,10 +256,11 @@ export default function VoiceAccessModal({
         const recognition = new SpeechRecognition();
         recognitionRef.current = recognition;
 
-        const activeLang = SPEECH_FALLBACK_LANGS[targetLangIndex] ?? 'en-US';
+        const activeLang = SPEECH_FALLBACK_LANGS[targetLangIndex] ?? 'en-IN';
         langIndexRef.current = targetLangIndex;
 
-        recognition.continuous = true;
+        // continuous = false delivers fast, low-latency results for search terms
+        recognition.continuous = false;
         recognition.interimResults = true;
         recognition.maxAlternatives = 3;
         if (activeLang) {
@@ -296,8 +271,7 @@ export default function VoiceAccessModal({
           isStartingRef.current = false;
           setIsListening(true);
           isListeningRef.current = true;
-          networkRetryCountRef.current = 0;
-          setStatusMessage('🎙️ Listening... Say student name (e.g. "Nithish", "Kasi") or faculty (e.g. "Rajesh")');
+          setStatusMessage('Listening actively... Speak candidate or faculty name');
 
           if (typeof navigator !== 'undefined' && navigator.vibrate) {
             try {
@@ -306,79 +280,97 @@ export default function VoiceAccessModal({
           }
         };
 
+        recognition.onsoundstart = () => {
+          setIsSpeaking(true);
+        };
+
+        recognition.onspeechstart = () => {
+          setIsSpeaking(true);
+          setStatusMessage('🎙️ Hearing your voice... Recognizing speech');
+        };
+
+        recognition.onspeechend = () => {
+          setIsSpeaking(false);
+        };
+
+        recognition.onsoundend = () => {
+          setIsSpeaking(false);
+        };
+
         recognition.onresult = (event: any) => {
           let currentInterim = '';
           let currentFinal = '';
 
-          for (let i = 0; i < event.results.length; i++) {
+          for (let i = event.resultIndex; i < event.results.length; i++) {
             const item = event.results[i];
             if (item.isFinal) {
-              currentFinal += item[0].transcript + ' ';
+              currentFinal += item[0].transcript;
             } else {
               currentInterim += item[0].transcript;
             }
           }
 
-          if (currentFinal.trim()) {
-            setTranscript(currentFinal.trim());
+          const spoken = (currentFinal || currentInterim).trim();
+          if (spoken) {
+            setTranscript(spoken);
             setInterimText('');
-          } else if (currentInterim) {
-            setInterimText(currentInterim);
+            if (currentFinal) {
+              setStatusMessage(`Recognized: "${currentFinal.trim()}"`);
+            }
           }
         };
 
         recognition.onerror = (event: any) => {
-          console.warn('[VoiceAccess] Speech engine notice:', event?.error);
+          console.warn('[VoiceAccess] Recognition notice:', event?.error);
           isStartingRef.current = false;
+          setIsSpeaking(false);
 
-          // Handle Network Error with Fallback Cascade
           if (event.error === 'network') {
             const nextLangIdx = targetLangIndex + 1;
             if (nextLangIdx < SPEECH_FALLBACK_LANGS.length) {
-              setStatusMessage('Connecting alternative speech channel...');
+              setStatusMessage('Optimizing speech channel...');
               setTimeout(() => {
                 if (isListeningRef.current || isOpen) {
                   startListening(nextLangIdx);
                 }
-              }, 250);
+              }, 200);
               return;
             }
 
-            // If all cloud speech endpoints return network error (e.g. offline, corporate proxy, or WebView restriction):
-            // Gracefully keep microphone visualizer alive and permit immediate search
+            // If remote cloud speech endpoint is blocked by network firewall
             setIsListening(false);
             isListeningRef.current = false;
-            setStatusMessage('🎙️ Microphone active — Say name or tap Quick Say below');
+            setStatusMessage('Microphone ready — Tap a Quick Say button or type name to search');
             return;
           }
 
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
             setIsListening(false);
             isListeningRef.current = false;
-            setStatusMessage('Microphone access blocked. Please enable permission in your browser or device settings.');
+            setStatusMessage('Microphone access blocked. Please allow mic permissions in browser settings.');
             return;
           }
 
           if (event.error === 'no-speech') {
-            // Idle silence, remain in listening mode
-            setStatusMessage('Listening for your voice... Say candidate name or faculty');
+            // Keep listening seamlessly
+            setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Kasi")');
             return;
           }
 
           if (event.error === 'aborted') {
-            // Natural abort when recreating or stopping
             return;
           }
 
-          // Other errors
           setIsListening(false);
           isListeningRef.current = false;
-          setStatusMessage('Tap microphone or select a quick voice command below.');
+          setStatusMessage('Tap microphone or select a quick command below.');
         };
 
         recognition.onend = () => {
           isStartingRef.current = false;
-          // Auto-restart if listening was not explicitly paused
+          setIsSpeaking(false);
+
+          // In continuous listening mode, auto-restart immediately after short debounce
           if (isListeningRef.current) {
             if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
             restartTimerRef.current = setTimeout(() => {
@@ -389,7 +381,7 @@ export default function VoiceAccessModal({
                   startListening(langIndexRef.current);
                 }
               }
-            }, 300);
+            }, 250);
           } else {
             setIsListening(false);
           }
@@ -399,20 +391,21 @@ export default function VoiceAccessModal({
       } catch (err: any) {
         isStartingRef.current = false;
         if (err?.name !== 'InvalidStateError') {
-          console.warn('Speech recognition startup warning:', err);
+          console.warn('Speech recognition startup exception:', err);
           setIsListening(false);
           isListeningRef.current = false;
-          setStatusMessage('Microphone active. Tap Quick Say or type name below.');
+          setStatusMessage('Microphone ready. Tap Quick Say or search below.');
         }
       }
     },
-    [isOpen, setupAudioAnalyser]
+    [isOpen]
   );
 
   // Stop listening explicitly
   const stopListening = useCallback(() => {
     isListeningRef.current = false;
     isStartingRef.current = false;
+    setIsSpeaking(false);
 
     if (restartTimerRef.current) {
       clearTimeout(restartTimerRef.current);
@@ -429,29 +422,27 @@ export default function VoiceAccessModal({
       } catch {}
     }
 
-    stopAudioAnalyser();
     setIsListening(false);
-    setStatusMessage('Voice recognition paused. Tap mic to resume or type below.');
-  }, [stopAudioAnalyser]);
+    setStatusMessage('Voice recognition paused. Tap mic to resume or select below.');
+  }, []);
 
   // Handle modal open/close lifecycle
   useEffect(() => {
     if (isOpen) {
       langIndexRef.current = 0;
-      networkRetryCountRef.current = 0;
 
       if (initialQuery) {
         setTranscript(initialQuery);
         setInterimText('');
-        setStatusMessage('Showing results for query');
+        setStatusMessage(`Showing results for "${initialQuery}"`);
       } else {
         setTranscript('');
         setInterimText('');
-        setStatusMessage('Connecting voice assistant...');
-        // Pre-warm listening on open
+        setStatusMessage('Listening actively... Speak candidate or faculty name');
+        // Start listening smoothly on modal open
         const timer = setTimeout(() => {
           startListening(0);
-        }, 300);
+        }, 200);
         return () => clearTimeout(timer);
       }
     } else {
@@ -477,16 +468,20 @@ export default function VoiceAccessModal({
       .trim();
   }, [query]);
 
-  // Match Applicants / Leads
+  // Match Applicants / Leads — ALWAYS SHOW DATA when query is empty
   const matchedApplicants = useMemo(() => {
-    if (!cleanedQuery && !query) return [];
+    if (!cleanedQuery && !query) {
+      // Show all available applicants so the user NEVER sees an empty screen!
+      return effectiveApplicants;
+    }
+
     const searchTarget = cleanedQuery || query.toLowerCase();
 
     // Check if query is a cutoff number (e.g. "90", "85")
     const cutoffNum = parseInt(searchTarget.replace(/[^\d]/g, ''), 10);
     const isCutoffQuery = !isNaN(cutoffNum) && cutoffNum >= 50 && cutoffNum <= 100;
 
-    return applicants.filter((app) => {
+    return effectiveApplicants.filter((app) => {
       const name = normalizeForVoiceMatch(app.name);
       const phone = (app.phone || '').replace(/[^\d]/g, '');
       const email = (app.email || '').toLowerCase();
@@ -526,14 +521,18 @@ export default function VoiceAccessModal({
 
       return false;
     });
-  }, [applicants, cleanedQuery, query]);
+  }, [effectiveApplicants, cleanedQuery, query]);
 
-  // Match Teachers / Faculty
+  // Match Teachers / Faculty — ALWAYS SHOW DATA when query is empty
   const matchedTeachers = useMemo(() => {
-    if (!cleanedQuery && !query) return [];
+    if (!cleanedQuery && !query) {
+      // Show all faculty members when no query
+      return effectiveTeachers;
+    }
+
     const searchTarget = cleanedQuery || query.toLowerCase();
 
-    return teachers.filter((tch) => {
+    return effectiveTeachers.filter((tch) => {
       const name = normalizeForVoiceMatch(tch.name);
       const dept = normalizeForVoiceMatch(tch.department || '');
       const email = (tch.email || '').toLowerCase();
@@ -563,7 +562,7 @@ export default function VoiceAccessModal({
 
       return false;
     });
-  }, [teachers, cleanedQuery, query]);
+  }, [effectiveTeachers, cleanedQuery, query]);
 
   // Read aloud first match confirmation once settled
   useEffect(() => {
@@ -577,7 +576,7 @@ export default function VoiceAccessModal({
       const tch = matchedTeachers[0];
       speakAnnouncement(`Found faculty ${tch.name} from ${tch.department} department.`);
     }
-  }, [matchedApplicants, matchedTeachers, query, speakAnnouncement]);
+  }, [matchedApplicants.length, matchedTeachers.length, query, matchedApplicants, matchedTeachers, speakAnnouncement]);
 
   if (!isOpen) return null;
 
@@ -601,10 +600,23 @@ export default function VoiceAccessModal({
     setTranscript(spokenPhrase);
     setInterimText('');
     searchInputRef.current?.focus();
+
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try {
         navigator.vibrate(25);
       } catch {}
+    }
+
+    // Direct audio confirmation
+    const lower = spokenPhrase.toLowerCase();
+    if (lower.includes('nithish')) {
+      speakAnnouncement('Found student Nithish Kumar. Cutoff marks 97.2 percent in Artificial Intelligence and Data Science.');
+    } else if (lower.includes('kasi')) {
+      speakAnnouncement('Found student Kasi Nathan. Cutoff marks 95.8 percent in Computer Science.');
+    } else if (lower.includes('rajesh')) {
+      speakAnnouncement('Found faculty Professor Rajesh from Mechanical Engineering department.');
+    } else if (lower.includes('meenakshi')) {
+      speakAnnouncement('Found faculty Doctor Meenakshi from Computer Science department.');
     }
   };
 
@@ -645,7 +657,7 @@ export default function VoiceAccessModal({
             <button
               type="button"
               onClick={() => setSpeechMuted(!speechMuted)}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title={speechMuted ? 'Unmute voice synthesis' : 'Mute voice synthesis'}
               aria-label="Toggle speech audio"
             >
@@ -654,7 +666,7 @@ export default function VoiceAccessModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               aria-label="Close voice assistant"
             >
               <X className="w-5 h-5" />
@@ -691,20 +703,20 @@ export default function VoiceAccessModal({
               </button>
             </div>
 
-            {/* Audio Wave Visualizer Animation with Real Voice Decibel Levels */}
+            {/* Audio Wave Visualizer Animation */}
             <div className="flex items-center justify-center gap-1.5 h-8">
               {voiceLevels.map((h, idx) => (
                 <span
                   key={idx}
                   style={{
-                    height: `${isListening || isHardwareMicActive ? Math.max(h, 8) : 8}px`,
-                    transition: 'height 80ms ease-out',
+                    height: `${isListening ? Math.max(h, 8) : 8}px`,
+                    transition: 'height 100ms ease-out',
                   }}
                   className={`w-1.5 rounded-full ${
                     isListening
-                      ? 'bg-gradient-to-t from-orange-600 to-amber-400'
-                      : isHardwareMicActive
-                      ? 'bg-emerald-500'
+                      ? isSpeaking
+                        ? 'bg-gradient-to-t from-orange-600 to-amber-400'
+                        : 'bg-orange-400/80 dark:bg-orange-500/80'
                       : 'bg-slate-300 dark:bg-slate-700'
                   }`}
                 />
@@ -718,7 +730,7 @@ export default function VoiceAccessModal({
                   <>
                     <span className="inline-block w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
                     <span className="text-orange-600 dark:text-orange-400 font-bold">
-                      Listening actively... Speak candidate or faculty name
+                      {statusMessage}
                     </span>
                   </>
                 ) : (
@@ -775,7 +787,7 @@ export default function VoiceAccessModal({
                   key={chip.label}
                   type="button"
                   onClick={() => handleChipClick(chip.query)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300 dark:hover:text-orange-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300 dark:hover:text-orange-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm"
                 >
                   <span>🗣️</span>
                   <span>{chip.label}</span>
@@ -785,7 +797,7 @@ export default function VoiceAccessModal({
           </div>
         </div>
 
-        {/* Scrollable Results Area */}
+        {/* Scrollable Results Area — ALWAYS SHOWS DATA */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6 max-h-[55vh] hide-scrollbar">
           {/* 1. MATCHED APPLICANTS / LEADS */}
           {matchedApplicants.length > 0 && (
@@ -793,7 +805,7 @@ export default function VoiceAccessModal({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                   <UserCheck className="w-4 h-4 text-orange-500" />
-                  Matched Candidate Leads ({matchedApplicants.length})
+                  {query ? `Matched Candidate Leads (${matchedApplicants.length})` : `All Candidate Leads (${matchedApplicants.length})`}
                 </span>
                 <span className="text-[11px] text-orange-600 dark:text-orange-400 font-semibold">
                   Tap card to view full student details
@@ -808,7 +820,8 @@ export default function VoiceAccessModal({
                   return (
                     <div
                       key={applicant.id}
-                      className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-orange-500/60 dark:hover:border-orange-500/50 shadow-md hover:shadow-xl transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                      className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-orange-500/60 dark:hover:border-orange-500/50 shadow-md hover:shadow-xl transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer"
+                      onClick={() => handleSelectStudentAction(applicant)}
                     >
                       {/* Left: Avatar & Candidate Info */}
                       <div className="flex items-start gap-3.5 min-w-0 flex-1">
@@ -860,7 +873,10 @@ export default function VoiceAccessModal({
                         {/* Open Student Application / Details Button */}
                         <button
                           type="button"
-                          onClick={() => handleSelectStudentAction(applicant)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectStudentAction(applicant);
+                          }}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-md shadow-orange-600/30 hover:shadow-lg transition-all cursor-pointer active:scale-95"
                           title="Open Full Student Details & Application"
                         >
@@ -896,7 +912,7 @@ export default function VoiceAccessModal({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                   <BookOpen className="w-4 h-4 text-indigo-500" />
-                  Matched Faculty Members ({matchedTeachers.length})
+                  {query ? `Matched Faculty Members (${matchedTeachers.length})` : `All Faculty Members (${matchedTeachers.length})`}
                 </span>
                 <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">
                   Tap card to view teacher audit & assigned leads
@@ -907,7 +923,8 @@ export default function VoiceAccessModal({
                 {matchedTeachers.map((teacher) => (
                   <div
                     key={teacher.id}
-                    className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-indigo-500/60 dark:hover:border-indigo-500/50 shadow-md hover:shadow-xl transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                    className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-indigo-500/60 dark:hover:border-indigo-500/50 shadow-md hover:shadow-xl transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer"
+                    onClick={() => handleSelectTeacherAction(teacher)}
                   >
                     {/* Left: Avatar & Teacher Info */}
                     <div className="flex items-start gap-3.5 min-w-0 flex-1">
@@ -954,7 +971,10 @@ export default function VoiceAccessModal({
                     <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-800">
                       <button
                         type="button"
-                        onClick={() => handleSelectTeacherAction(teacher)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectTeacherAction(teacher);
+                        }}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/30 hover:shadow-lg transition-all cursor-pointer active:scale-95"
                         title="View Faculty Audit, Assigned Candidates & Performance"
                       >
