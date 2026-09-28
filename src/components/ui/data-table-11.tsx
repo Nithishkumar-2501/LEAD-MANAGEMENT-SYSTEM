@@ -307,7 +307,7 @@ const DataTable11 = () => {
           <Select value={pageSize.toString()} onValueChange={changePageSize}>
             <SelectTrigger
               id='results-per-page'
-              className='h-9 w-fit whitespace-nowrap border-border/60'
+              className='h-8 w-fit text-xs font-semibold whitespace-nowrap border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg px-2.5 shadow-xs'
               aria-label='Results per page'
             >
               <SelectValue placeholder='Select number of results' />

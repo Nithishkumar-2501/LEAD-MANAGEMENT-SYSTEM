@@ -662,7 +662,7 @@ export default function ApplicantsTable({
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-8 w-8 disabled:pointer-events-none disabled:opacity-40"
+                  className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:pointer-events-none disabled:opacity-40 shadow-xs"
                   onClick={() => setPageIndex((current) => Math.max(current - 1, 0))}
                   disabled={safePageIndex === 0}
                   aria-label="Go to previous page"
@@ -686,10 +686,10 @@ export default function ApplicantsTable({
                       size="icon"
                       variant={isActive ? "default" : "ghost"}
                       className={cn(
-                        "h-8 w-8 font-bold text-xs",
+                        "h-8 w-8 rounded-lg font-bold text-xs transition-all shadow-xs",
                         isActive
-                          ? "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
-                          : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          ? "bg-blue-600 hover:bg-blue-700 text-white font-extrabold ring-2 ring-blue-400/30"
+                          : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                       )}
                       onClick={() => setPageIndex(page - 1)}
                       aria-current={isActive ? "page" : undefined}
@@ -710,7 +710,7 @@ export default function ApplicantsTable({
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-8 w-8 disabled:pointer-events-none disabled:opacity-40"
+                  className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:pointer-events-none disabled:opacity-40 shadow-xs"
                   onClick={() => setPageIndex((current) => Math.min(current + 1, pageCount - 1))}
                   disabled={safePageIndex >= pageCount - 1}
                   aria-label="Go to next page"
@@ -727,7 +727,7 @@ export default function ApplicantsTable({
           <Select value={pageSize.toString()} onValueChange={changePageSize}>
             <SelectTrigger
               id="results-per-page"
-              className="h-8 w-fit text-xs font-semibold whitespace-nowrap border-slate-200 dark:border-slate-800"
+              className="h-8 w-fit text-xs font-semibold whitespace-nowrap border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg px-2.5 shadow-xs"
               aria-label="Results per page"
             >
               <SelectValue placeholder="Select number of results" />

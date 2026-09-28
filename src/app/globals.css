@@ -4,6 +4,11 @@
 
 @layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+
+  .dark {
     --background: 230 60% 5%;
     --foreground: 210 40% 98%;
   }
