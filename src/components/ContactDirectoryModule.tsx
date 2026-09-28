@@ -2147,41 +2147,6 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* MERITTO-STYLE PRESET VIEW QUICK PILLS BAR (Neumorphic Elevated Pill System - Image 1) */}
-      <div className="flex items-center gap-2.5 overflow-x-auto py-1 text-xs font-sans hide-scrollbar">
-        {PRESET_VIEWS.map((pv) => {
-          const isActive = selectedViewName === pv.id;
-          return (
-            <button
-              key={pv.id}
-              onClick={() => {
-                setSelectedViewName(pv.id);
-                if (onTriggerToast) {
-                  onTriggerToast(`Viewing: ${pv.label}`);
-                }
-              }}
-              className={`neu-pill px-4 py-1.5 shrink-0 flex items-center gap-2 font-bold cursor-pointer transition-all ${
-                isActive
-                  ? "neu-pill-active scale-[1.03]"
-                  : "hover:scale-[1.01]"
-              }`}
-            >
-              <span className="text-sm shrink-0">{pv.icon}</span>
-              <span className="font-extrabold tracking-tight">{pv.label}</span>
-              <span
-                className={`text-[10px] font-black px-2 py-0.5 rounded-full transition-all ${
-                  isActive
-                    ? "bg-white/25 text-white shadow-xs"
-                    : "bg-slate-200/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300"
-                }`}
-              >
-                {pv.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* LEAD FUNNEL & SUMMARY METRICS RIBBON (6 Actionable KPI Cards) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Card 1: Total Enquiries */}
