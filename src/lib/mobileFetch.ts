@@ -8,7 +8,13 @@
 
 export function isCapacitorNative(): boolean {
   if (typeof window === "undefined") return false;
-  return !!(window as any).Capacitor?.isNativePlatform?.() || !!(window as any).Capacitor;
+  const cap = (window as any).Capacitor;
+  if (!cap) return false;
+  if (typeof cap.isNativePlatform === "function") {
+    return cap.isNativePlatform();
+  }
+  const platform = typeof cap.getPlatform === "function" ? cap.getPlatform() : "";
+  return platform === "android" || platform === "ios";
 }
 
 /**
