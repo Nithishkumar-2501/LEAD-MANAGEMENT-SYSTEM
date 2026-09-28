@@ -887,3 +887,159 @@ html.dark .InputContainer .micButton:hover,
   }
 }
 
+/* ============================================================
+   NEUMORPHIC DESIGN SYSTEM (.neu-button, .neu-pill, .neu-card-item)
+   Soft-embossed tactile surfaces with dual inner/outer shadows
+   ============================================================ */
+
+/* Base Neu-Button from prompt with full responsiveness */
+.neu-button {
+  background-color: #e0e0e0;
+  border-radius: 50px;
+  box-shadow: inset 4px 4px 10px #bcbcbc, inset -4px -4px 10px #ffffff;
+  color: #4d4d4d;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 10px 24px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 2px solid rgb(206, 206, 206);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.neu-button:hover {
+  box-shadow: inset 2px 2px 5px #bcbcbc, inset -2px -2px 5px #ffffff, 2px 2px 5px #bcbcbc, -2px -2px 5px #ffffff;
+  color: #1e293b;
+  transform: translateY(-1px);
+}
+
+.neu-button:focus,
+.neu-button:active {
+  outline: none;
+  box-shadow: inset 2px 2px 5px #bcbcbc, inset -2px -2px 5px #ffffff, 2px 2px 5px #bcbcbc, -2px -2px 5px #ffffff;
+  transform: scale(0.97);
+}
+
+/* Dark Mode Neu-Button */
+.dark .neu-button,
+html.dark .neu-button {
+  background-color: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 4px 4px 10px #090d16, inset -4px -4px 10px rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+.dark .neu-button:hover,
+html.dark .neu-button:hover {
+  box-shadow: inset 2px 2px 5px #090d16, inset -2px -2px 5px rgba(255, 255, 255, 0.08), 2px 2px 8px rgba(0, 0, 0, 0.5), -2px -2px 8px rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+}
+
+/* Neu-Pill (For horizontal filter ribbons) */
+.neu-pill {
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  border: 1.5px solid #dcdfe4;
+  box-shadow: inset 2px 2px 5px #bcbcbc, inset -2px -2px 5px #ffffff, 1px 1px 3px rgba(0, 0, 0, 0.04);
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.neu-pill:hover {
+  box-shadow: inset 1px 1px 3px #bcbcbc, inset -1px -1px 3px #ffffff, 2px 2px 5px #bcbcbc, -2px -2px 5px #ffffff;
+  color: #0f172a;
+  transform: translateY(-0.5px);
+}
+
+.neu-pill:active {
+  transform: scale(0.96);
+  box-shadow: inset 3px 3px 6px #a8a8a8, inset -2px -2px 5px #ffffff;
+}
+
+.dark .neu-pill,
+html.dark .neu-pill {
+  background-color: #1e293b;
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: inset 2px 2px 5px #0a0f1d, inset -2px -2px 5px rgba(255, 255, 255, 0.05), 1px 1px 4px rgba(0, 0, 0, 0.3);
+  color: #cbd5e1;
+}
+
+.dark .neu-pill:hover,
+html.dark .neu-pill:hover {
+  box-shadow: inset 1px 1px 3px #0a0f1d, inset -1px -1px 3px rgba(255, 255, 255, 0.08), 2px 2px 6px rgba(0, 0, 0, 0.5), -1px -1px 4px rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+}
+
+.dark .neu-pill:active,
+html.dark .neu-pill:active {
+  box-shadow: inset 3px 3px 6px #050811, inset -1px -1px 4px rgba(255, 255, 255, 0.05);
+}
+
+/* Neu-Pill Active (Selected Blue Gradient with Inset Glow) */
+.neu-pill-active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #60a5fa !important;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.25), 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+  transform: scale(1.02);
+}
+
+/* Neu-Card Item (For Grid Stages and Faculty List) */
+.neu-card-item {
+  background-color: #f8fafc;
+  border-radius: 18px;
+  border: 1.5px solid #dcdfe4;
+  box-shadow: inset 3px 3px 7px #bcbcbc, inset -3px -3px 7px #ffffff, 2px 3px 6px rgba(0, 0, 0, 0.04);
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neu-card-item:hover {
+  box-shadow: inset 1.5px 1.5px 4px #bcbcbc, inset -1.5px -1.5px 4px #ffffff, 3px 4px 9px #bcbcbc, -3px -3px 9px #ffffff;
+  transform: translateY(-1.5px);
+}
+
+.neu-card-item:active {
+  transform: scale(0.97);
+  box-shadow: inset 3px 3px 8px #a8a8a8, inset -2px -2px 6px #ffffff;
+}
+
+.dark .neu-card-item,
+html.dark .neu-card-item {
+  background-color: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 3px 3px 7px #070a12, inset -3px -3px 7px rgba(255, 255, 255, 0.05), 2px 3px 6px rgba(0, 0, 0, 0.4);
+  color: #f1f5f9;
+}
+
+.dark .neu-card-item:hover,
+html.dark .neu-card-item:hover {
+  box-shadow: inset 1px 1px 3px #070a12, inset -1px -1px 3px rgba(255, 255, 255, 0.08), 2px 4px 10px rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Neu-Card Active Blue State */
+.neu-card-active-blue {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #ffffff !important;
+  border-color: #60a5fa !important;
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.4), inset -2px -2px 6px rgba(255, 255, 255, 0.25), 0 6px 18px rgba(37, 99, 235, 0.4) !important;
+  transform: scale(1.02);
+}
+
+/* Neu-Card Active Purple State */
+.neu-card-active-purple {
+  background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
+  color: #ffffff !important;
+  border-color: #a78bfa !important;
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.4), inset -2px -2px 6px rgba(255, 255, 255, 0.25), 0 6px 18px rgba(124, 58, 237, 0.4) !important;
+  transform: scale(1.02);
+}
+

@@ -924,41 +924,41 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   setSelectedDept("ALL");
                   setCurrentPage(1);
                 }}
-                className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all text-left group cursor-pointer ${
+                className={`w-full flex items-center justify-between p-3 rounded-2xl text-xs font-bold transition-all text-left group cursor-pointer ${
                   selectedDept === "ALL"
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-md shadow-indigo-600/30 ring-2 ring-indigo-400/50 scale-[1.01]"
-                    : "bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-400/40"
+                    ? "neu-card-item neu-card-active-purple scale-[1.02]"
+                    : "neu-card-item hover:scale-[1.01]"
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div
-                    className={`p-1.5 rounded-lg shrink-0 ${
+                    className={`p-2 rounded-xl shrink-0 transition-all ${
                       selectedDept === "ALL"
-                        ? "bg-white/20 text-white"
-                        : "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20"
+                        ? "bg-white/20 text-white shadow-xs"
+                        : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
                     }`}
                   >
                     <Layers className="w-4 h-4" />
                   </div>
                   <div className="truncate">
                     <span className="font-extrabold truncate block">All Departments</span>
-                    <span className={`text-[10px] block ${selectedDept === "ALL" ? "text-indigo-100" : "text-slate-400"}`}>
+                    <span className={`text-[10px] block ${selectedDept === "ALL" ? "text-indigo-100" : "text-slate-500 dark:text-slate-400"}`}>
                       Full college faculty
                     </span>
                   </div>
                 </div>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[11px] font-black shrink-0 ${
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-black shrink-0 ${
                     selectedDept === "ALL"
-                      ? "bg-white text-indigo-900 shadow-xs"
-                      : "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200"
+                      ? "bg-white text-indigo-950 shadow-xs"
+                      : "bg-slate-200/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200"
                   }`}
                 >
                   {teachers.length}
                 </span>
               </button>
 
-              {/* Department Buttons */}
+              {/* Department Buttons (Neumorphic Style - Image 4) */}
               {filteredDeptList.map((deptName) => {
                 const isSelected = selectedDept.toLowerCase().trim() === deptName.toLowerCase().trim();
                 const count = departmentCounts.get(deptName) || 0;
@@ -973,42 +973,42 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                       setSelectedDept(deptName);
                       setCurrentPage(1);
                     }}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all text-left group cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-3 rounded-2xl text-xs font-bold transition-all text-left group cursor-pointer ${
                       isSelected
-                        ? "bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white border-transparent shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50 scale-[1.02]"
-                        : "bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-400/40"
+                        ? "neu-card-item neu-card-active-purple scale-[1.02]"
+                        : "neu-card-item hover:scale-[1.01]"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
                       <div
-                        className={`p-1.5 rounded-lg shrink-0 ${
+                        className={`p-2 rounded-xl shrink-0 transition-all ${
                           isSelected
-                            ? "bg-white/20 text-white"
+                            ? "bg-white/20 text-white shadow-xs"
                             : `${meta.bg} ${meta.color} border ${meta.border}`
                         }`}
                       >
                         <IconComp className="w-4 h-4" />
                       </div>
                       <div className="truncate">
-                        <div className="flex items-center gap-1 truncate">
+                        <div className="flex items-center gap-1.5 truncate">
                           <span className="text-xs">{meta.emoji}</span>
                           <span className="font-extrabold truncate block leading-tight">
                             {deptName}
                           </span>
                         </div>
-                        <span className={`text-[10px] block ${isSelected ? "text-indigo-100" : "text-slate-400"}`}>
+                        <span className={`text-[10px] block ${isSelected ? "text-indigo-100" : "text-slate-500 dark:text-slate-400"}`}>
                           {count} {count === 1 ? "Teacher" : "Teachers"}
                         </span>
                       </div>
                     </div>
 
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[11px] font-black shrink-0 ${
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-black shrink-0 ${
                         isSelected
-                          ? "bg-white text-indigo-900 shadow-xs"
+                          ? "bg-white text-indigo-950 shadow-xs"
                           : count > 0
                           ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50"
-                          : "bg-slate-200 dark:bg-slate-800 text-slate-400"
+                          : "bg-slate-200/90 dark:bg-slate-800/90 text-slate-500"
                       }`}
                       title={`${count} teachers in ${deptName}`}
                     >

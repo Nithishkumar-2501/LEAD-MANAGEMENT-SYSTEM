@@ -2147,8 +2147,8 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* MERITTO-STYLE PRESET VIEW QUICK PILLS BAR */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-sans hide-scrollbar">
+      {/* MERITTO-STYLE PRESET VIEW QUICK PILLS BAR (Neumorphic Elevated Pill System - Image 1) */}
+      <div className="flex items-center gap-2.5 overflow-x-auto py-1 text-xs font-sans hide-scrollbar">
         {PRESET_VIEWS.map((pv) => {
           const isActive = selectedViewName === pv.id;
           return (
@@ -2160,19 +2160,19 @@ export default function ContactDirectoryModule({
                   onTriggerToast(`Viewing: ${pv.label}`);
                 }
               }}
-              className={`px-3.5 py-1.5 rounded-full border transition-all shrink-0 flex items-center gap-1.5 font-bold shadow-xs cursor-pointer ${
+              className={`neu-pill px-4 py-1.5 shrink-0 flex items-center gap-2 font-bold cursor-pointer transition-all ${
                 isActive
-                  ? "bg-blue-600 text-white border-blue-500 shadow-md ring-2 ring-blue-400/40 scale-[1.02]"
-                  : "bg-white dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  ? "neu-pill-active scale-[1.03]"
+                  : "hover:scale-[1.01]"
               }`}
             >
-              <span>{pv.icon}</span>
-              <span>{pv.label}</span>
+              <span className="text-sm shrink-0">{pv.icon}</span>
+              <span className="font-extrabold tracking-tight">{pv.label}</span>
               <span
-                className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                className={`text-[10px] font-black px-2 py-0.5 rounded-full transition-all ${
                   isActive
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                    ? "bg-white/25 text-white shadow-xs"
+                    : "bg-slate-200/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300"
                 }`}
               >
                 {pv.count}
@@ -2311,16 +2311,16 @@ export default function ContactDirectoryModule({
         </div>
       </div>
 
-      {/* MULTI-CHANNEL SOURCE ATTRIBUTION RIBBON ("Zero Lead Leakage") */}
-      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 rounded-2xl p-3.5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans">
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-[10px]">
+      {/* MULTI-CHANNEL SOURCE ATTRIBUTION RIBBON (Neumorphic Elevated Ribbon - Image 3) */}
+      <div className="neu-card-item p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-xs" />
+          <span className="font-black text-slate-800 dark:text-white uppercase tracking-wider text-[11px]">
             Acquisition Attribution (Zero Leakage):
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto hide-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto hide-scrollbar py-0.5">
           {ACQUISITION_CHANNELS.map((ch) => {
             const isChActive = selectedAcquisitionChannel === ch.id;
             return (
@@ -2332,15 +2332,19 @@ export default function ContactDirectoryModule({
                     onTriggerToast(`Filtered by channel: ${ch.label}`);
                   }
                 }}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border ${
+                className={`neu-pill px-3.5 py-1.5 text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                   isChActive
-                    ? "bg-indigo-600 text-white border-indigo-500 shadow-md ring-2 ring-indigo-400/30"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    ? "neu-pill-active scale-[1.03]"
+                    : "hover:scale-[1.01]"
                 }`}
               >
-                <span>{ch.icon}</span>
-                <span>{ch.label}</span>
-                <span className="text-[10px] opacity-80">({ch.count})</span>
+                <span className="text-sm shrink-0">{ch.icon}</span>
+                <span className="font-extrabold">{ch.label}</span>
+                <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                  isChActive ? "bg-white/25 text-white" : "bg-slate-200/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400"
+                }`}>
+                  ({ch.count})
+                </span>
               </button>
             );
           })}
@@ -2459,52 +2463,58 @@ export default function ContactDirectoryModule({
         </div>
       )}
 
-      {/* V.S.B. TNEA & Lead Stage Icon Filters (Image 2 Bottom) */}
-      <div className="bubble-card p-4 space-y-3.5 border border-sky-400/30">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+      {/* V.S.B. TNEA & Lead Stage Icon Filters (Neumorphic Elevated Stage System - Image 2) */}
+      <div className="neu-card-item p-4 sm:p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
           <div>
-            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-sky-400" /> V.S.B. TNEA & Lead Stage Filters
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-sky-500 dark:text-sky-400" /> V.S.B. TNEA & Lead Stage Filters
             </h3>
-            <p className="text-xs text-slate-400">Filter candidate inquiries by stage or TNEA counselling category</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Filter candidate inquiries by stage or TNEA counselling category</p>
           </div>
 
           {/* Counselling Status Quick Filters */}
-          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar text-xs font-bold">
-            <span className="text-slate-400 text-[11px] uppercase tracking-wider shrink-0 mr-1">Counselling Intake:</span>
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar text-xs font-bold py-0.5">
+            <span className="text-slate-500 dark:text-slate-400 text-[11px] font-black uppercase tracking-wider shrink-0 mr-1">
+              Counselling Intake:
+            </span>
             <button
               onClick={() => setCounsellingFilter("ALL")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 ${counsellingFilter === "ALL"
-                ? "bg-slate-800 text-white border-white/30 font-black"
-                : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-                }`}
+              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 cursor-pointer ${
+                counsellingFilter === "ALL"
+                  ? "neu-pill-active"
+                  : ""
+              }`}
             >
               All Intake
             </button>
             <button
               onClick={() => setCounsellingFilter("COUNSELLING_ONLY")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "COUNSELLING_ONLY"
-                ? "bg-emerald-500/30 text-emerald-300 border-emerald-400/60 shadow-md font-black"
-                : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-                }`}
+              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                counsellingFilter === "COUNSELLING_ONLY"
+                  ? "neu-pill-active"
+                  : ""
+              }`}
             >
               <span>✅ Applied TNEA</span>
             </button>
             <button
               onClick={() => setCounsellingFilter("GOVT_QUOTA")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "GOVT_QUOTA"
-                ? "bg-indigo-500/30 text-indigo-300 border-indigo-400/60 shadow-md font-black"
-                : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-                }`}
+              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                counsellingFilter === "GOVT_QUOTA"
+                  ? "neu-pill-active"
+                  : ""
+              }`}
             >
               <span>🏛️ 7.5% Govt Quota</span>
             </button>
             <button
               onClick={() => setCounsellingFilter("MANAGEMENT_ONLY")}
-              className={`px-3 py-1 rounded-full border transition-all shrink-0 flex items-center gap-1 ${counsellingFilter === "MANAGEMENT_ONLY"
-                ? "bg-purple-500/30 text-purple-300 border-purple-400/60 shadow-md font-black"
-                : "bg-slate-950 text-slate-400 border-white/10 hover:text-white"
-                }`}
+              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                counsellingFilter === "MANAGEMENT_ONLY"
+                  ? "neu-pill-active"
+                  : ""
+              }`}
             >
               <span>💼 Management Quota</span>
             </button>
@@ -2512,88 +2522,112 @@ export default function ContactDirectoryModule({
         </div>
 
         {/* One by One Icon Status Filter Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 pt-1">
           <button
             onClick={() => setSelectedStatus("ALL")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "ALL"
-              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
-              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
-              }`}
+            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+              selectedStatus === "ALL"
+                ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
+                : "neu-card-item"
+            }`}
           >
-            <span className="text-lg">🌟</span>
+            <span className="text-xl">🌟</span>
             <div className="text-left leading-tight">
               <span className="block text-xs font-black">All Leads</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.length} Total</span>
+              <span className={`text-[10px] font-bold ${selectedStatus === "ALL" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+                {contacts.length} Total
+              </span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("HOT")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "HOT"
-              ? "bg-gradient-to-r from-rose-600 via-orange-600 to-amber-600 text-white border-rose-300 shadow-xl shadow-rose-500/40 font-black scale-[1.03] ring-2 ring-rose-400/50"
-              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
-              }`}
+            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+              selectedStatus === "HOT"
+                ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
+                : "neu-card-item"
+            }`}
           >
-            <span className="text-lg">🔥</span>
+            <span className="text-xl">🔥</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs font-black text-rose-500 dark:text-rose-400 group-hover:text-white">HOT (Admitted)</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => getStudentLeadState(c).state === "HOT").length} Admitted</span>
+              <span className={`block text-xs font-black ${selectedStatus === "HOT" ? "text-white" : "text-rose-600 dark:text-rose-400"}`}>
+                HOT (Admitted)
+              </span>
+              <span className={`text-[10px] font-bold ${selectedStatus === "HOT" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+                {contacts.filter(c => getStudentLeadState(c).state === "HOT").length} Admitted
+              </span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("WARM")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "WARM"
-              ? "bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 text-white border-amber-300 shadow-xl shadow-amber-500/40 font-black scale-[1.03] ring-2 ring-amber-400/50"
-              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
-              }`}
+            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+              selectedStatus === "WARM"
+                ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
+                : "neu-card-item"
+            }`}
           >
-            <span className="text-lg">⚡</span>
+            <span className="text-xl">⚡</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs font-black text-amber-600 dark:text-amber-400">WARM (Ready)</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => getStudentLeadState(c).state === "WARM").length} Ready</span>
+              <span className={`block text-xs font-black ${selectedStatus === "WARM" ? "text-white" : "text-amber-600 dark:text-amber-400"}`}>
+                WARM (Ready)
+              </span>
+              <span className={`text-[10px] font-bold ${selectedStatus === "WARM" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+                {contacts.filter(c => getStudentLeadState(c).state === "WARM").length} Ready
+              </span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("COLD")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "COLD"
-              ? "bg-gradient-to-r from-sky-600 via-cyan-600 to-blue-700 text-white border-sky-300 shadow-xl shadow-sky-500/40 font-black scale-[1.03] ring-2 ring-sky-400/50"
-              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
-              }`}
+            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+              selectedStatus === "COLD"
+                ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
+                : "neu-card-item"
+            }`}
           >
-            <span className="text-lg">❄️</span>
+            <span className="text-xl">❄️</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs font-black text-sky-600 dark:text-sky-400">COLD (Not Interested)</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => getStudentLeadState(c).state === "COLD").length} Leads</span>
+              <span className={`block text-xs font-black ${selectedStatus === "COLD" ? "text-white" : "text-sky-600 dark:text-sky-400"}`}>
+                COLD (Not Interested)
+              </span>
+              <span className={`text-[10px] font-bold ${selectedStatus === "COLD" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+                {contacts.filter(c => getStudentLeadState(c).state === "COLD").length} Leads
+              </span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("CONTACTED")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "CONTACTED"
-              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
-              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
-              }`}
+            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+              selectedStatus === "CONTACTED"
+                ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
+                : "neu-card-item"
+            }`}
           >
-            <span className="text-lg">📞</span>
+            <span className="text-xl">📞</span>
             <div className="text-left leading-tight">
               <span className="block text-xs font-black">Contacted</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "CONTACTED").length} Leads</span>
+              <span className={`text-[10px] font-bold ${selectedStatus === "CONTACTED" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+                {contacts.filter(c => c.status === "CONTACTED").length} Leads
+              </span>
             </div>
           </button>
 
           <button
             onClick={() => setSelectedStatus("IN_REVIEW")}
-            className={`p-3 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2.5 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer ${selectedStatus === "IN_REVIEW"
-              ? "bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white border-indigo-300 shadow-xl shadow-indigo-500/40 font-black scale-[1.03] ring-2 ring-indigo-400/50"
-              : "bg-slate-100 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-white/20 hover:bg-slate-200 dark:hover:bg-slate-800/90 shadow-md"
-              }`}
+            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+              selectedStatus === "IN_REVIEW"
+                ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
+                : "neu-card-item"
+            }`}
           >
-            <span className="text-lg">📊</span>
+            <span className="text-xl">📊</span>
             <div className="text-left leading-tight">
               <span className="block text-xs font-black">Cutoff Review</span>
-              <span className="text-[10px] font-bold opacity-80">{contacts.filter(c => c.status === "IN_REVIEW").length} Leads</span>
+              <span className={`text-[10px] font-bold ${selectedStatus === "IN_REVIEW" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+                {contacts.filter(c => c.status === "IN_REVIEW").length} Leads
+              </span>
             </div>
           </button>
         </div>
