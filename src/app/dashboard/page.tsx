@@ -744,6 +744,7 @@ export default function DashboardPage() {
             onDeleteContact={handleDeleteApplicant}
             onReloadLeads={handleReloadLeads}
             onOpenNoraAi={handleOpenNora}
+            onOpenVoiceAccessModal={handleOpenVoiceAccess}
           />
         )}
 

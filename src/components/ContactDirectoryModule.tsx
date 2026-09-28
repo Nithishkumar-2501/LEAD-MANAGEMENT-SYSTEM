@@ -68,7 +68,9 @@ import {
   Copy,
   ExternalLink,
   Check,
+  Mic,
 } from "lucide-react";
+import { Checkbox } from "@/components/base-ui/checkbox";
 
 const INDIAN_STATES = [
   "Tamil Nadu",
@@ -123,6 +125,7 @@ interface ContactDirectoryModuleProps {
   isReloading?: boolean;
   onReloadLeads?: () => Promise<void> | void;
   onOpenNoraAi?: (initialQuery?: string) => void;
+  onOpenVoiceAccessModal?: (initialQuery?: string) => void;
 }
 
 export default function ContactDirectoryModule({
@@ -138,6 +141,7 @@ export default function ContactDirectoryModule({
   isReloading: externalIsReloading,
   onReloadLeads,
   onOpenNoraAi,
+  onOpenVoiceAccessModal,
 }: ContactDirectoryModuleProps) {
   const [contacts, setContacts] = useState(initialContacts);
   const [internalIsReloading, setInternalIsReloading] = useState(false);
@@ -917,17 +921,24 @@ export default function ContactDirectoryModule({
       };
       const candidateId = getDisplayCandidateId(contact);
 
+      const AVATAR_COLORS = [
+        "bg-emerald-600",
+        "bg-teal-600",
+        "bg-lime-700",
+        "bg-amber-600",
+        "bg-green-600",
+        "bg-emerald-700",
+        "bg-amber-700",
+        "bg-teal-700",
+      ];
+      const charCodeSum = (contact.name.charCodeAt(0) || 0) + (contact.name.charCodeAt(1) || 0);
+      const avatarColor = AVATAR_COLORS[charCodeSum % AVATAR_COLORS.length];
+
       return (
         <div className="flex items-center gap-3 min-w-[260px]">
-          {/* Student Initials Avatar with Engagement State Ring */}
+          {/* Student Initials Avatar matching Image 1 */}
           <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 shadow-sm ${
-              stateInfo.state === "HOT"
-                ? "bg-gradient-to-tr from-rose-500 to-amber-500 ring-2 ring-rose-400/60"
-                : stateInfo.state === "WARM"
-                ? "bg-gradient-to-tr from-amber-500 to-teal-500 ring-2 ring-amber-400/60"
-                : "bg-gradient-to-tr from-sky-500 to-indigo-500 ring-2 ring-sky-400/60"
-            }`}
+            className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 shadow-xs ${avatarColor}`}
           >
             {contact.name.slice(0, 2).toUpperCase()}
           </div>
@@ -936,7 +947,7 @@ export default function ContactDirectoryModule({
             {/* Row 1: Student Name + Verified Shield Badge + Nora AI Sparkle */}
             <div className="flex items-center gap-2 whitespace-nowrap">
               <span
-                className="font-extrabold text-slate-900 dark:text-sky-300 hover:text-blue-600 dark:hover:text-sky-200 text-[13px] hover:underline cursor-pointer truncate max-w-[140px]"
+                className="font-bold text-slate-900 dark:text-sky-300 hover:text-blue-600 dark:hover:text-sky-200 text-xs hover:underline cursor-pointer truncate max-w-[140px]"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCandidateClick(contact);
@@ -972,7 +983,7 @@ export default function ContactDirectoryModule({
                     onOpenNoraAi(`Analyze student record for ${contact.name}`);
                   }
                 }}
-                className="p-1 rounded-full bg-purple-50 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-200 dark:border-purple-500/30 transition-all shadow-xs cursor-pointer hover:scale-110 shrink-0"
+                className="p-1 rounded-full text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 transition-all cursor-pointer hover:scale-110 shrink-0"
                 title={`Ask Nora AI to analyze ${contact.name}'s database record`}
               >
                 <Sparkles className="w-3 h-3" />
@@ -1002,8 +1013,8 @@ export default function ContactDirectoryModule({
 
       return (
         <div className="flex items-center gap-2.5 whitespace-nowrap min-w-[240px]">
-          {/* Communication Action Buttons Group */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Communication Action Buttons Group Capsule matching Image 1 */}
+          <div className="flex items-center gap-1 px-1.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs shrink-0">
             <a
               href={getCleanTelUri(contact.phone)}
               onClick={(e) => {
@@ -1011,7 +1022,7 @@ export default function ContactDirectoryModule({
                 onActionTrigger("CALL", contact.name);
                 redirectToDialPad(contact.phone);
               }}
-              className="w-7 h-7 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:border-blue-400 dark:hover:text-sky-400 hover:bg-blue-50 dark:hover:bg-sky-500/10 transition-all flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+              className="p-1 rounded text-slate-500 hover:text-blue-600 transition-colors"
               title={`Call ${contact.name} via Phone Dial Pad`}
             >
               <Phone className="w-3.5 h-3.5" />
@@ -1023,7 +1034,7 @@ export default function ContactDirectoryModule({
                 onActionTrigger("WHATSAPP", contact.name);
                 redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
               }}
-              className="w-7 h-7 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-600 hover:border-emerald-400 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+              className="p-1 rounded text-slate-500 hover:text-emerald-600 transition-colors"
               title={`Direct WhatsApp Chat with ${contact.name}`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
@@ -1035,7 +1046,7 @@ export default function ContactDirectoryModule({
                 onActionTrigger("SMS", contact.name);
                 redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
               }}
-              className="w-7 h-7 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-purple-600 hover:border-purple-400 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
+              className="p-1 rounded text-slate-500 hover:text-purple-600 transition-colors"
               title={`Direct Native SMS with ${contact.name}`}
             >
               <Smartphone className="w-3.5 h-3.5" />
@@ -2842,17 +2853,18 @@ export default function ContactDirectoryModule({
                 {/* Row 1: Header Titles with Sort & Interactive Filter Icon Popovers */}
                 <tr className="bg-slate-200/80 dark:bg-slate-950/90 text-slate-800 dark:text-slate-200 font-extrabold border-b border-slate-200 dark:border-white/10">
                   <th className="p-3 w-10 text-center">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selectedRows.length === sortedAndFilteredContacts.length && sortedAndFilteredContacts.length > 0}
-                      onChange={(e) => {
-                        if (e.target.checked) {
+                      aria-checked={selectedRows.length > 0 && selectedRows.length < sortedAndFilteredContacts.length ? "mixed" : selectedRows.length === sortedAndFilteredContacts.length && sortedAndFilteredContacts.length > 0}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
                           setSelectedRows(sortedAndFilteredContacts.map((c) => c.id));
                         } else {
                           setSelectedRows([]);
                         }
                       }}
-                      className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                      aria-label="Select all leads on page"
+                      className="mx-auto after:hidden data-checked:border-sky-600 data-checked:bg-sky-600 data-checked:text-white dark:data-checked:border-sky-500 dark:data-checked:bg-sky-500 dark:data-checked:text-white"
                     />
                   </th>
                   {selectedColumns.map((col) => {
@@ -2860,7 +2872,7 @@ export default function ContactDirectoryModule({
                     return (
                       <th
                         key={col}
-                        className={`p-3 font-extrabold text-blue-600 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap ${getColumnWidthClass(col)}`}
+                        className={`p-3 font-extrabold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap ${getColumnWidthClass(col)}`}
                       >
                         <span
                           onClick={() => {
@@ -2886,13 +2898,13 @@ export default function ContactDirectoryModule({
                       </th>
                     );
                   })}
-                  <th className="p-3 font-extrabold text-blue-600 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap text-center w-28">
+                  <th className="p-3 font-extrabold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap text-center w-28">
                     Actions
                   </th>
                 </tr>
 
                 {/* Row 2: Sub-Header Filter Bar Row (Direct Inline Filter Options under Column Headers) */}
-                <tr className="bg-slate-100 dark:bg-slate-950/90 border-b border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 font-normal normal-case">
+                <tr className="bg-slate-50 dark:bg-slate-950/90 border-b border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 font-normal normal-case">
                   <td className="p-2 text-center text-[10px] font-bold text-blue-600 dark:text-sky-400">
                     <Filter className="w-3.5 h-3.5 mx-auto text-blue-600 dark:text-sky-400" />
                   </td>
@@ -2906,7 +2918,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
                           >
                             <option value="ALL">All Cities</option>
                             {TAMIL_NADU_DISTRICTS.map((d) => (
@@ -2926,7 +2938,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
                           >
                             <option value="ALL">All Stages</option>
                             <option value="INQUIRY">📋 Inquiry</option>
@@ -2945,7 +2957,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
                           >
                             <option value="ALL">All Campuses</option>
                             <option value="KARUR">KARUR</option>
@@ -2962,7 +2974,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
                           >
                             <option value="ALL">All States</option>
                             <option value="Tamil Nadu">Tamil Nadu</option>
@@ -2978,7 +2990,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
                           >
                             <option value="ALL">All</option>
                             <option value="OC">OC</option>
@@ -2998,7 +3010,7 @@ export default function ContactDirectoryModule({
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-slate-900 border border-white/15 rounded-md px-2 py-1 text-[11px] font-medium text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
                           >
                             <option value="ALL">All</option>
                             <option value="Male">Male</option>
@@ -3017,7 +3029,7 @@ export default function ContactDirectoryModule({
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
                             placeholder="Filter..."
-                            className="w-full bg-slate-900 border border-white/15 rounded-md pl-2 pr-5 py-1 text-[11px] text-white placeholder-slate-400 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md pl-2 pr-5 py-1 text-[11px] text-slate-800 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-sky-500 focus:outline-none shadow-2xs"
                           />
                           {filterVal && (
                             <button
@@ -3026,7 +3038,7 @@ export default function ContactDirectoryModule({
                                 delete updated[col];
                                 setColumnFilters(updated);
                               }}
-                              className="absolute right-1 text-slate-400 hover:text-slate-600 text-[10px] font-bold px-1"
+                              className="absolute right-1 text-slate-400 hover:text-slate-600 text-[10px] font-bold px-1 cursor-pointer"
                               title="Clear Filter"
                             >
                               ✕
@@ -3088,17 +3100,17 @@ export default function ContactDirectoryModule({
                     >
                     {/* Select Checkbox */}
                     <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedRows.includes(contact.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
+                        onCheckedChange={(checked) => {
+                          if (checked) {
                             setSelectedRows([...selectedRows, contact.id]);
                           } else {
                             setSelectedRows(selectedRows.filter((id) => id !== contact.id));
                           }
                         }}
-                        className="w-4 h-4 rounded text-blue-600 dark:text-sky-500 border-slate-300 dark:border-white/20 focus:ring-sky-500 cursor-pointer"
+                        aria-label={`Select ${contact.name}`}
+                        className="mx-auto after:hidden data-checked:border-sky-600 data-checked:bg-sky-600 data-checked:text-white dark:data-checked:border-sky-500 dark:data-checked:bg-sky-500 dark:data-checked:text-white"
                       />
                     </td>
 
@@ -3114,7 +3126,7 @@ export default function ContactDirectoryModule({
                       </td>
                     ))}
 
-                    {/* Actions Column with Delete Icon (Image 2) */}
+                    {/* Actions Column with Delete Icon matching Image 1 */}
                     <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1.5">
                         <Tooltip text={`Send Official Email to ${contact.name}`} position="left">
@@ -3138,7 +3150,7 @@ export default function ContactDirectoryModule({
                                 status: contact.status,
                               })
                             }
-                            className="p-1.5 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
                             title={`Send Email to ${contact.name}`}
                           >
                             <Mail className="w-3.5 h-3.5" />
@@ -3150,7 +3162,7 @@ export default function ContactDirectoryModule({
                               onActionTrigger("WHATSAPP", contact.name);
                               redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
                             }}
-                            className="p-1.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
                             title={`WhatsApp Chat with ${contact.name}`}
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
@@ -3162,7 +3174,7 @@ export default function ContactDirectoryModule({
                               onActionTrigger("SMS", contact.name);
                               redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
                             }}
-                            className="p-1.5 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
                             title={`Send Native SMS to ${contact.name}`}
                           >
                             <Send className="w-3.5 h-3.5" />
@@ -3171,7 +3183,7 @@ export default function ContactDirectoryModule({
                         <Tooltip text={`Edit ${contact.name}`} position="left">
                           <button
                             onClick={() => setEditingContact(contact)}
-                            className="p-1.5 rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            className="p-1.5 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 hover:bg-sky-200 border border-sky-200 dark:border-sky-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
                             title={`Edit ${contact.name}`}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -3180,7 +3192,7 @@ export default function ContactDirectoryModule({
                         <Tooltip text={`Delete ${contact.name}`} position="left">
                           <button
                             onClick={() => handleDeleteContact(contact.id, contact.name)}
-                            className="p-1.5 rounded-full bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-500/40 transition-all shadow-md transform hover:-translate-y-0.5 hover:scale-125 active:scale-95 cursor-pointer"
+                            className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 hover:bg-rose-200 border border-rose-200 dark:border-rose-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer"
                             title={`Delete ${contact.name}`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -3195,17 +3207,17 @@ export default function ContactDirectoryModule({
             </table>
           </div>
 
-          {/* TABLE FOOTER CONTROLS BAR WITH FULL PAGINATION */}
+          {/* TABLE FOOTER CONTROLS BAR WITH FULL PAGINATION matching Image 1 */}
           <div className="bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200 dark:border-white/10 p-3.5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-700 dark:text-slate-300 font-sans shadow-inner">
             {/* Left: Classic View & Record Range Indicator */}
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => setDirectoryViewMode("GRID")}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-white font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-white font-bold shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all text-xs"
               >
                 <span>Classic View</span>
               </button>
-              <span className="font-extrabold text-slate-800 dark:text-white bg-slate-200/80 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/15">
+              <span className="font-extrabold text-slate-800 dark:text-white bg-slate-200/80 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-white/15 shadow-2xs">
                 Showing {sortedAndFilteredContacts.length > 0 ? dirStartIndex + 1 : 0} - {dirEndIndex} of {sortedAndFilteredContacts.length} Leads
               </span>
             </div>
@@ -3215,7 +3227,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === 1}
                 onClick={() => setCurrentPage(1)}
-                className="px-3 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-xs"
                 title="First Page"
               >
                 ⏮ First
@@ -3224,7 +3236,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === 1}
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                className="px-3 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-xs"
               >
                 ◀ Prev
               </button>
@@ -3249,10 +3261,10 @@ export default function ContactDirectoryModule({
                       <button
                         key={pNum}
                         onClick={() => setCurrentPage(pNum)}
-                        className={`w-8 h-8 rounded-lg font-black text-xs transition-all cursor-pointer shadow-sm ${
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-bold text-xs transition-all cursor-pointer shadow-2xs ${
                           isActive
-                            ? "bg-sky-500 text-slate-950 font-black ring-2 ring-sky-300 scale-105"
-                            : "bg-slate-100 dark:bg-slate-800 border border-slate-400 dark:border-white/30 text-slate-950 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700"
+                            ? "bg-sky-500 text-white font-extrabold ring-2 ring-sky-300 scale-105"
+                            : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/30 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
                         }`}
                       >
                         {pNum}
@@ -3265,7 +3277,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                className="px-3 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-xs"
               >
                 Next ▶
               </button>
@@ -3273,29 +3285,46 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => setCurrentPage(totalPages)}
-                className="px-3 py-1.5 rounded-lg border border-slate-400 dark:border-white/30 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-black text-slate-950 dark:text-white cursor-pointer shadow-sm text-xs"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-xs"
                 title="Last Page"
               >
                 Last ⏭
               </button>
             </div>
 
-            {/* Right: Show Rows Selector */}
-            <div className="flex items-center gap-2 font-extrabold text-slate-800 dark:text-white">
-              <span>Show Rows:</span>
-              <select
-                value={rowsPerPage}
-                onChange={(e) => {
-                  setRowsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-lg px-3 py-1.5 text-slate-800 dark:text-white font-black focus:outline-none cursor-pointer shadow-sm"
-              >
-                <option value={10}>10 rows</option>
-                <option value={25}>25 rows</option>
-                <option value={50}>50 rows</option>
-                <option value={100}>100 rows</option>
-              </select>
+            {/* Right: Show Rows Selector & Voice Access matching Image 1 */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-white">
+                <span className="text-xs text-slate-500 font-medium">Show Rows:</span>
+                <select
+                  value={rowsPerPage}
+                  onChange={(e) => {
+                    setRowsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-lg px-2.5 py-1 text-slate-800 dark:text-white font-bold text-xs focus:outline-none cursor-pointer shadow-2xs"
+                >
+                  <option value={10}>10 rows</option>
+                  <option value={25}>25 rows</option>
+                  <option value={50}>50 rows</option>
+                  <option value={100}>100 rows</option>
+                </select>
+              </div>
+
+              {onOpenVoiceAccessModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenVoiceAccessModal()}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 active:scale-95 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Open Voice Access Model (Ctrl+M)"
+                >
+                  <Mic className="w-3.5 h-3.5 text-white" />
+                  <span>Voice Access</span>
+                  <span className="bg-black/20 text-white text-[10px] px-1 py-0.2 rounded font-mono font-normal">
+                    Ctrl+M
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </div>
