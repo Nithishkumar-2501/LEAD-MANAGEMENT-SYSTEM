@@ -1894,58 +1894,6 @@ export default function ContactDirectoryModule({
   const verifiedLeadsCount = contacts.filter((c) => c.phone && c.phone.length >= 10).length;
   const admittedLeadsCount = contacts.filter((c) => c.status === "ADMITTED" || c.application?.stage === "FEE_PAID").length;
 
-  const ACQUISITION_CHANNELS = [
-    { id: "ALL", label: "All Channels", icon: "🌐", count: contacts.length },
-    {
-      id: "Google/Web",
-      label: "Google & Web",
-      icon: "🔍",
-      count: contacts.filter((c) => {
-        const s = (c.source || "").toLowerCase();
-        return s.includes("google") || s.includes("web") || s.includes("site");
-      }).length,
-    },
-    {
-      id: "WhatsApp",
-      label: "WhatsApp Chat",
-      icon: "💬",
-      count: contacts.filter((c) => (c.source || "").toLowerCase().includes("whatsapp")).length,
-    },
-    {
-      id: "Social Ads",
-      label: "Meta & Social Ads",
-      icon: "📢",
-      count: contacts.filter((c) => {
-        const s = (c.source || "").toLowerCase();
-        return s.includes("social") || s.includes("ads") || s.includes("meta") || s.includes("instagram") || s.includes("facebook");
-      }).length,
-    },
-    {
-      id: "TNEA",
-      label: "TNEA Direct",
-      icon: "🎓",
-      count: contacts.filter((c) => (c.source || "").toLowerCase().includes("tnea") || Boolean(c.appliedCounselling)).length,
-    },
-    {
-      id: "School Expo",
-      label: "School Outreach",
-      icon: "🏫",
-      count: contacts.filter((c) => {
-        const s = (c.source || "").toLowerCase();
-        return s.includes("school") || s.includes("expo") || s.includes("visit");
-      }).length,
-    },
-    {
-      id: "Walk-in",
-      label: "Campus Walk-ins",
-      icon: "🚶",
-      count: contacts.filter((c) => {
-        const s = (c.source || "").toLowerCase();
-        return s.includes("walk") || s.includes("direct");
-      }).length,
-    },
-  ];
-
   const PRESET_VIEWS = [
     { id: "All Enquiries", label: "All Enquiries", icon: "🌟", count: totalLeadsCount },
     { id: "Fresh & Untouched", label: "Fresh & Untouched", icon: "🆕", count: freshLeadsCount },
@@ -2273,46 +2221,6 @@ export default function ContactDirectoryModule({
               Fee Paid / Enrolled
             </p>
           </div>
-        </div>
-      </div>
-
-      {/* MULTI-CHANNEL SOURCE ATTRIBUTION RIBBON (Neumorphic Elevated Ribbon - Image 3) */}
-      <div className="neu-card-item p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans">
-        <div className="flex items-center gap-2.5 shrink-0">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-xs" />
-          <span className="font-black text-slate-800 dark:text-white uppercase tracking-wider text-[11px]">
-            Acquisition Attribution (Zero Leakage):
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto hide-scrollbar py-0.5">
-          {ACQUISITION_CHANNELS.map((ch) => {
-            const isChActive = selectedAcquisitionChannel === ch.id;
-            return (
-              <button
-                key={ch.id}
-                onClick={() => {
-                  setSelectedAcquisitionChannel(ch.id);
-                  if (onTriggerToast) {
-                    onTriggerToast(`Filtered by channel: ${ch.label}`);
-                  }
-                }}
-                className={`neu-pill px-3.5 py-1.5 text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                  isChActive
-                    ? "neu-pill-active scale-[1.03]"
-                    : "hover:scale-[1.01]"
-                }`}
-              >
-                <span className="text-sm shrink-0">{ch.icon}</span>
-                <span className="font-extrabold">{ch.label}</span>
-                <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
-                  isChActive ? "bg-white/25 text-white" : "bg-slate-200/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400"
-                }`}>
-                  ({ch.count})
-                </span>
-              </button>
-            );
-          })}
         </div>
       </div>
 
