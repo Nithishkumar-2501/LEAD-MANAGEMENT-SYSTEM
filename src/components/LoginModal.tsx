@@ -169,166 +169,61 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex min-h-screen w-full flex-col lg:flex-row overflow-y-auto"
+      className="fixed inset-0 z-50 flex min-h-screen w-full items-center justify-center overflow-y-auto p-4 sm:p-6"
       style={{
         backgroundColor: "#050505",
         color: "#ffffff",
         fontFamily: "'Poppins', sans-serif",
       }}
     >
-      {/* Left Image Panel */}
+      {/* Full-bleed Scenic Anime Landscape Background Image */}
       <div
-        className="relative hidden w-full flex-col justify-end p-4 lg:flex lg:min-h-screen lg:w-1/2"
-        style={{ boxSizing: "border-box" }}
-      >
-        {/* Background Image Wrapper */}
-        <div
-          className="relative h-full w-full overflow-hidden shadow-2xl"
-          style={{
-            borderRadius: "28px",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            backgroundColor: "#000000",
-            minHeight: "calc(100vh - 32px)",
-          }}
-        >
-          <img
-            src="https://assets.watermelon.sh/auth-11.avif"
-            alt="Serene landscape with a lone tree"
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-
-          {/* Deep Dark Gradient Overlay for Maximum Legibility */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.72) 32%, rgba(0, 0, 0, 0.25) 60%, transparent 100%)",
-            }}
-          />
-
-          {/* Bottom Content within the image */}
-          <div
-            className="absolute right-0 bottom-0 left-0 z-10 flex w-full flex-col items-center justify-center pb-12 text-center px-8"
-            style={{ boxSizing: "border-box" }}
-          >
-            {/* SPHEREX ADMISSION OS Pill */}
-            <div
-              className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 shadow-lg backdrop-blur-md"
-              style={{
-                backgroundColor: "rgba(0, 0, 0, 0.8)",
-                border: "1px solid rgba(255, 255, 255, 0.22)",
-              }}
-            >
-              <span
-                style={{
-                  display: "inline-block",
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  backgroundColor: "#34d399",
-                  boxShadow: "0 0 10px #34d399",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  color: "#ffffff",
-                  textTransform: "uppercase",
-                }}
-              >
-                SPHEREX ADMISSION OS &bull; 2026–2027
-              </span>
-            </div>
-
-            {/* Headline with 100% Guaranteed Bright White Contrast */}
-            <h1
-              style={{
-                color: "#ffffff",
-                fontSize: "clamp(2rem, 3.2vw, 3rem)",
-                fontWeight: 700,
-                lineHeight: 1.15,
-                letterSpacing: "-0.03em",
-                margin: "0 auto",
-                textShadow: "0 3px 20px rgba(0, 0, 0, 0.9)",
-              }}
-            >
-              Move fast. Feel Free
-            </h1>
-
-            <p
-              style={{
-                color: "#cbd5e1",
-                fontSize: "0.92rem",
-                lineHeight: 1.6,
-                maxWidth: "440px",
-                margin: "10px auto 0 auto",
-                textShadow: "0 2px 12px rgba(0, 0, 0, 0.9)",
-              }}
-            >
-              High-velocity institutional admission management and dual-campus lead allocation.
-            </p>
-
-            {/* Pagination Indicators */}
-            <div
-              className="mt-8 flex items-center justify-center gap-2"
-              style={{ display: "flex", gap: "8px", alignItems: "center" }}
-            >
-              <div
-                style={{
-                  width: "28px",
-                  height: "4px",
-                  borderRadius: "9999px",
-                  backgroundColor: "#ffffff",
-                  boxShadow: "0 0 10px rgba(255, 255, 255, 0.6)",
-                }}
-              />
-              <div
-                style={{
-                  width: "6px",
-                  height: "4px",
-                  borderRadius: "9999px",
-                  backgroundColor: "rgba(255, 255, 255, 0.4)",
-                }}
-              />
-              <div
-                style={{
-                  width: "6px",
-                  height: "4px",
-                  borderRadius: "9999px",
-                  backgroundColor: "rgba(255, 255, 255, 0.4)",
-                }}
-              />
-              <div
-                style={{
-                  width: "6px",
-                  height: "4px",
-                  borderRadius: "9999px",
-                  backgroundColor: "rgba(255, 255, 255, 0.4)",
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Form Panel with Deep Obsidian Black Background */}
-      <div
-        className="flex w-full flex-col items-center justify-center p-6 sm:p-10 lg:w-1/2"
+        className="fixed inset-0 pointer-events-none"
         style={{
-          backgroundColor: "#050505",
-          minHeight: "100vh",
-          boxSizing: "border-box",
+          backgroundImage: "url('/login-bg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          zIndex: 0,
         }}
+      />
+
+      {/* Atmospheric Soft Dark Scrim Overlay to guarantee crystal-clear contrast */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.52) 100%)",
+          backdropFilter: "blur(1.5px)",
+          WebkitBackdropFilter: "blur(1.5px)",
+          zIndex: 1,
+        }}
+      />
+
+      {/* Centered Login Card with Sleek Dark Glassmorphism */}
+      <div
+        className="relative z-10 w-full flex items-center justify-center my-auto py-6"
+        style={{ boxSizing: "border-box" }}
       >
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="w-full max-w-[430px]"
-          style={{ width: "100%", maxWidth: "430px", margin: "0 auto" }}
+          className="w-full max-w-[450px]"
+          style={{
+            width: "100%",
+            maxWidth: "450px",
+            margin: "0 auto",
+            backgroundColor: "rgba(5, 8, 16, 0.78)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            borderRadius: "28px",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
+            boxShadow:
+              "0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 35px rgba(56, 189, 248, 0.12)",
+            padding: "36px 30px",
+            boxSizing: "border-box",
+          }}
         >
           {/* SPHEREX CRM Pill Badge */}
           <motion.div
@@ -466,11 +361,12 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 style={{
                   width: "100%",
                   borderRadius: "14px",
-                  border: "1px solid rgba(255, 255, 255, 0.16)",
-                  backgroundColor: "#0d1117",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  backgroundColor: "#ffffff",
                   padding: "13px 16px",
                   fontSize: "14px",
-                  color: "#ffffff",
+                  color: "#000000",
+                  fontWeight: 600,
                   outline: "none",
                   boxSizing: "border-box",
                 }}
@@ -519,11 +415,12 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                   style={{
                     width: "100%",
                     borderRadius: "14px",
-                    border: "1px solid rgba(255, 255, 255, 0.16)",
-                    backgroundColor: "#0d1117",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    backgroundColor: "#ffffff",
                     padding: "13px 44px 13px 16px",
                     fontSize: "14px",
-                    color: "#ffffff",
+                    color: "#000000",
+                    fontWeight: 600,
                     outline: "none",
                     boxSizing: "border-box",
                   }}
@@ -539,7 +436,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                     transform: "translateY(-50%)",
                     background: "none",
                     border: "none",
-                    color: "rgba(255, 255, 255, 0.5)",
+                    color: "#475569",
                     cursor: "pointer",
                     padding: "4px",
                     display: "flex",
