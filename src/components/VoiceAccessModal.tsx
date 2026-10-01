@@ -179,40 +179,79 @@ export default function VoiceAccessModal({
     };
   }, [isOpen]);
 
-  // Merge MOCK_LEADS, applicants prop, localStorage cache, and live Firebase records into unified map
+  // Merge live Firebase records, localStorage cache, applicants prop, and fallback mock leads
   const allAvailableLeads = useMemo(() => {
-    const map = new Map<string, Lead & { application: Application }>();
+    const list: (Lead & { application: Application; isFromFirebase?: boolean })[] = [];
+    const seenIds = new Set<string>();
 
-    // Baseline: MOCK_LEADS ensures Nithish Kumar and Kasi Nathan are ALWAYS present
-    MOCK_LEADS.forEach((lead) => {
-      map.set(lead.name.toLowerCase().trim(), lead);
-      if (lead.id) map.set(lead.id, lead);
-    });
+    // 1. Live Firebase students (Firestore + RTDB) - HIGHEST PRIORITY
+    if (firebaseStudents && firebaseStudents.length > 0) {
+      firebaseStudents.forEach((fb: any) => {
+        if (fb && (fb.name || fb.id)) {
+          const id = String(fb.id || fb.leadId || `fb_${Math.random()}`);
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            const defaultApp: Application = {
+              id: fb.application?.id || `app_${id}`,
+              leadId: id,
+              stage: fb.application?.stage || fb.status || 'INQUIRY',
+              marks10th: fb.application?.marks10th || fb.marks10th || 85,
+              marks12th: fb.application?.marks12th || fb.marks12th || 85,
+              paymentStatus: fb.application?.paymentStatus || 'PENDING',
+            };
+            list.push({
+              ...fb,
+              id,
+              name: (fb.name || 'Candidate').trim(),
+              isFromFirebase: true,
+              application: fb.application || defaultApp,
+            });
+          }
+        }
+      });
+    }
 
-    // Local Storage cached leads
+    // 2. Props applicants (from Dashboard / live state)
+    if (applicants && applicants.length > 0) {
+      applicants.forEach((app) => {
+        if (app && app.id) {
+          const id = String(app.id);
+          if (!seenIds.has(id)) {
+            seenIds.add(id);
+            list.push({
+              ...app,
+              name: (app.name || 'Candidate').trim(),
+              isFromFirebase: true,
+            });
+          }
+        }
+      });
+    }
+
+    // 3. Local Storage cached leads
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('vsb_firebase_leads_cache');
         if (cached) {
-          const list = JSON.parse(cached);
-          if (Array.isArray(list)) {
-            list.forEach((item: any) => {
-              if (item && item.name) {
-                const defaultApp: Application = {
-                  id: item.application?.id || `app_${item.id || 'lead'}`,
-                  leadId: item.id || '',
-                  stage: item.application?.stage || item.status || 'INQUIRY',
-                  marks10th: item.application?.marks10th || item.marks10th || 85,
-                  marks12th: item.application?.marks12th || item.marks12th || 85,
-                  paymentStatus: item.application?.paymentStatus || 'PENDING',
-                };
-                map.set(item.name.toLowerCase().trim(), {
-                  ...item,
-                  application: item.application || defaultApp,
-                });
-                if (item.id) {
-                  map.set(item.id, {
+          const cachedList = JSON.parse(cached);
+          if (Array.isArray(cachedList)) {
+            cachedList.forEach((item: any) => {
+              if (item && item.id) {
+                const id = String(item.id);
+                if (!seenIds.has(id)) {
+                  seenIds.add(id);
+                  const defaultApp: Application = {
+                    id: item.application?.id || `app_${id}`,
+                    leadId: id,
+                    stage: item.application?.stage || item.status || 'INQUIRY',
+                    marks10th: item.application?.marks10th || item.marks10th || 85,
+                    marks12th: item.application?.marks12th || item.marks12th || 85,
+                    paymentStatus: item.application?.paymentStatus || 'PENDING',
+                  };
+                  list.push({
                     ...item,
+                    name: (item.name || 'Candidate').trim(),
+                    isFromFirebase: true,
                     application: item.application || defaultApp,
                   });
                 }
@@ -223,43 +262,19 @@ export default function VoiceAccessModal({
       } catch {}
     }
 
-    // Props applicants (from Prisma / current page state)
-    if (applicants && applicants.length > 0) {
-      applicants.forEach((app) => {
-        if (app && app.name) {
-          map.set(app.name.toLowerCase().trim(), app);
-          if (app.id) map.set(app.id, app);
-        }
-      });
-    }
+    // 4. Baseline Mock Leads (only if not already loaded from Firebase)
+    MOCK_LEADS.forEach((lead) => {
+      const id = String(lead.id);
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        list.push({
+          ...lead,
+          isFromFirebase: false,
+        });
+      }
+    });
 
-    // Live Firebase students (Firestore + RTDB)
-    if (firebaseStudents && firebaseStudents.length > 0) {
-      firebaseStudents.forEach((fb: any) => {
-        if (fb && fb.name) {
-          const defaultApp: Application = {
-            id: fb.application?.id || `app_${fb.id}`,
-            leadId: fb.id,
-            stage: fb.application?.stage || fb.status || 'INQUIRY',
-            marks10th: fb.application?.marks10th || fb.marks10th || 85,
-            marks12th: fb.application?.marks12th || fb.marks12th || 85,
-            paymentStatus: fb.application?.paymentStatus || 'PENDING',
-          };
-          map.set(fb.name.toLowerCase().trim(), {
-            ...fb,
-            application: fb.application || defaultApp,
-          });
-          if (fb.id) {
-            map.set(fb.id, {
-              ...fb,
-              application: fb.application || defaultApp,
-            });
-          }
-        }
-      });
-    }
-
-    return Array.from(new Set(map.values()));
+    return list;
   }, [applicants, firebaseStudents]);
 
   // Teachers dataset
@@ -619,7 +634,7 @@ export default function VoiceAccessModal({
     const cutoffNum = parseInt(searchTarget.replace(/[^\d]/g, ''), 10);
     const isCutoffQuery = !isNaN(cutoffNum) && cutoffNum >= 50 && cutoffNum <= 100;
 
-    return allAvailableLeads.filter((app) => {
+    const filtered = allAvailableLeads.filter((app: any) => {
       const name = normalizeForVoiceMatch(app.name);
       const phone = (app.phone || '').replace(/[^\d]/g, '');
       const email = (app.email || '').toLowerCase();
@@ -669,6 +684,17 @@ export default function VoiceAccessModal({
 
       return false;
     });
+
+    // Prioritize genuine Firebase Firestore records and exact matches first
+    return filtered.sort((a: any, b: any) => {
+      if ((a as any).isFromFirebase && !(b as any).isFromFirebase) return -1;
+      if (!(a as any).isFromFirebase && (b as any).isFromFirebase) return 1;
+      const nameA = normalizeForVoiceMatch(a.name);
+      const nameB = normalizeForVoiceMatch(b.name);
+      if (nameA === searchTarget && nameB !== searchTarget) return -1;
+      if (nameB === searchTarget && nameA !== searchTarget) return 1;
+      return 0;
+    });
   }, [allAvailableLeads, cleanedQuery, query]);
 
   // Match Teachers / Faculty
@@ -707,14 +733,13 @@ export default function VoiceAccessModal({
     });
   }, [effectiveTeachers, cleanedQuery, query]);
 
-  // Read aloud match confirmation once settled
+  // Update status message when candidate matches (SPEECH NARRATION MUTED PER USER REQUEST: Show details on screen directly)
   useEffect(() => {
     if (!query) return;
 
-    if (matchedApplicants.length === 1 && matchedTeachers.length === 0) {
+    if (matchedApplicants.length > 0 && matchedTeachers.length === 0) {
       const stu = matchedApplicants[0];
-      const cutoff = stu.application?.marks12th || stu.application?.marks10th || 'Good';
-      speakAnnouncement(`Found candidate ${stu.name}. Cutoff marks ${cutoff} percent in ${stu.courseInterest || 'Engineering'} at ${stu.campus} campus.`);
+      setStatusMessage(`Showing Firebase student data for "${stu.name}" (${matchedApplicants.length} record${matchedApplicants.length > 1 ? 's' : ''})`);
     } else if (matchedTeachers.length === 1 && matchedApplicants.length === 0) {
       const tch = matchedTeachers[0];
       speakAnnouncement(`Found faculty ${tch.name} from ${tch.department} department.`);
@@ -751,10 +776,9 @@ export default function VoiceAccessModal({
     }
 
     const lower = spokenPhrase.toLowerCase();
-    if (lower.includes('nithish')) {
-      speakAnnouncement('Found student Nithish Kumar. 12th Cutoff marks 97.2 percent in Artificial Intelligence and Data Science at Coimbatore campus.');
-    } else if (lower.includes('kasi')) {
-      speakAnnouncement('Found student Kasi Nathan. 12th Cutoff marks 95.8 percent in Computer Science and Engineering at Karur campus.');
+    if (lower.includes('nithish') || lower.includes('kasi')) {
+      // Speech narration muted per user instruction: directly show data on screen
+      setStatusMessage(`Showing Firebase student data for "${spokenPhrase}"`);
     } else if (lower.includes('rajesh')) {
       speakAnnouncement('Found faculty Professor Rajesh from Mechanical Engineering department.');
     } else if (lower.includes('meenakshi')) {
@@ -952,27 +976,33 @@ export default function VoiceAccessModal({
           {/* 1. MATCHED APPLICANTS / LEADS (FULL DETAILS) */}
           {matchedApplicants.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-orange-500" />
-                  {query ? `Matched Candidate Leads (${matchedApplicants.length})` : `All Synced Candidate Leads (${matchedApplicants.length})`}
-                </span>
-                <span className="text-[11px] text-orange-600 dark:text-orange-400 font-semibold">
-                  Tap card or button to view full student details
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-600 flex items-center justify-center">
+                    <Database className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                    {query ? `Firebase Student Data for "${query}" (${matchedApplicants.length} Record${matchedApplicants.length > 1 ? 's' : ''})` : `All Synced Candidate Leads (${matchedApplicants.length})`}
+                  </span>
+                </div>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Firestore Record • Tap card to open full profile
                 </span>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
-                {matchedApplicants.map((applicant) => {
-                  const marks12 = applicant.application?.marks12th;
-                  const marks10 = applicant.application?.marks10th;
+                {matchedApplicants.map((applicant: any) => {
+                  const marks12 = applicant.application?.marks12th || applicant.marks12th;
+                  const marks10 = applicant.application?.marks10th || applicant.marks10th;
                   const stage = applicant.application?.stage || applicant.status || 'NEW';
                   const payment = applicant.application?.paymentStatus || 'PENDING';
+                  const isFirebaseDoc = (applicant as any).isFromFirebase !== false;
 
                   return (
                     <div
                       key={applicant.id}
-                      className="p-5 rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-orange-500/60 dark:hover:border-orange-500/50 shadow-md hover:shadow-xl transition-all duration-200 flex flex-col gap-4 group cursor-pointer"
+                      className="p-5 rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-emerald-500/60 dark:hover:border-emerald-500/50 shadow-md hover:shadow-xl transition-all duration-200 flex flex-col gap-4 group cursor-pointer"
                       onClick={() => handleSelectStudentAction(applicant)}
                     >
                       {/* Top Header of Candidate Card */}
@@ -987,9 +1017,15 @@ export default function VoiceAccessModal({
 
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-orange-500 transition-colors">
+                              <h3 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors capitalize">
                                 {applicant.name}
                               </h3>
+                              {isFirebaseDoc && (
+                                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                                  <Database className="w-3 h-3 text-emerald-500" />
+                                  Firebase Record (#{applicant.id})
+                                </span>
+                              )}
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800">
                                 {stage}
                               </span>
@@ -998,7 +1034,7 @@ export default function VoiceAccessModal({
                               </span>
                             </div>
 
-                            <p className="text-xs font-bold text-orange-600 dark:text-orange-400 mt-0.5 flex items-center gap-1.5">
+                            <p className="text-xs font-bold text-sky-600 dark:text-sky-400 mt-0.5 flex items-center gap-1.5">
                               <GraduationCap className="w-3.5 h-3.5 shrink-0" />
                               <span>{applicant.courseInterest || 'Engineering Course'}</span>
                             </p>
@@ -1007,57 +1043,93 @@ export default function VoiceAccessModal({
 
                         {/* Cutoff & Payment Badges */}
                         <div className="flex items-center gap-2">
-                          {marks12 && (
+                          {applicant.tneaCutoff ? (
+                            <div className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-right">
+                              <span className="block text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">TNEA Cutoff</span>
+                              <span className="text-sm font-black">{applicant.tneaCutoff} / 200</span>
+                            </div>
+                          ) : null}
+                          {marks12 ? (
                             <div className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-right">
-                              <span className="block text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">12th Cutoff</span>
+                              <span className="block text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">12th Marks</span>
                               <span className="text-sm font-black">{marks12}%</span>
                             </div>
-                          )}
-                          {marks10 && (
+                          ) : null}
+                          {marks10 ? (
                             <div className="px-3 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-right">
                               <span className="block text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">10th Marks</span>
                               <span className="text-sm font-black">{marks10}%</span>
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       </div>
 
                       {/* Detailed Information Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
                         <div className="flex items-center gap-2">
-                          <Phone className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                          <span className="font-semibold text-slate-900 dark:text-white">{applicant.phone || 'N/A'}</span>
+                          <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span className="font-bold text-slate-900 dark:text-white">{applicant.phone || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                          <span className="truncate">{applicant.email || 'N/A'}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                          <span>{applicant.district || applicant.state || 'Tamil Nadu'}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <School className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <span className="truncate">{applicant.school || 'Higher Secondary School'}</span>
+                          <span className="truncate font-semibold">{applicant.email || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Building2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                          <span>Campus: <strong className="text-slate-900 dark:text-white">{applicant.campus}</strong></span>
+                          <span>Campus: <strong className="text-slate-900 dark:text-white">V.S.B. {applicant.campus}</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <School className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="truncate">School: <strong className="text-slate-900 dark:text-white capitalize">{applicant.school || 'Higher Secondary'}</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                          <span>District: <strong className="text-slate-900 dark:text-white capitalize">{applicant.district || applicant.state || 'Tamil Nadu'}</strong></span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Shield className="w-3.5 h-3.5 text-purple-500 shrink-0" />
                           <span>Fee: <strong className={payment === 'COMPLETED' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}>{payment}</strong></span>
                         </div>
                         {applicant.fatherName && (
-                          <div className="flex items-center gap-2 sm:col-span-2">
-                            <span className="text-[11px] text-slate-400 font-bold">Father:</span>
-                            <span>{applicant.fatherName}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-slate-500 font-bold shrink-0">Father:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white capitalize">{applicant.fatherName}</span>
+                          </div>
+                        )}
+                        {applicant.motherName && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-slate-500 font-bold shrink-0">Mother:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white capitalize">{applicant.motherName}</span>
+                          </div>
+                        )}
+                        {applicant.community && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-slate-500 font-bold shrink-0">Community:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">{applicant.community}</span>
+                          </div>
+                        )}
+                        {applicant.bloodGroup && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-slate-500 font-bold shrink-0">Blood Group:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">{applicant.bloodGroup}</span>
+                          </div>
+                        )}
+                        {applicant.gender && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-slate-500 font-bold shrink-0">Gender:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">{applicant.gender}</span>
+                          </div>
+                        )}
+                        {applicant.source && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-slate-500 font-bold shrink-0">Source:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">{applicant.source}</span>
                           </div>
                         )}
                         {applicant.address && (
-                          <div className="flex items-center gap-2 sm:col-span-3 text-[11px] text-slate-500 dark:text-slate-400">
-                            <span className="font-bold shrink-0">Address:</span>
-                            <span className="truncate">{applicant.address}</span>
+                          <div className="flex items-center gap-2 sm:col-span-3 text-[11px] text-slate-600 dark:text-slate-400 border-t border-slate-200/60 dark:border-slate-800 pt-2">
+                            <span className="font-bold shrink-0 text-slate-500">Address:</span>
+                            <span className="truncate capitalize">{applicant.address}</span>
                           </div>
                         )}
                       </div>
@@ -1115,12 +1187,12 @@ export default function VoiceAccessModal({
                             e.stopPropagation();
                             handleSelectStudentAction(applicant);
                           }}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-md shadow-orange-600/30 hover:shadow-lg transition-all cursor-pointer active:scale-95 ml-auto"
-                          title="Open Full Student Details & Application"
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md shadow-emerald-600/30 hover:shadow-lg transition-all cursor-pointer active:scale-95 ml-auto"
+                          title="Open Full Student Details & Documents Modal"
                         >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Student Details / Application</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <FileText className="w-4 h-4" />
+                          <span>Open Full Student Details Modal</span>
+                          <ArrowRight className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
