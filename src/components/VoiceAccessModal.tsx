@@ -295,11 +295,20 @@ export default function VoiceAccessModal({
   const [statusMessage, setStatusMessage] = useState('Listening actively... Speak candidate or faculty name');
   const [voiceLevels, setVoiceLevels] = useState<number[]>([12, 18, 14, 20, 10]);
 
+  const [micVolume, setMicVolume] = useState<number>(0);
+  const [isMicStreaming, setIsMicStreaming] = useState<boolean>(false);
+
   // References
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const animIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // System Hardware Mic & Web Audio API Analyser refs
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
   // Control refs
   const isListeningRef = useRef(false);
@@ -339,43 +348,126 @@ export default function VoiceAccessModal({
     }
   }, []);
 
-  // Animate audio wave visualizer based on speech activity
-  useEffect(() => {
-    if (isListening) {
-      animIntervalRef.current = setInterval(() => {
-        if (isSpeaking) {
-          setVoiceLevels([
-            Math.floor(Math.random() * 22) + 20,
-            Math.floor(Math.random() * 28) + 24,
-            Math.floor(Math.random() * 32) + 26,
-            Math.floor(Math.random() * 26) + 22,
-            Math.floor(Math.random() * 20) + 18,
-          ]);
-        } else {
-          setVoiceLevels([
-            Math.floor(Math.random() * 6) + 10,
-            Math.floor(Math.random() * 8) + 14,
-            Math.floor(Math.random() * 10) + 16,
-            Math.floor(Math.random() * 8) + 12,
-            Math.floor(Math.random() * 6) + 10,
-          ]);
-        }
-      }, 100);
-    } else {
-      if (animIntervalRef.current) {
-        clearInterval(animIntervalRef.current);
-        animIntervalRef.current = null;
-      }
-      setVoiceLevels([8, 8, 8, 8, 8]);
+  // Stop hardware mic stream and Web Audio analyzer
+  const stopSystemMicAnalysis = useCallback(() => {
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
     }
+    if (audioSourceRef.current) {
+      try {
+        audioSourceRef.current.disconnect();
+      } catch {}
+      audioSourceRef.current = null;
+    }
+    if (analyserRef.current) {
+      try {
+        analyserRef.current.disconnect();
+      } catch {}
+      analyserRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      try {
+        audioContextRef.current.close();
+      } catch {}
+      audioContextRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      try {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      } catch {}
+      mediaStreamRef.current = null;
+    }
+    setIsMicStreaming(false);
+    setIsSpeaking(false);
+    setVoiceLevels([8, 8, 8, 8, 8]);
+    setMicVolume(0);
+  }, []);
 
-    return () => {
-      if (animIntervalRef.current) {
-        clearInterval(animIntervalRef.current);
-        animIntervalRef.current = null;
+  // Start real hardware system microphone audio capture and frequency analyzer
+  const startSystemMicAnalysis = useCallback(async () => {
+    if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) return;
+
+    try {
+      if (mediaStreamRef.current && audioContextRef.current?.state === 'running') {
+        return; // Already streaming
       }
-    };
-  }, [isListening, isSpeaking]);
+
+      // Access real physical system microphone with hardware audio processing
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      mediaStreamRef.current = stream;
+
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const audioCtx = new AudioCtx();
+      audioContextRef.current = audioCtx;
+
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 128;
+      analyser.smoothingTimeConstant = 0.65;
+      analyserRef.current = analyser;
+
+      const source = audioCtx.createMediaStreamSource(stream);
+      source.connect(analyser);
+      audioSourceRef.current = source;
+
+      setIsMicStreaming(true);
+
+      const freqBuffer = new Uint8Array(analyser.frequencyBinCount);
+      const timeBuffer = new Uint8Array(analyser.fftSize);
+
+      const analyzeFrame = () => {
+        if (!analyserRef.current) return;
+
+        analyserRef.current.getByteFrequencyData(freqBuffer);
+        analyserRef.current.getByteTimeDomainData(timeBuffer);
+
+        // 1. Calculate Real RMS Volume from physical System Mic
+        let sumSquares = 0;
+        for (let i = 0; i < timeBuffer.length; i++) {
+          const norm = (timeBuffer[i] - 128) / 128;
+          sumSquares += norm * norm;
+        }
+        const rms = Math.sqrt(sumSquares / timeBuffer.length);
+        const volumeScore = Math.min(100, Math.round(rms * 220));
+        setMicVolume(volumeScore);
+
+        // Voice Activity Detection: user is actually speaking into system mic
+        const isVocalizing = rms > 0.035;
+        setIsSpeaking(isVocalizing);
+
+        // 2. Real System Mic Frequency Bands (5 responsive bars)
+        const bandSize = Math.max(1, Math.floor(freqBuffer.length / 5));
+        const levels = [0, 1, 2, 3, 4].map((b) => {
+          let sum = 0;
+          for (let i = b * bandSize; i < (b + 1) * bandSize && i < freqBuffer.length; i++) {
+            sum += freqBuffer[i];
+          }
+          const avg = sum / bandSize;
+          return Math.max(8, Math.min(38, Math.round((avg / 255) * 32) + 8));
+        });
+
+        setVoiceLevels(levels);
+        rafIdRef.current = requestAnimationFrame(analyzeFrame);
+      };
+
+      rafIdRef.current = requestAnimationFrame(analyzeFrame);
+    } catch (err) {
+      console.warn('[VoiceAccess] System mic hardware stream notice:', err);
+      setIsMicStreaming(false);
+    }
+  }, []);
 
   // Start Voice Recognition with continuous speech mode and auto-recovery
   const startListening = useCallback(
@@ -383,6 +475,9 @@ export default function VoiceAccessModal({
       if (typeof window === 'undefined') return;
 
       isStartingRef.current = false;
+
+      // Start hardware system microphone audio stream & analysis
+      startSystemMicAnalysis();
 
       // Clean up previous recognition instance cleanly
       if (recognitionRef.current) {
@@ -544,7 +639,7 @@ export default function VoiceAccessModal({
         }
       }
     },
-    []
+    [startSystemMicAnalysis]
   );
 
   // Stop listening explicitly
@@ -552,6 +647,9 @@ export default function VoiceAccessModal({
     isListeningRef.current = false;
     isStartingRef.current = false;
     setIsSpeaking(false);
+
+    // Stop hardware mic stream
+    stopSystemMicAnalysis();
 
     if (restartTimerRef.current) {
       clearTimeout(restartTimerRef.current);
@@ -570,23 +668,17 @@ export default function VoiceAccessModal({
 
     setIsListening(false);
     setStatusMessage('Voice recognition paused. Tap mic to resume or select below.');
-  }, []);
+  }, [stopSystemMicAnalysis]);
 
   // Safe user-gesture toggle for microphone
   const handleToggleMic = useCallback(async () => {
     if (isListeningRef.current) {
       stopListening();
     } else {
-      try {
-        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-          await navigator.mediaDevices.getUserMedia({ audio: true });
-        }
-      } catch (err) {
-        console.warn('[VoiceAccess] Mic permission check:', err);
-      }
+      await startSystemMicAnalysis();
       startListening(0);
     }
-  }, [startListening, stopListening]);
+  }, [startListening, stopListening, startSystemMicAnalysis]);
 
   // Handle modal open/close lifecycle
   useEffect(() => {
@@ -608,13 +700,14 @@ export default function VoiceAccessModal({
       }
     } else {
       stopListening();
+      stopSystemMicAnalysis();
       if (synthRef.current) {
         try {
           synthRef.current.cancel();
         } catch {}
       }
     }
-  }, [isOpen, initialQuery, startListening, stopListening]);
+  }, [isOpen, initialQuery, startListening, stopListening, stopSystemMicAnalysis]);
 
   // Clean voice search query
   const query = (transcript || interimText).trim();
@@ -918,6 +1011,32 @@ export default function VoiceAccessModal({
 
             {/* Status & Live Voice Feedback */}
             <div className="space-y-2 w-full max-w-lg">
+              {/* Real Hardware System Mic Analysis Feedback */}
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black border transition-all ${
+                  isMicStreaming
+                    ? isSpeaking
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700 shadow-sm'
+                      : 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border-teal-200 dark:border-teal-800'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    isMicStreaming
+                      ? isSpeaking
+                        ? 'bg-emerald-500 animate-ping'
+                        : 'bg-teal-500 animate-pulse'
+                      : 'bg-slate-400'
+                  }`} />
+                  <span>
+                    {isMicStreaming
+                      ? isSpeaking
+                        ? `🎙️ System Mic: Analyzing Voice (${micVolume}% Audio Energy)`
+                        : `🎙️ System Mic: Hardware Connected (${micVolume}% Ambient)`
+                      : '🎙️ System Mic: Click mic to connect'}
+                  </span>
+                </span>
+              </div>
+
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 min-h-5">
                 {isListening ? (
                   <>
