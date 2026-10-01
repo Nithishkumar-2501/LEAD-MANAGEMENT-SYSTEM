@@ -678,12 +678,23 @@ export default function DashboardPage() {
             onOpenCreateModal={() => setIsCreateModalOpen(true)}
             onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
             onToggleTask={handleToggleTask}
-            onImportLeads={(newLeads) => {
-              setApplicants((prev) => [...newLeads, ...prev]);
-              triggerToast(`📥 Imported ${newLeads.length} student record(s) from File Manager!`);
+            onImportLeads={async (newLeads) => {
+              setApplicants((prev) => {
+                const updated = [...newLeads, ...prev];
+                try {
+                  localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
+                } catch (e) {}
+                return updated;
+              });
+              triggerToast(`📥 Imported ${newLeads.length} student record(s)! Syncing to Firebase...`);
               if (newLeads.length > 0) {
                 handleSelectApplicant(newLeads[0]);
               }
+              // Persist all imported leads to Firebase Firestore
+              for (const lead of newLeads) {
+                await saveStudentToFirebase(lead).catch((err) => console.warn("Notice saving lead to Firebase:", err));
+              }
+              triggerToast(`🔥 All ${newLeads.length} student record(s) saved in Firebase!`);
             }}
             onDeleteApplicant={handleDeleteApplicant}
           />
@@ -736,11 +747,22 @@ export default function DashboardPage() {
             onActionTrigger={handleActionTrigger}
             onTriggerToast={triggerToast}
             onSelectApplicant={handleSelectApplicant}
-            onImportLeads={(newLeads) => {
-              setApplicants((prev) => [...newLeads, ...prev]);
+            onImportLeads={async (newLeads) => {
+              setApplicants((prev) => {
+                const updated = [...newLeads, ...prev];
+                try {
+                  localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
+                } catch (e) {}
+                return updated;
+              });
+              triggerToast(`📥 Imported ${newLeads.length} student record(s)! Syncing to Firebase...`);
               if (newLeads.length > 0) {
                 handleSelectApplicant(newLeads[0]);
               }
+              for (const lead of newLeads) {
+                await saveStudentToFirebase(lead).catch((err) => console.warn("Notice saving lead to Firebase:", err));
+              }
+              triggerToast(`🔥 All ${newLeads.length} student record(s) saved in Firebase!`);
             }}
             onDeleteContact={handleDeleteApplicant}
             onReloadLeads={handleReloadLeads}

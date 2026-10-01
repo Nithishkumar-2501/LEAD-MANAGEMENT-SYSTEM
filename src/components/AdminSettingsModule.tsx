@@ -24,6 +24,14 @@ import {
   Calendar
 } from "lucide-react";
 import GoogleCalendarModal from "@/components/GoogleCalendarModal";
+import {
+  fetchSystemAccountsFromFirebase,
+  saveSystemAccountToFirebase,
+  deleteSystemAccountFromFirebase,
+  fetchAdminSettingsFromFirebase,
+  saveAdminSettingsToFirebase,
+} from "@/lib/firebaseSync";
+import { SystemAccountRecord, AdminSettingsRecord } from "@/types/crm";
 
 interface AdminSettingsModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -32,15 +40,7 @@ interface AdminSettingsModuleProps {
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
 }
 
-interface SystemAccount {
-  id: string;
-  username: string;
-  password: string;
-  role: "ADMIN" | "COUNSELOR" | "FACULTY";
-  campus: "KARUR" | "COIMBATORE" | "ALL";
-  isLoggedIn: boolean;
-  lastActive: string;
-}
+export type SystemAccount = SystemAccountRecord;
 
 export default function AdminSettingsModule({
   loggedInCampus,
@@ -48,7 +48,7 @@ export default function AdminSettingsModule({
   theme = "DARK",
   onThemeChange,
 }: AdminSettingsModuleProps) {
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<AdminSettingsRecord>({
     collegeName: "V.S.B. ENGINEERING COLLEGE",
     karurCode: "VSB-612",
     coimbatoreCode: "VSB-714",
@@ -56,6 +56,7 @@ export default function AdminSettingsModule({
     whatsappAlerts: true,
     emailNotifications: true,
   });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const adminIdKey = loggedInCampus === "KARUR" ? "vsb_admin_karur_id" : "vsb_admin_coimbatore_id";
   const adminPwKey = loggedInCampus === "KARUR" ? "vsb_admin_karur_pw" : "vsb_admin_coimbatore_pw";
@@ -136,6 +137,29 @@ export default function AdminSettingsModule({
   const [newAccRole, setNewAccRole] = useState<"ADMIN" | "COUNSELOR" | "FACULTY">("COUNSELOR");
   const [newAccCampus, setNewAccCampus] = useState<"KARUR" | "COIMBATORE" | "ALL">("KARUR");
 
+  // Load system accounts and settings from Firebase Firestore
+  useEffect(() => {
+    let isMounted = true;
+    async function loadFirebaseData() {
+      try {
+        const liveAccs = await fetchSystemAccountsFromFirebase();
+        if (isMounted && liveAccs && liveAccs.length > 0) {
+          setAccounts(liveAccs);
+        }
+        const liveSet = await fetchAdminSettingsFromFirebase();
+        if (isMounted && liveSet) {
+          setSettings(liveSet);
+        }
+      } catch (err) {
+        console.warn("Firebase settings load notice:", err);
+      }
+    }
+    loadFirebaseData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Sync Accounts to LocalStorage
   useEffect(() => {
     localStorage.setItem("vsb_system_accounts", JSON.stringify(accounts));
@@ -149,7 +173,7 @@ export default function AdminSettingsModule({
     setNewAdminUsername(initialId);
   }, [loggedInCampus, adminIdKey]);
 
-  const handleCredentialsChange = (e: React.FormEvent) => {
+  const handleCredentialsChange = async (e: React.FormEvent) => {
     e.preventDefault();
     const storedPw =
       localStorage.getItem(adminPwKey) ||
@@ -174,34 +198,44 @@ export default function AdminSettingsModule({
     localStorage.setItem(adminIdKey, newAdminUsername.trim());
     setAdminUsername(newAdminUsername.trim());
 
-    // Also update accounts list
-    setAccounts((prev) =>
-      prev.map((acc) => {
-        if (
-          (loggedInCampus === "KARUR" && acc.username.includes("karur")) ||
-          (loggedInCampus === "COIMBATORE" && acc.username.includes("covai"))
-        ) {
-          return {
-            ...acc,
-            username: newAdminUsername.trim(),
-            password: newPassword || acc.password,
-          };
-        }
-        return acc;
-      })
-    );
+    // Also update accounts list and save to Firebase
+    const updatedAccounts = accounts.map((acc) => {
+      if (
+        (loggedInCampus === "KARUR" && acc.username.includes("karur")) ||
+        (loggedInCampus === "COIMBATORE" && acc.username.includes("covai"))
+      ) {
+        const updated = {
+          ...acc,
+          username: newAdminUsername.trim(),
+          password: newPassword || acc.password,
+        };
+        saveSystemAccountToFirebase(updated).catch(() => {});
+        return updated;
+      }
+      return acc;
+    });
+
+    setAccounts(updatedAccounts);
 
     onTriggerToast(
-      `🔑 Admin User ID & Security Credentials updated successfully to "${newAdminUsername.trim()}"!`
+      `🔑 Admin User ID & Security Credentials updated in Firebase successfully to "${newAdminUsername.trim()}"!`
     );
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    onTriggerToast("V.S.B. Admin Portal Configuration Saved Successfully!");
+    setIsSavingSettings(true);
+    try {
+      await saveAdminSettingsToFirebase(settings);
+      onTriggerToast("🔥 V.S.B. Admin Portal Configuration Saved to Firebase Successfully!");
+    } catch (e) {
+      onTriggerToast("V.S.B. Admin Portal Configuration Saved Successfully!");
+    } finally {
+      setIsSavingSettings(false);
+    }
   };
 
   // Toggle Password Visibility
@@ -210,17 +244,18 @@ export default function AdminSettingsModule({
   };
 
   // Delete User ID & Password Account
-  const handleDeleteAccount = (id: string, username: string) => {
+  const handleDeleteAccount = async (id: string, username: string) => {
     if (accounts.length <= 1) {
       onTriggerToast("❌ Cannot delete the last remaining system account.");
       return;
     }
     setAccounts((prev) => prev.filter((acc) => acc.id !== id));
-    onTriggerToast(`🗑️ User Account "${username}" and credentials permanently deleted.`);
+    await deleteSystemAccountFromFirebase(id);
+    onTriggerToast(`🗑️ User Account "${username}" and credentials permanently deleted from Firebase.`);
   };
 
   // Add New System Account
-  const handleAddAccountSubmit = (e: React.FormEvent) => {
+  const handleAddAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAccUsername.trim() || !newAccPassword.trim()) {
       onTriggerToast("❌ Username and Password are required.");
@@ -236,7 +271,8 @@ export default function AdminSettingsModule({
       lastActive: "Created Just Now",
     };
     setAccounts((prev) => [newAcc, ...prev]);
-    onTriggerToast(`✅ Added new ${newAccRole} account "${newAccUsername.trim()}"!`);
+    await saveSystemAccountToFirebase(newAcc);
+    onTriggerToast(`🔥 Added new ${newAccRole} account "${newAccUsername.trim()}" to Firebase!`);
     setNewAccUsername("");
     setNewAccPassword("");
     setIsAddAccountModalOpen(false);

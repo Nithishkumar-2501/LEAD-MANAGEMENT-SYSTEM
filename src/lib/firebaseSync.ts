@@ -12,7 +12,19 @@ import { ref, set, update, remove, get, child } from "firebase/database";
 import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storage";
 import { signInAnonymously } from "firebase/auth";
 import { auth, db, rtdb, storage } from "@/lib/firebase";
-import { Lead, Application, Teacher, ManagedApplication } from "@/types/crm";
+import {
+  Lead,
+  Application,
+  Teacher,
+  ManagedApplication,
+  CourseProgram,
+  Payment,
+  OfflineUploadLog,
+  SystemAccountRecord,
+  AdminSettingsRecord,
+  StudentDocument,
+  CampusLocation,
+} from "@/types/crm";
 import { formatPhoneWith91 } from "@/lib/phoneValidation";
 
 export type StudentRecord = Lead & { application?: Application | null };
@@ -1206,5 +1218,639 @@ if (typeof window !== "undefined") {
   setTimeout(() => {
     normalizeAllFirebasePhones().catch(() => {});
   }, 2500);
+}
+
+// -------------------------------------------------------------
+// 1. ACADEMIC DEGREE PROGRAMS & COURSES FIREBASE CRUD
+// -------------------------------------------------------------
+
+export const DEFAULT_COURSES: CourseProgram[] = [
+  {
+    code: "CSE-101",
+    name: "B.E. Computer Science & Engineering",
+    dept: "Computer Science",
+    hod: "Dr. K. Senthilkumar",
+    karurSeats: 180,
+    coimbatoreSeats: 240,
+    tuitionFee: "₹85,000 / Year",
+    nbaAccredited: true,
+    meta: "4 Years • Full-Time Degree",
+    iconName: "Cpu",
+    description: "Industry-aligned computing curriculum covering Data Structures, Cloud Computing, Full-Stack Development, and DevOps engineering.",
+    eligibility: "10+2 with Physics, Chemistry & Mathematics (Min. 50% for OC, 45% for BC/MBC, 40% for SC/ST).",
+    syllabus: ["Data Structures & Algorithms", "Database Management Systems", "Computer Networks", "Cloud Computing & AWS", "Compiler Design"],
+    careerRoles: ["Full-Stack Software Engineer", "Cloud Architect", "System Analyst", "Cybersecurity Specialist"],
+  },
+  {
+    code: "AIDS-102",
+    name: "B.Tech Artificial Intelligence & Data Science",
+    dept: "AI & DS",
+    hod: "Dr. P. Rajasekaran",
+    karurSeats: 120,
+    coimbatoreSeats: 180,
+    tuitionFee: "₹95,000 / Year",
+    nbaAccredited: true,
+    meta: "4 Years • High Demand Tech",
+    iconName: "Brain",
+    description: "Cutting-edge artificial intelligence, machine learning algorithms, deep learning neural networks, Big Data analytics, and generative AI models.",
+    eligibility: "10+2 with Physics, Chemistry & Mathematics with strong aptitude in computing and statistics.",
+    syllabus: ["Foundations of AI", "Machine Learning & Deep Learning", "Big Data Analytics", "Natural Language Processing", "Computer Vision"],
+    careerRoles: ["AI/ML Engineer", "Data Scientist", "NLP Researcher", "Business Intelligence Architect"],
+  },
+  {
+    code: "ECE-103",
+    name: "B.E. Electronics & Communication Engg",
+    dept: "Electronics",
+    hod: "Dr. M. Karthikeyan",
+    karurSeats: 180,
+    coimbatoreSeats: 180,
+    tuitionFee: "₹80,000 / Year",
+    nbaAccredited: true,
+    meta: "4 Years • VLSI & Embedded",
+    iconName: "Radio",
+    description: "Specialized focus on VLSI design, semiconductor chips, IoT sensor networks, 5G wireless telecommunications, and robotics.",
+    eligibility: "10+2 with PCM. TNEA Counselling and Management Quota direct admission available.",
+    syllabus: ["Digital Signal Processing", "VLSI System Design", "Embedded Microcontrollers", "Wireless Communication", "Optical Networks"],
+    careerRoles: ["VLSI Design Engineer", "Embedded Systems Developer", "Telecom Specialist", "Robotics Hardware Engineer"],
+  },
+  {
+    code: "CY-104",
+    name: "B.Tech Cyber Security",
+    dept: "Information Tech",
+    hod: "Dr. V. Deepa",
+    karurSeats: 60,
+    coimbatoreSeats: 120,
+    tuitionFee: "₹90,000 / Year",
+    nbaAccredited: true,
+    meta: "4 Years • Network & Security",
+    iconName: "ShieldAlert",
+    description: "Comprehensive offensive and defensive cybersecurity, ethical hacking, digital forensics, cloud governance, and zero-trust security.",
+    eligibility: "10+2 with PCM. Suitable for students passionate about cyber forensics and ethical hacking.",
+    syllabus: ["Ethical Hacking & Penetration Testing", "Cryptography", "Network Defense & Countermeasures", "Digital Forensics", "Cloud Security"],
+    careerRoles: ["Security Operations Analyst (SOC)", "Penetration Tester", "Information Security Consultant", "Forensic Investigator"],
+  },
+  {
+    code: "MECH-105",
+    name: "B.E. Mechanical Engineering",
+    dept: "Mechanical",
+    hod: "Dr. S. Ramesh",
+    karurSeats: 120,
+    coimbatoreSeats: 60,
+    tuitionFee: "₹75,000 / Year",
+    nbaAccredited: true,
+    meta: "4 Years • CAD & Automation",
+    iconName: "Wrench",
+    description: "Core mechanical engineering fundamentals combined with modern Industry 4.0, CAD/CAM/CAE, electric vehicle (EV) engineering, and robotics.",
+    eligibility: "10+2 with PCM or Diploma in Mechanical (Direct 2nd Year Lateral Entry eligible).",
+    syllabus: ["Thermodynamics & Heat Transfer", "Design of Machine Elements", "Finite Element Analysis (FEA)", "Automotive & EV Technology", "Robotics & Automation"],
+    careerRoles: ["Mechanical Design Engineer", "EV Powertrain Engineer", "Production & Quality Manager", "Automotive Specialist"],
+  },
+  {
+    code: "EEE-106",
+    name: "B.E. Electrical & Electronics Engg",
+    dept: "Electrical",
+    hod: "Dr. G. Anbalagan",
+    karurSeats: 60,
+    coimbatoreSeats: 60,
+    tuitionFee: "₹75,000 / Year",
+    nbaAccredited: true,
+    meta: "4 Years • Power & EV Systems",
+    iconName: "Zap",
+    description: "Smart grids, renewable energy systems, electric vehicle drivetrains, power electronics, and industrial automation controls.",
+    eligibility: "10+2 with PCM. Anna University affiliated.",
+    syllabus: ["Power Systems & Smart Grids", "Power Electronics & Inverters", "Electric Vehicle Drives", "Control Systems Engineering", "Renewable Energy Technology"],
+    careerRoles: ["Power Systems Engineer", "EV Battery Specialist", "Automation & PLC Engineer", "Solar/Wind Energy Consultant"],
+  },
+];
+
+export async function fetchCoursesFromFirebase(): Promise<CourseProgram[]> {
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDocs(collection(db, "courses")), 4000);
+    if (snap && !snap.empty) {
+      const list: CourseProgram[] = [];
+      snap.forEach((docSnap) => {
+        list.push(docSnap.data() as CourseProgram);
+      });
+      return list;
+    }
+  } catch (err) {
+    console.warn("Firestore fetchCourses notice:", err);
+  }
+
+  // If empty in Firestore, auto-seed default courses into Firebase!
+  return await seedInitialCoursesToFirebase();
+}
+
+export async function saveCourseToFirebase(course: CourseProgram): Promise<boolean> {
+  if (!course || !course.code) return false;
+  const clean = sanitizeForFirebase({
+    ...course,
+    updatedAt: new Date().toISOString(),
+  });
+
+  try {
+    await ensureFirebaseAuth();
+    const docRef = doc(db, "courses", course.code);
+    await withTimeout(setDoc(docRef, clean, { merge: true }), 3000);
+    console.log(`🔥 [Firebase Firestore] Saved academic program: ${course.code} (${course.name})`);
+    return true;
+  } catch (err) {
+    console.warn("Firestore saveCourse notice:", err);
+    return false;
+  }
+}
+
+export async function deleteCourseFromFirebase(courseCode: string): Promise<boolean> {
+  if (!courseCode) return false;
+  try {
+    await ensureFirebaseAuth();
+    await withTimeout(deleteDoc(doc(db, "courses", courseCode)), 2500);
+    console.log(`🔥 [Firebase Firestore] Deleted course: ${courseCode}`);
+    return true;
+  } catch (err) {
+    console.warn("Firestore deleteCourse notice:", err);
+    return false;
+  }
+}
+
+export async function seedInitialCoursesToFirebase(): Promise<CourseProgram[]> {
+  try {
+    await ensureFirebaseAuth();
+    await Promise.allSettled(
+      DEFAULT_COURSES.map(async (c) => {
+        const docRef = doc(db, "courses", c.code);
+        await setDoc(docRef, sanitizeForFirebase(c), { merge: true });
+      })
+    );
+    console.log(`🔥 [Firebase Firestore] Seeded ${DEFAULT_COURSES.length} academic courses successfully!`);
+    return DEFAULT_COURSES;
+  } catch (e) {
+    console.warn("Error seeding courses to Firebase:", e);
+    return DEFAULT_COURSES;
+  }
+}
+
+// -------------------------------------------------------------
+// 2. ADMISSION FEE PAYMENTS & BILLING FIREBASE CRUD
+// -------------------------------------------------------------
+
+export async function fetchPaymentsFromFirebase(campus?: CampusLocation): Promise<Payment[]> {
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDocs(collection(db, "payments")), 4000);
+    if (snap && !snap.empty) {
+      const list: Payment[] = [];
+      snap.forEach((docSnap) => {
+        const item = docSnap.data() as Payment;
+        if (!campus || campus === "ALL" || item.campus === campus) {
+          list.push(item);
+        }
+      });
+      if (list.length > 0) return list;
+    }
+  } catch (err) {
+    console.warn("Firestore fetchPayments notice:", err);
+  }
+
+  // Fallback: seed initial payments
+  return await seedInitialPaymentsToFirebase();
+}
+
+export async function savePaymentToFirebase(payment: Payment): Promise<boolean> {
+  if (!payment || !payment.id) return false;
+  const clean = sanitizeForFirebase({
+    ...payment,
+    updatedAt: new Date().toISOString(),
+  });
+
+  try {
+    await ensureFirebaseAuth();
+    const docRef = doc(db, "payments", payment.id);
+    await withTimeout(setDoc(docRef, clean, { merge: true }), 3000);
+    console.log(`🔥 [Firebase Firestore] Saved payment receipt: ${payment.transactionId} for ${payment.studentName}`);
+
+    // If student ID is known, also update paymentStatus in students & managed_applications
+    if (payment.applicationId) {
+      const studentId = payment.applicationId.replace(/^app_/, "");
+      try {
+        await setDoc(
+          doc(db, "students", studentId),
+          {
+            application: { paymentStatus: "COMPLETED", stage: "FEE_PAID" },
+            status: "ADMITTED",
+            updatedAt: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      } catch (e) {}
+
+      try {
+        await setDoc(
+          doc(db, "managed_applications", payment.applicationId),
+          { paymentStatus: "Payment Approved", formStatus: "Complete", updatedAt: new Date().toISOString() },
+          { merge: true }
+        );
+      } catch (e) {}
+    }
+
+    return true;
+  } catch (err) {
+    console.warn("Firestore savePayment notice:", err);
+    return false;
+  }
+}
+
+export async function seedInitialPaymentsToFirebase(): Promise<Payment[]> {
+  const initialPayments: Payment[] = [
+    {
+      id: "pay_401",
+      applicationId: "app_1",
+      studentName: "Revathy",
+      course: "B.E. Computer Science and Engineering",
+      campus: "KARUR",
+      amount: 85000,
+      status: "COMPLETED",
+      transactionId: "VSB_TXN_998827361",
+      createdAt: "2026-08-01T15:00:00Z",
+    },
+    {
+      id: "pay_402",
+      applicationId: "app_2",
+      studentName: "Gunal",
+      course: "B.Tech AI & Data Science",
+      campus: "COIMBATORE",
+      amount: 95000,
+      status: "COMPLETED",
+      transactionId: "VSB_TXN_998827362",
+      createdAt: "2026-08-05T09:00:00Z",
+    },
+    {
+      id: "pay_403",
+      applicationId: "app_3",
+      studentName: "Priyadharshini",
+      course: "B.E. Electronics & Communication",
+      campus: "KARUR",
+      amount: 80000,
+      status: "COMPLETED",
+      transactionId: "VSB_TXN_998827363",
+      createdAt: "2026-08-10T11:30:00Z",
+    },
+  ];
+
+  try {
+    await ensureFirebaseAuth();
+    await Promise.allSettled(
+      initialPayments.map(async (p) => {
+        await setDoc(doc(db, "payments", p.id), sanitizeForFirebase(p), { merge: true });
+      })
+    );
+    console.log(`🔥 [Firebase Firestore] Seeded ${initialPayments.length} initial payment transactions.`);
+    return initialPayments;
+  } catch (e) {
+    return initialPayments;
+  }
+}
+
+// -------------------------------------------------------------
+// 3. SYSTEM ACCOUNTS & ADMIN SETTINGS FIREBASE CRUD
+// -------------------------------------------------------------
+
+export const DEFAULT_SYSTEM_ACCOUNTS: SystemAccountRecord[] = [
+  {
+    id: "acc_1",
+    username: "adminkarur@123",
+    password: "vsbec@123",
+    role: "ADMIN",
+    campus: "KARUR",
+    isLoggedIn: true,
+    lastActive: "Active Now (Current Session)",
+  },
+  {
+    id: "acc_2",
+    username: "admincovai@123",
+    password: "vsbectc@1213",
+    role: "ADMIN",
+    campus: "COIMBATORE",
+    isLoggedIn: true,
+    lastActive: "Active Now (Coimbatore Session)",
+  },
+  {
+    id: "acc_3",
+    username: "usercounselor@123",
+    password: "user123",
+    role: "COUNSELOR",
+    campus: "KARUR",
+    isLoggedIn: true,
+    lastActive: "Active Now (Desk #4)",
+  },
+  {
+    id: "acc_4",
+    username: "teacherkarur@123",
+    password: "teacher123",
+    role: "FACULTY",
+    campus: "KARUR",
+    isLoggedIn: false,
+    lastActive: "Today at 09:45 AM",
+  },
+  {
+    id: "acc_5",
+    username: "teachercovai@123",
+    password: "teacher123",
+    role: "FACULTY",
+    campus: "COIMBATORE",
+    isLoggedIn: false,
+    lastActive: "Yesterday at 04:30 PM",
+  },
+];
+
+export async function fetchSystemAccountsFromFirebase(): Promise<SystemAccountRecord[]> {
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDocs(collection(db, "system_accounts")), 4000);
+    if (snap && !snap.empty) {
+      const list: SystemAccountRecord[] = [];
+      snap.forEach((docSnap) => {
+        list.push(docSnap.data() as SystemAccountRecord);
+      });
+      if (list.length > 0) return list;
+    }
+  } catch (err) {
+    console.warn("Firestore fetchSystemAccounts notice:", err);
+  }
+
+  // Seed defaults into Firestore
+  try {
+    await ensureFirebaseAuth();
+    await Promise.allSettled(
+      DEFAULT_SYSTEM_ACCOUNTS.map(async (acc) => {
+        await setDoc(doc(db, "system_accounts", acc.id), sanitizeForFirebase(acc), { merge: true });
+      })
+    );
+    return DEFAULT_SYSTEM_ACCOUNTS;
+  } catch (e) {
+    return DEFAULT_SYSTEM_ACCOUNTS;
+  }
+}
+
+export async function saveSystemAccountToFirebase(acc: SystemAccountRecord): Promise<boolean> {
+  if (!acc || !acc.id) return false;
+  const clean = sanitizeForFirebase({
+    ...acc,
+    updatedAt: new Date().toISOString(),
+  });
+
+  try {
+    await ensureFirebaseAuth();
+    await withTimeout(setDoc(doc(db, "system_accounts", acc.id), clean, { merge: true }), 3000);
+    console.log(`🔥 [Firebase Firestore] Saved system account: ${acc.username}`);
+    return true;
+  } catch (err) {
+    console.warn("Firestore saveSystemAccount notice:", err);
+    return false;
+  }
+}
+
+export async function deleteSystemAccountFromFirebase(id: string): Promise<boolean> {
+  if (!id) return false;
+  try {
+    await ensureFirebaseAuth();
+    await withTimeout(deleteDoc(doc(db, "system_accounts", id)), 2500);
+    console.log(`🔥 [Firebase Firestore] Deleted system account: ${id}`);
+    return true;
+  } catch (err) {
+    console.warn("Firestore deleteSystemAccount notice:", err);
+    return false;
+  }
+}
+
+export async function fetchAdminSettingsFromFirebase(): Promise<AdminSettingsRecord> {
+  const defaultSettings: AdminSettingsRecord = {
+    collegeName: "V.S.B. ENGINEERING COLLEGE",
+    karurCode: "VSB-612",
+    coimbatoreCode: "VSB-714",
+    autoCounselorAssignment: true,
+    whatsappAlerts: true,
+    emailNotifications: true,
+  };
+
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDoc(doc(db, "admin_settings", "general")), 3000);
+    if (snap && snap.exists()) {
+      return { ...defaultSettings, ...(snap.data() as AdminSettingsRecord) };
+    }
+  } catch (e) {}
+
+  return defaultSettings;
+}
+
+export async function saveAdminSettingsToFirebase(settings: AdminSettingsRecord): Promise<boolean> {
+  try {
+    await ensureFirebaseAuth();
+    await withTimeout(
+      setDoc(doc(db, "admin_settings", "general"), sanitizeForFirebase(settings), { merge: true }),
+      3000
+    );
+    console.log("🔥 [Firebase Firestore] Saved admin settings.");
+    return true;
+  } catch (err) {
+    console.warn("Firestore saveAdminSettings notice:", err);
+    return false;
+  }
+}
+
+// -------------------------------------------------------------
+// 4. OFFLINE APPLICATION BATCH UPLOAD HISTORY FIREBASE CRUD
+// -------------------------------------------------------------
+
+export async function fetchOfflineUploadLogsFromFirebase(): Promise<OfflineUploadLog[]> {
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDocs(collection(db, "offline_upload_logs")), 4000);
+    if (snap && !snap.empty) {
+      const list: OfflineUploadLog[] = [];
+      snap.forEach((docSnap) => {
+        list.push(docSnap.data() as OfflineUploadLog);
+      });
+      return list;
+    }
+  } catch (err) {
+    console.warn("Firestore fetchOfflineUploadLogs notice:", err);
+  }
+
+  // Initial demo logs
+  const demoLogs: OfflineUploadLog[] = [
+    {
+      id: "LOG_901",
+      batchName: "TNEA_WalkIn_Admissions_Karur_Day1.xlsx",
+      uploadedBy: "Prof. P. Rajesh",
+      recordsCount: 148,
+      status: "Verified & Synced",
+      timestamp: "Sep 12, 2026 10:15 AM",
+      campus: "KARUR",
+    },
+    {
+      id: "LOG_902",
+      batchName: "School_Outreach_Coimbatore_Expo.csv",
+      uploadedBy: "Dr. S. Meenakshi",
+      recordsCount: 92,
+      status: "Verified & Synced",
+      timestamp: "Sep 11, 2026 04:30 PM",
+      campus: "COIMBATORE",
+    },
+  ];
+
+  try {
+    await Promise.allSettled(
+      demoLogs.map(async (l) => {
+        await setDoc(doc(db, "offline_upload_logs", l.id), sanitizeForFirebase(l), { merge: true });
+      })
+    );
+  } catch (e) {}
+
+  return demoLogs;
+}
+
+export async function saveOfflineUploadBatchToFirebase(
+  log: OfflineUploadLog,
+  applications: ManagedApplication[],
+  leads?: Partial<Lead>[]
+): Promise<boolean> {
+  try {
+    await ensureFirebaseAuth();
+
+    // 1. Save log record into offline_upload_logs
+    await setDoc(doc(db, "offline_upload_logs", log.id), sanitizeForFirebase(log), { merge: true });
+
+    // 2. Save each parsed application into managed_applications
+    await Promise.allSettled(
+      applications.map(async (app) => {
+        await saveApplicationToFirebase(app);
+      })
+    );
+
+    // 3. Save each student lead into students
+    if (leads && leads.length > 0) {
+      await Promise.allSettled(
+        leads.map(async (lead) => {
+          if (lead.name) {
+            await saveStudentToFirebase(lead as any);
+          }
+        })
+      );
+    }
+
+    console.log(`🔥 [Firebase Batch Upload] Ingested ${applications.length} applications in batch ${log.batchName}!`);
+    return true;
+  } catch (err) {
+    console.warn("Firestore saveOfflineUploadBatch notice:", err);
+    return false;
+  }
+}
+
+// -------------------------------------------------------------
+// 5. STUDENT DOCUMENTS & MARKSHEET OCR UPLOAD TO FIREBASE
+// -------------------------------------------------------------
+
+export async function uploadStudentDocumentToFirebase(
+  studentId: string,
+  docData: StudentDocument
+): Promise<boolean> {
+  if (!studentId || !docData) return false;
+  const cleanDoc = sanitizeForFirebase({
+    ...docData,
+    updatedAt: new Date().toISOString(),
+  });
+
+  try {
+    await ensureFirebaseAuth();
+
+    // 1. Store in student document sub-collection
+    const docRef = doc(db, "students", studentId, "documents", docData.docType);
+    await withTimeout(setDoc(docRef, cleanDoc, { merge: true }), 4000);
+
+    // 2. Also update student document root with documents map and extracted marks
+    const studentUpdates: Record<string, any> = {
+      [`documents.${docData.docType}`]: cleanDoc,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (docData.extractedData) {
+      if (docData.extractedData.marks10th) {
+        studentUpdates["application.marks10th"] = docData.extractedData.marks10th;
+      }
+      if (docData.extractedData.marks12th) {
+        studentUpdates["application.marks12th"] = docData.extractedData.marks12th;
+      }
+      if (docData.extractedData.tneaCutoff) {
+        studentUpdates.tneaCutoff = docData.extractedData.tneaCutoff;
+      }
+      if (docData.extractedData.studentName) {
+        studentUpdates.name = docData.extractedData.studentName;
+      }
+    }
+
+    await setDoc(doc(db, "students", studentId), studentUpdates, { merge: true });
+    console.log(`🔥 [Firebase Documents] Successfully saved ${docData.title} for student #${studentId}!`);
+    return true;
+  } catch (err) {
+    console.warn("Firestore uploadStudentDocument notice:", err);
+    return false;
+  }
+}
+
+export async function fetchStudentDocumentsFromFirebase(
+  studentId: string
+): Promise<Record<string, StudentDocument>> {
+  if (!studentId) return {};
+  try {
+    await ensureFirebaseAuth();
+    const snap = await withTimeout(getDocs(collection(db, "students", studentId, "documents")), 3000);
+    const docsMap: Record<string, StudentDocument> = {};
+    if (snap && !snap.empty) {
+      snap.forEach((docSnap) => {
+        const item = docSnap.data() as StudentDocument;
+        docsMap[item.docType] = item;
+      });
+      return docsMap;
+    }
+
+    // Check student root documents field
+    const studentSnap = await getDoc(doc(db, "students", studentId));
+    if (studentSnap && studentSnap.exists()) {
+      const data = studentSnap.data();
+      if (data.documents && typeof data.documents === "object") {
+        return data.documents;
+      }
+    }
+  } catch (err) {
+    console.warn("Firestore fetchStudentDocuments notice:", err);
+  }
+  return {};
+}
+
+export async function deleteStudentDocumentFromFirebase(
+  studentId: string,
+  docType: string
+): Promise<boolean> {
+  if (!studentId || !docType) return false;
+  try {
+    await ensureFirebaseAuth();
+    await deleteDoc(doc(db, "students", studentId, "documents", docType));
+    await setDoc(
+      doc(db, "students", studentId),
+      {
+        [`documents.${docType}`]: null,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+    console.log(`🔥 [Firebase Documents] Removed ${docType} for student #${studentId}`);
+    return true;
+  } catch (err) {
+    console.warn("Firestore deleteStudentDocument notice:", err);
+    return false;
+  }
 }
 

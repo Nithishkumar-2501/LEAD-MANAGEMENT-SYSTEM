@@ -114,6 +114,7 @@ export interface Lead {
   generalRank?: number;
   createdAt: string;
   application?: Application | null;
+  documents?: Record<string, StudentDocument>;
 }
 
 export interface Application {
@@ -251,4 +252,78 @@ export interface ManagedApplication {
   notes?: string;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface CourseProgram {
+  code: string;
+  name: string;
+  dept: string;
+  hod: string;
+  karurSeats: number;
+  coimbatoreSeats: number;
+  tuitionFee: string;
+  nbaAccredited: boolean;
+  meta: string;
+  iconName?: string;
+  description?: string;
+  eligibility?: string;
+  syllabus?: string[];
+  careerRoles?: string[];
+}
+
+export interface OfflineUploadLog {
+  id: string;
+  batchName: string;
+  uploadedBy: string;
+  recordsCount: number;
+  campus: "KARUR" | "COIMBATORE" | "ALL";
+  timestamp: string;
+  status: string;
+}
+
+export interface SystemAccountRecord {
+  id: string;
+  username: string;
+  password: string;
+  role: "ADMIN" | "COUNSELOR" | "FACULTY";
+  campus: "KARUR" | "COIMBATORE" | "ALL";
+  isLoggedIn: boolean;
+  lastActive: string;
+}
+
+export interface AdminSettingsRecord {
+  collegeName: string;
+  karurCode: string;
+  coimbatoreCode: string;
+  autoCounselorAssignment: boolean;
+  whatsappAlerts: boolean;
+  emailNotifications: boolean;
+}
+
+export interface StudentDocument {
+  id: string;
+  studentId?: string;
+  docType: "MARKSHEET_10TH" | "MARKSHEET_12TH" | "TRANSFER_CERTIFICATE" | "COMMUNITY_CERTIFICATE" | "ID_PROOF" | "STUDENT_PHOTO";
+  title: string;
+  fileUrl?: string;
+  fileData?: string;
+  fileName: string;
+  fileSize?: number | string;
+  mimeType?: string;
+  uploadedAt: string;
+  verificationStatus?: "VERIFIED" | "PENDING" | "REJECTED";
+  verifiedStatus?: "VERIFIED" | "PENDING" | "REJECTED";
+  extractedData?: {
+    marks10th?: number;
+    marks12th?: number;
+    tneaCutoff?: number;
+    maths?: number;
+    physics?: number;
+    chemistry?: number;
+    studentName?: string;
+    registerNumber?: string;
+    schoolName?: string;
+    confidenceScore?: number;
+    isPass?: boolean;
+  };
 }
