@@ -989,23 +989,27 @@ export default function VoiceAccessModal({
         }
 
         recognition.onstart = () => {
+          console.log('[VoiceAccess] ✅ SpeechRecognition.onstart fired — mic is now active and listening');
           setIsListening(true);
           isListeningRef.current = true;
           setStatusMessage('🎙️ Microphone active! Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
         };
 
         recognition.onspeechstart = () => {
+          console.log('[VoiceAccess] 🗣️ SpeechRecognition.onspeechstart — voice detected by browser engine');
           setIsSpeaking(true);
           startActiveSpeechVisualizer();
           setStatusMessage('🎙️ Hearing your voice... Analyzing candidate name');
         };
 
         recognition.onspeechend = () => {
+          console.log('[VoiceAccess] 🔇 SpeechRecognition.onspeechend — voice stopped');
           setIsSpeaking(false);
           stopActiveSpeechVisualizer();
         };
 
         recognition.onresult = (event: any) => {
+          console.log('[VoiceAccess] 📝 SpeechRecognition.onresult fired — results count:', event.results.length);
           let bestMatch: any = null;
           let combinedFinal = '';
           let combinedInterim = '';
@@ -1022,6 +1026,7 @@ export default function VoiceAccessModal({
           }
 
           const fullTranscript = (combinedFinal || combinedInterim || '').trim();
+          console.log('[VoiceAccess] 📝 Transcript => Final:', JSON.stringify(combinedFinal), '| Interim:', JSON.stringify(combinedInterim), '| Full:', JSON.stringify(fullTranscript));
 
           // Show real-time interim speech in input as user is speaking
           if (combinedInterim && !combinedFinal) {
@@ -1064,6 +1069,7 @@ export default function VoiceAccessModal({
           }
 
           if (bestMatch) {
+            console.log('[VoiceAccess] ✅ MATCH FOUND:', bestMatch.name, '| Score:', bestMatch.score, '| isCall:', bestMatch.isCall, '| isGeneric:', bestMatch.isGenericLead);
             hasSpeechResultRef.current = true;
             if (bestMatch.isGenericLead) {
               setTranscript('Leads');
@@ -1088,6 +1094,7 @@ export default function VoiceAccessModal({
               }
             }
           } else if (fullTranscript) {
+            console.log('[VoiceAccess] ⚠️ No name match found for:', JSON.stringify(fullTranscript), '— setting as raw search query');
             hasSpeechResultRef.current = true;
             // Set the exact user speech so matchedApplicants deeply searches all leads
             setTranscript(fullTranscript);
@@ -1098,7 +1105,7 @@ export default function VoiceAccessModal({
 
         recognition.onerror = (event: any) => {
           const err = event?.error;
-          console.warn('[VoiceAccess] Speech notice:', err);
+          console.warn('[VoiceAccess] ❌ SpeechRecognition.onerror:', err, '| message:', event?.message);
 
           if (err === 'no-speech' || err === 'aborted') {
             return;
@@ -1123,6 +1130,7 @@ export default function VoiceAccessModal({
         };
 
         recognition.onend = () => {
+          console.log('[VoiceAccess] 🔄 SpeechRecognition.onend — will restart:', isListeningRef.current);
           setIsSpeaking(false);
           stopActiveSpeechVisualizer();
           if (isListeningRef.current) {
@@ -1137,6 +1145,7 @@ export default function VoiceAccessModal({
           }
         };
 
+        console.log('[VoiceAccess] 🚀 recognition.start() called with lang:', activeLang);
         recognition.start();
       } catch (err: any) {
         console.warn('Speech recognition startup notice:', err);
