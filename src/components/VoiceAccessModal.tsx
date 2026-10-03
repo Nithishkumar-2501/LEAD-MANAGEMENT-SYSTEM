@@ -424,9 +424,95 @@ export default function VoiceAccessModal({
     setVoiceLevels([8, 8, 8, 8, 8]);
   }, []);
 
+  // Absorb and map spoken input to exact lead or teacher record
+  const absorbLeadNameFromText = useCallback((rawSpoken: string) => {
+    if (!rawSpoken || !rawSpoken.trim()) return null;
+
+    const normSpoken = normalizeForVoiceMatch(rawSpoken);
+    const isCall = /\b(call|calling|dial|phone|ring|contact)\b/i.test(rawSpoken);
+
+    const cleaned = normSpoken
+      .replace(
+        /\b(call|calling|dial|phone|ring|contact|reach|connect|find|search|show|get|where is|who is|open|details of|student|students|lead|leads|teacher|faculty|professor|dr|prof|sir|madam|please|can you|details for|application for|tell me about|info on|candidate|candidates|admission|details|data|record|give me|check|view|display)\b/gi,
+        ' '
+      )
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const searchWords = (cleaned || normSpoken).split(' ').filter((w) => w.length >= 2);
+    const leads = allLeadsRef.current;
+    const teachers = teachersRef.current;
+
+    // 1. Check all live student leads
+    for (const lead of leads) {
+      const leadNorm = normalizeForVoiceMatch(lead.name);
+      const leadWords = leadNorm.split(' ').filter((w) => w.length >= 2);
+
+      // Direct exact match
+      if (leadNorm === cleaned || leadNorm === normSpoken) {
+        return { name: lead.name, lead, isCall };
+      }
+
+      // Substring match
+      if (cleaned && (leadNorm.includes(cleaned) || cleaned.includes(leadNorm))) {
+        return { name: lead.name, lead, isCall };
+      }
+
+      // Word match / fuzzy match
+      for (const lw of leadWords) {
+        for (const sw of searchWords) {
+          if (['call', 'dial', 'phone', 'lead', 'student', 'show'].includes(sw)) continue;
+          if (sw === lw || isFuzzyNameMatch(sw, lw)) {
+            return { name: lead.name, lead, isCall };
+          }
+        }
+      }
+
+      // Phonetic synonyms match
+      for (const [canon, variants] of Object.entries(SYNONYMS)) {
+        const swHas = searchWords.some((sw) => sw === canon || variants.includes(sw));
+        const lwHas = leadWords.some((lw) => lw === canon || variants.includes(lw));
+        if (swHas && lwHas) {
+          return { name: lead.name, lead, isCall };
+        }
+      }
+    }
+
+    // 2. Check teachers
+    for (const tch of teachers) {
+      const tchNorm = normalizeForVoiceMatch(tch.name);
+      const tchWords = tchNorm.split(' ').filter((w) => w.length >= 2);
+
+      if (tchNorm === cleaned || tchNorm === normSpoken) {
+        return { name: tch.name, teacher: tch, isCall };
+      }
+      if (cleaned && (tchNorm.includes(cleaned) || cleaned.includes(tchNorm))) {
+        return { name: tch.name, teacher: tch, isCall };
+      }
+
+      for (const tw of tchWords) {
+        for (const sw of searchWords) {
+          if (sw === tw || isFuzzyNameMatch(sw, tw)) {
+            return { name: tch.name, teacher: tch, isCall };
+          }
+        }
+      }
+
+      for (const [canon, variants] of Object.entries(SYNONYMS)) {
+        const swHas = searchWords.some((sw) => sw === canon || variants.includes(sw));
+        const twHas = tchWords.some((tw) => tw === canon || variants.includes(tw));
+        if (swHas && twHas) {
+          return { name: tch.name, teacher: tch, isCall };
+        }
+      }
+    }
+
+    return null;
+  }, []);
+
   // Start Voice Recognition with unblocked exclusive hardware access
   const startListening = useCallback(
-    async (targetLangIndex: number = 0) => {
+    (targetLangIndex: number = 0) => {
       if (typeof window === 'undefined') return;
 
       isListeningRef.current = true;
@@ -443,22 +529,6 @@ export default function VoiceAccessModal({
           recognitionRef.current.abort();
         } catch {}
         recognitionRef.current = null;
-      }
-
-      // Ensure browser microphone permission is prompt-cleared and immediately released
-      try {
-        if (navigator.mediaDevices?.getUserMedia) {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          // Release immediately so Web Speech API has exclusive access to the mic without lock contention
-          stream.getTracks().forEach((track) => track.stop());
-        }
-      } catch (err: any) {
-        if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
-          setStatusMessage('⚠️ Microphone permission blocked. Please allow mic in browser settings.');
-          setIsListening(false);
-          isListeningRef.current = false;
-          return;
-        }
       }
 
       const SpeechRecognition =
@@ -507,7 +577,7 @@ export default function VoiceAccessModal({
 
         recognition.onspeechstart = () => {
           startActiveSpeechVisualizer();
-          setStatusMessage('🎙️ Hearing your voice... Recognizing speech');
+          setStatusMessage('🎙️ Hearing your voice... Absorbing candidate name');
         };
 
         recognition.onspeechend = () => {
@@ -520,12 +590,10 @@ export default function VoiceAccessModal({
 
         recognition.onresult = (event: any) => {
           startActiveSpeechVisualizer();
-          let recognizedText = '';
-          let matchedLeadFound = false;
-          const currentLeads = allLeadsRef.current;
-          const currentTeachers = teachersRef.current;
+          let bestMatch: any = null;
+          let rawPhrase = '';
 
-          // 1. Check all results and alternatives for student names or call commands
+          // 1. Scan all results and alternatives for known candidate or faculty names
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const res = event.results[i];
             if (!res) continue;
@@ -533,67 +601,39 @@ export default function VoiceAccessModal({
             for (let j = 0; j < res.length; j++) {
               const altTranscript = (res[j]?.transcript || '').trim();
               if (!altTranscript) continue;
+              if (!rawPhrase) rawPhrase = altTranscript;
 
-              const normAlt = normalizeForVoiceMatch(altTranscript);
-
-              // Check if any lead matches this alternative transcript
-              const matchedLead = currentLeads.find((lead: any) => {
-                const leadName = normalizeForVoiceMatch(lead.name);
-                return (
-                  leadName === normAlt ||
-                  normAlt.includes(leadName) ||
-                  leadName.includes(normAlt) ||
-                  checkPhoneticMatch(normAlt, leadName) ||
-                  isFuzzyNameMatch(normAlt, leadName)
-                );
-              });
-
-              if (matchedLead) {
-                const isCall = /\b(call|dial|phone|ring|contact)\b/i.test(altTranscript);
-                recognizedText = isCall ? `Call ${matchedLead.name}` : matchedLead.name;
-                matchedLeadFound = true;
-                break;
-              }
-
-              // Also check teachers
-              const matchedTeacher = currentTeachers.find((tch: any) => {
-                const tchName = normalizeForVoiceMatch(tch.name);
-                return (
-                  tchName === normAlt ||
-                  normAlt.includes(tchName) ||
-                  tchName.includes(normAlt) ||
-                  checkPhoneticMatch(normAlt, tchName)
-                );
-              });
-
-              if (matchedTeacher) {
-                recognizedText = matchedTeacher.name;
-                matchedLeadFound = true;
+              const match = absorbLeadNameFromText(altTranscript);
+              if (match) {
+                bestMatch = match;
                 break;
               }
             }
 
-            if (matchedLeadFound) break;
+            if (bestMatch) break;
           }
 
-          // 2. If no direct lead matched in alternatives, take the primary transcript
-          if (!recognizedText && event.results.length > 0) {
-            const lastResult = event.results[event.results.length - 1];
-            if (lastResult && lastResult[0]) {
-              recognizedText = lastResult[0].transcript.trim();
-            }
-          }
-
-          if (recognizedText) {
-            setTranscript(recognizedText);
+          if (bestMatch) {
+            const queryName = bestMatch.isCall ? `Call ${bestMatch.name}` : bestMatch.name;
+            setTranscript(queryName);
             setInterimText('');
-            setStatusMessage(`Recognized: "${recognizedText}"`);
+            setStatusMessage(`🎙️ Absorbed: "${queryName}"`);
+
+            if (bestMatch.isCall) {
+              speakAnnouncement(`Calling candidate ${bestMatch.name}.`);
+            } else {
+              speakAnnouncement(`Found candidate data for ${bestMatch.name}.`);
+            }
 
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
               try {
-                navigator.vibrate(30);
+                navigator.vibrate(40);
               } catch {}
             }
+          } else if (rawPhrase) {
+            setTranscript(rawPhrase);
+            setInterimText('');
+            setStatusMessage(`Recognized: "${rawPhrase}"`);
           }
         };
 
@@ -665,7 +705,7 @@ export default function VoiceAccessModal({
         setStatusMessage('Tap microphone or select student below.');
       }
     },
-    [startActiveSpeechVisualizer, stopActiveSpeechVisualizer]
+    [absorbLeadNameFromText, speakAnnouncement, startActiveSpeechVisualizer, stopActiveSpeechVisualizer]
   );
 
   // Stop listening explicitly
