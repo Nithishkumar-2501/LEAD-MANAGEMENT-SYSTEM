@@ -624,6 +624,24 @@ export default function VoiceAccessModal({
     setVoiceLevels([8, 8, 8, 8, 8]);
   }, []);
 
+  // Dynamic gentle breathing wave for voice levels when listening and waiting for voice
+  useEffect(() => {
+    if (!isListening || isSpeaking) return;
+
+    const interval = setInterval(() => {
+      const t = Date.now() / 220;
+      setVoiceLevels([
+        Math.round(10 + Math.sin(t) * 3),
+        Math.round(14 + Math.sin(t + 1) * 4),
+        Math.round(18 + Math.sin(t + 2) * 5),
+        Math.round(14 + Math.sin(t + 3) * 4),
+        Math.round(10 + Math.sin(t + 4) * 3),
+      ]);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [isListening, isSpeaking]);
+
   // Deeply analyze spoken text to isolate candidate names and match against live Firebase students and faculty
   const absorbLeadNameFromText = useCallback((rawSpoken: string) => {
     if (!rawSpoken || !rawSpoken.trim()) return null;
@@ -908,7 +926,7 @@ export default function VoiceAccessModal({
     }
   }, [startActiveSpeechVisualizer, stopMicAudioStream]);
 
-  // Start Voice Recognition with real microphone audio capture and deep acoustic name analysis
+  // Start Voice Recognition with unhindered microphone audio capture and deep acoustic name analysis
   const startListening = useCallback(
     (targetLangIndex: number = 0) => {
       if (typeof window === 'undefined') return;
@@ -916,9 +934,6 @@ export default function VoiceAccessModal({
       isListeningRef.current = true;
       setIsListening(true);
       setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
-
-      // 1. Connect physical microphone input & live wave meter
-      startMicAudioStream();
 
       // Clean up previous recognition instance cleanly
       if (recognitionRef.current) {
@@ -951,7 +966,8 @@ export default function VoiceAccessModal({
       if (!SpeechRecognition) {
         setIsListening(true);
         isListeningRef.current = true;
-        setSpeechSupported(true);
+        setSpeechSupported(false);
+        setStatusMessage('⚠️ Web Speech API is not supported in this browser. Please use Google Chrome or Edge.');
         return;
       }
 
@@ -974,11 +990,18 @@ export default function VoiceAccessModal({
         recognition.onstart = () => {
           setIsListening(true);
           isListeningRef.current = true;
-          setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
+          setStatusMessage('🎙️ Microphone active! Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
         };
 
         recognition.onspeechstart = () => {
+          setIsSpeaking(true);
+          startActiveSpeechVisualizer();
           setStatusMessage('🎙️ Hearing your voice... Analyzing candidate name');
+        };
+
+        recognition.onspeechend = () => {
+          setIsSpeaking(false);
+          stopActiveSpeechVisualizer();
         };
 
         recognition.onresult = (event: any) => {
@@ -1080,32 +1103,34 @@ export default function VoiceAccessModal({
             return;
           }
 
+          if (err === 'audio-capture') {
+            setStatusMessage('⚠️ Microphone is busy or unavailable. Check Windows audio settings.');
+            return;
+          }
+
           if (err === 'network') {
-            setStatusMessage('Speech engine reconnecting... Please speak candidate name clearly.');
+            setStatusMessage('⚠️ Speech network connection interrupted. Reconnecting...');
             return;
           }
 
           if (err === 'not-allowed' || err === 'service-not-allowed') {
             setIsListening(false);
             isListeningRef.current = false;
-            stopMicAudioStream();
-            setStatusMessage('⚠️ Microphone access blocked. Please allow microphone in browser address bar.');
+            setStatusMessage('⚠️ Microphone blocked! Click the lock/mic icon in the browser address bar to Allow.');
             return;
           }
         };
 
         recognition.onend = () => {
+          setIsSpeaking(false);
+          stopActiveSpeechVisualizer();
           if (isListeningRef.current) {
             if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
             restartTimerRef.current = setTimeout(() => {
               if (isListeningRef.current) {
-                try {
-                  recognition.start();
-                } catch {
-                  startListening(langIndexRef.current);
-                }
+                startListening(langIndexRef.current);
               }
-            }, 100);
+            }, 150);
           } else {
             setIsListening(false);
           }
@@ -1116,13 +1141,15 @@ export default function VoiceAccessModal({
         console.warn('Speech recognition startup notice:', err);
       }
     },
-    [absorbLeadNameFromText, speakAnnouncement, startMicAudioStream]
+    [absorbLeadNameFromText, speakAnnouncement, startActiveSpeechVisualizer, stopActiveSpeechVisualizer]
   );
 
   // Stop listening explicitly
   const stopListening = useCallback(() => {
     isListeningRef.current = false;
     setIsListening(false);
+    setIsSpeaking(false);
+    stopActiveSpeechVisualizer();
 
     if (mockVoiceTimerRef.current) {
       clearTimeout(mockVoiceTimerRef.current);
@@ -1133,10 +1160,6 @@ export default function VoiceAccessModal({
       clearTimeout(restartTimerRef.current);
       restartTimerRef.current = null;
     }
-
-    // Stop real physical microphone stream
-    stopMicAudioStream();
-    stopActiveSpeechVisualizer();
 
     if (recognitionRef.current) {
       try {
@@ -1156,7 +1179,7 @@ export default function VoiceAccessModal({
     }
 
     setStatusMessage('Voice recognition paused. Tap mic to resume or select below.');
-  }, [stopActiveSpeechVisualizer, stopMicAudioStream]);
+  }, [stopActiveSpeechVisualizer]);
 
   // Safe user-gesture toggle for microphone
   const handleToggleMic = useCallback(() => {
