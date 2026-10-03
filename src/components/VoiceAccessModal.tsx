@@ -510,6 +510,7 @@ export default function VoiceAccessModal({
   const [statusMessage, setStatusMessage] = useState('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
   const [voiceLevels, setVoiceLevels] = useState<number[]>([8, 8, 8, 8, 8]);
   const [micVolume, setMicVolume] = useState<number>(0);
+  const [activeDeviceName, setActiveDeviceName] = useState<string>('💻 Laptop / 🎧 Headphone Mic');
 
   // References
   const recognitionRef = useRef<any>(null);
@@ -964,10 +965,10 @@ export default function VoiceAccessModal({
         (window as any).webkitSpeechRecognition;
 
       if (!SpeechRecognition) {
-        setIsListening(true);
-        isListeningRef.current = true;
+        setIsListening(false);
+        isListeningRef.current = false;
         setSpeechSupported(false);
-        setStatusMessage('⚠️ Web Speech API is not supported in this browser. Please use Google Chrome or Edge.');
+        setStatusMessage('📱 Voice recognition requires Chrome or HTTPS. Tap any candidate chip below to search.');
         return;
       }
 
@@ -1181,6 +1182,50 @@ export default function VoiceAccessModal({
     setStatusMessage('Voice recognition paused. Tap mic to resume or select below.');
   }, [stopActiveSpeechVisualizer]);
 
+  // Detect active audio input hardware (Laptop Built-in Mic vs Mobile Headset / Headphone Mic)
+  const detectAudioDevice = useCallback(async () => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) return;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter((d) => d.kind === 'audioinput');
+      if (audioInputs.length > 0) {
+        const hasHeadphones = audioInputs.some((d) => {
+          const l = (d.label || '').toLowerCase();
+          return l.includes('head') || l.includes('ear') || l.includes('airpod') || l.includes('bluetooth') || l.includes('hands-free');
+        });
+        if (hasHeadphones) {
+          setActiveDeviceName('🎧 Headphone Mic Active');
+        } else {
+          setActiveDeviceName('💻 Laptop Built-in Mic Active');
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Request browser microphone permission directly to wake laptop/mobile hardware, then start speech recognition
+  const requestMicPermissionAndStart = useCallback(
+    async (targetLangIndex: number = 0) => {
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          // Release immediately so SpeechRecognition has 100% unobstructed access to the mic
+          stream.getTracks().forEach((track) => track.stop());
+          detectAudioDevice();
+        } catch (err: any) {
+          console.warn('Microphone permission check notice:', err);
+          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            setIsListening(false);
+            isListeningRef.current = false;
+            setStatusMessage('⚠️ Microphone permission blocked. Click lock icon in browser URL bar to Allow.');
+            return;
+          }
+        }
+      }
+      startListening(targetLangIndex);
+    },
+    [detectAudioDevice, startListening]
+  );
+
   // Safe user-gesture toggle for microphone
   const handleToggleMic = useCallback(() => {
     if (isListeningRef.current) {
@@ -1188,9 +1233,9 @@ export default function VoiceAccessModal({
     } else {
       setTranscript('');
       setInterimText('');
-      startListening(0);
+      requestMicPermissionAndStart(0);
     }
-  }, [startListening, stopListening]);
+  }, [requestMicPermissionAndStart, stopListening]);
 
   // Clean up on component unmount
   useEffect(() => {
@@ -1203,6 +1248,7 @@ export default function VoiceAccessModal({
   useEffect(() => {
     if (isOpen) {
       langIndexRef.current = 0;
+      detectAudioDevice();
 
       if (initialQuery) {
         setTranscript(initialQuery);
@@ -1211,9 +1257,7 @@ export default function VoiceAccessModal({
       } else {
         setTranscript('');
         setInterimText('');
-        setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
-        // Start listening immediately
-        startListening(0);
+        requestMicPermissionAndStart(0);
       }
     } else {
       stopListening();
@@ -1640,6 +1684,12 @@ export default function VoiceAccessModal({
                         : '🎙️ Microphone Active (Speak now)'
                       : '🎙️ Microphone Paused: Tap mic to speak'}
                   </span>
+                </span>
+
+                {/* Hardware Audio Device Badge */}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-800 dark:text-amber-200 border border-amber-500/20">
+                  <span>{activeDeviceName}</span>
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-normal">• No external mic required</span>
                 </span>
               </div>
 
