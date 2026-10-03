@@ -47,8 +47,11 @@ interface VoiceAccessModalProps {
   initialQuery?: string;
 }
 
-// Fallback cascade for cloud speech engines
-const SPEECH_FALLBACK_LANGS = ['en-IN', 'en-US', 'en-GB', ''];
+// Fallback cascade for browser speech engines: Browser Locale -> en-IN -> en-US -> Default
+const getFallbackLangs = () => {
+  const browserLocale = typeof navigator !== 'undefined' ? navigator.language : 'en-IN';
+  return [browserLocale, 'en-IN', 'en-US', ''];
+};
 
 // Phonetic & normalization helper
 function normalizeForVoiceMatch(str: string): string {
@@ -332,8 +335,7 @@ export default function VoiceAccessModal({
   const [statusMessage, setStatusMessage] = useState('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
   const [voiceLevels, setVoiceLevels] = useState<number[]>([12, 18, 14, 20, 10]);
 
-  const [micVolume, setMicVolume] = useState<number>(55);
-  const [isMicStreaming, setIsMicStreaming] = useState<boolean>(true);
+  const [micVolume, setMicVolume] = useState<number>(65);
 
   // References
   const recognitionRef = useRef<any>(null);
@@ -409,14 +411,13 @@ export default function VoiceAccessModal({
     setIsSpeaking(false);
   }, []);
 
-  // Start Voice Recognition with continuous speech mode and auto-recovery
+  // Start Voice Recognition with single-shot fast delivery + automatic continuous loop
   const startListening = useCallback(
     (targetLangIndex: number = 0) => {
       if (typeof window === 'undefined') return;
 
       isListeningRef.current = true;
       setIsListening(true);
-      setIsMicStreaming(true);
       startVisualizerAnimation();
 
       // Clean up previous recognition instance cleanly
@@ -447,10 +448,12 @@ export default function VoiceAccessModal({
         const recognition = new SpeechRecognition();
         recognitionRef.current = recognition;
 
-        const activeLang = SPEECH_FALLBACK_LANGS[targetLangIndex] ?? 'en-IN';
+        const fallbackLangs = getFallbackLangs();
+        const activeLang = fallbackLangs[targetLangIndex] ?? fallbackLangs[0];
         langIndexRef.current = targetLangIndex;
 
-        recognition.continuous = true;
+        // CRITICAL FIX: continuous=false forces Chrome to flush STT buffer immediately without hanging
+        recognition.continuous = false;
         recognition.interimResults = true;
         recognition.maxAlternatives = 5;
         if (activeLang) {
@@ -460,7 +463,6 @@ export default function VoiceAccessModal({
         recognition.onstart = () => {
           setIsListening(true);
           isListeningRef.current = true;
-          setIsMicStreaming(true);
           setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
 
           if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -480,19 +482,15 @@ export default function VoiceAccessModal({
         };
 
         recognition.onresult = (event: any) => {
-          let fullFinal = '';
-          let currentInterim = '';
-
-          for (let i = 0; i < event.results.length; i++) {
-            const item = event.results[i];
-            if (item.isFinal) {
-              fullFinal += item[0].transcript + ' ';
-            } else {
-              currentInterim += item[0].transcript;
+          let spokenText = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const res = event.results[i];
+            if (res && res[0]) {
+              spokenText += res[0].transcript;
             }
           }
 
-          const spoken = (fullFinal.trim() || currentInterim.trim());
+          const spoken = spokenText.trim();
           if (spoken) {
             setTranscript(spoken);
             setInterimText('');
@@ -505,7 +503,7 @@ export default function VoiceAccessModal({
           setIsSpeaking(false);
 
           if (event.error === 'no-speech') {
-            setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
+            // Natural pause in speech: will auto-restart in onend
             return;
           }
 
@@ -514,16 +512,13 @@ export default function VoiceAccessModal({
           }
 
           if (event.error === 'network') {
-            const nextLangIdx = targetLangIndex + 1;
-            if (nextLangIdx < SPEECH_FALLBACK_LANGS.length) {
-              setTimeout(() => {
-                if (isListeningRef.current) {
-                  startListening(nextLangIdx);
-                }
-              }, 200);
-              return;
-            }
-            setStatusMessage('Speech engine reconnecting... You can type candidate name or tap quick chips.');
+            const fallbackLangs = getFallbackLangs();
+            const nextLangIdx = (targetLangIndex + 1) % fallbackLangs.length;
+            setTimeout(() => {
+              if (isListeningRef.current) {
+                startListening(nextLangIdx);
+              }
+            }, 250);
             return;
           }
 
@@ -531,23 +526,22 @@ export default function VoiceAccessModal({
             setIsListening(false);
             isListeningRef.current = false;
             stopVisualizerAnimation();
-            setStatusMessage('Microphone access blocked. Click the orange mic to grant permission.');
+            setStatusMessage('⚠️ Microphone access blocked. Click the orange mic to grant permission.');
             return;
           }
-
-          setStatusMessage('Listening... Speak candidate or teacher name.');
         };
 
         recognition.onend = () => {
           setIsSpeaking(false);
 
+          // Fast auto-restart loop provides uninterrupted continuous listening without buffering delay
           if (isListeningRef.current) {
             if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
             restartTimerRef.current = setTimeout(() => {
               if (isListeningRef.current) {
                 startListening(langIndexRef.current);
               }
-            }, 250);
+            }, 100);
           } else {
             setIsListening(false);
             stopVisualizerAnimation();
@@ -589,15 +583,24 @@ export default function VoiceAccessModal({
     }
 
     setIsListening(false);
-    setIsMicStreaming(false);
     setStatusMessage('Voice recognition paused. Tap mic to resume or select below.');
   }, [stopVisualizerAnimation]);
 
-  // Safe user-gesture toggle for microphone
-  const handleToggleMic = useCallback(() => {
+  // Safe user-gesture toggle for microphone with explicit hardware permission trigger
+  const handleToggleMic = useCallback(async () => {
     if (isListeningRef.current) {
       stopListening();
     } else {
+      // Trigger explicit browser permission prompt if required
+      try {
+        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          // Release immediately so Web Speech API has exclusive access
+          stream.getTracks().forEach((track) => track.stop());
+        }
+      } catch (err) {
+        console.warn('Microphone permission check notice:', err);
+      }
       startListening(0);
     }
   }, [startListening, stopListening]);
@@ -972,7 +975,7 @@ export default function VoiceAccessModal({
                       ? isSpeaking
                         ? `🎙️ Voice Detected (${micVolume}% Energy)`
                         : `🎙️ Microphone Active & Ready (${micVolume}%)`
-                      : '🎙️ System Mic: Tap to start speaking'}
+                      : '🎙️ Microphone Paused: Tap mic to speak'}
                   </span>
                 </span>
               </div>
@@ -1397,7 +1400,7 @@ export default function VoiceAccessModal({
           {/* 3. NO RESULTS EMPTY STATE */}
           {query && matchedApplicants.length === 0 && matchedTeachers.length === 0 && (
             <div className="py-12 px-4 text-center space-y-3 bg-slate-50/50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 mx-auto">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 dark:orange-950/50 text-orange-600 dark:text-orange-400 mx-auto">
                 <Search className="w-6 h-6" />
               </div>
               <div className="space-y-1">
