@@ -47,10 +47,15 @@ interface VoiceAccessModalProps {
   initialQuery?: string;
 }
 
-// Fallback cascade for browser speech engines: Browser Locale -> en-IN -> en-US -> Default
+// Fallback cascade for browser speech engines: Indian English first for accurate accent acoustic modeling
 const getFallbackLangs = () => {
   const browserLocale = typeof navigator !== 'undefined' ? navigator.language : 'en-IN';
-  return [browserLocale, 'en-IN', 'en-US', ''];
+  const langs = ['en-IN'];
+  if (browserLocale && !langs.includes(browserLocale)) {
+    langs.push(browserLocale);
+  }
+  langs.push('en-US', '');
+  return langs;
 };
 
 // Phonetic & normalization helper
@@ -108,15 +113,19 @@ const SYNONYMS: Record<string, string[]> = {
     'nitish', 'nithis', 'nitesh', 'nithik', 'nithi', 'nithish kumar', 'niteshkumar',
     'nitheesh', 'nitesh kumar', 'nitish kumar', 'knit this', 'knee dish', 'notice',
     'night is', 'latest', 'net is', 'neethish', 'nathesh', 'nithishk', 'nites', 'ntheesh',
+    'this', 'hit this', 'neat is', 'neet', 'nits', 'nitesh',
   ],
   gunal: [
     'guna', 'kunal', 'gunalan', 'gunalla', 'gunaal', 'goonal', 'gonal', 'kunal kumar', 'kunaal', 'gopal', 'good all',
+    'kuna', 'gual', 'canal', 'gunner', 'goona', 'google',
   ],
   revathy: [
     'revathi', 'revati', 'revate', 'revaty', 'rebathi', 'revathy s', 'reva', 'reethi', 'revath',
+    'ravathi', 'revathy mam',
   ],
   ram: [
     'rahm', 'rom', 'rama', 'ramu', 'ramkumar', 'ram kumar', 'shri ram', 'sri ram', 'shriram', 'rhyme',
+    'raam', 'ramesh',
   ],
   kasi: [
     'kashi', 'kasee', 'kasi nathan', 'kashinathan', 'kasi rajan', 'kasinathan',
@@ -333,20 +342,31 @@ export default function VoiceAccessModal({
   const [speechSupported, setSpeechSupported] = useState(true);
   const [speechMuted, setSpeechMuted] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
-  const [voiceLevels, setVoiceLevels] = useState<number[]>([12, 18, 14, 20, 10]);
-
-  const [micVolume, setMicVolume] = useState<number>(65);
+  const [voiceLevels, setVoiceLevels] = useState<number[]>([8, 8, 8, 8, 8]);
+  const [micVolume, setMicVolume] = useState<number>(0);
 
   // References
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Hardware audio stream & analyser refs
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+
+  // Data cache refs to avoid recreating recognition handlers
+  const allLeadsRef = useRef(allAvailableLeads);
+  allLeadsRef.current = allAvailableLeads;
+
+  const teachersRef = useRef(effectiveTeachers);
+  teachersRef.current = effectiveTeachers;
+
   // Control refs
   const isListeningRef = useRef(false);
   const langIndexRef = useRef(0);
   const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const visualizerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Text-to-speech announcement
   const speakAnnouncement = useCallback(
@@ -366,7 +386,7 @@ export default function VoiceAccessModal({
     [speechMuted]
   );
 
-  // Initialize Speech Synthesis
+  // Initialize Speech Synthesis & Speech Recognition capabilities
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthRef.current = window.speechSynthesis;
@@ -380,45 +400,137 @@ export default function VoiceAccessModal({
     }
   }, []);
 
-  // Visualizer Animation
-  const startVisualizerAnimation = useCallback(() => {
-    if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
-    visualizerIntervalRef.current = setInterval(() => {
-      if (isListeningRef.current) {
-        const base = Math.floor(Math.random() * 20) + 10;
-        setVoiceLevels([
-          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 15))),
-          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 20))),
-          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 25))),
-          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 18))),
-          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 12))),
-        ]);
-        setMicVolume(Math.min(95, Math.max(35, base * 3)));
-      } else {
-        setVoiceLevels([8, 8, 8, 8, 8]);
-        setMicVolume(0);
-      }
-    }, 120);
-  }, []);
-
-  const stopVisualizerAnimation = useCallback(() => {
-    if (visualizerIntervalRef.current) {
-      clearInterval(visualizerIntervalRef.current);
-      visualizerIntervalRef.current = null;
+  // Real Hardware Microphone Stream & Web Audio Frequency Analyzer
+  const stopRealAudioStream = useCallback(() => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
     }
+    if (mediaStreamRef.current) {
+      try {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      } catch {}
+      mediaStreamRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      try {
+        audioContextRef.current.close();
+      } catch {}
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
     setVoiceLevels([8, 8, 8, 8, 8]);
     setMicVolume(0);
     setIsSpeaking(false);
   }, []);
 
-  // Start Voice Recognition with single-shot fast delivery + automatic continuous loop
+  const startRealAudioStream = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
+    // Clean up any existing stream first
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      try {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      } catch {}
+      mediaStreamRef.current = null;
+    }
+
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) return;
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      mediaStreamRef.current = stream;
+
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        audioContextRef.current = new AudioCtx();
+      }
+
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        await ctx.resume().catch(() => {});
+      }
+
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      analyser.smoothingTimeConstant = 0.4;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const renderAudioMeters = () => {
+        if (!analyserRef.current || !isListeningRef.current) {
+          setVoiceLevels([8, 8, 8, 8, 8]);
+          setMicVolume(0);
+          setIsSpeaking(false);
+          return;
+        }
+
+        analyserRef.current.getByteFrequencyData(dataArray);
+
+        // Calculate real energy level
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+        }
+        const avg = sum / (bufferLength || 1);
+        const calculatedVolume = Math.min(100, Math.round((avg / 64) * 100));
+
+        setMicVolume(calculatedVolume);
+
+        // Voice activity detection: active vocal sound if volume > 10%
+        const isVoiceActive = calculatedVolume >= 10;
+        setIsSpeaking(isVoiceActive);
+
+        // 5 visualizer frequency bars
+        const step = Math.max(1, Math.floor(bufferLength / 5));
+        const bars = [
+          Math.max(8, Math.min(38, Math.round(((dataArray[0] || 0) / 255) * 32) + 8)),
+          Math.max(8, Math.min(38, Math.round(((dataArray[step] || 0) / 255) * 32) + 8)),
+          Math.max(8, Math.min(38, Math.round(((dataArray[step * 2] || 0) / 255) * 32) + 8)),
+          Math.max(8, Math.min(38, Math.round(((dataArray[step * 3] || 0) / 255) * 32) + 8)),
+          Math.max(8, Math.min(38, Math.round(((dataArray[step * 4] || 0) / 255) * 32) + 8)),
+        ];
+        setVoiceLevels(bars);
+
+        animFrameRef.current = requestAnimationFrame(renderAudioMeters);
+      };
+
+      renderAudioMeters();
+    } catch (err: any) {
+      console.warn('[VoiceAccess] Mic stream capture notice:', err);
+      if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+        setStatusMessage('⚠️ Microphone permission blocked. Please allow mic in browser settings.');
+      }
+    }
+  }, []);
+
+  // Start Voice Recognition with real hardware energy capture and continuous loop
   const startListening = useCallback(
     (targetLangIndex: number = 0) => {
       if (typeof window === 'undefined') return;
 
       isListeningRef.current = true;
       setIsListening(true);
-      startVisualizerAnimation();
+
+      // 1. Activate real microphone hardware audio analysis
+      startRealAudioStream();
 
       // Clean up previous recognition instance cleanly
       if (recognitionRef.current) {
@@ -452,8 +564,8 @@ export default function VoiceAccessModal({
         const activeLang = fallbackLangs[targetLangIndex] ?? fallbackLangs[0];
         langIndexRef.current = targetLangIndex;
 
-        // CRITICAL FIX: continuous=false forces Chrome to flush STT buffer immediately without hanging
-        recognition.continuous = false;
+        // Continuous listening keeps recognition session alive without premature aborts
+        recognition.continuous = true;
         recognition.interimResults = true;
         recognition.maxAlternatives = 5;
         if (activeLang) {
@@ -478,99 +590,167 @@ export default function VoiceAccessModal({
         };
 
         recognition.onspeechend = () => {
-          setIsSpeaking(false);
+          // Handled smoothly
         };
 
         recognition.onresult = (event: any) => {
-          let spokenText = '';
+          let recognizedText = '';
+          let matchedLeadFound = false;
+          const currentLeads = allLeadsRef.current;
+          const currentTeachers = teachersRef.current;
+
+          // 1. Check all results and alternatives for student names or call commands
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const res = event.results[i];
-            if (res && res[0]) {
-              spokenText += res[0].transcript;
+            if (!res) continue;
+
+            for (let j = 0; j < res.length; j++) {
+              const altTranscript = (res[j]?.transcript || '').trim();
+              if (!altTranscript) continue;
+
+              const normAlt = normalizeForVoiceMatch(altTranscript);
+
+              // Check if any lead matches this alternative transcript
+              const matchedLead = currentLeads.find((lead: any) => {
+                const leadName = normalizeForVoiceMatch(lead.name);
+                return (
+                  leadName === normAlt ||
+                  normAlt.includes(leadName) ||
+                  leadName.includes(normAlt) ||
+                  checkPhoneticMatch(normAlt, leadName) ||
+                  isFuzzyNameMatch(normAlt, leadName)
+                );
+              });
+
+              if (matchedLead) {
+                const isCall = /\b(call|dial|phone|ring|contact)\b/i.test(altTranscript);
+                recognizedText = isCall ? `Call ${matchedLead.name}` : matchedLead.name;
+                matchedLeadFound = true;
+                break;
+              }
+
+              // Also check teachers
+              const matchedTeacher = currentTeachers.find((tch: any) => {
+                const tchName = normalizeForVoiceMatch(tch.name);
+                return (
+                  tchName === normAlt ||
+                  normAlt.includes(tchName) ||
+                  tchName.includes(normAlt) ||
+                  checkPhoneticMatch(normAlt, tchName)
+                );
+              });
+
+              if (matchedTeacher) {
+                recognizedText = matchedTeacher.name;
+                matchedLeadFound = true;
+                break;
+              }
+            }
+
+            if (matchedLeadFound) break;
+          }
+
+          // 2. If no direct lead matched in alternatives, take the primary transcript
+          if (!recognizedText && event.results.length > 0) {
+            const lastResult = event.results[event.results.length - 1];
+            if (lastResult && lastResult[0]) {
+              recognizedText = lastResult[0].transcript.trim();
             }
           }
 
-          const spoken = spokenText.trim();
-          if (spoken) {
-            setTranscript(spoken);
+          if (recognizedText) {
+            setTranscript(recognizedText);
             setInterimText('');
-            setStatusMessage(`Recognized: "${spoken}"`);
+            setStatusMessage(`Recognized: "${recognizedText}"`);
+
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              try {
+                navigator.vibrate(30);
+              } catch {}
+            }
           }
         };
 
         recognition.onerror = (event: any) => {
-          console.warn('[VoiceAccess] Speech notice:', event?.error);
-          setIsSpeaking(false);
+          const err = event?.error;
+          console.warn('[VoiceAccess] Speech notice:', err);
 
-          if (event.error === 'no-speech') {
-            // Natural pause in speech: will auto-restart in onend
+          if (err === 'no-speech') {
             return;
           }
 
-          if (event.error === 'aborted') {
+          if (err === 'aborted') {
             return;
           }
 
-          if (event.error === 'network') {
+          if (err === 'not-allowed' || err === 'service-not-allowed') {
+            setIsListening(false);
+            isListeningRef.current = false;
+            stopRealAudioStream();
+            setStatusMessage('⚠️ Microphone access blocked. Please allow microphone in browser address bar.');
+            return;
+          }
+
+          if (err === 'audio-capture') {
+            setIsListening(false);
+            isListeningRef.current = false;
+            stopRealAudioStream();
+            setStatusMessage('⚠️ No microphone found. Please check your audio recording device.');
+            return;
+          }
+
+          if (err === 'network') {
             const fallbackLangs = getFallbackLangs();
             const nextLangIdx = (targetLangIndex + 1) % fallbackLangs.length;
-            setTimeout(() => {
+            setStatusMessage('Connecting speech engine... Try speaking or tap quick say below.');
+            if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+            restartTimerRef.current = setTimeout(() => {
               if (isListeningRef.current) {
                 startListening(nextLangIdx);
               }
-            }, 250);
-            return;
-          }
-
-          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            setIsListening(false);
-            isListeningRef.current = false;
-            stopVisualizerAnimation();
-            setStatusMessage('⚠️ Microphone access blocked. Click the orange mic to grant permission.');
+            }, 800);
             return;
           }
         };
 
         recognition.onend = () => {
-          setIsSpeaking(false);
-
-          // Fast auto-restart loop provides uninterrupted continuous listening without buffering delay
+          // Restart loop if user hasn't explicitly stopped
           if (isListeningRef.current) {
             if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
             restartTimerRef.current = setTimeout(() => {
               if (isListeningRef.current) {
                 startListening(langIndexRef.current);
               }
-            }, 100);
+            }, 300);
           } else {
             setIsListening(false);
-            stopVisualizerAnimation();
+            stopRealAudioStream();
           }
         };
 
         recognition.start();
       } catch (err: any) {
-        if (err?.name !== 'InvalidStateError') {
-          console.warn('Speech recognition startup exception:', err);
-          setIsListening(false);
-          isListeningRef.current = false;
-          stopVisualizerAnimation();
-          setStatusMessage('Microphone ready. Tap microphone or search below.');
+        if (err?.name === 'InvalidStateError') {
+          return;
         }
+        console.warn('Speech recognition startup exception:', err);
+        setStatusMessage('Tap microphone or select student below.');
       }
     },
-    [startVisualizerAnimation, stopVisualizerAnimation]
+    [startRealAudioStream, stopRealAudioStream]
   );
 
   // Stop listening explicitly
   const stopListening = useCallback(() => {
     isListeningRef.current = false;
-    stopVisualizerAnimation();
+    setIsListening(false);
 
     if (restartTimerRef.current) {
       clearTimeout(restartTimerRef.current);
       restartTimerRef.current = null;
     }
+
+    stopRealAudioStream();
 
     if (recognitionRef.current) {
       try {
@@ -580,30 +760,27 @@ export default function VoiceAccessModal({
         recognitionRef.current.onend = null;
         recognitionRef.current.stop();
       } catch {}
+      recognitionRef.current = null;
     }
 
-    setIsListening(false);
     setStatusMessage('Voice recognition paused. Tap mic to resume or select below.');
-  }, [stopVisualizerAnimation]);
+  }, [stopRealAudioStream]);
 
-  // Safe user-gesture toggle for microphone with explicit hardware permission trigger
-  const handleToggleMic = useCallback(async () => {
+  // Safe user-gesture toggle for microphone
+  const handleToggleMic = useCallback(() => {
     if (isListeningRef.current) {
       stopListening();
     } else {
-      // Trigger explicit browser permission prompt if required
-      try {
-        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          // Release immediately so Web Speech API has exclusive access
-          stream.getTracks().forEach((track) => track.stop());
-        }
-      } catch (err) {
-        console.warn('Microphone permission check notice:', err);
-      }
       startListening(0);
     }
   }, [startListening, stopListening]);
+
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      stopListening();
+    };
+  }, [stopListening]);
 
   // Handle modal open/close lifecycle
   useEffect(() => {
@@ -974,7 +1151,9 @@ export default function VoiceAccessModal({
                     {isListening
                       ? isSpeaking
                         ? `🎙️ Voice Detected (${micVolume}% Energy)`
-                        : `🎙️ Microphone Active & Ready (${micVolume}%)`
+                        : micVolume > 0
+                        ? `🎙️ Microphone Active (${micVolume}%)`
+                        : '🎙️ Microphone Ready (Speak now)'
                       : '🎙️ Microphone Paused: Tap mic to speak'}
                   </span>
                 </span>
