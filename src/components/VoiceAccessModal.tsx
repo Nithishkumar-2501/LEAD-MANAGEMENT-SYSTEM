@@ -112,6 +112,29 @@ function isFuzzyNameMatch(spokenWord: string, candidateWord: string): boolean {
   return false;
 }
 
+// Indian English phonetic key encoder to match Indian names phonetically across speech variations
+function getIndianPhoneticKey(str: string): string {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .replace(/[^\w]/g, '')
+    .replace(/ph/g, 'f')
+    .replace(/th/g, 't')
+    .replace(/dh/g, 'd')
+    .replace(/sh/g, 's')
+    .replace(/ch/g, 'c')
+    .replace(/ee|ea/g, 'i')
+    .replace(/oo|ou/g, 'u')
+    .replace(/ck/g, 'k')
+    .replace(/c(?=[eiy])/g, 's')
+    .replace(/c/g, 'k')
+    .replace(/w/g, 'v')
+    .replace(/z/g, 's')
+    .replace(/(.)\1+/g, '$1') // collapse double letters
+    .replace(/[aeiouh]+$/g, '') // remove trailing weak vowels / h
+    .trim();
+}
+
 // Indian voice search phonetic synonyms dictionary
 const SYNONYMS: Record<string, string[]> = {
   nithish: [
@@ -601,108 +624,136 @@ export default function VoiceAccessModal({
     setVoiceLevels([8, 8, 8, 8, 8]);
   }, []);
 
-  // Absorb and map spoken input to exact lead or teacher record
+  // Deeply analyze spoken text to isolate candidate names and match against live Firebase students and faculty
   const absorbLeadNameFromText = useCallback((rawSpoken: string) => {
     if (!rawSpoken || !rawSpoken.trim()) return null;
 
     const normSpoken = normalizeForVoiceMatch(rawSpoken);
     const isCall = /\b(call|calling|dial|phone|ring|contact)\b/i.test(rawSpoken);
 
-    const cleaned = normSpoken
-      .replace(
-        /\b(call|calling|dial|phone|ring|contact|reach|connect|find|search|show|get|where is|who is|open|details of|student|students|lead|leads|teacher|faculty|professor|dr|prof|sir|madam|please|can you|details for|application for|tell me about|info on|candidate|candidates|admission|details|data|record|give me|check|view|display)\b/gi,
-        ' '
-      )
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    const searchWords = (cleaned || normSpoken).split(' ').filter((w) => w.length >= 2);
-    const leads = allLeadsRef.current;
-    const teachers = teachersRef.current;
-
-    // 0. Handle generic lead / call lead inquiries (e.g. "call a lead name", "call lead", "lead name", "show leads")
-    const isGenericLeadRequest =
-      /\b(call\s+(a\s+)?lead(\s+name)?|lead\s+name|call\s+any\s+lead|call\s+a\s+student|student\s+name|show\s+leads|leads)\b/i.test(
-        normSpoken
-      ) ||
+    // 0. Check if user spoke purely a generic lead inquiry without any candidate name
+    const isPureGeneric =
+      /^(please\s+)?(can\s+you\s+)?(show|get|view|check|open|list|display|find|search)?\s*(a\s+|an\s+|the\s+)?(leads?|students?|candidates?|records?|applicants?)(\s+list|\s+data|\s+names?)?$/i.test(normSpoken) ||
+      /^(please\s+)?(can\s+you\s+)?(call\s+(a\s+|an\s+|the\s+)?(lead|student|candidate)?(\s*name)?)(\s+please)?$/i.test(normSpoken) ||
       normSpoken === 'call a lead name' ||
       normSpoken === 'call lead name' ||
       normSpoken === 'call a lead' ||
       normSpoken === 'call lead' ||
       normSpoken === 'lead name' ||
-      normSpoken === 'leads';
+      normSpoken === 'leads' ||
+      normSpoken === 'show leads' ||
+      normSpoken === 'students';
 
-    // 1. Check all live student leads
+    if (isPureGeneric) {
+      // Do NOT force any single student name! Return a generic indicator so the UI lists live leads
+      return { name: 'Leads', lead: null, isCall, isGenericLead: true };
+    }
+
+    // 1. Extract core candidate name by removing spoken prefixes and fillers
+    let coreName = normSpoken
+      .replace(/^(please\s+)?(can\s+you\s+)?(could\s+you\s+)?(kindly\s+)?(i\s+want\s+to\s+)?(i\s+need\s+to\s+)?/i, '')
+      .replace(/^(call|calling|dial|phone|ring|contact|reach|connect)\s+(to\s+)?(a\s+|an\s+|the\s+)?(lead|student|candidate|person)?(\s*(named|name))?\s*/i, '')
+      .replace(/^(find|search(\s+for)?|show(\s+me)?|look(\s*up)?|check|open|get|view|display|details\s+(of|for)|info\s+on|tell\s+me\s+about)\s+(a\s+|an\s+|the\s+)?(lead|student|candidate|faculty|teacher|professor|applicant)?(\s*(named|name))?\s*/i, '')
+      .replace(/^(lead\s+name|student\s+name|candidate\s+name|teacher\s+name|faculty\s+name)\s*(is\s+|:)?\s*/i, '')
+      .replace(/^(lead|student|candidate|faculty|teacher|professor|dr|prof|sir|madam)\s+/i, '')
+      .replace(/\s+(details|record|data|profile|application|information|info|please)$/i, '')
+      .trim();
+
+    if (!coreName) {
+      coreName = normSpoken;
+    }
+
+    const coreWords = coreName.split(' ').filter((w) => w.length >= 2);
+    const leads = allLeadsRef.current;
+    const teachers = teachersRef.current;
+
+    let bestLeadMatch: any = null;
+    let highestScore = 0;
+
+    // Helper to evaluate matching score between spoken core and a candidate
+    const scoreCandidate = (candName: string, isTeacher: boolean, entity: any) => {
+      const candNorm = normalizeForVoiceMatch(candName);
+      if (!candNorm) return;
+      const candWords = candNorm.split(' ').filter((w) => w.length >= 2);
+
+      let score = 0;
+
+      // Exact full name match
+      if (candNorm === coreName || candNorm === normSpoken) {
+        score = 100;
+      }
+      // Candidate name starts with coreName (e.g. "nithish" matches "nithish kumar", "kasi" matches "kasi nathan")
+      else if (candNorm.startsWith(coreName + ' ') || coreName.startsWith(candNorm + ' ')) {
+        score = 94;
+      }
+      // First name exact match
+      else if (candWords[0] && (candWords[0] === coreName || coreWords[0] === candWords[0])) {
+        score = 92;
+      }
+      // Phonetic dictionary match (SYNONYMS)
+      else if (
+        Object.entries(SYNONYMS).some(([canon, variants]) => {
+          const candHas = candWords.some((cw) => cw === canon || variants.includes(cw));
+          const coreHas = coreWords.some((sw) => sw === canon || variants.includes(sw)) || coreName === canon || variants.includes(coreName);
+          return candHas && coreHas;
+        })
+      ) {
+        score = 88;
+      }
+      // Indian phonetic key match
+      else if (
+        coreWords.some((cw) =>
+          candWords.some((lw) => {
+            const k1 = getIndianPhoneticKey(cw);
+            const k2 = getIndianPhoneticKey(lw);
+            return k1.length >= 3 && k1 === k2;
+          })
+        )
+      ) {
+        score = 85;
+      }
+      // Fuzzy edit distance match on words
+      else {
+        for (const lw of candWords) {
+          for (const cw of coreWords) {
+            if (['call', 'dial', 'phone', 'lead', 'student', 'show', 'name', 'the', 'for'].includes(cw)) continue;
+            if (isFuzzyNameMatch(cw, lw)) {
+              score = Math.max(score, 80);
+            }
+          }
+        }
+      }
+
+      // Substring contains match
+      if (score === 0 && coreName.length >= 3 && (candNorm.includes(coreName) || coreName.includes(candNorm))) {
+        score = 75;
+      }
+
+      // Keep candidate with highest score
+      if (score > highestScore) {
+        highestScore = score;
+        bestLeadMatch = {
+          name: candName,
+          lead: isTeacher ? undefined : entity,
+          teacher: isTeacher ? entity : undefined,
+          isCall,
+          score,
+        };
+      }
+    };
+
+    // Score all leads
     for (const lead of leads) {
-      const leadNorm = normalizeForVoiceMatch(lead.name);
-      const leadWords = leadNorm.split(' ').filter((w) => w.length >= 2);
-
-      // Direct exact match
-      if (leadNorm === cleaned || leadNorm === normSpoken) {
-        return { name: lead.name, lead, isCall };
-      }
-
-      // Substring match
-      if (cleaned && (leadNorm.includes(cleaned) || cleaned.includes(leadNorm))) {
-        return { name: lead.name, lead, isCall };
-      }
-
-      // Word match / fuzzy match
-      for (const lw of leadWords) {
-        for (const sw of searchWords) {
-          if (['call', 'dial', 'phone', 'lead', 'student', 'show', 'name'].includes(sw)) continue;
-          if (sw === lw || isFuzzyNameMatch(sw, lw)) {
-            return { name: lead.name, lead, isCall };
-          }
-        }
-      }
-
-      // Phonetic synonyms match
-      for (const [canon, variants] of Object.entries(SYNONYMS)) {
-        const swHas = searchWords.some((sw) => sw === canon || variants.includes(sw));
-        const lwHas = leadWords.some((lw) => lw === canon || variants.includes(lw));
-        if (swHas && lwHas) {
-          return { name: lead.name, lead, isCall };
-        }
-      }
+      scoreCandidate(lead.name, false, lead);
     }
 
-    // 2. Check teachers
+    // Score all teachers
     for (const tch of teachers) {
-      const tchNorm = normalizeForVoiceMatch(tch.name);
-      const tchWords = tchNorm.split(' ').filter((w) => w.length >= 2);
-
-      if (tchNorm === cleaned || tchNorm === normSpoken) {
-        return { name: tch.name, teacher: tch, isCall };
-      }
-      if (cleaned && (tchNorm.includes(cleaned) || cleaned.includes(tchNorm))) {
-        return { name: tch.name, teacher: tch, isCall };
-      }
-
-      for (const tw of tchWords) {
-        for (const sw of searchWords) {
-          if (['call', 'dial', 'phone', 'lead', 'student', 'show', 'name', 'teacher', 'prof', 'dr'].includes(sw)) continue;
-          if (sw === tw || isFuzzyNameMatch(sw, tw)) {
-            return { name: tch.name, teacher: tch, isCall };
-          }
-        }
-      }
-
-      for (const [canon, variants] of Object.entries(SYNONYMS)) {
-        const swHas = searchWords.some((sw) => sw === canon || variants.includes(sw));
-        const twHas = tchWords.some((tw) => tw === canon || variants.includes(tw));
-        if (swHas && twHas) {
-          return { name: tch.name, teacher: tch, isCall };
-        }
-      }
+      scoreCandidate(tch.name, true, tch);
     }
 
-    // 3. If it was a generic request ("call a lead name", "call a lead", "lead name"), surface the top live lead
-    if (isGenericLeadRequest) {
-      const topLead = leads.find((l: any) => l.isFromFirebase && l.name && l.name.toLowerCase() !== 'test student') || leads[0];
-      if (topLead) {
-        return { name: topLead.name, lead: topLead, isCall: true };
-      }
+    if (bestLeadMatch && highestScore >= 75) {
+      return bestLeadMatch;
     }
 
     return null;
@@ -840,17 +891,8 @@ export default function VoiceAccessModal({
           setVoiceLevels([idle0, idle1, idle2, idle3, idle4]);
 
           if (vadSpeakingRef.current) {
-            const spokeDuration = Date.now() - vadSpeechStartTimeRef.current;
-            if (spokeDuration > 300 && !vadSilenceTimerRef.current) {
-              // User finished speaking! Give speech engine 500ms, then absorb candidate
-              vadSilenceTimerRef.current = setTimeout(() => {
-                vadSpeakingRef.current = false;
-                setIsSpeaking(false);
-                if (!hasSpeechResultRef.current && isListeningRef.current) {
-                  triggerMockVoiceRecognition();
-                }
-              }, 500);
-            }
+            vadSpeakingRef.current = false;
+            setIsSpeaking(false);
           } else {
             setIsSpeaking(false);
           }
@@ -864,9 +906,9 @@ export default function VoiceAccessModal({
       console.warn('[VoiceAccess] Real microphone stream notice:', err);
       startActiveSpeechVisualizer();
     }
-  }, [startActiveSpeechVisualizer, stopMicAudioStream, triggerMockVoiceRecognition]);
+  }, [startActiveSpeechVisualizer, stopMicAudioStream]);
 
-  // Start Voice Recognition with real microphone audio capture and automatic fallback
+  // Start Voice Recognition with real microphone audio capture and deep acoustic name analysis
   const startListening = useCallback(
     (targetLangIndex: number = 0) => {
       if (typeof window === 'undefined') return;
@@ -896,16 +938,11 @@ export default function VoiceAccessModal({
         recognitionRef.current = null;
       }
 
-      // Reset speech result tracker & arm fallback timer (3.5s)
       hasSpeechResultRef.current = false;
       if (mockVoiceTimerRef.current) {
         clearTimeout(mockVoiceTimerRef.current);
+        mockVoiceTimerRef.current = null;
       }
-      mockVoiceTimerRef.current = setTimeout(() => {
-        if (!hasSpeechResultRef.current && isListeningRef.current) {
-          triggerMockVoiceRecognition();
-        }
-      }, 3500);
 
       const SpeechRecognition =
         (window as any).SpeechRecognition ||
@@ -923,11 +960,11 @@ export default function VoiceAccessModal({
         recognitionRef.current = recognition;
 
         const fallbackLangs = getFallbackLangs();
-        const activeLang = fallbackLangs[targetLangIndex] ?? fallbackLangs[0];
+        const activeLang = fallbackLangs.includes('en-IN') ? 'en-IN' : fallbackLangs[targetLangIndex] ?? fallbackLangs[0];
         langIndexRef.current = targetLangIndex;
 
-        // Snappy single phrase recognition
-        recognition.continuous = false;
+        // Continuous listening with interim results for deep real-time speech analysis
+        recognition.continuous = true;
         recognition.interimResults = true;
         recognition.maxAlternatives = 5;
         if (activeLang) {
@@ -941,15 +978,10 @@ export default function VoiceAccessModal({
         };
 
         recognition.onspeechstart = () => {
-          setStatusMessage('🎙️ Hearing your voice... Absorbing candidate name');
+          setStatusMessage('🎙️ Hearing your voice... Analyzing candidate name');
         };
 
         recognition.onresult = (event: any) => {
-          hasSpeechResultRef.current = true;
-          if (mockVoiceTimerRef.current) {
-            clearTimeout(mockVoiceTimerRef.current);
-            mockVoiceTimerRef.current = null;
-          }
           let bestMatch: any = null;
           let combinedFinal = '';
           let combinedInterim = '';
@@ -967,26 +999,32 @@ export default function VoiceAccessModal({
 
           const fullTranscript = (combinedFinal || combinedInterim || '').trim();
 
-          // 1. Try matching the full accumulated transcript
-          if (fullTranscript) {
-            bestMatch = absorbLeadNameFromText(fullTranscript);
+          // Show real-time interim speech in input as user is speaking
+          if (combinedInterim && !combinedFinal) {
+            setInterimText(combinedInterim);
+            setStatusMessage(`🎙️ Hearing: "${combinedInterim}"...`);
           }
 
-          // 2. Try matching any of the individual alternative transcripts
-          if (!bestMatch) {
-            for (let i = 0; i < event.results.length; i++) {
-              const res = event.results[i];
-              if (!res) continue;
-              for (let j = 0; j < res.length; j++) {
-                const alt = (res[j]?.transcript || '').trim();
+          // 1. Deeply check ALL alternative hypotheses across all speech results
+          for (let i = 0; i < event.results.length; i++) {
+            const res = event.results[i];
+            if (!res) continue;
+            for (let j = 0; j < res.length; j++) {
+              const alt = (res[j]?.transcript || '').trim();
+              if (alt) {
                 const m = absorbLeadNameFromText(alt);
-                if (m) {
+                if (m && !m.isGenericLead) {
                   bestMatch = m;
                   break;
                 }
               }
-              if (bestMatch) break;
             }
+            if (bestMatch) break;
+          }
+
+          // 2. Try matching the full accumulated transcript
+          if (!bestMatch && fullTranscript) {
+            bestMatch = absorbLeadNameFromText(fullTranscript);
           }
 
           // 3. Try matching individual words
@@ -994,7 +1032,7 @@ export default function VoiceAccessModal({
             const words = fullTranscript.split(' ').filter((w) => w.length >= 2);
             for (const w of words) {
               const m = absorbLeadNameFromText(w);
-              if (m) {
+              if (m && !m.isGenericLead) {
                 bestMatch = m;
                 break;
               }
@@ -1002,26 +1040,35 @@ export default function VoiceAccessModal({
           }
 
           if (bestMatch) {
-            const queryName = bestMatch.isCall ? `Call ${bestMatch.name}` : bestMatch.name;
-            setTranscript(queryName);
-            setInterimText('');
-            setStatusMessage(`🎙️ Absorbed: "${queryName}"`);
-
-            if (bestMatch.isCall) {
-              speakAnnouncement(`Calling candidate ${bestMatch.name}.`);
+            hasSpeechResultRef.current = true;
+            if (bestMatch.isGenericLead) {
+              setTranscript('Leads');
+              setInterimText('');
+              setStatusMessage('Showing live candidate leads. Speak a name to view or call (e.g. "Call Nithish").');
             } else {
-              speakAnnouncement(`Found candidate data for ${bestMatch.name}.`);
-            }
+              const queryName = bestMatch.isCall ? `Call ${bestMatch.name}` : bestMatch.name;
+              setTranscript(queryName);
+              setInterimText('');
+              setStatusMessage(`🎙️ Found candidate: "${bestMatch.name}"${bestMatch.isCall ? ' (Calling)' : ''}`);
 
-            if (typeof navigator !== 'undefined' && navigator.vibrate) {
-              try {
-                navigator.vibrate(40);
-              } catch {}
+              if (bestMatch.isCall) {
+                speakAnnouncement(`Calling candidate ${bestMatch.name}.`);
+              } else {
+                speakAnnouncement(`Found candidate data for ${bestMatch.name}.`);
+              }
+
+              if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                try {
+                  navigator.vibrate(40);
+                } catch {}
+              }
             }
           } else if (fullTranscript) {
+            hasSpeechResultRef.current = true;
+            // Set the exact user speech so matchedApplicants deeply searches all leads
             setTranscript(fullTranscript);
             setInterimText('');
-            setStatusMessage(`Recognized: "${fullTranscript}"`);
+            setStatusMessage(`Searching candidate data for: "${fullTranscript}"`);
           }
         };
 
@@ -1029,15 +1076,20 @@ export default function VoiceAccessModal({
           const err = event?.error;
           console.warn('[VoiceAccess] Speech notice:', err);
 
-          if (!hasSpeechResultRef.current && isListeningRef.current) {
-            if (err === 'no-speech' || err === 'network' || err === 'audio-capture' || err === 'aborted') {
-              triggerMockVoiceRecognition();
-              return;
-            }
+          if (err === 'no-speech' || err === 'aborted') {
+            return;
+          }
+
+          if (err === 'network') {
+            setStatusMessage('Speech engine reconnecting... Please speak candidate name clearly.');
+            return;
           }
 
           if (err === 'not-allowed' || err === 'service-not-allowed') {
-            triggerMockVoiceRecognition();
+            setIsListening(false);
+            isListeningRef.current = false;
+            stopMicAudioStream();
+            setStatusMessage('⚠️ Microphone access blocked. Please allow microphone in browser address bar.');
             return;
           }
         };
@@ -1046,7 +1098,7 @@ export default function VoiceAccessModal({
           if (isListeningRef.current) {
             if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
             restartTimerRef.current = setTimeout(() => {
-              if (isListeningRef.current && !hasSpeechResultRef.current) {
+              if (isListeningRef.current) {
                 try {
                   recognition.start();
                 } catch {
@@ -1064,7 +1116,7 @@ export default function VoiceAccessModal({
         console.warn('Speech recognition startup notice:', err);
       }
     },
-    [absorbLeadNameFromText, speakAnnouncement, startMicAudioStream, triggerMockVoiceRecognition]
+    [absorbLeadNameFromText, speakAnnouncement, startMicAudioStream]
   );
 
   // Stop listening explicitly
@@ -1109,17 +1161,13 @@ export default function VoiceAccessModal({
   // Safe user-gesture toggle for microphone
   const handleToggleMic = useCallback(() => {
     if (isListeningRef.current) {
-      if (!transcript) {
-        triggerMockVoiceRecognition();
-      } else {
-        stopListening();
-      }
+      stopListening();
     } else {
       setTranscript('');
       setInterimText('');
       startListening(0);
     }
-  }, [startListening, stopListening, transcript, triggerMockVoiceRecognition]);
+  }, [startListening, stopListening]);
 
   // Clean up on component unmount
   useEffect(() => {
@@ -1163,12 +1211,17 @@ export default function VoiceAccessModal({
     return /\b(call|calling|dial|phone|ring|contact)\b/i.test(query);
   }, [query]);
 
-  // Clean the search query by stripping command words like "call", "find", "show", etc.
+  // Clean the search query by stripping command words like "call", "find", "show", "lead name", etc.
   const cleanedQuery = useMemo(() => {
     const raw = query.toLowerCase();
     return raw
+      .replace(/^(please\s+)?(can\s+you\s+)?(could\s+you\s+)?(kindly\s+)?(i\s+want\s+to\s+)?(i\s+need\s+to\s+)?/i, '')
+      .replace(/^(call|calling|dial|phone|ring|contact|reach|connect)\s+(to\s+)?(a\s+|an\s+|the\s+)?(lead|student|candidate|person)?(\s*(named|name))?\s*/i, '')
+      .replace(/^(find|search(\s+for)?|show(\s+me)?|look(\s*up)?|check|open|get|view|display|details\s+(of|for)|info\s+on|tell\s+me\s+about)\s+(a\s+|an\s+|the\s+)?(lead|student|candidate|faculty|teacher|professor|applicant)?(\s*(named|name))?\s*/i, '')
+      .replace(/^(lead\s+name|student\s+name|candidate\s+name|teacher\s+name|faculty\s+name)\s*(is\s+|:)?\s*/i, '')
+      .replace(/^(lead|student|candidate|faculty|teacher|professor|dr|prof|sir|madam)\s+/i, '')
       .replace(
-        /\b(call|calling|dial|phone|ring|contact|reach|connect|find|search|show|get|where is|who is|open|details of|student|students|lead|leads|teacher|faculty|professor|dr|prof|sir|madam|please|can you|details for|application for|tell me about|info on|candidate|candidates|admission|details|data|record|give me|check|view|display)\b/gi,
+        /\b(call|calling|dial|phone|ring|contact|reach|connect|find|search|show|get|where is|who is|open|details of|student|students|lead|leads|teacher|faculty|professor|dr|prof|sir|madam|please|can you|details for|application for|tell me about|info on|candidate|candidates|admission|details|data|record|give me|check|view|display|name|named|a|an|the)\b/gi,
         ' '
       )
       .replace(/\s+/g, ' ')
@@ -1233,9 +1286,25 @@ export default function VoiceAccessModal({
       // Direct name check
       if (name && (name.includes(searchTarget) || searchTarget.includes(name))) return true;
 
+      // Starts with name check (e.g. "nithish" matches "nithish kumar")
+      if (name.startsWith(searchTarget + ' ') || searchTarget.startsWith(name + ' ')) return true;
+
       // Word-level & fuzzy matching
       const nameWords = name.split(' ').filter((w) => w && w.length >= 2);
       if (queryWords.some((qw) => nameWords.some((nw) => isFuzzyNameMatch(qw, nw)))) return true;
+
+      // Indian phonetic key matching across word tokens
+      if (
+        queryWords.some((qw) =>
+          nameWords.some((nw) => {
+            const k1 = getIndianPhoneticKey(qw);
+            const k2 = getIndianPhoneticKey(nw);
+            return k1.length >= 3 && k1 === k2;
+          })
+        )
+      ) {
+        return true;
+      }
 
       // Phonetic synonym dictionary check
       for (const [targetKey, variants] of Object.entries(SYNONYMS)) {
@@ -1328,14 +1397,24 @@ export default function VoiceAccessModal({
   useEffect(() => {
     if (!query) return;
 
-    if (matchedApplicants.length > 0 && matchedTeachers.length === 0) {
+    if (matchedApplicants.length === 1 && matchedTeachers.length === 0) {
       const stu = matchedApplicants[0];
-      setStatusMessage(`Found ${isCallCommand ? '📞 Call lead' : 'student data'} for "${stu.name}" (${matchedApplicants.length} record${matchedApplicants.length > 1 ? 's' : ''})`);
+      setStatusMessage(`Found ${isCallCommand ? '📞 Call lead' : 'student data'} for "${stu.name}"`);
+    } else if (matchedApplicants.length > 1 && matchedTeachers.length === 0) {
+      const exact = matchedApplicants.find((a: any) => {
+        const aNorm = normalizeForVoiceMatch(a.name);
+        return aNorm === cleanedQuery || aNorm.startsWith(cleanedQuery + ' ');
+      });
+      if (exact) {
+        setStatusMessage(`Found ${isCallCommand ? '📞 Call lead' : 'student data'} for "${exact.name}" (${matchedApplicants.length} records)`);
+      } else {
+        setStatusMessage(`Found ${matchedApplicants.length} candidate leads for "${query}"`);
+      }
     } else if (matchedTeachers.length === 1 && matchedApplicants.length === 0) {
       const tch = matchedTeachers[0];
       speakAnnouncement(`Found faculty ${tch.name} from ${tch.department} department.`);
     }
-  }, [matchedApplicants, matchedTeachers, query, isCallCommand, speakAnnouncement]);
+  }, [matchedApplicants, matchedTeachers, query, cleanedQuery, isCallCommand, speakAnnouncement]);
 
   if (!isOpen) return null;
 
