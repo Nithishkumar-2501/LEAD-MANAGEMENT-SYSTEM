@@ -62,7 +62,6 @@ interface SidebarProps {
   applicants?: (Lead & { application: Application })[];
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
   onOpenNoraAi?: () => void;
-  onOpenVoiceAccessModal?: (initialQuery?: string) => void;
 }
 
 export default function Sidebar({
@@ -82,7 +81,6 @@ export default function Sidebar({
   applicants = [],
   onSelectApplicant,
   onOpenNoraAi,
-  onOpenVoiceAccessModal,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
@@ -578,7 +576,6 @@ export default function Sidebar({
                 placeholder="Search Menu or Application..."
                 onClear={() => setMenuSearchQuery("")}
                 onVoiceSearchEnd={(transcript) => setMenuSearchQuery(transcript)}
-                onOpenVoiceModal={() => onOpenVoiceAccessModal?.()}
                 className="w-full"
               />
 

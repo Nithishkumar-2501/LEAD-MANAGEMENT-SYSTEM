@@ -26,8 +26,6 @@ import EchoDashboardView from "@/components/EchoDashboardView";
 import AiIntelligenceModule from "@/components/AiIntelligenceModule";
 import ApplicationManagerModule from "@/components/ApplicationManagerModule";
 import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
-import VoiceAccessModal from "@/components/VoiceAccessModal";
-import TeacherStudentAuditModal from "@/components/TeacherStudentAuditModal";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
@@ -52,7 +50,6 @@ import {
   Application,
   Task,
   Payment,
-  Teacher,
   SummaryMetrics,
   LeadStatusCounts,
   ActiveTab,
@@ -64,8 +61,6 @@ import {
   MOCK_ADMIN_USER,
   MOCK_TODAYS_TASKS,
   MOCK_PAYMENTS,
-  MOCK_TEACHERS,
-  MOCK_LEADS,
 } from "@/lib/mockData";
 
 export default function DashboardPage() {
@@ -138,31 +133,10 @@ export default function DashboardPage() {
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
   const [isNoraModalOpen, setIsNoraModalOpen] = useState(false);
   const [noraInitialQuery, setNoraInitialQuery] = useState("");
-  const [isVoiceAccessModalOpen, setIsVoiceAccessModalOpen] = useState(false);
-  const [voiceInitialQuery, setVoiceInitialQuery] = useState("");
-  const [selectedTeacherForAudit, setSelectedTeacherForAudit] = useState<Teacher | null>(null);
-
   const handleOpenNora = (query?: string) => {
     setNoraInitialQuery(query || "");
     setIsNoraModalOpen(true);
   };
-
-  const handleOpenVoiceAccess = (query?: string) => {
-    setVoiceInitialQuery(query || "");
-    setIsVoiceAccessModalOpen(true);
-  };
-
-  // Global hotkey: Ctrl+M or Alt+V opens Voice Access Assistant anywhere
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey && e.key.toLowerCase() === "m") || (e.altKey && e.key.toLowerCase() === "v")) {
-        e.preventDefault();
-        setIsVoiceAccessModalOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
 
   // Synchronize activeTab from URL search params (e.g. ?tab=CONTACT_DIRECTORY or ?tab=CONTACTS)
   useEffect(() => {
@@ -683,7 +657,6 @@ export default function DashboardPage() {
         applicants={applicants}
         onSelectApplicant={handleSelectApplicant}
         onOpenNoraAi={() => handleOpenNora()}
-        onOpenVoiceAccessModal={handleOpenVoiceAccess}
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}
@@ -708,7 +681,6 @@ export default function DashboardPage() {
           applicants={applicants}
           onSelectApplicant={handleSelectApplicant}
           onOpenNoraAi={handleOpenNora}
-          onOpenVoiceAccessModal={handleOpenVoiceAccess}
         />
 
         {/* Main Content Area */}
@@ -818,7 +790,6 @@ export default function DashboardPage() {
             onDeleteContact={handleDeleteApplicant}
             onReloadLeads={handleReloadLeads}
             onOpenNoraAi={handleOpenNora}
-            onOpenVoiceAccessModal={handleOpenVoiceAccess}
           />
         )}
 
@@ -934,37 +905,6 @@ export default function DashboardPage() {
         currentUserRole={currentUserRole}
         initialQuery={noraInitialQuery}
       />
-
-      {/* VOICE ACCESS MODEL (STUDENT LEADS & FACULTY VOICE SEARCH) */}
-      <VoiceAccessModal
-        isOpen={isVoiceAccessModalOpen}
-        onClose={() => setIsVoiceAccessModalOpen(false)}
-        applicants={applicants && applicants.length > 0 ? applicants : MOCK_LEADS}
-        teachers={MOCK_TEACHERS}
-        onSelectApplicant={(student) => {
-          setIsVoiceAccessModalOpen(false);
-          handleSelectApplicant(student);
-        }}
-        onSelectTeacher={(teacher) => {
-          setIsVoiceAccessModalOpen(false);
-          setSelectedTeacherForAudit(teacher);
-        }}
-        onTriggerToast={triggerToast}
-        initialQuery={voiceInitialQuery}
-      />
-
-      {/* TEACHER STUDENT AUDIT MODAL FROM VOICE ACCESS */}
-      {selectedTeacherForAudit && (
-        <TeacherStudentAuditModal
-          teacher={selectedTeacherForAudit}
-          isOpen={!!selectedTeacherForAudit}
-          onClose={() => setSelectedTeacherForAudit(null)}
-          currentUserRole={currentUserRole}
-          onTriggerToast={triggerToast}
-          allLeads={applicants}
-          teachersList={MOCK_TEACHERS}
-        />
-      )}
 
       {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">

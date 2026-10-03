@@ -125,7 +125,6 @@ interface ContactDirectoryModuleProps {
   isReloading?: boolean;
   onReloadLeads?: () => Promise<void> | void;
   onOpenNoraAi?: (initialQuery?: string) => void;
-  onOpenVoiceAccessModal?: (initialQuery?: string) => void;
 }
 
 export default function ContactDirectoryModule({
@@ -141,7 +140,6 @@ export default function ContactDirectoryModule({
   isReloading: externalIsReloading,
   onReloadLeads,
   onOpenNoraAi,
-  onOpenVoiceAccessModal,
 }: ContactDirectoryModuleProps) {
   const [contacts, setContacts] = useState(initialContacts);
   const [internalIsReloading, setInternalIsReloading] = useState(false);
