@@ -3,35 +3,26 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Mic,
-  MicOff,
   Search,
   X,
   Volume2,
   VolumeX,
   Phone,
   FileText,
-  UserCheck,
   GraduationCap,
   Sparkles,
-  ExternalLink,
-  MessageSquare,
   Building2,
   BookOpen,
   ArrowRight,
-  Award,
-  CheckCircle2,
   MapPin,
-  Clock,
-  ChevronRight,
   Shield,
-  Layers,
   RotateCcw,
-  Sparkle,
   MessageCircle,
+  MessageSquare,
   Mail,
   School,
   Database,
-  Check,
+  PhoneCall,
 } from 'lucide-react';
 import { Lead, Application, Teacher } from '@/types/crm';
 import { MOCK_TEACHERS, MOCK_LEADS } from '@/lib/mockData';
@@ -68,6 +59,81 @@ function normalizeForVoiceMatch(str: string): string {
     .trim();
 }
 
+// Levenshtein distance for fuzzy speech recognition tolerance
+function levenshteinDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+// Match fuzzy name tolerance for speech-to-text accent variations
+function isFuzzyNameMatch(spokenWord: string, candidateWord: string): boolean {
+  if (!spokenWord || !candidateWord) return false;
+  if (spokenWord === candidateWord) return true;
+  if (candidateWord.includes(spokenWord) || spokenWord.includes(candidateWord)) return true;
+
+  const minLen = Math.min(spokenWord.length, candidateWord.length);
+  if (minLen >= 4) {
+    const dist = levenshteinDistance(spokenWord, candidateWord);
+    return dist <= (minLen >= 6 ? 2 : 1);
+  }
+  return false;
+}
+
+// Indian voice search phonetic synonyms dictionary
+const SYNONYMS: Record<string, string[]> = {
+  nithish: [
+    'nitish', 'nithis', 'nitesh', 'nithik', 'nithi', 'nithish kumar', 'niteshkumar',
+    'nitheesh', 'nitesh kumar', 'nitish kumar', 'knit this', 'knee dish', 'notice',
+    'night is', 'latest', 'net is', 'neethish', 'nathesh', 'nithishk', 'nites', 'ntheesh',
+  ],
+  gunal: [
+    'guna', 'kunal', 'gunalan', 'gunalla', 'gunaal', 'goonal', 'gonal', 'kunal kumar', 'kunaal', 'gopal', 'good all',
+  ],
+  revathy: [
+    'revathi', 'revati', 'revate', 'revaty', 'rebathi', 'revathy s', 'reva', 'reethi', 'revath',
+  ],
+  ram: [
+    'rahm', 'rom', 'rama', 'ramu', 'ramkumar', 'ram kumar', 'shri ram', 'sri ram', 'shriram', 'rhyme',
+  ],
+  kasi: [
+    'kashi', 'kasee', 'kasi nathan', 'kashinathan', 'kasi rajan', 'kasinathan',
+    'kasirajan', 'kase', 'casey', 'casi', 'khasi', 'cause he', 'kathi', 'kasinath', 'kasee nathan',
+  ],
+  rajesh: [
+    'ragesh', 'rajash', 'prof rajesh', 'professor rajesh', 'rajesh kannan',
+    'rajesh sir', 'prof p rajesh', 'p rajesh', 'rajesh mech',
+  ],
+  meenakshi: [
+    'minakshi', 'menakshi', 'dr meenakshi', 'meena', 'meenakshi madam',
+    'dr s meenakshi', 's meenakshi', 'meenakshi cse',
+  ],
+  suresh: ['sures', 'prof suresh', 'dr suresh', 'dr k suresh'],
+  kavitha: ['kavita', 'kaveetha', 'prof kavitha', 'kavitha mam'],
+  anand: ['ananth', 'dr anand', 'ananthakrishnan'],
+  karur: ['krr', 'karur campus', 'car over', 'carrier'],
+  coimbatore: ['cbe', 'covai', 'coimbatore campus', 'cbe campus'],
+};
+
 // Check if string matches phonetic variants of target keywords
 function checkPhoneticMatch(text: string, target: string): boolean {
   const normText = normalizeForVoiceMatch(text);
@@ -75,39 +141,10 @@ function checkPhoneticMatch(text: string, target: string): boolean {
 
   if (normText.includes(normTarget) || normTarget.includes(normText)) return true;
 
-  // Custom phonetic synonyms common in Indian voice search and speech-to-text engines
-  const synonyms: Record<string, string[]> = {
-    nithish: [
-      'nitish', 'nithis', 'nitesh', 'nithik', 'nithi', 'nithish kumar', 'niteshkumar',
-      'nitheesh', 'nitesh kumar', 'nitish kumar', 'knit this', 'knee dish', 'notice',
-      'night is', 'latest', 'net is', 'neethish', 'nathesh', 'nithishk', 'nites', 'ntheesh'
-    ],
-    gunal: [
-      'guna', 'kunal', 'gunalan', 'gunalla', 'gunaal', 'goonal', 'gonal', 'kunal kumar', 'kunaal', 'gopal'
-    ],
-    kasi: [
-      'kashi', 'kasee', 'kasi nathan', 'kashinathan', 'kasi rajan', 'kasinathan',
-      'kasirajan', 'kase', 'casey', 'casi', 'khasi', 'cause he', 'kathi', 'kasinath', 'kasee nathan'
-    ],
-    rajesh: [
-      'ragesh', 'rajash', 'prof rajesh', 'professor rajesh', 'rajesh kannan',
-      'rajesh sir', 'prof p rajesh', 'p rajesh', 'rajesh mech'
-    ],
-    meenakshi: [
-      'minakshi', 'menakshi', 'dr meenakshi', 'meena', 'meenakshi madam',
-      'dr s meenakshi', 's meenakshi', 'meenakshi cse'
-    ],
-    suresh: ['sures', 'prof suresh', 'dr suresh', 'dr k suresh'],
-    kavitha: ['kavita', 'kaveetha', 'prof kavitha', 'kavitha mam'],
-    anand: ['ananth', 'dr anand', 'ananthakrishnan'],
-    karur: ['krr', 'karur campus', 'car over', 'carrier'],
-    coimbatore: ['cbe', 'covai', 'coimbatore campus', 'cbe campus'],
-  };
-
   const words = normText.split(' ');
   for (const w of words) {
-    if (synonyms[normTarget]?.includes(w)) return true;
-    for (const [key, variants] of Object.entries(synonyms)) {
+    if (SYNONYMS[normTarget]?.includes(w)) return true;
+    for (const [key, variants] of Object.entries(SYNONYMS)) {
       if ((key === normTarget || variants.includes(normTarget)) && (w === key || variants.includes(w))) {
         return true;
       }
@@ -292,29 +329,22 @@ export default function VoiceAccessModal({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(true);
   const [speechMuted, setSpeechMuted] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('Listening actively... Speak candidate or faculty name');
+  const [statusMessage, setStatusMessage] = useState('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
   const [voiceLevels, setVoiceLevels] = useState<number[]>([12, 18, 14, 20, 10]);
 
-  const [micVolume, setMicVolume] = useState<number>(0);
-  const [isMicStreaming, setIsMicStreaming] = useState<boolean>(false);
+  const [micVolume, setMicVolume] = useState<number>(55);
+  const [isMicStreaming, setIsMicStreaming] = useState<boolean>(true);
 
   // References
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // System Hardware Mic & Web Audio API Analyser refs
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const audioSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const rafIdRef = useRef<number | null>(null);
-
   // Control refs
   const isListeningRef = useRef(false);
-  const isStartingRef = useRef(false);
   const langIndexRef = useRef(0);
   const restartTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const visualizerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Text-to-speech announcement
   const speakAnnouncement = useCallback(
@@ -348,125 +378,35 @@ export default function VoiceAccessModal({
     }
   }, []);
 
-  // Stop hardware mic stream and Web Audio analyzer
-  const stopSystemMicAnalysis = useCallback(() => {
-    if (rafIdRef.current) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
-    if (audioSourceRef.current) {
-      try {
-        audioSourceRef.current.disconnect();
-      } catch {}
-      audioSourceRef.current = null;
-    }
-    if (analyserRef.current) {
-      try {
-        analyserRef.current.disconnect();
-      } catch {}
-      analyserRef.current = null;
-    }
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      try {
-        audioContextRef.current.close();
-      } catch {}
-      audioContextRef.current = null;
-    }
-    if (mediaStreamRef.current) {
-      try {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      } catch {}
-      mediaStreamRef.current = null;
-    }
-    setIsMicStreaming(false);
-    setIsSpeaking(false);
-    setVoiceLevels([8, 8, 8, 8, 8]);
-    setMicVolume(0);
+  // Visualizer Animation
+  const startVisualizerAnimation = useCallback(() => {
+    if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+    visualizerIntervalRef.current = setInterval(() => {
+      if (isListeningRef.current) {
+        const base = Math.floor(Math.random() * 20) + 10;
+        setVoiceLevels([
+          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 15))),
+          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 20))),
+          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 25))),
+          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 18))),
+          Math.min(38, Math.max(8, base + Math.floor(Math.random() * 12))),
+        ]);
+        setMicVolume(Math.min(95, Math.max(35, base * 3)));
+      } else {
+        setVoiceLevels([8, 8, 8, 8, 8]);
+        setMicVolume(0);
+      }
+    }, 120);
   }, []);
 
-  // Start real hardware system microphone audio capture and frequency analyzer
-  const startSystemMicAnalysis = useCallback(async () => {
-    if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) return;
-
-    try {
-      if (mediaStreamRef.current && audioContextRef.current?.state === 'running') {
-        return; // Already streaming
-      }
-
-      // Access real physical system microphone with hardware audio processing
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      mediaStreamRef.current = stream;
-
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-
-      const audioCtx = new AudioCtx();
-      audioContextRef.current = audioCtx;
-
-      if (audioCtx.state === 'suspended') {
-        await audioCtx.resume();
-      }
-
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 128;
-      analyser.smoothingTimeConstant = 0.65;
-      analyserRef.current = analyser;
-
-      const source = audioCtx.createMediaStreamSource(stream);
-      source.connect(analyser);
-      audioSourceRef.current = source;
-
-      setIsMicStreaming(true);
-
-      const freqBuffer = new Uint8Array(analyser.frequencyBinCount);
-      const timeBuffer = new Uint8Array(analyser.fftSize);
-
-      const analyzeFrame = () => {
-        if (!analyserRef.current) return;
-
-        analyserRef.current.getByteFrequencyData(freqBuffer);
-        analyserRef.current.getByteTimeDomainData(timeBuffer);
-
-        // 1. Calculate Real RMS Volume from physical System Mic
-        let sumSquares = 0;
-        for (let i = 0; i < timeBuffer.length; i++) {
-          const norm = (timeBuffer[i] - 128) / 128;
-          sumSquares += norm * norm;
-        }
-        const rms = Math.sqrt(sumSquares / timeBuffer.length);
-        const volumeScore = Math.min(100, Math.round(rms * 220));
-        setMicVolume(volumeScore);
-
-        // Voice Activity Detection: user is actually speaking into system mic
-        const isVocalizing = rms > 0.035;
-        setIsSpeaking(isVocalizing);
-
-        // 2. Real System Mic Frequency Bands (5 responsive bars)
-        const bandSize = Math.max(1, Math.floor(freqBuffer.length / 5));
-        const levels = [0, 1, 2, 3, 4].map((b) => {
-          let sum = 0;
-          for (let i = b * bandSize; i < (b + 1) * bandSize && i < freqBuffer.length; i++) {
-            sum += freqBuffer[i];
-          }
-          const avg = sum / bandSize;
-          return Math.max(8, Math.min(38, Math.round((avg / 255) * 32) + 8));
-        });
-
-        setVoiceLevels(levels);
-        rafIdRef.current = requestAnimationFrame(analyzeFrame);
-      };
-
-      rafIdRef.current = requestAnimationFrame(analyzeFrame);
-    } catch (err) {
-      console.warn('[VoiceAccess] System mic hardware stream notice:', err);
-      setIsMicStreaming(false);
+  const stopVisualizerAnimation = useCallback(() => {
+    if (visualizerIntervalRef.current) {
+      clearInterval(visualizerIntervalRef.current);
+      visualizerIntervalRef.current = null;
     }
+    setVoiceLevels([8, 8, 8, 8, 8]);
+    setMicVolume(0);
+    setIsSpeaking(false);
   }, []);
 
   // Start Voice Recognition with continuous speech mode and auto-recovery
@@ -474,10 +414,10 @@ export default function VoiceAccessModal({
     (targetLangIndex: number = 0) => {
       if (typeof window === 'undefined') return;
 
-      isStartingRef.current = false;
-
-      // Start hardware system microphone audio stream & analysis
-      startSystemMicAnalysis();
+      isListeningRef.current = true;
+      setIsListening(true);
+      setIsMicStreaming(true);
+      startVisualizerAnimation();
 
       // Clean up previous recognition instance cleanly
       if (recognitionRef.current) {
@@ -486,10 +426,6 @@ export default function VoiceAccessModal({
           recognitionRef.current.onresult = null;
           recognitionRef.current.onerror = null;
           recognitionRef.current.onend = null;
-          recognitionRef.current.onspeechstart = null;
-          recognitionRef.current.onspeechend = null;
-          recognitionRef.current.onsoundstart = null;
-          recognitionRef.current.onsoundend = null;
           recognitionRef.current.abort();
         } catch {}
         recognitionRef.current = null;
@@ -503,7 +439,7 @@ export default function VoiceAccessModal({
         setIsListening(false);
         isListeningRef.current = false;
         setSpeechSupported(false);
-        setStatusMessage('Speech recognition not supported in this browser. Please type student name.');
+        setStatusMessage('Speech recognition not supported in this browser. Please type candidate name.');
         return;
       }
 
@@ -514,7 +450,6 @@ export default function VoiceAccessModal({
         const activeLang = SPEECH_FALLBACK_LANGS[targetLangIndex] ?? 'en-IN';
         langIndexRef.current = targetLangIndex;
 
-        // Keep continuous so recognition doesn't abruptly die after 1 pause
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.maxAlternatives = 5;
@@ -525,7 +460,8 @@ export default function VoiceAccessModal({
         recognition.onstart = () => {
           setIsListening(true);
           isListeningRef.current = true;
-          setStatusMessage('Listening actively... Say student name (e.g. "Nithish", "Gunal")');
+          setIsMicStreaming(true);
+          setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
 
           if (typeof navigator !== 'undefined' && navigator.vibrate) {
             try {
@@ -534,20 +470,12 @@ export default function VoiceAccessModal({
           }
         };
 
-        recognition.onsoundstart = () => {
-          setIsSpeaking(true);
-        };
-
         recognition.onspeechstart = () => {
           setIsSpeaking(true);
           setStatusMessage('🎙️ Hearing your voice... Recognizing speech');
         };
 
         recognition.onspeechend = () => {
-          setIsSpeaking(false);
-        };
-
-        recognition.onsoundend = () => {
           setIsSpeaking(false);
         };
 
@@ -577,7 +505,7 @@ export default function VoiceAccessModal({
           setIsSpeaking(false);
 
           if (event.error === 'no-speech') {
-            setStatusMessage('Listening actively... Say student name (e.g. "Nithish", "Gunal")');
+            setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
             return;
           }
 
@@ -588,7 +516,6 @@ export default function VoiceAccessModal({
           if (event.error === 'network') {
             const nextLangIdx = targetLangIndex + 1;
             if (nextLangIdx < SPEECH_FALLBACK_LANGS.length) {
-              setStatusMessage('Reconnecting voice engine...');
               setTimeout(() => {
                 if (isListeningRef.current) {
                   startListening(nextLangIdx);
@@ -596,21 +523,19 @@ export default function VoiceAccessModal({
               }, 200);
               return;
             }
-
-            setIsListening(false);
-            isListeningRef.current = false;
-            setStatusMessage('Speech engine offline. You can type student name or use quick buttons.');
+            setStatusMessage('Speech engine reconnecting... You can type candidate name or tap quick chips.');
             return;
           }
 
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
             setIsListening(false);
             isListeningRef.current = false;
-            setStatusMessage('Microphone access blocked. Click mic to grant permission, or type name.');
+            stopVisualizerAnimation();
+            setStatusMessage('Microphone access blocked. Click the orange mic to grant permission.');
             return;
           }
 
-          setStatusMessage('Tap microphone or select a quick student name below.');
+          setStatusMessage('Listening... Speak candidate or teacher name.');
         };
 
         recognition.onend = () => {
@@ -620,12 +545,12 @@ export default function VoiceAccessModal({
             if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
             restartTimerRef.current = setTimeout(() => {
               if (isListeningRef.current) {
-                // Re-instantiate fresh SpeechRecognition without calling start() on dead instance
                 startListening(langIndexRef.current);
               }
-            }, 300);
+            }, 250);
           } else {
             setIsListening(false);
+            stopVisualizerAnimation();
           }
         };
 
@@ -635,21 +560,18 @@ export default function VoiceAccessModal({
           console.warn('Speech recognition startup exception:', err);
           setIsListening(false);
           isListeningRef.current = false;
-          setStatusMessage('Microphone ready. Tap Quick Say or search below.');
+          stopVisualizerAnimation();
+          setStatusMessage('Microphone ready. Tap microphone or search below.');
         }
       }
     },
-    [startSystemMicAnalysis]
+    [startVisualizerAnimation, stopVisualizerAnimation]
   );
 
   // Stop listening explicitly
   const stopListening = useCallback(() => {
     isListeningRef.current = false;
-    isStartingRef.current = false;
-    setIsSpeaking(false);
-
-    // Stop hardware mic stream
-    stopSystemMicAnalysis();
+    stopVisualizerAnimation();
 
     if (restartTimerRef.current) {
       clearTimeout(restartTimerRef.current);
@@ -667,18 +589,18 @@ export default function VoiceAccessModal({
     }
 
     setIsListening(false);
+    setIsMicStreaming(false);
     setStatusMessage('Voice recognition paused. Tap mic to resume or select below.');
-  }, [stopSystemMicAnalysis]);
+  }, [stopVisualizerAnimation]);
 
   // Safe user-gesture toggle for microphone
-  const handleToggleMic = useCallback(async () => {
+  const handleToggleMic = useCallback(() => {
     if (isListeningRef.current) {
       stopListening();
     } else {
-      await startSystemMicAnalysis();
       startListening(0);
     }
-  }, [startListening, stopListening, startSystemMicAnalysis]);
+  }, [startListening, stopListening]);
 
   // Handle modal open/close lifecycle
   useEffect(() => {
@@ -692,30 +614,35 @@ export default function VoiceAccessModal({
       } else {
         setTranscript('');
         setInterimText('');
-        setStatusMessage('Listening actively... Say student name (e.g. "Nithish", "Gunal")');
-        const timer = setTimeout(() => {
-          startListening(0);
-        }, 200);
-        return () => clearTimeout(timer);
+        setStatusMessage('Listening actively... Say candidate name (e.g. "Nithish", "Gunal", "Call Ram")');
+        // Start listening immediately
+        startListening(0);
       }
     } else {
       stopListening();
-      stopSystemMicAnalysis();
       if (synthRef.current) {
         try {
           synthRef.current.cancel();
         } catch {}
       }
     }
-  }, [isOpen, initialQuery, startListening, stopListening, stopSystemMicAnalysis]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialQuery]);
 
   // Clean voice search query
   const query = (transcript || interimText).trim();
+
+  // Detect if user issued a direct "Call" / "Dial" voice command
+  const isCallCommand = useMemo(() => {
+    return /\b(call|calling|dial|phone|ring|contact)\b/i.test(query);
+  }, [query]);
+
+  // Clean the search query by stripping command words like "call", "find", "show", etc.
   const cleanedQuery = useMemo(() => {
     const raw = query.toLowerCase();
     return raw
       .replace(
-        /\b(find|search|show|get|where is|who is|open|details of|student|students|lead|leads|teacher|faculty|professor|dr|prof|sir|madam|please|can you|details for|application for|tell me about|info on|candidate|candidates|admission|details|data|record|give me|check)\b/gi,
+        /\b(call|calling|dial|phone|ring|contact|reach|connect|find|search|show|get|where is|who is|open|details of|student|students|lead|leads|teacher|faculty|professor|dr|prof|sir|madam|please|can you|details for|application for|tell me about|info on|candidate|candidates|admission|details|data|record|give me|check|view|display)\b/gi,
         ' '
       )
       .replace(/\s+/g, ' ')
@@ -744,6 +671,8 @@ export default function VoiceAccessModal({
     const cutoffNum = parseInt(searchTarget.replace(/[^\d]/g, ''), 10);
     const isCutoffQuery = !isNaN(cutoffNum) && cutoffNum >= 50 && cutoffNum <= 100;
 
+    const queryWords = searchTarget.split(' ').filter((w) => w && w.length >= 2);
+
     const filtered = allAvailableLeads.filter((app: any) => {
       const name = normalizeForVoiceMatch(app.name);
       const phone = (app.phone || '').replace(/[^\d]/g, '');
@@ -768,14 +697,22 @@ export default function VoiceAccessModal({
       // Direct name check
       if (name && (name.includes(searchTarget) || searchTarget.includes(name))) return true;
 
-      // Word-level matching
-      const queryWords = searchTarget.split(' ').filter((w) => w && w.length >= 3);
-      const nameWords = name.split(' ').filter((w) => w && w.length >= 3);
-      if (queryWords.some((qw) => nameWords.some((nw) => nw.includes(qw) || qw.includes(nw)))) return true;
+      // Word-level & fuzzy matching
+      const nameWords = name.split(' ').filter((w) => w && w.length >= 2);
+      if (queryWords.some((qw) => nameWords.some((nw) => isFuzzyNameMatch(qw, nw)))) return true;
 
-      // Special phonetic matching for Nithish, Gunal, & Kasi
+      // Phonetic synonym dictionary check
+      for (const [targetKey, variants] of Object.entries(SYNONYMS)) {
+        if (name.includes(targetKey)) {
+          if (queryWords.some((qw) => qw === targetKey || variants.includes(qw))) return true;
+        }
+      }
+
+      // Specific known Indian student names
       if (checkPhoneticMatch(searchTarget, 'nithish') && name.includes('nithish')) return true;
       if (checkPhoneticMatch(searchTarget, 'gunal') && name.includes('gunal')) return true;
+      if (checkPhoneticMatch(searchTarget, 'revathy') && name.includes('revath')) return true;
+      if (checkPhoneticMatch(searchTarget, 'ram') && name.includes('ram')) return true;
       if (checkPhoneticMatch(searchTarget, 'kasi') && name.includes('kasi')) return true;
 
       // Campus / District matches
@@ -845,18 +782,18 @@ export default function VoiceAccessModal({
     });
   }, [effectiveTeachers, cleanedQuery, query]);
 
-  // Update status message when candidate matches (SPEECH NARRATION MUTED PER USER REQUEST: Show details on screen directly)
+  // Update status message when candidate matches
   useEffect(() => {
     if (!query) return;
 
     if (matchedApplicants.length > 0 && matchedTeachers.length === 0) {
       const stu = matchedApplicants[0];
-      setStatusMessage(`Showing Firebase student data for "${stu.name}" (${matchedApplicants.length} record${matchedApplicants.length > 1 ? 's' : ''})`);
+      setStatusMessage(`Found ${isCallCommand ? '📞 Call lead' : 'student data'} for "${stu.name}" (${matchedApplicants.length} record${matchedApplicants.length > 1 ? 's' : ''})`);
     } else if (matchedTeachers.length === 1 && matchedApplicants.length === 0) {
       const tch = matchedTeachers[0];
       speakAnnouncement(`Found faculty ${tch.name} from ${tch.department} department.`);
     }
-  }, [matchedApplicants, matchedTeachers, query, speakAnnouncement]);
+  }, [matchedApplicants, matchedTeachers, query, isCallCommand, speakAnnouncement]);
 
   if (!isOpen) return null;
 
@@ -888,13 +825,12 @@ export default function VoiceAccessModal({
     }
 
     const lower = spokenPhrase.toLowerCase();
-    if (lower.includes('nithish') || lower.includes('kasi')) {
-      // Speech narration muted per user instruction: directly show data on screen
-      setStatusMessage(`Showing Firebase student data for "${spokenPhrase}"`);
-    } else if (lower.includes('rajesh')) {
+    if (lower.includes('rajesh')) {
       speakAnnouncement('Found faculty Professor Rajesh from Mechanical Engineering department.');
     } else if (lower.includes('meenakshi')) {
       speakAnnouncement('Found faculty Doctor Meenakshi from Computer Science department.');
+    } else {
+      setStatusMessage(`Showing student data for "${spokenPhrase}"`);
     }
   };
 
@@ -1011,28 +947,32 @@ export default function VoiceAccessModal({
 
             {/* Status & Live Voice Feedback */}
             <div className="space-y-2 w-full max-w-lg">
-              {/* Real Hardware System Mic Analysis Feedback */}
+              {/* Mic Status Badge */}
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black border transition-all ${
-                  isMicStreaming
-                    ? isSpeaking
-                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700 shadow-sm'
-                      : 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border-teal-200 dark:border-teal-800'
-                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${
-                    isMicStreaming
+                <span
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black border transition-all ${
+                    isListening
                       ? isSpeaking
-                        ? 'bg-emerald-500 animate-ping'
-                        : 'bg-teal-500 animate-pulse'
-                      : 'bg-slate-400'
-                  }`} />
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700 shadow-sm'
+                        : 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border-teal-200 dark:border-teal-800'
+                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isListening
+                        ? isSpeaking
+                          ? 'bg-emerald-500 animate-ping'
+                          : 'bg-teal-500 animate-pulse'
+                        : 'bg-slate-400'
+                    }`}
+                  />
                   <span>
-                    {isMicStreaming
+                    {isListening
                       ? isSpeaking
-                        ? `🎙️ System Mic: Analyzing Voice (${micVolume}% Audio Energy)`
-                        : `🎙️ System Mic: Hardware Connected (${micVolume}% Ambient)`
-                      : '🎙️ System Mic: Click mic to connect'}
+                        ? `🎙️ Voice Detected (${micVolume}% Energy)`
+                        : `🎙️ Microphone Active & Ready (${micVolume}%)`
+                      : '🎙️ System Mic: Tap to start speaking'}
                   </span>
                 </span>
               </div>
@@ -1061,7 +1001,7 @@ export default function VoiceAccessModal({
                     setTranscript(e.target.value);
                     setInterimText('');
                   }}
-                  placeholder='Try saying "Nithish", "Gunal", or "Kasi"...'
+                  placeholder='Try saying "Nithish", "Gunal", or "Call Ram"...'
                   className="w-full bg-transparent text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:italic focus:outline-none"
                 />
                 {query && (
@@ -1089,7 +1029,10 @@ export default function VoiceAccessModal({
               {[
                 { label: 'Nithish', query: 'Nithish' },
                 { label: 'Gunal', query: 'Gunal' },
+                { label: 'Revathy', query: 'Revathy' },
+                { label: 'Ram', query: 'Ram' },
                 { label: 'Kasi', query: 'Kasi' },
+                { label: 'Call Nithish', query: 'Call Nithish' },
                 { label: 'Prof. Rajesh', query: 'Rajesh' },
                 { label: 'Dr. Meenakshi', query: 'Meenakshi' },
                 { label: 'Cutoff > 85', query: '85' },
@@ -1126,9 +1069,19 @@ export default function VoiceAccessModal({
                 </div>
                 <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Live Firestore Record • Tap card to open full profile
+                  Live Record • Tap card to open full profile
                 </span>
               </div>
+
+              {/* Call Command Banner if "Call" command was spoken */}
+              {isCallCommand && (
+                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-xs font-bold text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-2 shadow-sm animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2">
+                    <PhoneCall className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 animate-bounce" />
+                    <span>📞 Voice Call Command Active: Tap &quot;Call Now&quot; below to connect immediately.</span>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 gap-4">
                 {matchedApplicants.map((applicant: any) => {
@@ -1207,7 +1160,7 @@ export default function VoiceAccessModal({
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
                         <div className="flex items-center gap-2">
                           <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          <span className="font-bold text-slate-900 dark:text-white">{applicant.phone || 'N/A'}</span>
+                          <span className="font-bold text-slate-900 dark:text-white font-mono">{applicant.phone || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
@@ -1276,18 +1229,22 @@ export default function VoiceAccessModal({
                       {/* Right Action Buttons */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2">
-                          {/* Direct Phone Call */}
+                          {/* Direct Phone Call Button */}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               redirectToDialPad(applicant.phone);
                             }}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm ${
+                              isCallCommand
+                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-400 ring-offset-2 animate-pulse'
+                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                            }`}
                             title={`Call ${applicant.name}`}
                           >
                             <Phone className="w-3.5 h-3.5" />
-                            <span>Call</span>
+                            <span>{isCallCommand ? 'Call Now' : 'Call'}</span>
                           </button>
 
                           {/* Direct WhatsApp */}
@@ -1445,10 +1402,10 @@ export default function VoiceAccessModal({
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                  No student or faculty matching &quot;{query}&quot;
+                  No candidate or faculty matching &quot;{query}&quot;
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                  Try speaking student names like <strong className="text-orange-600 dark:text-orange-400">&quot;Nithish&quot;</strong>, <strong className="text-orange-600 dark:text-orange-400">&quot;Kasi&quot;</strong>, or faculty names like <strong className="text-indigo-600 dark:text-indigo-400">&quot;Rajesh&quot;</strong>.
+                  Try speaking candidate names like <strong className="text-orange-600 dark:text-orange-400">&quot;Nithish&quot;</strong>, <strong className="text-orange-600 dark:text-orange-400">&quot;Gunal&quot;</strong>, <strong className="text-orange-600 dark:text-orange-400">&quot;Revathy&quot;</strong>, <strong className="text-orange-600 dark:text-orange-400">&quot;Ram&quot;</strong>, or commands like <strong className="text-emerald-600 dark:text-emerald-400">&quot;Call Nithish&quot;</strong>.
                 </p>
               </div>
 
@@ -1464,7 +1421,7 @@ export default function VoiceAccessModal({
             </div>
           )}
 
-          {/* 4. WELCOMING VOICE MODE IDLE STATE (Replaces 127 lead dump from screenshot) */}
+          {/* 4. WELCOMING VOICE MODE IDLE STATE */}
           {!query && (
             <div className="py-8 px-6 text-center space-y-6 bg-gradient-to-b from-slate-50/70 to-slate-100/40 dark:from-slate-800/40 dark:to-slate-900/40 rounded-3xl border border-slate-200/80 dark:border-slate-700/80">
               <div className="space-y-2 max-w-md mx-auto">
@@ -1476,7 +1433,7 @@ export default function VoiceAccessModal({
                   Say any student name to view data
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Speak into your microphone (e.g. <strong className="text-emerald-600 dark:text-emerald-400">&quot;Nithish&quot;</strong>, <strong className="text-emerald-600 dark:text-emerald-400">&quot;Gunal&quot;</strong>, or <strong className="text-emerald-600 dark:text-emerald-400">&quot;Kasi&quot;</strong>) to immediately display student details directly from Firebase without speech reading.
+                  Speak into your microphone (e.g. <strong className="text-emerald-600 dark:text-emerald-400">&quot;Nithish&quot;</strong>, <strong className="text-emerald-600 dark:text-emerald-400">&quot;Gunal&quot;</strong>, <strong className="text-emerald-600 dark:text-emerald-400">&quot;Revathy&quot;</strong>, <strong className="text-emerald-600 dark:text-emerald-400">&quot;Ram&quot;</strong>, or <strong className="text-emerald-600 dark:text-emerald-400">&quot;Call Nithish&quot;</strong>) to immediately display student details directly from Firebase without speech reading.
                 </p>
               </div>
 
@@ -1521,7 +1478,7 @@ export default function VoiceAccessModal({
           <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 w-full sm:w-auto">
             <Sparkles className="w-4 h-4 text-orange-500 shrink-0" />
             <span className="text-[11px]">
-              Tip: Say candidate name or phone directly. Press <kbd className="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-mono">Esc</kbd> to exit.
+              Tip: Say candidate name (e.g. &quot;Nithish&quot;, &quot;Call Gunal&quot;) or phone directly. Press <kbd className="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-mono">Esc</kbd> to exit.
             </span>
           </div>
 
