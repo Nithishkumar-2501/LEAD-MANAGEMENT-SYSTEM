@@ -13,12 +13,20 @@
     --foreground: 210 40% 98%;
   }
 
-  *, ::before, ::after, body, html, input, select, textarea, button, table, td, th, span, div, p, h1, h2, h3, h4, h5, h6 {
+  *, ::before, ::after, body, html, table, td, th, span, div, p, h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', var(--font-poppins), system-ui, -apple-system, sans-serif !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
   }
 
-  input, select, textarea, button {
+  input, select, textarea, button, [contenteditable="true"] {
     font-size: inherit;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
   }
 }
 

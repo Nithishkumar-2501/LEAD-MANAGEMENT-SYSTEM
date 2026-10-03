@@ -566,14 +566,6 @@ export default function ApplicationManagerModule({
               )}
             </div>
 
-            {/* Export CSV Button */}
-            <button
-              onClick={handleExportCSV}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
-              title="Download Applications CSV"
-            >
-              <Download className="w-4 h-4" />
-            </button>
 
             {/* Offline Logs Toggle */}
             <button

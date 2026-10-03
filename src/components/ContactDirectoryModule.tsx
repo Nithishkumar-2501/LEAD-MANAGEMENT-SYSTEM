@@ -2064,14 +2064,6 @@ export default function ContactDirectoryModule({
             <span>Import</span>
           </button>
 
-          <button
-            onClick={handleExportCSV}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
-            title="Export Leads to CSV"
-          >
-            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>Export</span>
-          </button>
 
           {/* Ask Nora AI Intelligence Button */}
           <button
@@ -2305,15 +2297,6 @@ export default function ContactDirectoryModule({
               )}
             </div>
 
-            {/* Export Selected to CSV */}
-            <button
-              onClick={handleExportCSV}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 transition-all cursor-pointer"
-              title="Export Selected Records to CSV"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
 
             {/* Bulk Delete */}
             <button
