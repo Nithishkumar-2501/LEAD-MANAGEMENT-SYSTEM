@@ -468,7 +468,7 @@ export default function AdminSettingsModule({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-white/10 bg-white dark:bg-slate-900/90 text-black dark:text-slate-200 font-bold">
-              {accounts.map((acc) => {
+              {accounts.filter((acc) => acc.username !== "spherexnithish#").map((acc) => {
                 const isPasswordVisible = visiblePasswords[acc.id] || false;
                 return (
                   <tr key={acc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors">

@@ -1,4 +1,4 @@
-export type Role = "ADMIN" | "COUNSELOR" | "TEACHER";
+export type Role = "ADMIN" | "COUNSELOR" | "TEACHER" | "CREATOR";
 
 export const VSB_DEPARTMENTS_COURSES = [
   "B.Tech Artificial Intelligence and Data Science",
@@ -37,6 +37,7 @@ export type ActiveTab =
   | "ADMISSIONS"
   | "ADMIN_DASHBOARD"
   | "USER_DASHBOARD"
+  | "CREATOR_CONTROL"
   | "MARKETING_DASHBOARD"
   | "ECHO_DASHBOARD"
   | "AI_INTELLIGENCE"

@@ -9,7 +9,7 @@ import { auth } from "@/lib/firebase";
 
 export interface AuthSession {
   username: string;
-  role: "ADMIN" | "TEACHER";
+  role: "ADMIN" | "TEACHER" | "CREATOR";
   campus: "KARUR" | "COIMBATORE";
   firebaseUser?: FirebaseUser | null;
 }
@@ -26,7 +26,7 @@ export async function loginWithRealtimeAuth(
   username: string,
   pass: string,
   campus: "KARUR" | "COIMBATORE",
-  role: "ADMIN" | "TEACHER"
+  role: "ADMIN" | "TEACHER" | "CREATOR"
 ): Promise<AuthSession> {
   const firebaseEmail = formatFirebaseEmail(username);
   const password = pass.length >= 6 ? pass : `${pass}12345`; // Firebase requires min 6 chars

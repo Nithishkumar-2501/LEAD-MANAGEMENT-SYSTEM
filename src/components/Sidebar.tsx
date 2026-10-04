@@ -38,6 +38,7 @@ import {
   Users,
   MessageCircleCode,
   FormInput,
+  Crown,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -54,7 +55,7 @@ interface SidebarProps {
   onCampusChange: (campus: CampusLocation) => void;
   onLogout: () => void;
   loggedInCampus: "KARUR" | "COIMBATORE";
-  currentUserRole: "ADMIN" | "TEACHER";
+  currentUserRole: "ADMIN" | "TEACHER" | "CREATOR";
   loggedInUsername: string;
   theme?: "LIGHT" | "DARK";
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
@@ -272,6 +273,19 @@ export default function Sidebar({
   const filteredSubItems =
     currentUserRole === "TEACHER"
       ? admissionSubItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "TEACHERS")
+      : currentUserRole === "CREATOR"
+      ? [
+          {
+            id: "CREATOR_CONTROL" as ActiveTab,
+            label: "👑 Creator Control",
+            sublabel: "Master Architecture & License",
+            icon: Crown,
+            color: "from-amber-500 to-orange-600",
+            activeBorder: "border-amber-400",
+            activeGlow: "shadow-amber-500/30",
+          },
+          ...admissionSubItems,
+        ]
       : admissionSubItems;
 
   const handleNavClick = (id: ActiveTab) => {

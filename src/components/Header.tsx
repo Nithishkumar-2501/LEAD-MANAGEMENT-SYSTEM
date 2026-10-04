@@ -17,6 +17,7 @@ import {
   X,
   Lock,
   ShieldCheck,
+  Crown,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -34,7 +35,7 @@ interface HeaderProps {
   onCampusChange: (campus: CampusLocation) => void;
   onLogout: () => void;
   loggedInCampus: "KARUR" | "COIMBATORE";
-  currentUserRole: "ADMIN" | "TEACHER";
+  currentUserRole: "ADMIN" | "TEACHER" | "CREATOR";
   loggedInUsername?: string;
   theme?: "LIGHT" | "DARK";
   onThemeChange?: (newTheme: "LIGHT" | "DARK") => void;
@@ -127,8 +128,9 @@ export default function Header({
     { id: "CONTACTS" as ActiveTab, label: "Lead Manager", icon: UserCheck, roles: ["ADMIN", "TEACHER"] },
     { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen, roles: ["ADMIN"] },
     { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2, roles: ["ADMIN", "TEACHER"] },
-    { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard, roles: ["ADMIN"] },
-    { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings, roles: ["ADMIN"] },
+    { id: "CREATOR_CONTROL" as ActiveTab, label: "Creator Control", icon: Crown, roles: ["CREATOR"] },
+    { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard, roles: ["ADMIN", "CREATOR"] },
+    { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings, roles: ["ADMIN", "CREATOR"] },
   ];
 
   const filteredNavItems = navItems.filter((item) =>
@@ -173,6 +175,21 @@ export default function Header({
 
         {/* Right: Controls (Campus Selector, Ask Nora AI, Search, Logout) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Master Creator Badge */}
+          {currentUserRole === "CREATOR" && (
+            <Tooltip text="Master Creator & Developer Account Active (spherexnithish#)">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border border-amber-400 text-amber-300 font-bold text-xs shadow-md shadow-amber-500/10 shrink-0">
+                <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="font-mono text-[11px] sm:text-xs font-black truncate max-w-[150px]">
+                  spherexnithish#
+                </span>
+                <span className="px-1.5 py-0.2 rounded bg-amber-500/30 text-amber-300 text-[9px] font-black uppercase">
+                  Creator
+                </span>
+              </div>
+            </Tooltip>
+          )}
+
           {/* Teacher Profile ID Badge (Prominently displayed for logged in faculty) */}
           {currentUserRole === "TEACHER" && (
             <Tooltip text={`Faculty Account Active: Profile ID ${loggedInUsername || "Staff"}`}>

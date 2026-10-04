@@ -27,6 +27,7 @@ import AiIntelligenceModule from "@/components/AiIntelligenceModule";
 import ApplicationManagerModule from "@/components/ApplicationManagerModule";
 import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
 import LeadLimitOverageModal from "@/components/LeadLimitOverageModal";
+import CreatorControlModule from "@/components/CreatorControlModule";
 import {
   evaluateLeadQuota,
   recordOverageLeadsToAnnualRenewal,
@@ -76,9 +77,12 @@ export default function DashboardPage() {
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
-  const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER">("ADMIN");
+  const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER" | "CREATOR">("ADMIN");
   const [loggedInUsername, setLoggedInUsername] = useState<string>("adminkarur@123");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Sub-modules role: Creator has full administrative privileges across all CRM screens
+  const effectiveSubRole: "ADMIN" | "TEACHER" = currentUserRole === "TEACHER" ? "TEACHER" : "ADMIN";
 
   const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>([]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
@@ -414,7 +418,7 @@ export default function DashboardPage() {
     if (authSession === "true") {
       setIsAuthenticated(true);
       const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
-      const role = sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER";
+      const role = sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR";
       const user = sessionStorage.getItem("vsb_logged_in_user");
       if (campus) {
         setLoggedInCampus(campus);
@@ -451,7 +455,7 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const handleLoginSuccess = async (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER", username: string) => {
+  const handleLoginSuccess = async (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => {
     sessionStorage.setItem("vsb_admin_auth", "true");
     sessionStorage.setItem("vsb_logged_in_campus", campus);
     sessionStorage.setItem("vsb_logged_in_role", role);
@@ -462,7 +466,10 @@ export default function DashboardPage() {
     setSelectedCampus(campus);
     setIsAuthenticated(true);
 
-    if (role === "TEACHER") {
+    if (role === "CREATOR") {
+      setActiveTab("CREATOR_CONTROL");
+      triggerToast("👑 Welcome Master Creator (Nithish Kumar)! Full System Control Unlocked.");
+    } else if (role === "TEACHER") {
       setActiveTab("USER_DASHBOARD");
       try {
         const updatedTeacher = await updateTeacherOnlineStatus(username, campus, "ACTIVE");
@@ -480,7 +487,7 @@ export default function DashboardPage() {
   };
 
   const handleLogout = async () => {
-    const role = currentUserRole || (sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER");
+    const role = currentUserRole || (sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR");
     const user = loggedInUsername || sessionStorage.getItem("vsb_logged_in_user");
     const campus = loggedInCampus || (sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE");
 
@@ -809,7 +816,7 @@ export default function DashboardPage() {
           <ContactDirectoryModule
             initialContacts={filteredApplicants}
             selectedCampus={selectedCampus}
-            currentUserRole={currentUserRole}
+            currentUserRole={effectiveSubRole}
             loggedInUsername={loggedInUsername}
             onActionTrigger={handleActionTrigger}
             onTriggerToast={triggerToast}
@@ -878,10 +885,10 @@ export default function DashboardPage() {
         )}
 
         {/* TEACHER DIRECTORY MODULE (ADMIN ONLY) */}
-        {activeTab === "TEACHERS" && currentUserRole === "ADMIN" && (
+        {activeTab === "TEACHERS" && (currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
           <TeacherModule
             loggedInCampus={loggedInCampus}
-            currentUserRole={currentUserRole}
+            currentUserRole={effectiveSubRole}
             loggedInUsername={loggedInUsername}
             onTriggerToast={triggerToast}
             applicants={filteredApplicants}
@@ -911,6 +918,21 @@ export default function DashboardPage() {
             onTriggerToast={triggerToast}
             theme={theme}
             onThemeChange={handleThemeChange}
+          />
+        )}
+
+        {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible when logged in as Creator) */}
+        {activeTab === "CREATOR_CONTROL" && currentUserRole === "CREATOR" && (
+          <CreatorControlModule
+            onTriggerToast={triggerToast}
+            currentLeadsCount={applicants.length}
+            applicants={applicants}
+            onLogout={handleLogout}
+            onSwitchCampus={(c) => {
+              setSelectedCampus(c);
+              if (c !== "ALL") setLoggedInCampus(c);
+            }}
+            currentCampus={loggedInCampus}
           />
         )}
 
@@ -945,7 +967,7 @@ export default function DashboardPage() {
       {selectedApplicant && (
         <ApplicantDetailModal
           applicant={selectedApplicant}
-          currentUserRole={currentUserRole}
+          currentUserRole={effectiveSubRole}
           onClose={() => setSelectedApplicant(null)}
           onActionTrigger={handleActionTrigger}
           onSave={handleUpdateApplicant}
@@ -978,7 +1000,7 @@ export default function DashboardPage() {
           setActiveTab(tab);
           triggerToast(`🚀 Navigated to ${tab.replace(/_/g, " ")}`);
         }}
-        currentUserRole={currentUserRole}
+        currentUserRole={effectiveSubRole}
         initialQuery={noraInitialQuery}
       />
 
