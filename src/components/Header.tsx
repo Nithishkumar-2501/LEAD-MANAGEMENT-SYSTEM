@@ -342,13 +342,13 @@ export default function Header({
           {/* Live Firebase Lead Quota Indicator (X / 1,00,000) */}
           <button
             type="button"
-            onClick={() => onTabChange("PAYMENTS")}
+            onClick={() => onTabChange("CONTACTS")}
             className={`press-spring flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border transition-all cursor-pointer shadow-xs shrink-0 ${
               isLimitReached
                 ? "bg-rose-500/10 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300"
                 : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:border-indigo-400"
             }`}
-            title={`Live Firebase Database: ${liveLeadCount.toLocaleString("en-IN")} out of 1,00,000 leads in database (${remainingFreeQuota.toLocaleString("en-IN")} remaining). Click to view Annual Renewal.`}
+            title={`Live Firebase Database: ${liveLeadCount.toLocaleString("en-IN")} out of 1,00,000 leads in database (${remainingFreeQuota.toLocaleString("en-IN")} remaining). Click to view Lead Directory.`}
           >
             <span className="relative flex h-2 w-2 shrink-0">
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLimitReached ? "bg-rose-400" : "bg-emerald-400"}`} />

@@ -894,12 +894,13 @@ export default function DashboardPage() {
           <CampusCourseModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
         )}
 
-        {/* FEE PAYMENTS & ANNUAL RENEWAL MODULE */}
+        {/* STUDENT FEE PAYMENTS MODULE */}
         {activeTab === "PAYMENTS" && (
           <PaymentBillingModule
             loggedInCampus={loggedInCampus}
             onTriggerToast={triggerToast}
             currentLeadsCount={applicants.length}
+            applicants={applicants}
           />
         )}
 

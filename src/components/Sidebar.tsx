@@ -260,8 +260,8 @@ export default function Sidebar({
     },
     {
       id: "PAYMENTS" as ActiveTab,
-      label: "Fee & Annual Renewal",
-      sublabel: "Receipts & App Renewal",
+      label: "Student Fee Payments",
+      sublabel: "Paid Students & Fee Receipts",
       icon: CreditCard,
       color: "from-emerald-500 to-teal-600",
       activeBorder: "border-emerald-400",
@@ -1808,13 +1808,13 @@ export default function Sidebar({
               {/* LIVE FIREBASE LEADS QUOTA WIDGET (X / 1,00,000) */}
               <button
                 type="button"
-                onClick={() => handleNavClick("PAYMENTS")}
+                onClick={() => handleNavClick("CONTACTS")}
                 className={`w-full p-2.5 rounded-2xl border text-left transition-all cursor-pointer group ${
                   isLight
                     ? "bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
                     : "bg-slate-900/90 hover:bg-slate-800/80 border-white/10"
                 }`}
-                title="Live Firebase Lead Quota: Click to view Annual Renewal Billing"
+                title="Live Firebase Lead Quota: 1,00,000 Capacity. Click to view All Leads."
               >
                 <div className="flex items-center justify-between text-[11px] font-extrabold mb-1">
                   <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">

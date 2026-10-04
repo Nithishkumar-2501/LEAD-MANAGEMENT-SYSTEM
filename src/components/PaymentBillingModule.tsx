@@ -1,82 +1,81 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Payment, CampusLocation } from "@/types/crm";
+import { useState, useEffect, useMemo } from "react";
+import { Payment, CampusLocation, Lead, Application } from "@/types/crm";
 import {
   fetchPaymentsFromFirebase,
   savePaymentToFirebase,
 } from "@/lib/firebaseSync";
-import {
-  getAnnualRenewalData,
-  setSimulatedQuotaMode,
-  resetOverageLedger,
-  MAX_FREE_LEAD_LIMIT,
-  PRICE_PER_EXTRA_LEAD,
-  BASE_ANNUAL_RENEWAL_FEE,
-  getEffectiveLeadCount,
-  AnnualRenewalBillingRecord,
-} from "@/lib/leadQuotaService";
+import { MAX_FREE_LEAD_LIMIT, getEffectiveLeadCount } from "@/lib/leadQuotaService";
 import {
   CreditCard,
-  DollarSign,
-  Download,
   Search,
   CheckCircle2,
   ShieldCheck,
-  ArrowUpRight,
   Plus,
   X,
-  FileText,
   Printer,
+  User,
+  Loader2,
+  Receipt,
+  Clock,
+  Phone,
+  MessageCircle,
+  Filter,
+  Sparkles,
+  DollarSign,
+  AlertCircle,
   Calendar,
   Building,
-  User,
-  Check,
-  Loader2,
+  GraduationCap,
+  ArrowUpRight,
+  TrendingUp,
   RefreshCw,
-  Receipt,
-  Smartphone,
-  Globe,
-  AlertTriangle,
-  RotateCcw,
-  Sparkles,
-  Layers,
-  Clock,
 } from "lucide-react";
+import { getWhatsAppUrl } from "@/lib/whatsappSender";
+
+export interface StudentFeeItem {
+  id: string;
+  studentName: string;
+  applicationNo: string;
+  course: string;
+  campus: CampusLocation;
+  phone: string;
+  email: string;
+  feeCategory: "Tuition Fee" | "Seat Allotment Deposit" | "Hostel & Mess Fee" | "Transport Fee";
+  totalFee: number;
+  amountPaid: number;
+  balanceDue: number;
+  status: "COMPLETED" | "PENDING" | "PARTIAL";
+  transactionId?: string;
+  paymentMethod?: string;
+  paidAt?: string;
+  rawPayment?: Payment;
+}
 
 interface PaymentBillingModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
   onTriggerToast: (msg: string) => void;
   currentLeadsCount?: number;
+  applicants?: (Lead & { application: Application })[];
 }
 
 export default function PaymentBillingModule({
   loggedInCampus,
   onTriggerToast,
   currentLeadsCount = 0,
+  applicants = [],
 }: PaymentBillingModuleProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"STUDENT_FEES" | "ANNUAL_RENEWAL">("STUDENT_FEES");
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-
-  // Annual Renewal Billing State
-  const [annualBilling, setAnnualBilling] = useState<AnnualRenewalBillingRecord>(getAnnualRenewalData());
-
-  // Listen to annual renewal updates
-  useEffect(() => {
-    const handleRenewalUpdate = () => {
-      setAnnualBilling(getAnnualRenewalData());
-    };
-    window.addEventListener("vsb_annual_renewal_updated", handleRenewalUpdate);
-    return () => window.removeEventListener("vsb_annual_renewal_updated", handleRenewalUpdate);
-  }, []);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "COMPLETED" | "PENDING" | "PARTIAL">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+  const [campusFilter, setCampusFilter] = useState<string>("ALL");
 
   // Modals state
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedReceiptPayment, setSelectedReceiptPayment] = useState<Payment | null>(null);
 
   // New Payment Form state
   const [newPayment, setNewPayment] = useState({
@@ -84,7 +83,8 @@ export default function PaymentBillingModule({
     course: "B.E. Computer Science and Engineering",
     campus: loggedInCampus,
     amount: 85000,
-    status: "COMPLETED",
+    feeCategory: "Tuition Fee" as "Tuition Fee" | "Seat Allotment Deposit" | "Hostel & Mess Fee" | "Transport Fee",
+    status: "COMPLETED" as "COMPLETED" | "PENDING" | "PARTIAL",
     paymentMethod: "Online UPI / NetBanking",
     transactionId: `VSB_TXN_${Date.now().toString().slice(-6)}`,
   });
@@ -106,26 +106,119 @@ export default function PaymentBillingModule({
     loadPayments();
   }, [loggedInCampus]);
 
-  const filteredPayments = payments.filter((p) => {
-    const matchesSearch =
-      p.studentName.toLowerCase().includes(search.toLowerCase()) ||
-      p.transactionId.toLowerCase().includes(search.toLowerCase()) ||
-      p.course.toLowerCase().includes(search.toLowerCase());
+  // Aggregate student fee list from CRM applicants + Firebase receipts
+  const allStudentFeeRecords: StudentFeeItem[] = useMemo(() => {
+    const list: StudentFeeItem[] = [];
+    const processedStudentNames = new Set<string>();
 
-    const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
-    const matchesCampus = !p.campus || p.campus === loggedInCampus || p.campus === "ALL";
+    // 1. Process admitted / enrolled applicants from CRM database
+    applicants.forEach((app, idx) => {
+      const name = app.name || "Student Applicant";
+      processedStudentNames.add(name.toLowerCase());
 
-    return matchesSearch && matchesStatus && matchesCampus;
-  });
+      // Check if this student has a recorded payment in Firebase
+      const matchingPayment = payments.find(
+        (p) =>
+          p.applicationId === app.id ||
+          p.studentName.toLowerCase() === name.toLowerCase()
+      );
 
-  const totalCollected = filteredPayments
-    .filter((p) => p.status === "COMPLETED")
-    .reduce((sum, p) => sum + p.amount, 0);
+      const isCompleted =
+        matchingPayment?.status === "COMPLETED" ||
+        app.application?.paymentStatus === "COMPLETED" ||
+        app.status === "ADMITTED" ||
+        (app.application?.stage as string) === "FEE_PAID";
 
-  const effectiveTotalLeads = getEffectiveLeadCount(currentLeadsCount);
-  const percentQuotaUsed = Math.min(100, Number(((effectiveTotalLeads / MAX_FREE_LEAD_LIMIT) * 100).toFixed(1)));
-  const isCapReached = effectiveTotalLeads >= MAX_FREE_LEAD_LIMIT;
+      const totalFee = 85000;
+      const amountPaid = isCompleted
+        ? matchingPayment?.amount || 85000
+        : matchingPayment ? matchingPayment.amount : 0;
+      const balanceDue = Math.max(0, totalFee - amountPaid);
 
+      const status: "COMPLETED" | "PENDING" | "PARTIAL" =
+        amountPaid >= totalFee
+          ? "COMPLETED"
+          : amountPaid > 0
+          ? "PARTIAL"
+          : "PENDING";
+
+      list.push({
+        id: app.id || `stud_${idx}`,
+        studentName: name,
+        applicationNo: (app.application as any)?.applicationNo || `VSB-2026-${String(idx + 1).padStart(4, "0")}`,
+        course: app.courseInterest || "B.E. Computer Science and Engineering",
+        campus: app.campus || loggedInCampus,
+        phone: app.phone || "",
+        email: app.email || "",
+        feeCategory: "Tuition Fee",
+        totalFee,
+        amountPaid,
+        balanceDue,
+        status,
+        transactionId: matchingPayment?.transactionId || (isCompleted ? `VSB_TXN_${app.id.slice(-6)}` : undefined),
+        paymentMethod: matchingPayment ? "Online UPI / NetBanking" : isCompleted ? "Net Banking" : undefined,
+        paidAt: matchingPayment?.createdAt || (isCompleted ? app.createdAt : undefined),
+        rawPayment: matchingPayment,
+      });
+    });
+
+    // 2. Add any standalone Firebase payments not directly mapped to an applicant
+    payments.forEach((p, idx) => {
+      if (!processedStudentNames.has(p.studentName.toLowerCase())) {
+        processedStudentNames.add(p.studentName.toLowerCase());
+        const totalFee = Math.max(p.amount, 85000);
+        list.push({
+          id: p.id || `pay_${idx}`,
+          studentName: p.studentName,
+          applicationNo: `VSB-PAY-${p.id.slice(-4)}`,
+          course: p.course || "B.E. Computer Science and Engineering",
+          campus: p.campus || loggedInCampus,
+          phone: "",
+          email: "",
+          feeCategory: "Tuition Fee",
+          totalFee,
+          amountPaid: p.amount,
+          balanceDue: Math.max(0, totalFee - p.amount),
+          status: p.status === "COMPLETED" ? "COMPLETED" : "PENDING",
+          transactionId: p.transactionId,
+          paymentMethod: "Online UPI / NetBanking",
+          paidAt: p.createdAt,
+          rawPayment: p,
+        });
+      }
+    });
+
+    return list;
+  }, [applicants, payments, loggedInCampus]);
+
+  // Overall Headcount Metrics (HOW MANY STUDENTS HAVE PAID THEIR FEES)
+  const totalStudentsCount = allStudentFeeRecords.length;
+  const paidStudentsCount = allStudentFeeRecords.filter((s) => s.status === "COMPLETED").length;
+  const pendingStudentsCount = allStudentFeeRecords.filter((s) => s.status === "PENDING").length;
+  const partialStudentsCount = allStudentFeeRecords.filter((s) => s.status === "PARTIAL").length;
+  const paidPercentage = totalStudentsCount > 0 ? Math.round((paidStudentsCount / totalStudentsCount) * 100) : 0;
+  const totalAmountCollected = allStudentFeeRecords.reduce((sum, s) => sum + s.amountPaid, 0);
+
+  // Filtered Student Fee List
+  const filteredStudents = useMemo(() => {
+    return allStudentFeeRecords.filter((s) => {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        s.studentName.toLowerCase().includes(q) ||
+        s.applicationNo.toLowerCase().includes(q) ||
+        s.course.toLowerCase().includes(q) ||
+        (s.phone && s.phone.includes(q)) ||
+        (s.transactionId && s.transactionId.toLowerCase().includes(q));
+
+      const matchesStatus = statusFilter === "ALL" || s.status === statusFilter;
+      const matchesCategory = categoryFilter === "ALL" || s.feeCategory === categoryFilter;
+      const matchesCampus = campusFilter === "ALL" || s.campus === campusFilter;
+
+      return matchesSearch && matchesStatus && matchesCategory && matchesCampus;
+    });
+  }, [allStudentFeeRecords, search, statusFilter, categoryFilter, campusFilter]);
+
+  // Record Student Fee in Firebase
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPayment.studentName.trim()) {
@@ -142,7 +235,7 @@ export default function PaymentBillingModule({
         course: newPayment.course,
         campus: newPayment.campus,
         amount: Number(newPayment.amount),
-        status: newPayment.status,
+        status: newPayment.status === "PENDING" ? "PENDING" : "COMPLETED",
         transactionId: newPayment.transactionId.trim() || `VSB_TXN_${Date.now().toString().slice(-6)}`,
         createdAt: new Date().toISOString(),
       };
@@ -150,29 +243,45 @@ export default function PaymentBillingModule({
       const ok = await savePaymentToFirebase(payload);
       if (ok) {
         setPayments((prev) => [payload, ...prev]);
-        onTriggerToast(`🎉 Payment receipt ₹${payload.amount.toLocaleString("en-IN")} recorded for ${payload.studentName} in Firebase!`);
+        onTriggerToast(`🎉 Student fee payment ₹${payload.amount.toLocaleString("en-IN")} recorded for ${payload.studentName}!`);
         setIsRecordModalOpen(false);
         setNewPayment({
           studentName: "",
           course: "B.E. Computer Science and Engineering",
           campus: loggedInCampus,
           amount: 85000,
+          feeCategory: "Tuition Fee",
           status: "COMPLETED",
           paymentMethod: "Online UPI / NetBanking",
           transactionId: `VSB_TXN_${Date.now().toString().slice(-6)}`,
         });
       } else {
-        onTriggerToast("❌ Failed to save payment to Firebase.");
+        onTriggerToast("❌ Failed to save student fee payment to Firebase.");
       }
     } catch (err) {
-      onTriggerToast("❌ Error recording payment.");
+      onTriggerToast("❌ Error recording student fee payment.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Official Fee Receipt Printable Generator
-  const handlePrintReceipt = (p: Payment) => {
+  // Open modal pre-filled for a specific student
+  const handleOpenRecordForStudent = (s: StudentFeeItem) => {
+    setNewPayment({
+      studentName: s.studentName,
+      course: s.course,
+      campus: (s.campus === "COIMBATORE" ? "COIMBATORE" : "KARUR") as "KARUR" | "COIMBATORE",
+      amount: s.balanceDue > 0 ? s.balanceDue : s.totalFee,
+      feeCategory: s.feeCategory,
+      status: "COMPLETED",
+      paymentMethod: "Online UPI / NetBanking",
+      transactionId: `VSB_TXN_${Date.now().toString().slice(-6)}`,
+    });
+    setIsRecordModalOpen(true);
+  };
+
+  // Official Fee Receipt Printable PDF Generator
+  const handlePrintReceipt = (s: StudentFeeItem) => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
       onTriggerToast("⚠️ Popup blocked! Please allow popups to print fee receipt.");
@@ -180,11 +289,11 @@ export default function PaymentBillingModule({
     }
 
     const collegeTitle =
-      p.campus === "COIMBATORE"
+      s.campus === "COIMBATORE"
         ? "V.S.B. COLLEGE OF ENGINEERING TECHNICAL CAMPUS (COIMBATORE)"
         : "V.S.B. ENGINEERING COLLEGE (KARUR)";
     const address =
-      p.campus === "COIMBATORE"
+      s.campus === "COIMBATORE"
         ? "Pollachi Main Road, EAL, Coimbatore, Tamil Nadu 642109"
         : "NH-67, Kovai Road, Karur, Tamil Nadu 639111";
 
@@ -192,7 +301,7 @@ export default function PaymentBillingModule({
       <!DOCTYPE html>
       <html>
       <head>
-        <title>VSB_Official_Fee_Receipt_${p.transactionId}.pdf</title>
+        <title>VSB_Official_Student_Fee_Receipt_${s.transactionId || s.applicationNo}.pdf</title>
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
           body { font-family: 'Inter', sans-serif; margin: 40px; color: #0f172a; background: #fff; }
@@ -224,74 +333,82 @@ export default function PaymentBillingModule({
             <h1 class="college-name">${collegeTitle}</h1>
             <p class="college-sub">${address}</p>
             <p class="college-sub">Approved by AICTE, New Delhi • Affiliated to Anna University • NAAC 'A+' Accredited</p>
-            <div class="receipt-title">Official Admission Fee E-Receipt</div>
+            <div class="receipt-title">Official Student College Fee E-Receipt</div>
           </div>
 
           <div class="meta-grid">
             <div class="meta-item">
               <span class="meta-label">Receipt Number:</span>
-              <span class="meta-val">VSB-REC-2026-${p.id.slice(-4)}</span>
+              <span class="meta-val">VSB-REC-${s.id.slice(-6).toUpperCase()}</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Date & Time:</span>
-              <span class="meta-val">${new Date(p.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+              <span class="meta-val">${s.paidAt ? new Date(s.paidAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : new Date().toLocaleDateString("en-IN")}</span>
             </div>
             <div class="meta-item">
-              <span class="meta-label">Transaction Ref ID:</span>
-              <span class="meta-val">${p.transactionId}</span>
+              <span class="meta-label">Application / Roll No:</span>
+              <span class="meta-val">${s.applicationNo}</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Campus Branch:</span>
-              <span class="meta-val">${p.campus} CAMPUS</span>
+              <span class="meta-val">${s.campus} CAMPUS</span>
             </div>
             <div class="meta-item">
-              <span class="meta-label">Student Applicant:</span>
-              <span class="meta-val">${p.studentName}</span>
+              <span class="meta-label">Student Name:</span>
+              <span class="meta-val">${s.studentName}</span>
             </div>
             <div class="meta-item">
-              <span class="meta-label">Payment Status:</span>
-              <span class="meta-val" style="color:#059669;">✔ ${p.status}</span>
+              <span class="meta-label">Fee Payment Status:</span>
+              <span class="meta-val" style="color:#059669;">✔ ${s.status === "COMPLETED" ? "FEES FULLY PAID" : s.status}</span>
             </div>
           </div>
 
           <table class="table-box">
             <thead>
               <tr>
-                <th>Description / Allotment Account</th>
+                <th>Fee Description / Account Head</th>
                 <th>Academic Year</th>
-                <th style="text-align: right;">Amount (INR)</th>
+                <th style="text-align: right;">Amount Paid (INR)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>
-                  <strong>Provisional Admission & Tuition Allotment Fee</strong><br/>
-                  <span style="color:#64748b; font-size:11px;">Program: ${p.course}</span>
+                  <strong>${s.feeCategory}</strong><br/>
+                  <span style="color:#64748b; font-size:11px;">Degree & Branch: ${s.course}</span>
                 </td>
                 <td>2026 - 2027</td>
-                <td style="text-align: right; font-weight:800;">₹${p.amount.toLocaleString("en-IN")}.00</td>
+                <td style="text-align: right; font-weight:800;">₹${s.amountPaid.toLocaleString("en-IN")}.00</td>
               </tr>
               <tr class="amount-row">
-                <td colspan="2" style="text-align: right;">NET AMOUNT RECEIVED:</td>
-                <td style="text-align: right;">₹${p.amount.toLocaleString("en-IN")}.00</td>
+                <td colspan="2" style="text-align: right;">TOTAL STUDENT FEE RECEIVED:</td>
+                <td style="text-align: right;">₹${s.amountPaid.toLocaleString("en-IN")}.00</td>
               </tr>
             </tbody>
           </table>
 
+          <div style="font-size: 11px; color: #475569; margin-top: 15px; border-left: 3px solid #1e3a8a; padding-left: 10px;">
+            <p style="margin: 0;">• Official bank receipt generated electronically via V.S.B. Central Admission Portal.</p>
+            <p style="margin: 3px 0 0 0;">• Subject to Anna University / DOTE seat approval verification.</p>
+          </div>
+
           <div class="stamp-box">
             <div>
-              <div class="stamp">PAID & VERIFIED</div>
-              <p style="font-size:10px; color:#64748b; margin-top:6px;">Bank Cleared via VSB Central Accounts</p>
+              <div class="stamp">VERIFIED & CONFIRMED</div>
+              <p style="font-size: 10px; color: #64748b; margin-top: 5px;">VSB Central Treasury</p>
             </div>
             <div class="signature">
-              <p style="margin-bottom:40px; color:#94a3b8;">Digitally Signed by</p>
-              <p><strong>Chief Finance Officer</strong><br/>VSB Educational Trust</p>
+              <div style="border-bottom: 1px solid #94a3b8; width: 140px; margin-bottom: 5px;"></div>
+              Authorized Cashier / Bursar Desk
             </div>
           </div>
+
+          <div class="no-print" style="margin-top: 30px; text-align: center;">
+            <button onclick="window.print()" style="background:#1e3a8a; color:#fff; padding:10px 24px; border:none; border-radius:8px; font-weight:700; cursor:pointer;">
+              🖨️ Print / Save as PDF
+            </button>
+          </div>
         </div>
-        <script>
-          window.onload = function() { window.print(); }
-        </script>
       </body>
       </html>
     `;
@@ -299,836 +416,499 @@ export default function PaymentBillingModule({
     printWindow.document.open();
     printWindow.document.write(receiptHtml);
     printWindow.document.close();
-    onTriggerToast(`📄 Official fee receipt generated for ${p.studentName}!`);
   };
 
-  // Official Annual Platform Renewal Invoice Printable Generator
-  const handlePrintAnnualRenewalInvoice = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      onTriggerToast("⚠️ Popup blocked! Please allow popups to view annual renewal invoice.");
+  // WhatsApp Fee Receipt / Reminder
+  const handleWhatsAppAction = (s: StudentFeeItem) => {
+    if (!s.phone) {
+      onTriggerToast("⚠️ No mobile number available for this student.");
       return;
     }
 
-    const invoiceNumber = `VSB-RENEW-2026-001`;
-    const invoiceDate = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-    const dueDate = new Date(annualBilling.renewalDueDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-
-    const invoiceHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>VSB_Annual_Application_Renewal_Invoice_${invoiceNumber}.pdf</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
-          body { font-family: 'Inter', sans-serif; margin: 40px; color: #0f172a; background: #fff; }
-          .invoice-box { max-width: 800px; margin: 0 auto; border: 2px solid #1e293b; border-radius: 14px; padding: 32px; }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; }
-          .company-title { font-size: 22px; font-weight: 900; color: #0284c7; text-transform: uppercase; margin: 0; }
-          .company-sub { font-size: 11px; color: #64748b; margin-top: 4px; }
-          .invoice-badge { background: #0f172a; color: #38bdf8; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-          .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; font-size: 12px; }
-          .meta-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
-          .meta-label { color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; }
-          .meta-val { font-weight: 800; color: #0f172a; font-size: 13px; margin-top: 2px; }
-          .table-box { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 12px; }
-          .table-box th { background: #f1f5f9; text-align: left; padding: 10px; font-weight: 800; border-bottom: 1px solid #cbd5e1; }
-          .table-box td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-weight: 600; }
-          .total-row { font-size: 15px; font-weight: 900; color: #0f172a; background: #f8fafc; }
-          .grand-total { color: #059669; font-size: 18px; }
-          .terms-box { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px; font-size: 11px; color: #92400e; margin-top: 24px; line-height: 1.5; }
-          .stamp-box { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 36px; padding-top: 20px; }
-          .signature { text-align: center; font-size: 11px; font-weight: 700; color: #334155; }
-          .stamp { border: 2px solid #0284c7; color: #0284c7; font-weight: 900; font-size: 11px; padding: 8px 14px; border-radius: 8px; text-transform: uppercase; transform: rotate(-3deg); display: inline-block; }
-          @media print {
-            body { margin: 0; }
-            .no-print { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="invoice-box">
-          <div class="header">
-            <div>
-              <h1 class="company-title">SPHEREX CRM • ANNUAL RENEWAL</h1>
-              <p class="company-sub">Multi-Campus Admission Operating System (Web Portal + Native Mobile App)</p>
-              <p class="company-sub">Licensed to: <strong>V.S.B. EDUCATIONAL TRUST (KARUR & COIMBATORE)</strong></p>
-            </div>
-            <div style="text-align: right;">
-              <div class="invoice-badge">Official Renewal Statement</div>
-              <p style="font-size: 11px; color: #64748b; margin-top: 6px;">Ref: ${invoiceNumber}</p>
-            </div>
-          </div>
-
-          <div class="meta-grid">
-            <div class="meta-card">
-              <div class="meta-label">Billed Institution</div>
-              <div class="meta-val">V.S.B. Group of Institutions</div>
-              <div style="font-size: 11px; color: #475569; margin-top: 4px;">Karur Main Campus & Coimbatore Technical Campus</div>
-              <div style="font-size: 11px; color: #0284c7; font-weight: 700; margin-top: 2px;">Coverage: Web Portal + Android & iOS Mobile Apps</div>
-            </div>
-            <div class="meta-card">
-              <div class="meta-label">Invoice Details</div>
-              <div style="display: flex; justify-content: space-between; margin-top: 4px;">
-                <span style="color: #64748b;">Invoice Date:</span>
-                <span style="font-weight: 800;">${invoiceDate}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-top: 2px;">
-                <span style="color: #64748b;">Renewal Due Date:</span>
-                <span style="font-weight: 800; color: #dc2626;">${dueDate}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-top: 2px;">
-                <span style="color: #64748b;">Included Capacity:</span>
-                <span style="font-weight: 800; color: #059669;">1,00,000 Free Leads</span>
-              </div>
-            </div>
-          </div>
-
-          <table class="table-box">
-            <thead>
-              <tr>
-                <th>Service Item / Subscription Breakdown</th>
-                <th>Units / Quota</th>
-                <th>Rate (INR)</th>
-                <th style="text-align: right;">Amount (INR)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <strong>Annual CRM Enterprise Platform SaaS License</strong><br/>
-                  <span style="color: #64748b; font-size: 11px;">Dual Deployment: Responsive Web App + Native Android & iOS Mobile Applications</span>
-                </td>
-                <td>1 Year</td>
-                <td>₹1,50,000.00</td>
-                <td style="text-align: right; font-weight: 800;">₹1,50,000.00</td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>Standard Admission Lead Capacity Tier</strong><br/>
-                  <span style="color: #64748b; font-size: 11px;">Includes up to 1,00,000 candidate leads across both campuses</span>
-                </td>
-                <td>1,00,000 Leads</td>
-                <td>FREE</td>
-                <td style="text-align: right; font-weight: 800; color: #059669;">₹0.00 (Included)</td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>Additional Overage Leads Pack (Beyond 1,00,000 Cap)</strong><br/>
-                  <span style="color: #64748b; font-size: 11px;">Policy: ₹500 per additional lead added after 1,00,000 limit</span>
-                </td>
-                <td>${annualBilling.extraLeadsCount} Extra Lead(s)</td>
-                <td>₹500.00 / lead</td>
-                <td style="text-align: right; font-weight: 800; color: ${annualBilling.extraLeadsCost > 0 ? '#b91c1c' : '#64748b'};">
-                  ₹${annualBilling.extraLeadsCost.toLocaleString("en-IN")}.00
-                </td>
-              </tr>
-              <tr class="total-row">
-                <td colspan="3" style="text-align: right;">TOTAL ANNUAL PAYMENT RENEWAL:</td>
-                <td style="text-align: right;" class="grand-total">₹${annualBilling.totalRenewalFee.toLocaleString("en-IN")}.00</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="terms-box">
-            <strong>📋 Quota & Renewal Policy:</strong><br/>
-            • Base license covers unlimited admin, counselor & teacher seats, plus up to 1,00,000 student leads.<br/>
-            • When the 1,00,000 limit is reached, any new lead authorized by Admin is billed at ₹500/lead and added directly to this Annual Renewal invoice.<br/>
-            • Payment encompasses both Web Portal and Native Mobile Applications.
-          </div>
-
-          <div class="stamp-box">
-            <div>
-              <div class="stamp">ENTERPRISE SAAS INVOICE</div>
-              <p style="font-size: 10px; color: #64748b; margin-top: 6px;">V.S.B. Cloud System Architecture</p>
-            </div>
-            <div class="signature">
-              <p style="margin-bottom: 40px; color: #94a3b8;">Authorized Signature</p>
-              <p><strong>Lead Software Licensing Division</strong><br/>SPHEREX CRM Systems</p>
-            </div>
-          </div>
-        </div>
-        <script>
-          window.onload = function() { window.print(); }
-        </script>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(invoiceHtml);
-    printWindow.document.close();
-    onTriggerToast("📄 Official Annual Renewal invoice generated!");
-  };
-
-  const handleToggleSimulation = (enabled: boolean) => {
-    const updated = setSimulatedQuotaMode(enabled, 100000);
-    setAnnualBilling(updated);
-    if (enabled) {
-      onTriggerToast("🧪 Test Mode: Simulated 1,00,000 Lead Limit is now ACTIVE! Try adding a lead to see the ₹500 overage prompt.");
+    let text = "";
+    if (s.status === "COMPLETED") {
+      text = `Dear ${s.studentName}, your college fee payment of ₹${s.amountPaid.toLocaleString("en-IN")} for ${s.course} at V.S.B. Engineering College has been verified and confirmed. Receipt No: ${s.transactionId || s.applicationNo}. Thank you!`;
     } else {
-      onTriggerToast("✅ Returned to real database lead count.");
+      text = `Dear ${s.studentName}, your college admission fee payment for ${s.course} at V.S.B. Engineering College is currently pending (Balance Due: ₹${s.balanceDue.toLocaleString("en-IN")}). Please complete your fee payment to secure your seat. Helpline: +91 98424 11223.`;
     }
-  };
 
-  const handleResetOverage = () => {
-    if (confirm("Reset accumulated overage leads back to 0?")) {
-      const updated = resetOverageLedger();
-      setAnnualBilling(updated);
-      onTriggerToast("🔄 Overage ledger reset to base annual renewal (₹1,50,000).");
+    const url = getWhatsAppUrl(s.phone, text);
+    if (url) {
+      window.open(url, "_blank");
     }
   };
 
   return (
     <div className="space-y-6 font-sans animate-in fade-in duration-200">
-      {/* Top Navigation Tabs: Student Fees vs Annual Renewal */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-2 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md">
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setActiveSubTab("STUDENT_FEES")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeSubTab === "STUDENT_FEES"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
-            }`}
-          >
-            <CreditCard className="w-4 h-4" />
-            <span>Student Fee Receipts ({filteredPayments.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab("ANNUAL_RENEWAL")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeSubTab === "ANNUAL_RENEWAL"
-                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-orange-500/30"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
-            }`}
-          >
-            <Receipt className="w-4 h-4" />
-            <span>Annual Application Renewal & Quota (1,00,000 Cap)</span>
-            {annualBilling.extraLeadsCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white">
-                +{annualBilling.extraLeadsCount}
-              </span>
-            )}
-          </button>
+      {/* Top Banner: Student Fee Payments Console */}
+      <div className="p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+              Student Fee Console
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              V.S.B. {loggedInCampus} Campus Intake
+            </span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2">
+            <GraduationCap className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            <span>Student Fee Payments & Receipts</span>
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            Real-time tracking of <strong>how many students have paid their college fees</strong>, pending fee clearances, verified bank tuition deposits, and official V.S.B. printable receipts.
+          </p>
         </div>
 
-        {/* Quick Quota Pill */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-          <span className="text-slate-400 font-medium">Lead Quota:</span>
-          <span className={`font-mono font-bold ${isCapReached ? "text-rose-400" : "text-emerald-400"}`}>
-            {effectiveTotalLeads.toLocaleString("en-IN")} / {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}
-          </span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">
-            {percentQuotaUsed}%
-          </span>
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={loadPayments}
+            disabled={isLoading}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Refresh latest fee receipts from Firebase"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-emerald-500" : ""}`} />
+            <span>{isLoading ? "Syncing..." : "Sync Fees"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsRecordModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Record Student Fee</span>
+          </button>
         </div>
       </div>
 
       {/* ============================================================== */}
-      {/* VIEW 1: ANNUAL APPLICATION PAYMENT RENEWAL & LEAD QUOTA */}
+      {/* 4 PROMINENT HEADCOUNT METRICS: HOW MANY STUDENTS PAID FEES     */}
       {/* ============================================================== */}
-      {activeSubTab === "ANNUAL_RENEWAL" && (
-        <div className="space-y-6 animate-in fade-in duration-150">
-          {/* Top Banner: Enterprise License & Dual-Platform Coverage */}
-          <div className="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 bg-gradient-to-br from-slate-900/90 via-slate-950 to-slate-900 text-white space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                    Dual Platform Active
-                  </span>
-                  <span className="text-xs text-slate-400 font-medium">
-                    Web Application + Native Android & iOS Mobile Apps
-                  </span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
-                  Application Annual Payment Renewal & Lead Limit
-                </h2>
-                <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                  Institutional license includes <strong>1,00,000 free student leads</strong>. If the 1,00,000 limit is reached, admin cannot add any leads without approval. Each additional lead costs <strong>₹500</strong>, automatically billed to this Annual Renewal invoice.
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={handlePrintAnnualRenewalInvoice}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Download Annual Invoice (PDF)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleResetOverage}
-                  className="px-3.5 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                  title="Reset Overage Ledger to 0"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Surcharge</span>
-                </button>
-              </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Metric 1: Students Paid Fees (Full Clearance) */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/60 bg-gradient-to-br from-emerald-50/60 to-white dark:from-emerald-950/20 dark:to-slate-900 shadow-xs space-y-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                STUDENTS PAID FEES
+              </p>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
+                {paidStudentsCount} <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">/ {totalStudentsCount} Students</span>
+              </h3>
             </div>
-
-            {/* Test Simulation Switch Banner */}
-            <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-bold text-slate-200">
-                    Live 1,00,000 Limit Testing Simulator
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    {annualBilling.simulatedLimitEnabled
-                      ? "⚠️ Simulation is ON: System treats lead count as 1,00,000 to demonstrate the ₹500/lead overage prompt."
-                      : "Simulation is OFF: Using real database count (" + currentLeadsCount + " leads). Click to test limit."}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleToggleSimulation(!annualBilling.simulatedLimitEnabled)}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                    annualBilling.simulatedLimitEnabled
-                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
-                      : "bg-slate-800 hover:bg-slate-700 text-slate-200"
-                  }`}
-                >
-                  {annualBilling.simulatedLimitEnabled ? "Disable Test Simulator" : "Activate 1,00,000 Limit Test"}
-                </button>
-              </div>
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
-
-          {/* Metric Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: Lead Quota */}
-            <div className="glass-card rounded-2xl p-4 sm:p-5 border border-slate-800 bg-white/5 backdrop-blur-md space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">
-                    Total Lead Capacity
-                  </p>
-                  <h3 className="text-xl sm:text-2xl font-black text-white font-mono mt-1">
-                    {effectiveTotalLeads.toLocaleString("en-IN")}
-                  </h3>
-                </div>
-                <div className={`p-2.5 rounded-xl border ${isCapReached ? "bg-rose-500/10 text-rose-400 border-rose-500/30" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"}`}>
-                  <Layers className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${isCapReached ? "bg-rose-500 w-full" : "bg-emerald-500"}`}
-                  style={{ width: `${Math.min(100, percentQuotaUsed)}%` }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] font-medium text-slate-400 pt-0.5">
-                <span>Free Cap: {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}</span>
-                <span className={isCapReached ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
-                  {percentQuotaUsed}% Used
-                </span>
-              </div>
+          <div className="space-y-1">
+            <div className="w-full bg-emerald-100 dark:bg-emerald-950/60 h-2 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                style={{ width: `${paidPercentage}%` }}
+              />
             </div>
-
-            {/* Card 2: Extra Leads Added Beyond Limit */}
-            <div className="glass-card rounded-2xl p-4 sm:p-5 border border-slate-800 bg-white/5 backdrop-blur-md space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">
-                    Extra Leads Added
-                  </p>
-                  <h3 className="text-xl sm:text-2xl font-black text-amber-400 font-mono mt-1">
-                    +{annualBilling.extraLeadsCount} Leads
-                  </h3>
-                </div>
-                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                  <Plus className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-xs text-slate-400">
-                Overage rate: <strong>₹{PRICE_PER_EXTRA_LEAD}</strong> per lead
-              </p>
-              <p className="text-[11px] text-amber-400 font-bold">
-                Extra Surcharge: ₹{annualBilling.extraLeadsCost.toLocaleString("en-IN")}
-              </p>
+            <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">{paidPercentage}% Cleared</span>
+              <span>100% Fee Paid & Seat Confirmed</span>
             </div>
-
-            {/* Card 3: Base Annual Renewal */}
-            <div className="glass-card rounded-2xl p-4 sm:p-5 border border-slate-800 bg-white/5 backdrop-blur-md space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">
-                    Base Annual License
-                  </p>
-                  <h3 className="text-xl sm:text-2xl font-black text-indigo-300 font-mono mt-1">
-                    ₹{BASE_ANNUAL_RENEWAL_FEE.toLocaleString("en-IN")}
-                  </h3>
-                </div>
-                <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-xs text-slate-400">
-                Next Due: <strong>{new Date(annualBilling.renewalDueDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}</strong>
-              </p>
-              <p className="text-[11px] text-indigo-400 font-bold">
-                Web CRM + Android & iOS
-              </p>
-            </div>
-
-            {/* Card 4: Total Annual Payment Renewal */}
-            <div className="glass-card rounded-2xl p-4 sm:p-5 border border-emerald-500/30 bg-emerald-950/20 backdrop-blur-md space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] font-bold uppercase text-emerald-400 tracking-wider">
-                    Total Renewal Payable
-                  </p>
-                  <h3 className="text-xl sm:text-2xl font-black text-emerald-400 font-mono mt-1">
-                    ₹{annualBilling.totalRenewalFee.toLocaleString("en-IN")}
-                  </h3>
-                </div>
-                <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                  <DollarSign className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-xs text-slate-300">
-                Base Fee + ₹{annualBilling.extraLeadsCost.toLocaleString("en-IN")} Surcharge
-              </p>
-              <div className="text-[11px] font-extrabold text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Billed in Annual Renewal
-              </div>
-            </div>
-          </div>
-
-          {/* Detailed Itemized Statement Card */}
-          <div className="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 bg-white/5 backdrop-blur-md space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                  <Receipt className="w-4 h-4 text-sky-400" />
-                  <span>Annual Subscription & Renewal Ledger Breakdown</span>
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Detailed cost breakdown for Web and Native Mobile Application maintenance & licensing
-                </p>
-              </div>
-
-              <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-slate-800 text-slate-200">
-                Academic Year 2026 - 2027
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="py-3 px-4">Line Item / Service Description</th>
-                    <th className="py-3 px-4">Allocated Quota</th>
-                    <th className="py-3 px-4">Unit Pricing</th>
-                    <th className="py-3 px-4 text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-300 font-medium">
-                  <tr>
-                    <td className="py-3.5 px-4 font-bold text-white">
-                      1. SPHEREX Enterprise Admission CRM Platform
-                      <div className="text-[11px] text-slate-400 font-normal">
-                        Includes Dual-Deploy Web CRM + Native Mobile App APK/IPA build support
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4">1 Year Term</td>
-                    <td className="py-3.5 px-4 font-mono">₹1,50,000 / year</td>
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-white">₹1,50,000.00</td>
-                  </tr>
-
-                  <tr>
-                    <td className="py-3.5 px-4 font-bold text-white">
-                      2. Free Student Lead Storage Tier (Included)
-                      <div className="text-[11px] text-slate-400 font-normal">
-                        Standard quota of 1,00,000 leads for Karur and Coimbatore campuses
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono">1,00,000 Leads</td>
-                    <td className="py-3.5 px-4 font-mono text-emerald-400">FREE</td>
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">₹0.00</td>
-                  </tr>
-
-                  <tr>
-                    <td className="py-3.5 px-4 font-bold text-white">
-                      3. Additional Overage Leads Added Beyond 1,00,000 Limit
-                      <div className="text-[11px] text-slate-400 font-normal">
-                        Accumulated via Admin Lead Creation / Bulk Imports after cap
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-amber-400">
-                      +{annualBilling.extraLeadsCount} Leads
-                    </td>
-                    <td className="py-3.5 px-4 font-mono">₹500.00 / lead</td>
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-amber-400">
-                      ₹{annualBilling.extraLeadsCost.toLocaleString("en-IN")}.00
-                    </td>
-                  </tr>
-
-                  <tr className="bg-slate-900/60 font-black text-sm text-white">
-                    <td colSpan={3} className="py-4 px-4 text-right">
-                      TOTAL ANNUAL RENEWAL DUE:
-                    </td>
-                    <td className="py-4 px-4 text-right font-mono text-emerald-400 text-base">
-                      ₹{annualBilling.totalRenewalFee.toLocaleString("en-IN")}.00
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Overage Audit Trail Ledger */}
-          <div className="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 bg-white/5 backdrop-blur-md space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-amber-400" />
-                  <span>Overage Audit Ledger ({annualBilling.overageLedger?.length || 0} Transactions)</span>
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Real-time log of each candidate lead added beyond the 1,00,000 limit with ₹500 fee added to Annual Renewal
-                </p>
-              </div>
-            </div>
-
-            {annualBilling.overageLedger && annualBilling.overageLedger.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                    <tr>
-                      <th className="py-2.5 px-3">Date & Time</th>
-                      <th className="py-2.5 px-3">Candidate / Batch</th>
-                      <th className="py-2.5 px-3">Leads Added</th>
-                      <th className="py-2.5 px-3">Rate</th>
-                      <th className="py-2.5 px-3">Charged Amount</th>
-                      <th className="py-2.5 px-3">Billed Destination</th>
-                      <th className="py-2.5 px-3 text-right">Authorized By</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 text-slate-300">
-                    {annualBilling.overageLedger.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 px-3 font-mono text-slate-400">
-                          {new Date(item.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                        </td>
-                        <td className="py-3 px-3 font-bold text-white">
-                          {item.leadName}
-                        </td>
-                        <td className="py-3 px-3 font-mono font-bold text-amber-400">
-                          +{item.count} Lead{item.count > 1 ? "s" : ""}
-                        </td>
-                        <td className="py-3 px-3 font-mono">
-                          ₹{item.costPerLead}
-                        </td>
-                        <td className="py-3 px-3 font-mono font-bold text-rose-400">
-                          ₹{item.totalCost.toLocaleString("en-IN")}.00
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                            Annual Renewal (Web & Mobile)
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-right text-slate-400 font-medium">
-                          {item.approvedBy}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-500 text-xs">
-                <CheckCircle2 className="w-8 h-8 text-emerald-500/60 mx-auto mb-2" />
-                <p className="font-semibold text-slate-300">No overage leads added yet</p>
-                <p className="text-slate-500 mt-0.5">
-                  All leads are currently operating within the 1,00,000 capacity.
-                </p>
-              </div>
-            )}
           </div>
         </div>
-      )}
 
-      {/* ============================================================== */}
-      {/* VIEW 2: STANDARD STUDENT ADMISSION FEE RECEIPTS */}
-      {/* ============================================================== */}
-      {activeSubTab === "STUDENT_FEES" && (
-        <div className="space-y-6 animate-in fade-in duration-150">
-          {/* Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="glass-card rounded-2xl p-5 border border-slate-800 bg-white/5 backdrop-blur-md">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Total Fee Collected ({loggedInCampus})
-                  </p>
-                  <h3 className="text-2xl font-bold text-slate-100 mt-1">
-                    ₹{totalCollected.toLocaleString("en-IN")}
-                  </h3>
-                </div>
-                <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <DollarSign className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-xs text-emerald-400 font-medium mt-3 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> 100% Bank Cleared Receipts • Firebase Synced
+        {/* Metric 2: Students Fee Pending */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-amber-200/80 dark:border-amber-900/60 bg-gradient-to-br from-amber-50/60 to-white dark:from-amber-950/20 dark:to-slate-900 shadow-xs space-y-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                FEE PENDING STUDENTS
               </p>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
+                {pendingStudentsCount} <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Students</span>
+              </h3>
             </div>
-
-            <div className="glass-card rounded-2xl p-5 border border-slate-800 bg-white/5 backdrop-blur-md">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Verified Receipts</p>
-                  <h3 className="text-2xl font-bold text-indigo-300 mt-1">
-                    {filteredPayments.filter((p) => p.status === "COMPLETED").length} Students
-                  </h3>
-                </div>
-                <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-xs text-indigo-400 font-medium mt-3">VSB Central Treasury Account</p>
-            </div>
-
-            <div className="glass-card rounded-2xl p-5 border border-slate-800 bg-white/5 backdrop-blur-md">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Allotments</p>
-                  <h3 className="text-2xl font-bold text-amber-300 mt-1">
-                    {filteredPayments.filter((p) => p.status !== "COMPLETED").length} Pending
-                  </h3>
-                </div>
-                <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-xs text-amber-400 font-medium mt-3">Awaiting Bank Reconciliation</p>
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              <Clock className="w-5 h-5" />
             </div>
           </div>
+          <div className="space-y-1">
+            <div className="w-full bg-amber-100 dark:bg-amber-950/60 h-2 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                style={{ width: `${totalStudentsCount > 0 ? (pendingStudentsCount / totalStudentsCount) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+              <span className="text-amber-600 dark:text-amber-400 font-bold">Awaiting Payment</span>
+              <span>Follow-up Due</span>
+            </div>
+          </div>
+        </div>
 
-          {/* Payment Transactions Table */}
-          <div className="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 bg-white/5 backdrop-blur-md">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
-              <div>
-                <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                  <span>Admission Fee Receipts & Transactions</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 font-extrabold">
-                    🔥 Firestore Live
-                  </span>
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Verified tuition and allotment fee payments for V.S.B. ({loggedInCampus} Campus)
-                </p>
-              </div>
+        {/* Metric 3: Partial / Allotment Token Paid */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-indigo-200/80 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/60 to-white dark:from-indigo-950/20 dark:to-slate-900 shadow-xs space-y-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+                PARTIAL / TOKEN PAID
+              </p>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
+                {partialStudentsCount} <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Students</span>
+              </h3>
+            </div>
+            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
+            Seat Allotment Deposit Paid (Balance Due)
+          </p>
+        </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Search Input */}
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search Txn ID, student, course..."
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
+        {/* Metric 4: Total Admitted Intake */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-sky-200/80 dark:border-sky-900/60 bg-gradient-to-br from-sky-50/60 to-white dark:from-sky-950/20 dark:to-slate-900 shadow-xs space-y-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">
+                TOTAL REGISTERED INTAKE
+              </p>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
+                {totalStudentsCount} <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Students</span>
+              </h3>
+            </div>
+            <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+              <User className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-[11px] text-sky-600 dark:text-sky-400 font-medium">
+            ₹{totalAmountCollected.toLocaleString("en-IN")} Total Student Fees Collected
+          </p>
+        </div>
+      </div>
 
-                {/* Status Filter */}
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                >
-                  <option value="ALL">All Status</option>
-                  <option value="COMPLETED">Completed / Paid</option>
-                  <option value="PENDING">Pending Approval</option>
-                  <option value="FAILED">Failed</option>
-                </select>
+      {/* ============================================================== */}
+      {/* STUDENT FEE DIRECTORY & RECEIPT TABLE                          */}
+      {/* ============================================================== */}
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs p-4 sm:p-6 space-y-4">
+        {/* Filter Navigation Bar */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+          {/* Quick Headcount Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              onClick={() => setStatusFilter("ALL")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                statusFilter === "ALL"
+                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+              }`}
+            >
+              All Students ({totalStudentsCount})
+            </button>
 
-                {/* Record Payment Button */}
-                <button
-                  onClick={() => setIsRecordModalOpen(true)}
-                  className="press-spring flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Record Fee Payment</span>
-                </button>
-              </div>
+            <button
+              onClick={() => setStatusFilter("COMPLETED")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                statusFilter === "COMPLETED"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Fees Paid ({paidStudentsCount})</span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter("PENDING")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                statusFilter === "PENDING"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100"
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Fee Pending ({pendingStudentsCount})</span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter("PARTIAL")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                statusFilter === "PARTIAL"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Partial Paid ({partialStudentsCount})</span>
+            </button>
+          </div>
+
+          {/* Search & Secondary Filter Dropdowns */}
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+            {/* Search Box */}
+            <div className="relative w-full sm:w-60">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search student, app no, phone..."
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
             </div>
 
-            {/* Table */}
-            {isLoading ? (
-              <div className="py-12 flex flex-col items-center justify-center text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-400 mb-2" />
-                <p className="text-xs">Loading payment transactions...</p>
-              </div>
-            ) : filteredPayments.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-xs">
-                No payment transactions found matching your filter.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-900/60 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
-                    <tr>
-                      <th className="py-3 px-4">Transaction Ref</th>
-                      <th className="py-3 px-4">Student Name</th>
-                      <th className="py-3 px-4">Course / Program</th>
-                      <th className="py-3 px-4">Campus</th>
-                      <th className="py-3 px-4">Amount</th>
-                      <th className="py-3 px-4">Date</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4 text-right">E-Receipt</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 text-slate-200">
-                    {filteredPayments.map((p) => (
-                      <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-indigo-400">
-                          {p.transactionId}
-                        </td>
-                        <td className="py-3.5 px-4 font-semibold text-slate-100 flex items-center gap-2">
-                          <User className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{p.studentName}</span>
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-300 max-w-[200px] truncate" title={p.course}>
-                          {p.course}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                              p.campus === "COIMBATORE"
-                                ? "bg-amber-950/80 text-amber-300 border border-amber-800"
-                                : "bg-sky-950/80 text-sky-300 border border-sky-800"
-                            }`}
-                          >
-                            {p.campus || loggedInCampus}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-emerald-400">
-                          ₹{p.amount.toLocaleString("en-IN")}.00
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px]">
-                          {new Date(p.createdAt).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              p.status === "COMPLETED"
-                                ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
-                                : p.status === "PENDING"
-                                ? "bg-amber-950 text-amber-300 border border-amber-800"
-                                : "bg-rose-950 text-rose-300 border border-rose-800"
-                            }`}
-                          >
-                            {p.status === "COMPLETED" && <CheckCircle2 className="w-3 h-3" />}
-                            <span>{p.status}</span>
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
+            {/* Campus Selector */}
+            <select
+              value={campusFilter}
+              onChange={(e) => setCampusFilter(e.target.value)}
+              className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="ALL">All Campuses</option>
+              <option value="KARUR">Karur Campus</option>
+              <option value="COIMBATORE">Coimbatore Campus</option>
+            </select>
+
+            {/* Category Selector */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="ALL">All Fee Types</option>
+              <option value="Tuition Fee">Tuition Fee</option>
+              <option value="Seat Allotment Deposit">Allotment Deposit</option>
+              <option value="Hostel & Mess Fee">Hostel & Mess</option>
+              <option value="Transport Fee">Transport Fee</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Student Fee Records Table */}
+        {isLoading ? (
+          <div className="py-16 flex flex-col items-center justify-center text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-2" />
+            <p className="text-xs font-semibold">Loading student fee records from Firebase...</p>
+          </div>
+        ) : filteredStudents.length === 0 ? (
+          <div className="py-16 text-center text-slate-400 text-xs">
+            No student fee records found matching your filter.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th className="py-3 px-3.5">Student Details</th>
+                  <th className="py-3 px-3">Course / Branch</th>
+                  <th className="py-3 px-3">Campus</th>
+                  <th className="py-3 px-3">Fee Type</th>
+                  <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3 text-right">Fee Paid</th>
+                  <th className="py-3 px-3 text-right">Balance Due</th>
+                  <th className="py-3 px-3 text-center">Receipt & Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+                {filteredStudents.map((s) => (
+                  <tr key={s.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    {/* Student Name & Roll No */}
+                    <td className="py-3 px-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold flex items-center justify-center text-xs shrink-0 border border-emerald-200 dark:border-emerald-800">
+                          {s.studentName.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 dark:text-white leading-tight">
+                            {s.studentName}
+                          </p>
+                          <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                            {s.applicationNo} {s.phone ? `• ${s.phone}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Course */}
+                    <td className="py-3 px-3 max-w-[200px] truncate" title={s.course}>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">
+                        {s.course}
+                      </span>
+                    </td>
+
+                    {/* Campus */}
+                    <td className="py-3 px-3">
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          s.campus === "COIMBATORE"
+                            ? "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
+                            : "bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-800"
+                        }`}
+                      >
+                        {s.campus}
+                      </span>
+                    </td>
+
+                    {/* Fee Category */}
+                    <td className="py-3 px-3">
+                      <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                        {s.feeCategory}
+                      </span>
+                    </td>
+
+                    {/* Fee Status Badge */}
+                    <td className="py-3 px-3">
+                      {s.status === "COMPLETED" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          <span>Fees Paid</span>
+                        </span>
+                      ) : s.status === "PARTIAL" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
+                          <ShieldCheck className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                          <span>Partial Paid</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                          <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                          <span>Fee Pending</span>
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Amount Paid */}
+                    <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">
+                      ₹{s.amountPaid.toLocaleString("en-IN")}.00
+                    </td>
+
+                    {/* Balance Due */}
+                    <td className="py-3 px-3 text-right font-mono text-xs">
+                      {s.balanceDue > 0 ? (
+                        <span className="text-rose-600 dark:text-rose-400 font-bold">
+                          ₹{s.balanceDue.toLocaleString("en-IN")}.00
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 font-semibold">₹0.00</span>
+                      )}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3 px-3">
+                      <div className="flex items-center justify-center gap-1.5">
+                        {/* Print Receipt Button */}
+                        <button
+                          type="button"
+                          onClick={() => handlePrintReceipt(s)}
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                          title="Print Official V.S.B. PDF Fee Receipt"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        </button>
+
+                        {/* Record / Collect Payment Button */}
+                        {s.status !== "COMPLETED" && (
                           <button
-                            onClick={() => handlePrintReceipt(p)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 font-medium text-xs transition-colors cursor-pointer"
-                            title="Generate Official Printable PDF Receipt"
+                            type="button"
+                            onClick={() => handleOpenRecordForStudent(s)}
+                            className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                            title="Collect / Record Fee Payment for this student"
                           >
-                            <Printer className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>Print Receipt</span>
+                            <CreditCard className="w-3 h-3" />
+                            <span>Collect Fee</span>
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                        )}
 
-      {/* RECORD NEW PAYMENT MODAL */}
+                        {/* WhatsApp Receipt or Reminder */}
+                        {s.phone && (
+                          <button
+                            type="button"
+                            onClick={() => handleWhatsAppAction(s)}
+                            className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 transition-colors cursor-pointer"
+                            title={s.status === "COMPLETED" ? "Send WhatsApp Fee Receipt" : "Send Fee Payment Reminder"}
+                          >
+                            <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ============================================================== */}
+      {/* RECORD NEW STUDENT FEE MODAL                                   */}
+      {/* ============================================================== */}
       {isRecordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl relative">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl relative">
             <button
               onClick={() => setIsRecordModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full bg-slate-800 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-emerald-400" />
-              <span>Record New Student Fee Payment</span>
-            </h3>
-            <p className="text-xs text-slate-400">
-              Add student admission tuition fee allotment to generate official VSB receipt & sync with Firebase.
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <CreditCard className="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    Record Student Fee Payment
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Record student college tuition, admission, or hostel fees directly into Firebase.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <form onSubmit={handleRecordPayment} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-slate-300 mb-1">Student Candidate Full Name *</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                  Student Name *
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ramesh Kumar"
                   value={newPayment.studentName}
                   onChange={(e) => setNewPayment({ ...newPayment, studentName: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="e.g. S. Vignesh"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-300 mb-1">Course / Engineering Department</label>
-                <input
-                  type="text"
-                  required
-                  value={newPayment.course}
-                  onChange={(e) => setNewPayment({ ...newPayment, course: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 mb-1">Fee Amount (INR) *</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={newPayment.amount}
-                    onChange={(e) => setNewPayment({ ...newPayment, amount: Number(e.target.value) })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-emerald-400 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                    Course / Branch
+                  </label>
+                  <select
+                    value={newPayment.course}
+                    onChange={(e) => setNewPayment({ ...newPayment, course: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  >
+                    <option value="B.E. Computer Science and Engineering">B.E. Computer Science</option>
+                    <option value="B.Tech Artificial Intelligence and Data Science">B.Tech AI & Data Science</option>
+                    <option value="B.Tech Information Technology">B.Tech Information Technology</option>
+                    <option value="B.E. Electronics and Communication">B.E. Electronics & Communication</option>
+                    <option value="B.E. Mechanical Engineering">B.E. Mechanical Engineering</option>
+                    <option value="B.E. Electrical and Electronics">B.E. Electrical & Electronics</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 mb-1">Campus</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                    Campus Branch
+                  </label>
                   <select
                     value={newPayment.campus}
                     onChange={(e) => setNewPayment({ ...newPayment, campus: e.target.value as any })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                   >
                     <option value="KARUR">Karur Campus</option>
                     <option value="COIMBATORE">Coimbatore Campus</option>
@@ -1136,46 +916,81 @@ export default function PaymentBillingModule({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 mb-1">Transaction Ref ID</label>
-                  <input
-                    type="text"
-                    required
-                    value={newPayment.transactionId}
-                    onChange={(e) => setNewPayment({ ...newPayment, transactionId: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                    Fee Category
+                  </label>
+                  <select
+                    value={newPayment.feeCategory}
+                    onChange={(e) => setNewPayment({ ...newPayment, feeCategory: e.target.value as any })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  >
+                    <option value="Tuition Fee">Tuition Fee (₹85,000)</option>
+                    <option value="Seat Allotment Deposit">Seat Allotment Token (₹25,000)</option>
+                    <option value="Hostel & Mess Fee">Hostel & Mess Fee (₹40,000)</option>
+                    <option value="Transport Fee">Transport / Bus Fee (₹15,000)</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 mb-1">Payment Method</label>
-                  <select
-                    value={newPayment.paymentMethod}
-                    onChange={(e) => setNewPayment({ ...newPayment, paymentMethod: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer"
-                  >
-                    <option value="Online UPI / NetBanking">Online UPI / NetBanking</option>
-                    <option value="Debit / Credit Card">Debit / Credit Card</option>
-                    <option value="Demand Draft (DD)">Demand Draft (DD)</option>
-                    <option value="Cash Counter">College Cash Counter</option>
-                  </select>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                    Amount Paid (₹) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={newPayment.amount}
+                    onChange={(e) => setNewPayment({ ...newPayment, amount: Number(e.target.value) })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold"
+                  />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                    Payment Method
+                  </label>
+                  <select
+                    value={newPayment.paymentMethod}
+                    onChange={(e) => setNewPayment({ ...newPayment, paymentMethod: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  >
+                    <option value="Online UPI / NetBanking">Online UPI / GPay / PhonePe</option>
+                    <option value="Net Banking / NEFT / RTGS">Net Banking / NEFT / RTGS</option>
+                    <option value="Demand Draft (DD)">Demand Draft (DD)</option>
+                    <option value="Cash Deposit">Cash Deposit (Bursar Office)</option>
+                    <option value="Debit / Credit Card">Debit / Credit Card (POS)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                    Transaction / Receipt ID
+                  </label>
+                  <input
+                    type="text"
+                    value={newPayment.transactionId}
+                    onChange={(e) => setNewPayment({ ...newPayment, transactionId: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsRecordModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700"
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-200 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
-
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 transition-transform disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSaving ? (
                     <>
@@ -1183,10 +998,7 @@ export default function PaymentBillingModule({
                       <span>Saving to Firebase...</span>
                     </>
                   ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span>Confirm & Record to Firebase</span>
-                    </>
+                    <span>Save Fee Receipt</span>
                   )}
                 </button>
               </div>

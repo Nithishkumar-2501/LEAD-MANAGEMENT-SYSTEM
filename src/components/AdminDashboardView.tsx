@@ -33,6 +33,7 @@ import {
   MoreVertical,
   PlusCircle,
   Zap,
+  CreditCard,
 } from "lucide-react";
 import {
   BarChart,
@@ -100,6 +101,23 @@ export default function AdminDashboardView({
   const liveLeadCount = getEffectiveLeadCount(applicants.length);
   const remainingFreeQuota = Math.max(0, MAX_FREE_LEAD_LIMIT - liveLeadCount);
   const isCapReached = liveLeadCount >= MAX_FREE_LEAD_LIMIT;
+
+  // Real-time calculation of how many students have paid their fees
+  const feePaidStudentsCount = useMemo(() => {
+    return applicants.filter((a) =>
+      a.application?.paymentStatus === "COMPLETED" ||
+      a.status === "ADMITTED" ||
+      a.application?.stage === "FEE_PAID"
+    ).length;
+  }, [applicants]);
+
+  const totalAdmittedStudents = useMemo(() => {
+    const admitted = applicants.filter((a) => a.status === "ADMITTED" || a.application?.stage === "FEE_PAID").length;
+    return Math.max(admitted, feePaidStudentsCount, metrics.seatsFilled || 1);
+  }, [applicants, feePaidStudentsCount, metrics.seatsFilled]);
+
+  const feePendingStudentsCount = Math.max(0, totalAdmittedStudents - feePaidStudentsCount);
+  const feePaidPercentage = Math.round((feePaidStudentsCount / Math.max(1, totalAdmittedStudents)) * 100);
 
   // Time-based greeting
   const greeting = useMemo(() => {
@@ -409,14 +427,14 @@ export default function AdminDashboardView({
             progress: 54,
           },
           {
-            title: "TOTAL FEE RECEIPTS",
-            value: `₹${metrics.totalRevenue.toLocaleString("en-IN")}`,
-            trend: `+${metrics.revenueTrend}%`,
-            subtitle: "Tuition Revenue",
-            icon: IndianRupee,
-            color: "from-pink-500 to-rose-600",
-            iconBg: "bg-pink-500",
-            progress: 90,
+            title: "STUDENTS PAID FEES",
+            value: `${feePaidStudentsCount.toLocaleString("en-IN")} / ${totalAdmittedStudents.toLocaleString("en-IN")}`,
+            trend: `${feePaidPercentage}% Paid`,
+            subtitle: `${feePendingStudentsCount.toLocaleString("en-IN")} students pending fees`,
+            icon: CreditCard,
+            color: "from-emerald-500 to-teal-600",
+            iconBg: "bg-emerald-500",
+            progress: feePaidPercentage,
           },
         ].map((card, idx) => {
           const Icon = card.icon;
