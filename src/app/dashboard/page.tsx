@@ -1038,6 +1038,7 @@ export default function DashboardPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onApplicationCreated={handleCreateApplication}
         existingLeads={applicants}
+        loggedInUsername={loggedInUsername}
       />
 
       <AddQuickLeadModal
@@ -1045,6 +1046,7 @@ export default function DashboardPage() {
         onClose={() => setIsQuickLeadModalOpen(false)}
         onLeadAdded={handleCreateApplication}
         existingLeads={applicants}
+        loggedInUsername={loggedInUsername}
       />
 
       {selectedApplicant && (

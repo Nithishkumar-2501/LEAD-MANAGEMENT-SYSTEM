@@ -28,6 +28,16 @@ import {
   LICENSE_EVENT_KEY,
 } from "@/lib/collegeLicenseService";
 import {
+  getCreatorQrSettings,
+  saveCreatorQrSettings,
+  getAllLeadQrPayments,
+  calculateLeadQrRevenueMetrics,
+  CreatorQrSettings,
+  LeadQrPaymentRecord,
+  QR_SETTINGS_EVENT,
+  QR_PAYMENT_EVENT,
+} from "@/lib/leadPaymentQrService";
+import {
   ShieldAlert,
   Crown,
   Key,
@@ -61,6 +71,8 @@ import {
   Check,
   Power,
   ShieldCheck,
+  QrCode,
+  Upload,
 } from "lucide-react";
 
 interface CreatorControlModuleProps {
@@ -107,11 +119,17 @@ export default function CreatorControlModule({
   const [customOveragePrice, setCustomOveragePrice] = useState(PRICE_PER_EXTRA_LEAD);
   const [customBaseAnnualFee, setCustomBaseAnnualFee] = useState(BASE_ANNUAL_RENEWAL_FEE);
 
+  // QR Code & Lead Payments State (Owner Managed)
+  const [qrSettings, setQrSettings] = useState<CreatorQrSettings>(() => getCreatorQrSettings());
+  const [leadQrPayments, setLeadQrPayments] = useState<LeadQrPaymentRecord[]>(() => getAllLeadQrPayments());
+  const [qrRevenueMetrics, setQrRevenueMetrics] = useState(() => calculateLeadQrRevenueMetrics());
+  const [isQrSaving, setIsQrSaving] = useState(false);
+
   // System Controls State
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isBypassQuotaActive, setIsBypassQuotaActive] = useState(false);
   const [isNormalizing, setIsNormalizing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"COLLEGES" | "QUOTA" | "LICENSING" | "DATABASE" | "SECURITY">("COLLEGES");
+  const [activeTab, setActiveTab] = useState<"COLLEGES" | "QR_PAYMENTS" | "QUOTA" | "LICENSING" | "DATABASE" | "SECURITY">("COLLEGES");
   const [creatorLogs, setCreatorLogs] = useState<Array<{ id: string; time: string; action: string; type: "info" | "warn" | "success" }>>([
     {
       id: "log_1",
@@ -127,13 +145,26 @@ export default function CreatorControlModule({
     },
   ]);
 
-  // Sync colleges registry whenever an update occurs
+  // Sync colleges registry & QR payments whenever updates occur
   useEffect(() => {
     const handleLicenseUpdate = () => {
       setColleges(getAllCollegeLicenses());
     };
+    const handleQrUpdate = () => {
+      setQrSettings(getCreatorQrSettings());
+      setLeadQrPayments(getAllLeadQrPayments());
+      setQrRevenueMetrics(calculateLeadQrRevenueMetrics());
+    };
+
     window.addEventListener(LICENSE_EVENT_KEY, handleLicenseUpdate);
-    return () => window.removeEventListener(LICENSE_EVENT_KEY, handleLicenseUpdate);
+    window.addEventListener(QR_SETTINGS_EVENT, handleQrUpdate);
+    window.addEventListener(QR_PAYMENT_EVENT, handleQrUpdate);
+
+    return () => {
+      window.removeEventListener(LICENSE_EVENT_KEY, handleLicenseUpdate);
+      window.removeEventListener(QR_SETTINGS_EVENT, handleQrUpdate);
+      window.removeEventListener(QR_PAYMENT_EVENT, handleQrUpdate);
+    };
   }, []);
 
   // Load latest billing data on mount
@@ -254,6 +285,50 @@ export default function CreatorControlModule({
       "success"
     );
     setSelectedCollegeForPayment(null);
+  };
+
+  // Upload Custom Payment QR Image (Owner / Creator)
+  const handleUploadQrImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (PNG, JPG, JPEG, WebP).");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (base64) {
+        const updated = saveCreatorQrSettings({ qrCodeImageUrl: base64 });
+        setQrSettings(updated);
+        onTriggerToast("📸 Custom Payment QR Code image uploaded and activated for all lead forms!");
+        addLog("Creator uploaded new custom Payment QR Code image.", "success");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Reset to Default Auto-Generated UPI QR
+  const handleResetToUpiQr = () => {
+    const upiPayload = `upi://pay?pa=${encodeURIComponent(qrSettings.upiId)}&pn=${encodeURIComponent(qrSettings.payeeName)}&am=${qrSettings.leadPriceAmount}&cu=INR&tn=${encodeURIComponent("SPHEREX Student Lead Registration")}`;
+    const defaultUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiPayload)}&margin=12&format=png`;
+    const updated = saveCreatorQrSettings({ qrCodeImageUrl: defaultUrl });
+    setQrSettings(updated);
+    onTriggerToast("🔄 Reset to dynamic UPI QR code generator.");
+    addLog("Creator reset QR code to dynamic UPI generator.", "info");
+  };
+
+  // Save QR Settings Form
+  const handleSaveQrSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsQrSaving(true);
+    const updated = saveCreatorQrSettings(qrSettings);
+    setQrSettings(updated);
+    setIsQrSaving(false);
+    onTriggerToast("💾 Saved Payment QR Code settings successfully!");
+    addLog(`Creator updated Payment QR: UPI=${qrSettings.upiId}, Fee=₹${qrSettings.leadPriceAmount}.`, "success");
   };
 
   // Register New Client College
@@ -607,7 +682,8 @@ export default function CreatorControlModule({
       {/* ============================================================== */}
       <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-bold">
         {[
-          { id: "COLLEGES", label: "🏛️ Client Colleges & Payment Controls", icon: Building },
+          { id: "COLLEGES", label: "🏛️ Client Colleges & Subscriptions", icon: Building },
+          { id: "QR_PAYMENTS", label: "💳 QR Code & Lead Revenue", icon: QrCode },
           { id: "QUOTA", label: "1,00,000 Quota & Overage Engine", icon: Sliders },
           { id: "LICENSING", label: "Dual-Platform Software Licensing", icon: DollarSign },
           { id: "DATABASE", label: "Firebase Health & Diagnostics", icon: Database },
@@ -978,6 +1054,294 @@ export default function CreatorControlModule({
           </div>
         </div>
       )}
+
+      {/* ============================================================== */}
+      {/* TAB: CREATOR PAYMENT QR CODE & STUDENT LEAD REVENUE             */}
+      {/* ============================================================== */}
+      {activeTab === "QR_PAYMENTS" && (
+        <div className="space-y-6 animate-in fade-in duration-150">
+          {/* Revenue KPI Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                Total QR Lead Payments Collected
+              </p>
+              <h3 className="text-2xl font-black text-emerald-400 font-mono">
+                ₹{qrRevenueMetrics.totalRevenue.toLocaleString("en-IN")}
+              </h3>
+              <p className="text-xs text-slate-400">Calculated directly in Creator center</p>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                Paid Student Leads Added
+              </p>
+              <h3 className="text-2xl font-black text-amber-400 font-mono">
+                {qrRevenueMetrics.totalTransactionsCount} <span className="text-xs font-normal text-slate-400">Candidates</span>
+              </h3>
+              <p className="text-xs text-emerald-400 font-semibold">100% Synced to Firebase</p>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                Karur Campus QR Volume
+              </p>
+              <h3 className="text-2xl font-black text-sky-400 font-mono">
+                ₹{qrRevenueMetrics.karurRevenue.toLocaleString("en-IN")}
+              </h3>
+              <p className="text-xs text-slate-400">VSB Engineering College</p>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                Coimbatore Campus QR Volume
+              </p>
+              <h3 className="text-2xl font-black text-indigo-400 font-mono">
+                ₹{qrRevenueMetrics.coimbatoreRevenue.toLocaleString("en-IN")}
+              </h3>
+              <p className="text-xs text-slate-400">VSB Technical Campus</p>
+            </div>
+          </div>
+
+          {/* Two Columns: QR Image Uploader (Left) & Pricing Gateway Config (Right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Active QR Code & Image Upload (5 cols) */}
+            <div className="lg:col-span-5 p-6 rounded-3xl border border-slate-800 bg-slate-900/90 space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <QrCode className="w-5 h-5 text-amber-400" />
+                  <h3 className="text-base font-bold text-white">Owner Payment QR Code</h3>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Live on Checkout
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-3">
+                <div className="p-3 bg-white rounded-2xl shadow-xl border-2 border-amber-400/40 inline-block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={qrSettings.qrCodeImageUrl}
+                    alt="Active Creator Payment QR Code"
+                    className="w-48 h-48 md:w-52 md:h-52 object-contain rounded-lg"
+                  />
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-white font-mono">{qrSettings.upiId}</p>
+                  <p className="text-[11px] text-slate-400">{qrSettings.payeeName}</p>
+                </div>
+              </div>
+
+              {/* Upload Controls */}
+              <div className="space-y-3 pt-2">
+                <label className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  <span>Upload Custom Payment QR Image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadQrImage}
+                    className="hidden"
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handleResetToUpiQr}
+                  className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+                >
+                  Regenerate from UPI ID
+                </button>
+
+                <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+                  Supported formats: PNG, JPG, JPEG, WebP. Once uploaded, this QR code immediately replaces the checkout QR code on all student lead creation forms.
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Payment Gateway & Lead Pricing Settings (7 cols) */}
+            <form
+              onSubmit={handleSaveQrSettings}
+              className="lg:col-span-7 p-6 rounded-3xl border border-slate-800 bg-slate-900/90 space-y-5 flex flex-col justify-between"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <Sliders className="w-5 h-5 text-indigo-400" />
+                    <h3 className="text-base font-bold text-white">Lead Checkout & Pricing Engine</h3>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Creator Controlled
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold">Charge per Student Lead (INR)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-slate-400 font-bold">₹</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={qrSettings.leadPriceAmount}
+                        onChange={(e) =>
+                          setQrSettings({ ...qrSettings, leadPriceAmount: Number(e.target.value) })
+                        }
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-500">Default rate: ₹500 per lead</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-300 font-bold">Creator UPI ID</label>
+                    <input
+                      type="text"
+                      value={qrSettings.upiId}
+                      onChange={(e) => setQrSettings({ ...qrSettings, upiId: e.target.value })}
+                      placeholder="e.g. spherexnithish@okaxis"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <p className="text-[10px] text-slate-500">Receiving bank UPI address</p>
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-slate-300 font-bold">Payee Display Name</label>
+                    <input
+                      type="text"
+                      value={qrSettings.payeeName}
+                      onChange={(e) => setQrSettings({ ...qrSettings, payeeName: e.target.value })}
+                      placeholder="e.g. Nithish Kumar (SPHEREX Creator)"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-slate-300 font-bold">Checkout Purpose Description</label>
+                    <input
+                      type="text"
+                      value={qrSettings.merchantNote}
+                      onChange={(e) => setQrSettings({ ...qrSettings, merchantNote: e.target.value })}
+                      placeholder="e.g. SPHEREX Student Lead Registration Fee"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={qrSettings.isPaymentRequired}
+                      onChange={(e) =>
+                        setQrSettings({ ...qrSettings, isPaymentRequired: e.target.checked })
+                      }
+                      className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500 cursor-pointer"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-white">
+                        Require QR Code Payment on Student Lead Creation
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        When enabled, college admins and teachers cannot save candidate leads to Firebase until the ₹{qrSettings.leadPriceAmount} QR payment is verified.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-800 flex items-center justify-end">
+                <button
+                  type="submit"
+                  disabled={isQrSaving}
+                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isQrSaving ? "Saving Settings..." : "Save QR Settings & Apply Live"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Real-Time Student Lead QR Payment Transactions Ledger */}
+          <div className="p-6 rounded-3xl border border-slate-800 bg-slate-900/90 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-emerald-400" />
+                  <span>Real-Time Student Lead QR Payments Ledger</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Live audit log of all candidate registrations paid via QR code and synchronized with Firebase
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 font-mono">
+                {leadQrPayments.length} Total Payments Recorded
+              </span>
+            </div>
+
+            {leadQrPayments.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-slate-950 border border-dashed border-slate-800 text-center space-y-2">
+                <QrCode className="w-10 h-10 text-slate-600 mx-auto" />
+                <p className="text-xs font-semibold text-slate-300">No QR payments recorded yet</p>
+                <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                  When college admins or teachers click the lead button, fill candidate details, scan the QR code, and verify payment, transactions will automatically compute and appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-slate-800">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-slate-950 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <tr>
+                      <th className="p-3">Candidate</th>
+                      <th className="p-3">Campus / College</th>
+                      <th className="p-3">Course</th>
+                      <th className="p-3">Amount (INR)</th>
+                      <th className="p-3">UPI Ref / UTR</th>
+                      <th className="p-3">Submitted By</th>
+                      <th className="p-3">Timestamp</th>
+                      <th className="p-3 text-right">Firebase Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-slate-200">
+                    {leadQrPayments.map((p) => (
+                      <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-3">
+                          <strong className="text-white">{p.leadName}</strong>
+                          <p className="text-[10px] text-slate-400 font-mono">{p.leadPhone}</p>
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
+                            {p.campus}
+                          </span>
+                        </td>
+                        <td className="p-3 text-slate-300 truncate max-w-[180px]">{p.courseInterest}</td>
+                        <td className="p-3 font-mono font-bold text-emerald-400">
+                          ₹{p.amount.toLocaleString("en-IN")}.00
+                        </td>
+                        <td className="p-3 font-mono text-[11px] text-amber-300">{p.utrRef}</td>
+                        <td className="p-3 font-mono text-[11px] text-indigo-300">{p.submittedBy}</td>
+                        <td className="p-3 text-slate-400 text-[11px]">
+                          {new Date(p.timestamp).toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                        <td className="p-3 text-right">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-950 text-emerald-300 border border-emerald-800">
+                            Verified & Synced
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {/* ============================================================== */}
       {/* TAB 2: 1,00,000 LEAD QUOTA & OVERAGE ENGINE                     */}

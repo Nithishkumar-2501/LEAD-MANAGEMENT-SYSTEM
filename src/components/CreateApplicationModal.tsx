@@ -8,12 +8,15 @@ import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { evaluateLeadQuota } from "@/lib/leadQuotaService";
+import LeadPaymentQrModal from "@/components/LeadPaymentQrModal";
+import { getCreatorQrSettings, LeadQrPaymentRecord } from "@/lib/leadPaymentQrService";
 
 interface CreateApplicationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onApplicationCreated: (newLead: Lead & { application: Application }) => void;
   existingLeads?: Lead[];
+  loggedInUsername?: string;
 }
 
 export default function CreateApplicationModal({
@@ -21,7 +24,9 @@ export default function CreateApplicationModal({
   onClose,
   onApplicationCreated,
   existingLeads = [],
+  loggedInUsername = "Admin",
 }: CreateApplicationModalProps) {
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -62,6 +67,17 @@ export default function CreateApplicationModal({
       return;
     }
 
+    // Check if Creator has mandated QR Payment before submitting candidate lead
+    const qrSettings = getCreatorQrSettings();
+    if (qrSettings.isPaymentRequired) {
+      setIsQrModalOpen(true);
+      return;
+    }
+
+    await executeSaveLead();
+  };
+
+  const executeSaveLead = async (paymentRecord?: LeadQrPaymentRecord) => {
     setLoading(true);
     setError(null);
 
@@ -94,7 +110,7 @@ export default function CreateApplicationModal({
             stage: formData.stage || "INQUIRY",
             marks10th: formData.marks10th || 0,
             marks12th: formData.marks12th || 0,
-            paymentStatus: "PENDING",
+            paymentStatus: paymentRecord ? "PAID" : "PENDING",
           },
         } as Lead & { application: Application };
       }
@@ -103,6 +119,7 @@ export default function CreateApplicationModal({
       await saveStudentToFirebase(createdLead);
 
       onApplicationCreated(createdLead);
+      setIsQrModalOpen(false);
       onClose();
     } catch (err: any) {
       setError(err.message || "An error occurred while creating application.");
@@ -430,6 +447,21 @@ export default function CreateApplicationModal({
           </div>
         </form>
       </div>
+
+      {/* Creator Payment QR Code Modal (Scan & Pay before adding to Firebase) */}
+      {isQrModalOpen && (
+        <LeadPaymentQrModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          candidateName={formData.name}
+          candidatePhone={formData.phone}
+          courseInterest={formData.courseInterest}
+          campus={formData.campus}
+          submittedBy={loggedInUsername || "Admin"}
+          onPaymentVerified={executeSaveLead}
+        />
+      )}
     </div>
   );
 }
+

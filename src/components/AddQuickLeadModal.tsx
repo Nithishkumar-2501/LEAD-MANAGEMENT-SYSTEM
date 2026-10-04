@@ -8,12 +8,15 @@ import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { evaluateLeadQuota } from "@/lib/leadQuotaService";
+import LeadPaymentQrModal from "@/components/LeadPaymentQrModal";
+import { getCreatorQrSettings, LeadQrPaymentRecord } from "@/lib/leadPaymentQrService";
 
 interface AddQuickLeadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLeadAdded: (newLead: Lead & { application: Application }) => void;
   existingLeads?: Lead[];
+  loggedInUsername?: string;
 }
 
 export default function AddQuickLeadModal({
@@ -21,7 +24,10 @@ export default function AddQuickLeadModal({
   onClose,
   onLeadAdded,
   existingLeads = [],
+  loggedInUsername = "Admin",
 }: AddQuickLeadModalProps) {
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [pendingSaveAndNew, setPendingSaveAndNew] = useState(false);
   const [activeTab, setActiveTab] = useState<"LEAD" | "ADDITIONAL" | "FACEBOOK">("LEAD");
   const [uploadVia, setUploadVia] = useState<"EMAIL" | "MOBILE">("EMAIL");
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +107,18 @@ export default function AddQuickLeadModal({
       }
     }
 
+    // 3. Check if Creator has mandated QR Payment before submitting candidate lead to Firebase
+    const qrSettings = getCreatorQrSettings();
+    if (qrSettings.isPaymentRequired) {
+      setPendingSaveAndNew(saveAndNew);
+      setIsQrModalOpen(true);
+      return;
+    }
+
+    await executeSaveLead(saveAndNew);
+  };
+
+  const executeSaveLead = async (saveAndNew: boolean = false, paymentRecord?: LeadQrPaymentRecord) => {
     const rawPhoneDigits = formData.phone.trim()
       ? extractRaw10Digits(formData.phone)
       : "9876543210";
@@ -183,7 +201,7 @@ export default function AddQuickLeadModal({
           stage: "INQUIRY",
           marks10th: Number(formData.marks10th) || 85,
           marks12th: Number(formData.marks12th) || 88,
-          paymentStatus: "PENDING",
+          paymentStatus: paymentRecord ? "PAID" : "PENDING",
         },
       };
     }
@@ -197,6 +215,7 @@ export default function AddQuickLeadModal({
     }
 
     onLeadAdded(savedLead);
+    setIsQrModalOpen(false);
 
     if (saveAndNew) {
       setFormData({
@@ -875,6 +894,23 @@ export default function AddQuickLeadModal({
           </button>
         </div>
       </div>
+
+      {/* Creator Payment QR Code Modal (Scan & Pay before adding to Firebase) */}
+      {isQrModalOpen && (
+        <LeadPaymentQrModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          candidateName={formData.name}
+          candidatePhone={formData.phone}
+          courseInterest={formData.formInterested}
+          campus="KARUR"
+          submittedBy={loggedInUsername || "Admin"}
+          onPaymentVerified={async (record) => {
+            await executeSaveLead(pendingSaveAndNew, record);
+          }}
+        />
+      )}
     </div>
   );
 }
+
