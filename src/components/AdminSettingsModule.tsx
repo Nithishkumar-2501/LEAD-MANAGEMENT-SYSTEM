@@ -21,9 +21,18 @@ import {
   Users,
   AlertCircle,
   X,
-  Calendar
+  Calendar,
+  Receipt,
+  Globe,
+  Smartphone,
 } from "lucide-react";
 import GoogleCalendarModal from "@/components/GoogleCalendarModal";
+import {
+  getAnnualRenewalData,
+  MAX_FREE_LEAD_LIMIT,
+  PRICE_PER_EXTRA_LEAD,
+  BASE_ANNUAL_RENEWAL_FEE,
+} from "@/lib/leadQuotaService";
 import {
   fetchSystemAccountsFromFirebase,
   saveSystemAccountToFirebase,
@@ -67,6 +76,7 @@ export default function AdminSettingsModule({
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isGCalModalOpen, setIsGCalModalOpen] = useState(false);
+  const annualBilling = getAnnualRenewalData();
 
   // System Accounts List with Password & Login Status
   const [accounts, setAccounts] = useState<SystemAccount[]>(() => {
@@ -833,6 +843,59 @@ export default function AdminSettingsModule({
               <p className="text-[10px] text-slate-500">Candidate verification & counseling slots</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Enterprise Platform License, 1,00,000 Lead Quota & Annual Renewal Section */}
+      <div className="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3.5">
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-emerald-400" />
+              <span>Enterprise Platform License & Lead Quota (1,00,000 Leads Cap)</span>
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Dual deployment coverage: Web Application Portal + Native Android & iOS Mobile Applications
+            </p>
+          </div>
+
+          <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 w-fit">
+            ✓ License Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Included Free Quota</span>
+            <p className="font-mono font-bold text-white text-base">1,00,000 Leads</p>
+            <p className="text-[10px] text-slate-400">Standard institutional capacity</p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Overage Surcharge Policy</span>
+            <p className="font-mono font-bold text-amber-400 text-base">₹500 / extra lead</p>
+            <p className="text-[10px] text-slate-400">Triggered after 1,00,000 leads reached</p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Extra Leads Added</span>
+            <p className="font-mono font-bold text-amber-300 text-base">+{annualBilling.extraLeadsCount} Leads</p>
+            <p className="text-[10px] text-slate-400">Total Surcharge: ₹{annualBilling.extraLeadsCost.toLocaleString("en-IN")}</p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 space-y-1">
+            <span className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider">Total Annual Renewal</span>
+            <p className="font-mono font-bold text-emerald-400 text-base">₹{annualBilling.totalRenewalFee.toLocaleString("en-IN")}</p>
+            <p className="text-[10px] text-slate-400">Due: {new Date(annualBilling.renewalDueDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })} (Web & Mobile)</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 pt-1 text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-sky-400" /> Web CRM Application</span>
+          <span>•</span>
+          <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5 text-emerald-400" /> Native Mobile Apps (Android & iOS)</span>
+          <span>•</span>
+          <span className="text-slate-300 font-semibold">Track & print invoices in Fee Payment & Renewal tab.</span>
         </div>
       </div>
 

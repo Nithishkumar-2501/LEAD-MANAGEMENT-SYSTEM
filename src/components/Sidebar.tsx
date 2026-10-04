@@ -232,7 +232,7 @@ export default function Sidebar({
     {
       id: "CONTACTS" as ActiveTab,
       label: "Lead Manager",
-      sublabel: "Manage Student Leads",
+      sublabel: "1,00,000 Lead Capacity Tier",
       icon: UserCheck,
       color: "from-indigo-500 to-purple-600",
       activeBorder: "border-indigo-400",
@@ -258,8 +258,8 @@ export default function Sidebar({
     },
     {
       id: "PAYMENTS" as ActiveTab,
-      label: "Fee Payment",
-      sublabel: "Payment Verification",
+      label: "Fee & Annual Renewal",
+      sublabel: "Receipts & App Renewal",
       icon: CreditCard,
       color: "from-emerald-500 to-teal-600",
       activeBorder: "border-emerald-400",

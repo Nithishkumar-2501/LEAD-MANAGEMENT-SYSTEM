@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { X, UserPlus, Send } from "lucide-react";
+import { X, UserPlus, Send, AlertTriangle } from "lucide-react";
 import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import SpecularButton from "@/components/SpecularButton";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
+import { evaluateLeadQuota } from "@/lib/leadQuotaService";
 
 interface CreateApplicationModalProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export default function CreateApplicationModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const quotaEval = evaluateLeadQuota(existingLeads.length, 1);
 
   if (!isOpen) return null;
 
@@ -146,6 +148,18 @@ export default function CreateApplicationModal({
 
         {/* Modal Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+          {quotaEval.isLimitReached && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>1,00,000 Free Lead Quota reached. Creating this lead will incur ₹500 overage surcharge (billed to Annual Renewal).</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 shrink-0">
+                ₹500 / lead
+              </span>
+            </div>
+          )}
+
           {error && (
             <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-300 text-xs">
               {error}

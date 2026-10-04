@@ -7,6 +7,7 @@ import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
+import { evaluateLeadQuota } from "@/lib/leadQuotaService";
 
 interface AddQuickLeadModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export default function AddQuickLeadModal({
   const [activeTab, setActiveTab] = useState<"LEAD" | "ADDITIONAL" | "FACEBOOK">("LEAD");
   const [uploadVia, setUploadVia] = useState<"EMAIL" | "MOBILE">("EMAIL");
   const [error, setError] = useState<string | null>(null);
+  const quotaEval = evaluateLeadQuota(existingLeads.length, 1);
 
   const [formData, setFormData] = useState({
     // Core Lead Details
@@ -245,6 +247,19 @@ export default function AddQuickLeadModal({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Quota Limit Reached Banner */}
+          {quotaEval.isLimitReached && (
+            <div className="mx-4 mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-600/50 text-amber-800 dark:text-amber-200 text-xs font-semibold flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-500" />
+                <span>1,00,000 Free Lead Quota reached. Submitting will prompt for ₹500 overage surcharge (billed to Annual Renewal).</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 shrink-0">
+                ₹500 / lead
+              </span>
+            </div>
+          )}
 
           {/* Validation Error Banner */}
           {error && (

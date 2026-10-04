@@ -26,6 +26,12 @@ import EchoDashboardView from "@/components/EchoDashboardView";
 import AiIntelligenceModule from "@/components/AiIntelligenceModule";
 import ApplicationManagerModule from "@/components/ApplicationManagerModule";
 import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
+import LeadLimitOverageModal from "@/components/LeadLimitOverageModal";
+import {
+  evaluateLeadQuota,
+  recordOverageLeadsToAnnualRenewal,
+  QuotaEvaluation,
+} from "@/lib/leadQuotaService";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
@@ -133,6 +139,16 @@ export default function DashboardPage() {
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
   const [isNoraModalOpen, setIsNoraModalOpen] = useState(false);
   const [noraInitialQuery, setNoraInitialQuery] = useState("");
+
+  // Lead Quota (1,00,000 limit) Overage Authorization Modal State
+  const [quotaOverageModal, setQuotaOverageModal] = useState<{
+    isOpen: boolean;
+    candidateName: string;
+    incomingCount: number;
+    evaluation: QuotaEvaluation;
+    onAuthorize: () => Promise<void> | void;
+  } | null>(null);
+
   const handleOpenNora = (query?: string) => {
     setNoraInitialQuery(query || "");
     setIsNoraModalOpen(true);
@@ -573,7 +589,7 @@ export default function DashboardPage() {
     triggerToast("Task status updated.");
   };
 
-  const handleCreateApplication = async (newApp: Lead & { application: Application }) => {
+  const proceedSaveApplication = async (newApp: Lead & { application: Application }) => {
     await saveStudentToFirebase(newApp);
     setApplicants((prev) => {
       const newList = [newApp, ...prev.filter((a) => a.id !== newApp.id)];
@@ -585,6 +601,34 @@ export default function DashboardPage() {
     setIsCreateModalOpen(false);
     setIsQuickLeadModalOpen(false);
     triggerToast(`Created new lead for ${newApp.name}`);
+  };
+
+  const handleCreateApplication = async (newApp: Lead & { application: Application }) => {
+    // Enforce 1,00,000 Lead Limit Quota
+    const evaluation = evaluateLeadQuota(applicants.length, 1);
+    if (evaluation.requiresOverageAuthorization) {
+      setQuotaOverageModal({
+        isOpen: true,
+        candidateName: newApp.name,
+        incomingCount: 1,
+        evaluation,
+        onAuthorize: async () => {
+          recordOverageLeadsToAnnualRenewal({
+            leadName: newApp.name,
+            leadPhone: newApp.phone,
+            count: 1,
+            source: newApp.source || "Direct Form",
+            approvedBy: loggedInUsername,
+          });
+          await proceedSaveApplication(newApp);
+          triggerToast(`💳 Authorized overage lead "${newApp.name}"! ₹500 added to Annual Payment Renewal.`);
+          setQuotaOverageModal(null);
+        },
+      });
+      return;
+    }
+
+    await proceedSaveApplication(newApp);
   };
 
   const handleDeleteApplicant = async (id: string, name: string) => {
@@ -771,21 +815,48 @@ export default function DashboardPage() {
             onTriggerToast={triggerToast}
             onSelectApplicant={handleSelectApplicant}
             onImportLeads={async (newLeads) => {
-              setApplicants((prev) => {
-                const updated = [...newLeads, ...prev];
-                try {
-                  localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
-                } catch (e) {}
-                return updated;
-              });
-              triggerToast(`📥 Imported ${newLeads.length} student record(s)! Syncing to Firebase...`);
-              if (newLeads.length > 0) {
-                handleSelectApplicant(newLeads[0]);
+              const proceedImport = async () => {
+                setApplicants((prev) => {
+                  const updated = [...newLeads, ...prev];
+                  try {
+                    localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
+                  } catch (e) {}
+                  return updated;
+                });
+                triggerToast(`📥 Imported ${newLeads.length} student record(s)! Syncing to Firebase...`);
+                if (newLeads.length > 0) {
+                  handleSelectApplicant(newLeads[0]);
+                }
+                for (const lead of newLeads) {
+                  await saveStudentToFirebase(lead).catch((err) => console.warn("Notice saving lead to Firebase:", err));
+                }
+                triggerToast(`🔥 All ${newLeads.length} student record(s) saved in Firebase!`);
+              };
+
+              // Enforce 1,00,000 Lead Limit Quota on Bulk Imports
+              const evaluation = evaluateLeadQuota(applicants.length, newLeads.length);
+              if (evaluation.requiresOverageAuthorization) {
+                setQuotaOverageModal({
+                  isOpen: true,
+                  candidateName: `Bulk File Import (${newLeads.length} leads)`,
+                  incomingCount: newLeads.length,
+                  evaluation,
+                  onAuthorize: async () => {
+                    recordOverageLeadsToAnnualRenewal({
+                      leadName: `Bulk File Import (${newLeads.length} leads)`,
+                      count: evaluation.overageLeadsCount,
+                      source: "CSV / Excel Bulk Upload",
+                      approvedBy: loggedInUsername,
+                    });
+                    await proceedImport();
+                    triggerToast(`💳 Imported ${newLeads.length} leads. ₹${evaluation.overageTotalCost.toLocaleString("en-IN")} added to Annual Payment Renewal.`);
+                    setQuotaOverageModal(null);
+                  },
+                });
+                return;
               }
-              for (const lead of newLeads) {
-                await saveStudentToFirebase(lead).catch((err) => console.warn("Notice saving lead to Firebase:", err));
-              }
-              triggerToast(`🔥 All ${newLeads.length} student record(s) saved in Firebase!`);
+
+              await proceedImport();
             }}
             onDeleteContact={handleDeleteApplicant}
             onReloadLeads={handleReloadLeads}
@@ -823,9 +894,13 @@ export default function DashboardPage() {
           <CampusCourseModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
         )}
 
-        {/* FEE PAYMENTS MODULE */}
+        {/* FEE PAYMENTS & ANNUAL RENEWAL MODULE */}
         {activeTab === "PAYMENTS" && (
-          <PaymentBillingModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
+          <PaymentBillingModule
+            loggedInCampus={loggedInCampus}
+            onTriggerToast={triggerToast}
+            currentLeadsCount={applicants.length}
+          />
         )}
 
         {/* ADMIN SETTINGS MODULE */}
@@ -905,6 +980,18 @@ export default function DashboardPage() {
         currentUserRole={currentUserRole}
         initialQuery={noraInitialQuery}
       />
+
+      {/* LEAD LIMIT OVERAGE CONFIRMATION MODAL */}
+      {quotaOverageModal && (
+        <LeadLimitOverageModal
+          isOpen={quotaOverageModal.isOpen}
+          onClose={() => setQuotaOverageModal(null)}
+          onConfirm={quotaOverageModal.onAuthorize}
+          quotaEvaluation={quotaOverageModal.evaluation}
+          candidateName={quotaOverageModal.candidateName}
+          incomingBatchCount={quotaOverageModal.incomingCount}
+        />
+      )}
 
       {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
