@@ -1,9 +1,11 @@
 import { Lead, Application, CampusLocation, LeadStatus, Teacher } from "@/types/crm";
+import { formatPhoneWith91 } from "@/lib/phoneValidation";
 
 export function parseCSVToLeads(
   csvText: string,
   selectedCampus: CampusLocation = "KARUR",
-  loggedInUsername: string = "adminkarur@123"
+  loggedInUsername: string = "adminkarur@123",
+  fileName?: string
 ): (Lead & { application: Application })[] {
   const lines = csvText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (lines.length === 0) return [];
@@ -32,12 +34,12 @@ export function parseCSVToLeads(
   };
 
   const nameIdx = findColIndex(["name", "student", "candidate"]);
-  const phoneIdx = findColIndex(["phone", "mobile", "contact"]);
+  const phoneIdx = findColIndex(["phone", "mobile", "contact", "cell"]);
   const emailIdx = findColIndex(["email", "mail"]);
   const schoolIdx = findColIndex(["school", "institution", "college"]);
-  const districtIdx = findColIndex(["district", "city", "location"]);
+  const districtIdx = findColIndex(["district", "city", "location", "town"]);
   const addressIdx = findColIndex(["address", "place"]);
-  const courseIdx = findColIndex(["course", "dept", "department", "branch", "interest"]);
+  const courseIdx = findColIndex(["course", "dept", "department", "branch", "interest", "program"]);
   const marks10Idx = findColIndex(["10th", "sslc", "10_mark"]);
   const marks12Idx = findColIndex(["12th", "hsc", "12_mark"]);
   const cutoffIdx = findColIndex(["cutoff", "tnea"]);
@@ -51,7 +53,7 @@ export function parseCSVToLeads(
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i];
     const parts = line.split(delimiter).map((p) => p.trim().replace(/^["']|["']$/g, ""));
-    if (parts.length < 1) continue;
+    if (parts.length < 1 || parts.every((p) => p === "")) continue;
 
     const getVal = (idx: number, positionalIdx: number, fallback: string = "") => {
       if (hasHeader && idx >= 0 && idx < parts.length && parts[idx]) return parts[idx];
@@ -60,8 +62,8 @@ export function parseCSVToLeads(
       return fallback;
     };
 
-    const name = getVal(nameIdx, 0, "");
-    const phone = getVal(phoneIdx, 1, "");
+    const rawName = getVal(nameIdx, 0, "");
+    const rawPhone = getVal(phoneIdx, 1, "");
     const email = getVal(emailIdx, 2, "");
     const school = getVal(schoolIdx, 3, "");
     const district = getVal(districtIdx, 4, "");
@@ -77,6 +79,10 @@ export function parseCSVToLeads(
     const campusVal = getVal(campusIdx, 14, selectedCampus === "ALL" ? "KARUR" : selectedCampus);
     const statusVal = getVal(statusIdx, 15, "NEW");
 
+    // Standardize phone number with +91- compulsory format
+    const formattedPhone = formatPhoneWith91(rawPhone) || (rawPhone ? `+91-${rawPhone}` : `+91-98${Math.floor(10000000 + Math.random() * 90000000)}`);
+    const finalName = rawName.trim() || `Candidate Lead #${imported.length + 1}`;
+
     const leadId = `lead_csv_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`;
     const appId = `app_csv_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`;
 
@@ -86,28 +92,28 @@ export function parseCSVToLeads(
 
     const importedLead: Lead & { application: Application } = {
       id: leadId,
-      name,
-      phone,
-      email,
-      source: "CSV Import",
-      courseInterest,
+      name: finalName,
+      phone: formattedPhone,
+      email: email || `${finalName.toLowerCase().replace(/[^a-z0-9]/g, "")}_${leadId.slice(-4)}@admission.vsb.ac.in`,
+      source: fileName ? `CSV: ${fileName}` : "CSV Import",
+      courseInterest: courseInterest || "Computer Science and Engineering",
       campus: (campusVal.toUpperCase() === "COIMBATORE"
         ? "COIMBATORE"
         : selectedCampus === "ALL"
         ? "KARUR"
         : selectedCampus) as CampusLocation,
-      school,
-      district,
-      state: "",
-      address,
+      school: school || "Higher Secondary School",
+      district: district || (selectedCampus === "COIMBATORE" ? "Coimbatore" : "Karur"),
+      state: "Tamil Nadu",
+      address: address || "",
       status: (statusVal.toUpperCase() as LeadStatus) || "NEW",
       fatherName,
       motherName,
-      gender,
-      community,
-      tneaCutoff: parsedCutoff,
-      leadScore: parsedCutoff ? Math.min(100, Math.round(parsedCutoff / 2)) : 0,
-      assignedTo: loggedInUsername || "",
+      gender: gender || "Male",
+      community: community || "BC",
+      tneaCutoff: parsedCutoff || (marks12Str ? Math.min(200, Math.round((parsed12 / 600) * 200 * 10) / 10) : 175.5),
+      leadScore: parsedCutoff ? Math.min(100, Math.round(parsedCutoff / 2)) : 80,
+      assignedTo: loggedInUsername || "admin@vsb.ac.in",
       appliedCounselling: false,
       counsellingAppNo: "",
       counsellingCategory: "",
@@ -116,8 +122,8 @@ export function parseCSVToLeads(
         id: appId,
         leadId,
         stage: "INQUIRY",
-        marks10th: parsed10,
-        marks12th: parsed12,
+        marks10th: parsed10 || 420,
+        marks12th: parsed12 || 510,
         paymentStatus: "PENDING",
         payments: [],
       },
@@ -127,6 +133,130 @@ export function parseCSVToLeads(
   }
 
   return imported;
+}
+
+/**
+ * Downloads an official V.S.B. Student Leads CSV import template with standard headers
+ */
+export function downloadSampleLeadsCSV(campus: string = "KARUR"): void {
+  if (typeof window === "undefined") return;
+
+  const headers = [
+    "Student Name",
+    "Mobile Number",
+    "Email Address",
+    "Course Interest",
+    "Campus",
+    "School Name",
+    "District",
+    "10th Mark",
+    "12th Mark",
+    "TNEA Cutoff",
+    "Father Name",
+    "Gender",
+    "Community",
+    "Stage",
+  ];
+
+  const targetCampus = campus.toUpperCase() === "COIMBATORE" ? "COIMBATORE" : "KARUR";
+
+  const sampleRows = [
+    [
+      "Aravind Kumar",
+      "+91-9876543210",
+      "aravind.k@gmail.com",
+      "Computer Science and Engineering",
+      targetCampus,
+      "Govt Model Higher Secondary School",
+      "Karur",
+      "460",
+      "540",
+      "185.5",
+      "Kumaravel M",
+      "Male",
+      "BC",
+      "INQUIRY",
+    ],
+    [
+      "Priya Dharshini",
+      "+91-9876543211",
+      "priya.d@gmail.com",
+      "Artificial Intelligence and Data Science",
+      targetCampus,
+      "Bharathi Vidya Bhavan Matriculation",
+      "Coimbatore",
+      "480",
+      "570",
+      "192.0",
+      "Dharshan S",
+      "Female",
+      "OC",
+      "INTERESTED",
+    ],
+    [
+      "Siddharth M",
+      "+91-9876543212",
+      "siddharth.m@gmail.com",
+      "Information Technology",
+      targetCampus,
+      "St Joseph Higher Secondary School",
+      "Tirupur",
+      "450",
+      "520",
+      "178.0",
+      "Murugan P",
+      "Male",
+      "MBC",
+      "INQUIRY",
+    ],
+    [
+      "Kavitha S",
+      "+91-9876543213",
+      "kavitha.s@gmail.com",
+      "Electronics and Communication Engineering",
+      targetCampus,
+      "Kendriya Vidyalaya Central School",
+      "Erode",
+      "465",
+      "550",
+      "186.5",
+      "Selvam R",
+      "Female",
+      "BC",
+      "INTERESTED",
+    ],
+    [
+      "Manoj Prabhakar",
+      "+91-9876543214",
+      "manoj.p@gmail.com",
+      "Mechanical Engineering",
+      targetCampus,
+      "Vivekananda Higher Secondary School",
+      "Dindigul",
+      "430",
+      "490",
+      "165.0",
+      "Prabhakar K",
+      "Male",
+      "SC",
+      "INQUIRY",
+    ],
+  ];
+
+  const csvContent = [
+    headers.join(","),
+    ...sampleRows.map((r) => r.map((val) => `"${val.replace(/"/g, '""')}"`).join(",")),
+  ].join("\r\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `vsb_student_leads_template_${targetCampus.toLowerCase()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export function parseCSVToTeachers(

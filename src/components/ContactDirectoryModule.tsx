@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
-import { parseCSVToLeads } from "@/lib/csvParser";
+import { parseCSVToLeads, downloadSampleLeadsCSV } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase, saveApplicationToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted, normalizeAllFirebasePhones } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits, formatPhoneWith91 } from "@/lib/phoneValidation";
@@ -121,7 +121,7 @@ interface ContactDirectoryModuleProps {
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP" | "SMS", name: string) => void;
   onTriggerToast?: (msg: string) => void;
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
-  onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
+  onImportLeads?: (importedLeads: (Lead & { application: Application })[], fileName?: string) => void;
   onDeleteContact?: (id: string, name: string) => void;
   isReloading?: boolean;
   onReloadLeads?: () => Promise<void> | void;
@@ -1748,42 +1748,22 @@ export default function ContactDirectoryModule({
       const text = event.target?.result as string;
       if (!text) return;
 
-      const imported = parseCSVToLeads(text, selectedCampus, loggedInUsername);
+      const imported = parseCSVToLeads(text, selectedCampus, loggedInUsername, file.name);
 
-      const validImported: (Lead & { application?: Application | null })[] = [];
-      let rejectedCount = 0;
-      const currentList = [...contacts];
-
-      imported.forEach((item) => {
-        const err = validateLeadPhoneNumber(item.phone, currentList as Lead[]);
-        if (!err) {
-          validImported.push(item);
-          currentList.push(item as any);
-        } else {
-          rejectedCount++;
-        }
-      });
-
-      if (validImported.length > 0) {
-        setContacts((prev) => [...(validImported as any), ...prev]);
-
-        // Real-time Firebase Database update for each imported student
-        validImported.forEach((item) => saveStudentToFirebase(item as any));
-
-        if (onImportLeads) {
-          onImportLeads(validImported as any);
-        }
-
+      if (imported.length === 0) {
         if (onTriggerToast) {
-          let msg = `📥 Imported ${validImported.length} student contact(s)!`;
-          if (rejectedCount > 0) {
-            msg += ` (${rejectedCount} rejected due to invalid/duplicate mobile numbers)`;
-          }
-          onTriggerToast(msg);
+          onTriggerToast(`⚠️ No valid student lead records found in "${file.name}". Please check the CSV format or download the sample template.`);
         }
+        return;
+      }
+
+      if (onImportLeads) {
+        onImportLeads(imported as any, file.name);
       } else {
+        setContacts((prev) => [...(imported as any), ...prev]);
+        imported.forEach((item) => saveStudentToFirebase(item as any));
         if (onTriggerToast) {
-          onTriggerToast("⚠️ All contacts in CSV were rejected (invalid or duplicate 10-digit mobile numbers).");
+          onTriggerToast(`📥 Successfully imported ${imported.length} student lead(s) from "${file.name}"!`);
         }
       }
     };
@@ -2068,11 +2048,20 @@ export default function ContactDirectoryModule({
           />
           <button
             onClick={() => document.getElementById("csv-file-upload")?.click()}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
             title="Import Leads from CSV"
           >
             <Upload className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
-            <span>Import</span>
+            <span>Import CSV</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadSampleLeadsCSV(selectedCampus)}
+            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-300 dark:border-white/15 flex items-center gap-1 shadow-sm transition-all active:scale-95 cursor-pointer"
+            title="Download Sample Student Leads CSV Template"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            <span className="hidden sm:inline text-[11px]">Template</span>
           </button>
 
 

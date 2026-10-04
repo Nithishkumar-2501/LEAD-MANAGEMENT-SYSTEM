@@ -19,9 +19,10 @@ import {
   ChevronUpIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  Download,
 } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
-import { parseCSVToLeads } from "@/lib/csvParser";
+import { parseCSVToLeads, downloadSampleLeadsCSV } from "@/lib/csvParser";
 import { getStudentLeadState } from "@/lib/studentLeadState";
 
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -44,7 +45,7 @@ interface ApplicantsTableProps {
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP" | "SMS", name: string) => void;
   onOpenCreateModal: () => void;
   onOpenQuickLeadModal?: () => void;
-  onImportLeads?: (importedLeads: (Lead & { application: Application })[]) => void;
+  onImportLeads?: (importedLeads: (Lead & { application: Application })[], fileName?: string) => void;
   onDeleteApplicant?: (id: string, name: string) => void;
 }
 
@@ -257,9 +258,9 @@ export default function ApplicantsTable({
                 reader.onload = (evt) => {
                   const text = evt.target?.result as string;
                   if (!text) return;
-                  const imported = parseCSVToLeads(text);
-                  if (imported.length > 0 && onImportLeads) {
-                    onImportLeads(imported);
+                  const imported = parseCSVToLeads(text, "KARUR", "admin@vsb.ac.in", file.name);
+                  if (onImportLeads) {
+                    onImportLeads(imported, file.name);
                   }
                 };
                 reader.readAsText(file);
@@ -270,9 +271,19 @@ export default function ApplicantsTable({
               type="button"
               onClick={() => document.getElementById("csv-dashboard-upload")?.click()}
               className="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Import Student Leads from .CSV File"
             >
               <Upload className="w-3.5 h-3.5 shrink-0 text-slate-500" />
               <span>Import CSV</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadSampleLeadsCSV()}
+              className="px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1 transition-all cursor-pointer"
+              title="Download Sample Student Leads CSV Template"
+            >
+              <Download className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+              <span className="hidden xl:inline text-[11px]">CSV Template</span>
             </button>
           </div>
         </div>

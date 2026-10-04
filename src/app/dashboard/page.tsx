@@ -29,10 +29,12 @@ import ApplicationManagerModule from "@/components/ApplicationManagerModule";
 import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
 import LeadLimitOverageModal from "@/components/LeadLimitOverageModal";
 import CreatorControlModule from "@/components/CreatorControlModule";
+import CsvLeadsImportModal from "@/components/CsvLeadsImportModal";
 import {
   evaluateLeadQuota,
   recordOverageLeadsToAnnualRenewal,
   QuotaEvaluation,
+  MAX_FREE_LEAD_LIMIT,
 } from "@/lib/leadQuotaService";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
@@ -161,6 +163,14 @@ export default function DashboardPage() {
     };
   }, []);
 
+  // Action Notification State
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const triggerToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  }, []);
+
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickLeadModalOpen, setIsQuickLeadModalOpen] = useState(false);
@@ -175,6 +185,83 @@ export default function DashboardPage() {
     evaluation: QuotaEvaluation;
     onAuthorize: () => Promise<void> | void;
   } | null>(null);
+
+  // CSV Leads File Import Modal State (Counts leads in CSV and adds to 1,00,000 quota)
+  const [csvImportModal, setCsvImportModal] = useState<{
+    isOpen: boolean;
+    fileName: string;
+    leads: (Lead & { application: Application })[];
+  } | null>(null);
+  const [isProcessingCsvImport, setIsProcessingCsvImport] = useState(false);
+
+  const handleRequestCsvImport = useCallback((newLeads: (Lead & { application: Application })[], fileName: string = "uploaded_leads.csv") => {
+    if (!newLeads || newLeads.length === 0) {
+      triggerToast(`⚠️ No valid student lead records found in "${fileName}".`);
+      return;
+    }
+
+    setCsvImportModal({
+      isOpen: true,
+      fileName,
+      leads: newLeads,
+    });
+  }, [triggerToast]);
+
+  const handleConfirmCsvImport = async (newLeads: (Lead & { application: Application })[]) => {
+    if (!newLeads || newLeads.length === 0) return;
+    setIsProcessingCsvImport(true);
+
+    try {
+      const fileName = csvImportModal?.fileName || "uploaded_leads.csv";
+      const incomingCount = newLeads.length;
+      const evaluation = evaluateLeadQuota(applicants.length, incomingCount);
+
+      // If overage leads exist beyond 1,00,000 quota, record surcharge to Annual Renewal
+      if (evaluation.requiresOverageAuthorization && evaluation.overageLeadsCount > 0) {
+        recordOverageLeadsToAnnualRenewal({
+          leadName: `CSV Import (${fileName} - ${incomingCount} leads)`,
+          count: evaluation.overageLeadsCount,
+          source: `CSV File: ${fileName}`,
+          approvedBy: loggedInUsername,
+        });
+      }
+
+      // Update in-memory state and localStorage cache
+      setApplicants((prev) => {
+        const updated = [...newLeads, ...prev];
+        try {
+          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
+
+      if (newLeads.length > 0) {
+        handleSelectApplicant(newLeads[0]);
+      }
+
+      const newTotal = applicants.length + incomingCount;
+      const remaining = Math.max(0, MAX_FREE_LEAD_LIMIT - newTotal);
+
+      setCsvImportModal(null);
+
+      if (evaluation.requiresOverageAuthorization) {
+        triggerToast(`💳 Added ${incomingCount} lead(s) from "${fileName}"! Database total: ${newTotal.toLocaleString("en-IN")} / 1,00,000. ₹${evaluation.overageTotalCost.toLocaleString("en-IN")} added to Annual Renewal.`);
+      } else {
+        triggerToast(`📥 Added ${incomingCount} lead(s) from "${fileName}"! Database total: ${newTotal.toLocaleString("en-IN")} / 1,00,000 (${remaining.toLocaleString("en-IN")} remaining).`);
+      }
+
+      // Persist all imported leads to Firebase Firestore
+      for (const lead of newLeads) {
+        await saveStudentToFirebase(lead).catch((err) => console.warn("Notice saving lead to Firebase:", err));
+      }
+      triggerToast(`🔥 All ${incomingCount} student lead(s) from "${fileName}" saved to Firebase!`);
+    } catch (err) {
+      console.error("Error during CSV lead import:", err);
+      triggerToast("❌ Error saving leads to database. Please try again.");
+    } finally {
+      setIsProcessingCsvImport(false);
+    }
+  };
 
   const handleOpenNora = (query?: string) => {
     setNoraInitialQuery(query || "");
@@ -406,9 +493,6 @@ export default function DashboardPage() {
   // Modals
   const [selectedApplicant, setSelectedApplicant] = useState<(Lead & { application: Application }) | null>(null);
 
-  // Action Notification State
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
   const [theme, setTheme] = useState<"LIGHT" | "DARK">("DARK");
 
   useEffect(() => {
@@ -537,11 +621,6 @@ export default function DashboardPage() {
         ? "🟡 Teacher status updated to ON LEAVE. Logged out successfully."
         : "Logged out successfully."
     );
-  };
-
-  const triggerToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
   };
 
   const handleSelectApplicant = (applicant: Lead & { application: Application }) => {
@@ -835,24 +914,7 @@ export default function DashboardPage() {
             onOpenCreateModal={() => setIsCreateModalOpen(true)}
             onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
             onToggleTask={handleToggleTask}
-            onImportLeads={async (newLeads) => {
-              setApplicants((prev) => {
-                const updated = [...newLeads, ...prev];
-                try {
-                  localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
-                } catch (e) {}
-                return updated;
-              });
-              triggerToast(`📥 Imported ${newLeads.length} student record(s)! Syncing to Firebase...`);
-              if (newLeads.length > 0) {
-                handleSelectApplicant(newLeads[0]);
-              }
-              // Persist all imported leads to Firebase Firestore
-              for (const lead of newLeads) {
-                await saveStudentToFirebase(lead).catch((err) => console.warn("Notice saving lead to Firebase:", err));
-              }
-              triggerToast(`🔥 All ${newLeads.length} student record(s) saved in Firebase!`);
-            }}
+            onImportLeads={handleRequestCsvImport}
             onDeleteApplicant={handleDeleteApplicant}
           />
         )}
@@ -904,50 +966,7 @@ export default function DashboardPage() {
             onActionTrigger={handleActionTrigger}
             onTriggerToast={triggerToast}
             onSelectApplicant={handleSelectApplicant}
-            onImportLeads={async (newLeads) => {
-              const proceedImport = async () => {
-                setApplicants((prev) => {
-                  const updated = [...newLeads, ...prev];
-                  try {
-                    localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
-                  } catch (e) {}
-                  return updated;
-                });
-                triggerToast(`📥 Imported ${newLeads.length} student record(s)! Syncing to Firebase...`);
-                if (newLeads.length > 0) {
-                  handleSelectApplicant(newLeads[0]);
-                }
-                for (const lead of newLeads) {
-                  await saveStudentToFirebase(lead).catch((err) => console.warn("Notice saving lead to Firebase:", err));
-                }
-                triggerToast(`🔥 All ${newLeads.length} student record(s) saved in Firebase!`);
-              };
-
-              // Enforce 1,00,000 Lead Limit Quota on Bulk Imports
-              const evaluation = evaluateLeadQuota(applicants.length, newLeads.length);
-              if (evaluation.requiresOverageAuthorization) {
-                setQuotaOverageModal({
-                  isOpen: true,
-                  candidateName: `Bulk File Import (${newLeads.length} leads)`,
-                  incomingCount: newLeads.length,
-                  evaluation,
-                  onAuthorize: async () => {
-                    recordOverageLeadsToAnnualRenewal({
-                      leadName: `Bulk File Import (${newLeads.length} leads)`,
-                      count: evaluation.overageLeadsCount,
-                      source: "CSV / Excel Bulk Upload",
-                      approvedBy: loggedInUsername,
-                    });
-                    await proceedImport();
-                    triggerToast(`💳 Imported ${newLeads.length} leads. ₹${evaluation.overageTotalCost.toLocaleString("en-IN")} added to Annual Payment Renewal.`);
-                    setQuotaOverageModal(null);
-                  },
-                });
-                return;
-              }
-
-              await proceedImport();
-            }}
+            onImportLeads={handleRequestCsvImport}
             onDeleteContact={handleDeleteApplicant}
             onReloadLeads={handleReloadLeads}
             onOpenNoraAi={handleOpenNora}
@@ -1098,6 +1117,19 @@ export default function DashboardPage() {
           quotaEvaluation={quotaOverageModal.evaluation}
           candidateName={quotaOverageModal.candidateName}
           incomingBatchCount={quotaOverageModal.incomingCount}
+        />
+      )}
+
+      {/* CSV LEADS FILE IMPORT MODAL (1,00,000 QUOTA CALCULATION & OVERAGE HANDLING) */}
+      {csvImportModal && (
+        <CsvLeadsImportModal
+          isOpen={csvImportModal.isOpen}
+          onClose={() => setCsvImportModal(null)}
+          onConfirm={handleConfirmCsvImport}
+          fileName={csvImportModal.fileName}
+          importedLeads={csvImportModal.leads}
+          currentTotalLeads={applicants.length}
+          isProcessing={isProcessingCsvImport}
         />
       )}
 

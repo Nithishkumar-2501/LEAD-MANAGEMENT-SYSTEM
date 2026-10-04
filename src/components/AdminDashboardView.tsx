@@ -74,7 +74,7 @@ interface AdminDashboardViewProps {
   onOpenCreateModal: () => void;
   onOpenQuickLeadModal: () => void;
   onToggleTask: (taskId: string) => void;
-  onImportLeads: (newLeads: (Lead & { application: Application })[]) => void;
+  onImportLeads: (newLeads: (Lead & { application: Application })[], fileName?: string) => void;
   onDeleteApplicant?: (id: string, name: string) => void;
 }
 
