@@ -57,6 +57,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { MAX_FREE_LEAD_LIMIT, getEffectiveLeadCount } from "@/lib/leadQuotaService";
 
 interface AdminDashboardViewProps {
   metrics: SummaryMetrics;
@@ -96,6 +97,9 @@ export default function AdminDashboardView({
   const [timeline, setTimeline] = useState<"7d" | "30d" | "90d" | "1y">("7d");
   const [funnelViewMode, setFunnelViewMode] = useState<"SINGLE" | "GRID" | "SEGREGATION">("SINGLE");
   const [activeStageIndex, setActiveStageIndex] = useState(1);
+  const liveLeadCount = getEffectiveLeadCount(applicants.length);
+  const remainingFreeQuota = Math.max(0, MAX_FREE_LEAD_LIMIT - liveLeadCount);
+  const isCapReached = liveLeadCount >= MAX_FREE_LEAD_LIMIT;
 
   // Time-based greeting
   const greeting = useMemo(() => {
@@ -375,14 +379,14 @@ export default function AdminDashboardView({
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            title: "TOTAL TNEA LEADS",
-            value: metrics.totalLeads.toLocaleString(),
-            trend: `+${metrics.leadsTrend}%`,
-            subtitle: "vs last intake",
+            title: "FIREBASE DB LEADS",
+            value: `${liveLeadCount.toLocaleString("en-IN")} / ${MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}`,
+            trend: isCapReached ? "100% CAP" : `+${metrics.leadsTrend}%`,
+            subtitle: isCapReached ? "Overage ₹500/lead" : `${remainingFreeQuota.toLocaleString("en-IN")} left`,
             icon: Users,
             color: "from-sky-500 to-blue-600",
             iconBg: "bg-sky-500",
-            progress: 82,
+            progress: Math.min(100, Math.round((liveLeadCount / MAX_FREE_LEAD_LIMIT) * 100)),
           },
           {
             title: "VERIFIED MARKSHEETS",

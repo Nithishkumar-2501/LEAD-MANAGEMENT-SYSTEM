@@ -22,6 +22,7 @@ import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm"
 import Tooltip from "@/components/Tooltip";
 import VoiceSearchBar from "@/components/VoiceSearchBar";
 import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
+import { MAX_FREE_LEAD_LIMIT, getEffectiveLeadCount } from "@/lib/leadQuotaService";
 
 interface HeaderProps {
   user: User;
@@ -67,6 +68,10 @@ export default function Header({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(true);
+
+  const liveLeadCount = getEffectiveLeadCount(applicants.length);
+  const remainingFreeQuota = Math.max(0, MAX_FREE_LEAD_LIMIT - liveLeadCount);
+  const isLimitReached = liveLeadCount >= MAX_FREE_LEAD_LIMIT;
 
   const trimmedQuery = searchQuery.trim().toLowerCase();
   const visibleApplicants = currentUserRole === "TEACHER"
@@ -332,6 +337,37 @@ export default function Header({
               className="w-4 h-4 rounded-full object-cover shrink-0"
             />
             <span className="text-xs whitespace-nowrap">Ask Nora AI</span>
+          </button>
+
+          {/* Live Firebase Lead Quota Indicator (X / 1,00,000) */}
+          <button
+            type="button"
+            onClick={() => onTabChange("PAYMENTS")}
+            className={`press-spring flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border transition-all cursor-pointer shadow-xs shrink-0 ${
+              isLimitReached
+                ? "bg-rose-500/10 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300"
+                : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:border-indigo-400"
+            }`}
+            title={`Live Firebase Database: ${liveLeadCount.toLocaleString("en-IN")} out of 1,00,000 leads in database (${remainingFreeQuota.toLocaleString("en-IN")} remaining). Click to view Annual Renewal.`}
+          >
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLimitReached ? "bg-rose-400" : "bg-emerald-400"}`} />
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${isLimitReached ? "bg-rose-500" : "bg-emerald-500"}`} />
+            </span>
+            <div className="flex items-center gap-1.5 text-xs font-black">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden xl:inline">
+                🔥 Live DB:
+              </span>
+              <span className={`font-mono ${isLimitReached ? "text-rose-600 dark:text-rose-400 font-black" : "text-emerald-600 dark:text-emerald-400 font-extrabold"}`}>
+                {liveLeadCount.toLocaleString("en-IN")}
+              </span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                / {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}
+              </span>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hidden sm:inline">
+              Leads
+            </span>
           </button>
 
           {/* Search Icon — mobile/tablet */}

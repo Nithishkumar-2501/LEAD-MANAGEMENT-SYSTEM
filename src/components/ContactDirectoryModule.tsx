@@ -71,6 +71,7 @@ import {
   Mic,
 } from "lucide-react";
 import { Checkbox } from "@/components/base-ui/checkbox";
+import { MAX_FREE_LEAD_LIMIT } from "@/lib/leadQuotaService";
 
 const INDIAN_STATES = [
   "Tamil Nadu",
@@ -2018,6 +2019,18 @@ export default function ContactDirectoryModule({
             />
             <span>{isReloading ? "Syncing Firebase..." : `Live sync: ${lastSyncTime}`}</span>
           </div>
+
+          {/* Firebase DB Live Quota Counter */}
+          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-indigo-500/10 dark:from-blue-900/30 dark:via-emerald-900/30 dark:to-indigo-900/30 px-3 py-1.5 rounded-full border border-blue-500/20 dark:border-blue-400/20 text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-slate-500 dark:text-slate-400">Firebase DB:</span>
+            <span className="font-extrabold text-blue-600 dark:text-sky-400">{contacts.length.toLocaleString()}</span>
+            <span className="text-slate-400">/</span>
+            <span className="font-semibold text-slate-600 dark:text-slate-300">{MAX_FREE_LEAD_LIMIT.toLocaleString()} Capacity</span>
+          </div>
         </div>
 
         {/* Right: Primary Action Toolbar */}
@@ -2389,7 +2402,7 @@ export default function ContactDirectoryModule({
             <div className="text-left leading-tight">
               <span className="block text-xs font-black">All Leads</span>
               <span className={`text-[10px] font-bold ${selectedStatus === "ALL" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
-                {contacts.length} Total
+                {contacts.length.toLocaleString()} / {MAX_FREE_LEAD_LIMIT.toLocaleString()} (Live DB)
               </span>
             </div>
           </button>

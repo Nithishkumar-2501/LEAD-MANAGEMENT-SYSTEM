@@ -44,6 +44,7 @@ import Tooltip from "@/components/Tooltip";
 import VoiceSearchBar from "@/components/VoiceSearchBar";
 import { NoiseBackground } from "@/components/ui/noise-background";
 import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
+import { MAX_FREE_LEAD_LIMIT, getEffectiveLeadCount } from "@/lib/leadQuotaService";
 
 interface SidebarProps {
   user: User;
@@ -86,6 +87,7 @@ export default function Sidebar({
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
+  const liveLeadCount = getEffectiveLeadCount(applicants.length);
 
   // Close settings & right flyout popovers when clicking outside or pressing Escape
   useEffect(() => {
@@ -1802,6 +1804,44 @@ export default function Sidebar({
                   </span>
                 </button>
               </NoiseBackground>
+
+              {/* LIVE FIREBASE LEADS QUOTA WIDGET (X / 1,00,000) */}
+              <button
+                type="button"
+                onClick={() => handleNavClick("PAYMENTS")}
+                className={`w-full p-2.5 rounded-2xl border text-left transition-all cursor-pointer group ${
+                  isLight
+                    ? "bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
+                    : "bg-slate-900/90 hover:bg-slate-800/80 border-white/10"
+                }`}
+                title="Live Firebase Lead Quota: Click to view Annual Renewal Billing"
+              >
+                <div className="flex items-center justify-between text-[11px] font-extrabold mb-1">
+                  <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                    <span className="relative flex h-2 w-2">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-400" : "bg-emerald-400"}`} />
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-500" : "bg-emerald-500"}`} />
+                    </span>
+                    <span>Firebase Live DB</span>
+                  </span>
+                  <span className={`font-mono font-black ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "text-rose-500" : "text-emerald-500"}`}>
+                    {liveLeadCount.toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden my-1">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-500 w-full" : "bg-emerald-500"}`}
+                    style={{ width: `${Math.min(100, (liveLeadCount / MAX_FREE_LEAD_LIMIT) * 100)}%` }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                  <span>Cap: {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}</span>
+                  <span>{Math.max(0, MAX_FREE_LEAD_LIMIT - liveLeadCount).toLocaleString("en-IN")} Left</span>
+                </div>
+              </button>
 
               <div
                 className={`flex items-center justify-between gap-2 p-2 rounded-2xl border transition-all ${
