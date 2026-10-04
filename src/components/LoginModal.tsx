@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, type Variants } from "motion/react";
-import { Eye, EyeOff, AlertCircle, Info, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Info, ShieldCheck, ArrowRight, Loader2, Lock } from "lucide-react";
 import { loginWithRealtimeAuth } from "@/lib/authService";
+import { isCollegeSuspendedForCurrentEnvironment, CollegeClientLicense } from "@/lib/collegeLicenseService";
 
 
 interface LoginModalProps {
@@ -19,6 +20,11 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [suspensionAlert, setSuspensionAlert] = useState<{
+    isOpen: boolean;
+    college: CollegeClientLicense;
+    platform: "WEB" | "MOBILE";
+  } | null>(null);
 
   useEffect(() => {
     // Initialize default credentials in localStorage if not set
@@ -132,6 +138,18 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     if (!targetCampus || !targetRole) {
       setLoading(false);
       setError("Invalid credentials. Please check your user ID / email and password.");
+      return;
+    }
+
+    // Check if the college's Web or Mobile application has been stopped by the Root Creator
+    const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(targetCampus);
+    if (suspensionCheck.isSuspended && suspensionCheck.college) {
+      setLoading(false);
+      setSuspensionAlert({
+        isOpen: true,
+        college: suspensionCheck.college,
+        platform: suspensionCheck.platform,
+      });
       return;
     }
 
@@ -912,6 +930,159 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
           </div>
         </div>
       )}
+
+      {/* Institutional Suspension Lockdown Modal (Creator Stopped Application) */}
+      {suspensionAlert?.isOpen && suspensionAlert.college && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99999,
+            backgroundColor: "rgba(3, 7, 18, 0.88)",
+            backdropFilter: "blur(12px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "520px",
+              backgroundColor: "#0f172a",
+              borderRadius: "24px",
+              border: "2px solid #ef4444",
+              padding: "28px",
+              boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.35)",
+              color: "#ffffff",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                width: "68px",
+                height: "68px",
+                borderRadius: "20px",
+                backgroundColor: "rgba(239, 68, 68, 0.15)",
+                border: "1px solid rgba(239, 68, 68, 0.4)",
+                color: "#ef4444",
+                margin: "0 auto 16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Lock style={{ width: "34px", height: "34px" }} />
+            </div>
+
+            <span
+              style={{
+                display: "inline-block",
+                padding: "4px 12px",
+                borderRadius: "9999px",
+                fontSize: "10px",
+                fontWeight: 800,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                backgroundColor: "rgba(239, 68, 68, 0.2)",
+                color: "#fca5a5",
+                border: "1px solid rgba(239, 68, 68, 0.4)",
+                marginBottom: "12px",
+              }}
+            >
+              Access Suspended by SPHEREX Root
+            </span>
+
+            <h3
+              style={{
+                fontSize: "20px",
+                fontWeight: 900,
+                color: "#ffffff",
+                marginBottom: "6px",
+              }}
+            >
+              {suspensionAlert.college.collegeName}
+            </h3>
+
+            <p
+              style={{
+                fontSize: "12px",
+                color: "rgba(255, 255, 255, 0.75)",
+                lineHeight: 1.6,
+                marginBottom: "18px",
+              }}
+            >
+              Access to the SPHEREX{" "}
+              <strong style={{ color: "#ffffff" }}>
+                {suspensionAlert.platform === "MOBILE" ? "Native Mobile App" : "Web Application"}
+              </strong>{" "}
+              has been stopped by the Root Creator due to pending annual renewal payment.
+            </p>
+
+            <div
+              style={{
+                backgroundColor: "#030712",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                borderRadius: "16px",
+                padding: "16px",
+                textAlign: "left",
+                fontSize: "12px",
+                marginBottom: "18px",
+                lineHeight: 1.8,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Default Reason:</span>
+                <span style={{ fontWeight: 700, color: "#f87171" }}>Unpaid Annual Subscription</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Outstanding Balance:</span>
+                <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#ffffff", fontSize: "14px" }}>
+                  ₹{suspensionAlert.college.outstandingBalance.toLocaleString("en-IN")}.00
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Due Date:</span>
+                <span style={{ fontFamily: "monospace", color: "#fbbf24" }}>{suspensionAlert.college.paymentDueDate}</span>
+              </div>
+            </div>
+
+            <p
+              style={{
+                fontSize: "11px",
+                color: "#fbbf24",
+                backgroundColor: "rgba(251, 191, 36, 0.1)",
+                border: "1px solid rgba(251, 191, 36, 0.2)",
+                borderRadius: "12px",
+                padding: "10px",
+                marginBottom: "20px",
+                lineHeight: 1.5,
+              }}
+            >
+              ℹ️ Please contact SPHEREX Master Creator (<strong>Nithish Kumar</strong>) to settle your institutional payment. Once cleared, application access will be opened immediately.
+            </p>
+
+            <button
+              onClick={() => setSuspensionAlert(null)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                backgroundColor: "#ffffff",
+                color: "#000000",
+                fontWeight: 800,
+                borderRadius: "9999px",
+                fontSize: "12px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Acknowledge &amp; Close
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
