@@ -763,24 +763,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </button>
           </motion.div>
 
-          {!isCapacitorNative() && (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator")) && (
-            <div
-              style={{
-                marginBottom: "14px",
-                padding: "8px 12px",
-                borderRadius: "10px",
-                backgroundColor: "rgba(245, 158, 11, 0.15)",
-                border: "1px solid rgba(245, 158, 11, 0.4)",
-                color: "#fcd34d",
-                fontSize: "11px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              <span>👑 Master Creator Access: ID: <code style={{ color: "#ffffff", fontWeight: 700 }}>spherexnithish#</code> | PW: <code style={{ color: "#ffffff", fontWeight: 700 }}>spherex#2501</code></span>
-            </div>
-          )}
+
 
           {/* Form */}
           <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
