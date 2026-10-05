@@ -1006,26 +1006,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             >
               <button
                 type="button"
-                onClick={() => autoFill("spherexnithish#", "spherex#2501")}
-                style={{
-                  background: "linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(234, 88, 12, 0.25))",
-                  border: "1px solid rgba(245, 158, 11, 0.6)",
-                  color: "#fcd34d",
-                  borderRadius: "9999px",
-                  padding: "6px 14px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  boxShadow: "0 0 12px rgba(245, 158, 11, 0.2)",
-                  transition: "all 0.2s",
-                }}
-              >
-                👑 Master Creator (Nithish)
-              </button>
-              <button
-                type="button"
                 onClick={() => autoFill("adminkarur@123", "vsbec@123")}
                 style={{
                   backgroundColor: "rgba(168, 85, 247, 0.12)",
