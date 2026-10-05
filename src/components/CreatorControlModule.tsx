@@ -19,12 +19,19 @@ import {
 } from "@/lib/firebaseSync";
 import {
   CollegeClientLicense,
+  GlobalLockoutState,
   getAllCollegeLicenses,
+  getGlobalLockoutState,
   setCollegeWebApplicationStatus,
   setCollegeMobileApplicationStatus,
   freezeCollegeEntireApplication,
+  setGlobalWebStatus,
+  setGlobalMobileStatus,
+  freezeAllApplicationsGlobally,
+  restoreAllApplicationsGlobally,
   recordCollegePaymentAndOpenApp,
   registerNewCollegeClient,
+  listenToCollegeLicenses,
   LICENSE_EVENT_KEY,
 } from "@/lib/collegeLicenseService";
 import {
@@ -94,6 +101,7 @@ export default function CreatorControlModule({
 }: CreatorControlModuleProps) {
   // College Clients & Payments State
   const [colleges, setColleges] = useState<CollegeClientLicense[]>(() => getAllCollegeLicenses());
+  const [globalLockout, setGlobalLockout] = useState<GlobalLockoutState>(() => getGlobalLockoutState());
   const [selectedCollegeForPayment, setSelectedCollegeForPayment] = useState<CollegeClientLicense | null>(null);
   const [paymentAmountInput, setPaymentAmountInput] = useState<number>(0);
   const [paymentRefInput, setPaymentRefInput] = useState<string>("");
@@ -145,32 +153,33 @@ export default function CreatorControlModule({
     },
   ]);
 
-  // Sync colleges registry & QR payments whenever updates occur
+  // Sync colleges registry, global lockout & QR payments whenever updates occur (Cloud + Local)
   useEffect(() => {
-    const handleLicenseUpdate = () => {
-      setColleges(getAllCollegeLicenses());
-    };
     const handleQrUpdate = () => {
       setQrSettings(getCreatorQrSettings());
       setLeadQrPayments(getAllLeadQrPayments());
       setQrRevenueMetrics(calculateLeadQrRevenueMetrics());
     };
 
-    window.addEventListener(LICENSE_EVENT_KEY, handleLicenseUpdate);
     window.addEventListener(QR_SETTINGS_EVENT, handleQrUpdate);
     window.addEventListener(QR_PAYMENT_EVENT, handleQrUpdate);
 
+    // Live continuous subscription across Firebase Firestore, RTDB, and Cloud API
+    const unsubscribeLicenses = listenToCollegeLicenses((latestColleges, latestGlobal) => {
+      setColleges(latestColleges);
+      setGlobalLockout(latestGlobal);
+    });
+
     return () => {
-      window.removeEventListener(LICENSE_EVENT_KEY, handleLicenseUpdate);
       window.removeEventListener(QR_SETTINGS_EVENT, handleQrUpdate);
       window.removeEventListener(QR_PAYMENT_EVENT, handleQrUpdate);
+      unsubscribeLicenses();
     };
   }, []);
 
   // Load latest billing data on mount
   useEffect(() => {
     setAnnualBilling(getAnnualRenewalData());
-    setColleges(getAllCollegeLicenses());
     const savedMaintenance = localStorage.getItem("spherex_maintenance_mode");
     if (savedMaintenance === "true") setIsMaintenanceMode(true);
     const savedBypass = localStorage.getItem("spherex_bypass_quota");
@@ -253,6 +262,64 @@ export default function CreatorControlModule({
       onTriggerToast(`✨ Restored FULL Web & Mobile Application access for ${college.collegeName}!`);
       addLog(`Creator restored full access for ${college.collegeName} (Web & Mobile re-opened).`, "success");
     }
+  };
+
+  // Master Global Killswitch: Stop or Restore ALL Web Applications worldwide
+  const handleToggleGlobalWeb = () => {
+    const willStop = !globalLockout.isGlobalWebStopped;
+    const updated = setGlobalWebStatus(
+      willStop,
+      willStop ? "SPHEREX Master Creator (Nithish Kumar) has stopped Web Application access across all institutions." : ""
+    );
+    setGlobalLockout(updated);
+    if (willStop) {
+      onTriggerToast("🛑 ALL Web Applications STOPPED worldwide across every system!");
+      addLog("Master Creator STOPPED Web Applications GLOBALLY on all systems.", "warn");
+    } else {
+      onTriggerToast("🟢 ALL Web Applications RESTORED & OPENED globally!");
+      addLog("Master Creator RESTORED Web Applications globally.", "success");
+    }
+  };
+
+  // Master Global Killswitch: Stop or Restore ALL Mobile Applications worldwide
+  const handleToggleGlobalMobile = () => {
+    const willStop = !globalLockout.isGlobalMobileStopped;
+    const updated = setGlobalMobileStatus(
+      willStop,
+      willStop ? "SPHEREX Master Creator (Nithish Kumar) has stopped Native Mobile App access across all institutions." : ""
+    );
+    setGlobalLockout(updated);
+    if (willStop) {
+      onTriggerToast("🛑 ALL Mobile Applications STOPPED worldwide across all devices!");
+      addLog("Master Creator STOPPED Mobile Apps GLOBALLY across all devices.", "warn");
+    } else {
+      onTriggerToast("🟢 ALL Mobile Applications RESTORED & OPENED globally!");
+      addLog("Master Creator RESTORED Mobile Apps globally.", "success");
+    }
+  };
+
+  // Master Emergency Freeze: Freeze EVERY Web & Mobile app simultaneously
+  const handleEmergencyFreezeAll = () => {
+    if (!confirm("⚠️ EMERGENCY LOCKDOWN CONFIRMATION:\n\nAre you sure you want to STOP ALL Web & Mobile applications for ALL colleges worldwide? No college user will be able to access the system until you restore it.")) {
+      return;
+    }
+    const res = freezeAllApplicationsGlobally(
+      true,
+      "EMERGENCY SYSTEM LOCKOUT: Master Creator (Nithish Kumar) has stopped all Web & Mobile application access."
+    );
+    setColleges(res.colleges);
+    setGlobalLockout(res.globalLockout);
+    onTriggerToast("🚨 EMERGENCY FREEZE ACTIVATED: Every Web & Mobile application locked worldwide!");
+    addLog("Master Creator activated EMERGENCY FREEZE: All Web and Mobile apps stopped.", "warn");
+  };
+
+  // Master Restore All: Re-open all applications everywhere
+  const handleRestoreAllSystems = () => {
+    const res = restoreAllApplicationsGlobally();
+    setColleges(res.colleges);
+    setGlobalLockout(res.globalLockout);
+    onTriggerToast("✨ ALL SYSTEMS RESTORED: All Web & Mobile applications are now fully open!");
+    addLog("Master Creator restored all applications globally (Web & Mobile open).", "success");
   };
 
   // Open Record Payment Modal
@@ -768,6 +835,100 @@ export default function CreatorControlModule({
             </div>
           </div>
 
+          {/* EMERGENCY MASTER KILL-SWITCH & GLOBAL SYSTEM LOCKOUT BAR */}
+          <div className="p-6 rounded-3xl border-2 border-rose-600/70 bg-gradient-to-br from-rose-950/60 via-slate-900 to-slate-950 shadow-2xl shadow-rose-950/50 space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-rose-900/50">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border-2 border-rose-500/50 text-rose-400 flex items-center justify-center shrink-0">
+                  <Power className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="text-base md:text-lg font-black text-white flex flex-wrap items-center gap-2">
+                    <span>Emergency Master Kill-Switch (All Systems Worldwide)</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                      Live Cloud Lockout
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Instantly stops or re-opens the Web & Mobile application for <strong>ALL colleges</strong> across every computer, laptop, tablet, and mobile device worldwide.
+                  </p>
+                </div>
+              </div>
+
+              {/* Live Cloud Status Indicators */}
+              <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                <div className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-2 font-bold shadow-sm ${
+                  globalLockout.isGlobalWebStopped
+                    ? "bg-rose-950 border-rose-600 text-rose-300 animate-pulse"
+                    : "bg-emerald-950/60 border-emerald-700 text-emerald-300"
+                }`}>
+                  <Globe className="w-4 h-4" />
+                  <span>Web App: {globalLockout.isGlobalWebStopped ? "🛑 STOPPED GLOBALLY" : "🟢 ACTIVE EVERYWHERE"}</span>
+                </div>
+
+                <div className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-2 font-bold shadow-sm ${
+                  globalLockout.isGlobalMobileStopped
+                    ? "bg-rose-950 border-rose-600 text-rose-300 animate-pulse"
+                    : "bg-emerald-950/60 border-emerald-700 text-emerald-300"
+                }`}>
+                  <Smartphone className="w-4 h-4" />
+                  <span>Mobile App: {globalLockout.isGlobalMobileStopped ? "🛑 STOPPED GLOBALLY" : "🟢 ACTIVE EVERYWHERE"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Kill-switch control buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {/* Global Web Toggle */}
+              <button
+                type="button"
+                onClick={handleToggleGlobalWeb}
+                className={`py-3.5 px-4 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${
+                  globalLockout.isGlobalWebStopped
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30"
+                    : "bg-slate-900 hover:bg-rose-950 border border-slate-700 hover:border-rose-600 text-slate-200 hover:text-rose-200"
+                }`}
+              >
+                <Globe className="w-4 h-4" />
+                <span>{globalLockout.isGlobalWebStopped ? "🟢 RESTORE ALL WEB APPS" : "🛑 STOP ALL WEB APPS"}</span>
+              </button>
+
+              {/* Global Mobile Toggle */}
+              <button
+                type="button"
+                onClick={handleToggleGlobalMobile}
+                className={`py-3.5 px-4 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${
+                  globalLockout.isGlobalMobileStopped
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30"
+                    : "bg-slate-900 hover:bg-rose-950 border border-slate-700 hover:border-rose-600 text-slate-200 hover:text-rose-200"
+                }`}
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>{globalLockout.isGlobalMobileStopped ? "🟢 RESTORE ALL MOBILE APPS" : "🛑 STOP ALL MOBILE APPS"}</span>
+              </button>
+
+              {/* Emergency Freeze All */}
+              <button
+                type="button"
+                onClick={handleEmergencyFreezeAll}
+                className="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-700 to-red-800 hover:from-rose-600 hover:to-red-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xl shadow-rose-950/60 cursor-pointer active:scale-95 transition-all"
+              >
+                <Lock className="w-4 h-4" />
+                <span>🚨 EMERGENCY FREEZE ALL</span>
+              </button>
+
+              {/* Restore All Systems */}
+              <button
+                type="button"
+                onClick={handleRestoreAllSystems}
+                className="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/60 cursor-pointer active:scale-95 transition-all"
+              >
+                <Unlock className="w-4 h-4" />
+                <span>✨ RESTORE ALL (OPEN ALL)</span>
+              </button>
+            </div>
+          </div>
+
           {/* Explanation Banner */}
           <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-950/20 text-xs text-amber-200 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
@@ -779,7 +940,7 @@ export default function CreatorControlModule({
                 As the master creator, you can see all colleges using the SPHEREX application and the exact payments they make.
                 If any college fails to pay the annual renewal or lead overage fee, you can unilaterally <strong>STOP</strong> their
                 Web application and Mobile app. When payment is cleared, click <strong>Record Payment & Open App</strong> to immediately
-                restore full access.
+                restore full access. All changes synchronize in real-time across Firestore, Realtime Database, and Cloud APIs.
               </p>
             </div>
           </div>

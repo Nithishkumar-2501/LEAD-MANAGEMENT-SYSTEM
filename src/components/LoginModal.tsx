@@ -5,8 +5,14 @@ import Image from "next/image";
 import { motion, type Variants } from "motion/react";
 import { Eye, EyeOff, AlertCircle, Info, ShieldCheck, ArrowRight, Loader2, Lock } from "lucide-react";
 import { loginWithRealtimeAuth } from "@/lib/authService";
-import { isCollegeSuspendedForCurrentEnvironment, CollegeClientLicense } from "@/lib/collegeLicenseService";
-
+import {
+  isCollegeSuspendedForCurrentEnvironment,
+  listenToCollegeLicenses,
+  getGlobalLockoutState,
+  CollegeClientLicense,
+  GlobalLockoutState,
+} from "@/lib/collegeLicenseService";
+import { isCapacitorNative } from "@/lib/mobileFetch";
 
 interface LoginModalProps {
   onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => void;
@@ -20,10 +26,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [globalLockout, setGlobalLockout] = useState<GlobalLockoutState>(() => getGlobalLockoutState());
   const [suspensionAlert, setSuspensionAlert] = useState<{
     isOpen: boolean;
-    college: CollegeClientLicense;
+    college?: CollegeClientLicense;
     platform: "WEB" | "MOBILE";
+    isGlobal?: boolean;
+    reason?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -60,6 +69,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     if (savedUser) {
       setUsername(savedUser);
     }
+
+    // Subscribe to live cloud license and global lockout updates
+    const unsubscribe = listenToCollegeLicenses((_colleges, latestGlobal) => {
+      setGlobalLockout(latestGlobal);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleLogin = async (e?: React.FormEvent) => {
@@ -148,12 +164,14 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
     // Check if the college's Web or Mobile application has been stopped by the Root Creator
     const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(targetCampus);
-    if (suspensionCheck.isSuspended && suspensionCheck.college) {
+    if (suspensionCheck.isSuspended) {
       setLoading(false);
       setSuspensionAlert({
         isOpen: true,
         college: suspensionCheck.college,
         platform: suspensionCheck.platform,
+        isGlobal: suspensionCheck.isGlobal,
+        reason: suspensionCheck.reason,
       });
       return;
     }
@@ -448,6 +466,61 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
           </motion.div>
 
 
+
+          {/* Global System Lockout Alert Banner */}
+          {((!isCapacitorNative() && globalLockout.isGlobalWebStopped) ||
+            (isCapacitorNative() && globalLockout.isGlobalMobileStopped)) && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              style={{
+                marginBottom: "16px",
+                padding: "14px 16px",
+                borderRadius: "16px",
+                backgroundColor: "rgba(127, 29, 29, 0.7)",
+                border: "2px solid rgba(239, 68, 68, 0.6)",
+                color: "#ffffff",
+                fontSize: "12px",
+                textAlign: "left",
+                boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.4)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 800, color: "#fca5a5", marginBottom: "6px" }}>
+                <Lock style={{ width: "16px", height: "16px", color: "#f87171" }} />
+                <span>APPLICATION ACCESS HALTED BY CREATOR</span>
+              </div>
+              <p style={{ margin: "0 0 10px 0", fontSize: "11px", color: "rgba(255, 255, 255, 0.8)", lineHeight: 1.5 }}>
+                {isCapacitorNative()
+                  ? "Native Mobile Application access has been stopped across all systems by the Master Creator."
+                  : "Web Application access has been stopped across all systems by the Master Creator."}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername("spherexnithish#");
+                  setPassword("spherex#2501");
+                  setError(null);
+                }}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(to right, #f59e0b, #ea580c)",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                }}
+              >
+                👑 Master Creator Sign In (Nithish Kumar)
+              </button>
+            </motion.div>
+          )}
 
           {/* Error Notification */}
           {error && (
@@ -996,7 +1069,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 marginBottom: "12px",
               }}
             >
-              Access Suspended by SPHEREX Root
+              {suspensionAlert.isGlobal ? "System Lockout by Master Creator" : "Access Suspended by SPHEREX Root"}
             </span>
 
             <h3
@@ -1007,7 +1080,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 marginBottom: "6px",
               }}
             >
-              {suspensionAlert.college.collegeName}
+              {suspensionAlert.college ? suspensionAlert.college.collegeName : "SPHEREX ADMISSION OS"}
             </h3>
 
             <p
@@ -1022,7 +1095,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               <strong style={{ color: "#ffffff" }}>
                 {suspensionAlert.platform === "MOBILE" ? "Native Mobile App" : "Web Application"}
               </strong>{" "}
-              has been stopped by the Root Creator due to pending annual renewal payment.
+              has been stopped across all systems by the Master Creator.
             </p>
 
             <div
@@ -1038,18 +1111,30 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Default Reason:</span>
-                <span style={{ fontWeight: 700, color: "#f87171" }}>Unpaid Annual Subscription</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Outstanding Balance:</span>
-                <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#ffffff", fontSize: "14px" }}>
-                  ₹{suspensionAlert.college.outstandingBalance.toLocaleString("en-IN")}.00
+                <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Suspension Reason:</span>
+                <span style={{ fontWeight: 700, color: "#f87171" }}>
+                  {suspensionAlert.reason || "Annual Software Subscription Pending"}
                 </span>
               </div>
+              {suspensionAlert.college && (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Outstanding Balance:</span>
+                    <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#ffffff", fontSize: "14px" }}>
+                      ₹{suspensionAlert.college.outstandingBalance.toLocaleString("en-IN")}.00
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Due Date:</span>
+                    <span style={{ fontFamily: "monospace", color: "#fbbf24" }}>{suspensionAlert.college.paymentDueDate}</span>
+                  </div>
+                </>
+              )}
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Due Date:</span>
-                <span style={{ fontFamily: "monospace", color: "#fbbf24" }}>{suspensionAlert.college.paymentDueDate}</span>
+                <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Platform Restricted:</span>
+                <span style={{ color: "#38bdf8", fontWeight: 700 }}>
+                  {suspensionAlert.platform === "MOBILE" ? "📱 Mobile App (Android/iOS)" : "💻 Web App (All Browsers)"}
+                </span>
               </div>
             </div>
 
@@ -1065,17 +1150,39 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 lineHeight: 1.5,
               }}
             >
-              ℹ️ Please contact SPHEREX Master Creator (<strong>Nithish Kumar</strong>) to settle your institutional payment. Once cleared, application access will be opened immediately.
+              ℹ️ Please contact SPHEREX Master Creator (<strong>Nithish Kumar</strong>) to settle your institutional payment. Once cleared, application access will be opened immediately on all systems.
             </p>
+
+            <button
+              onClick={() => {
+                setUsername("spherexnithish#");
+                setPassword("spherex#2501");
+                setSuspensionAlert(null);
+              }}
+              style={{
+                width: "100%",
+                padding: "12px",
+                background: "linear-gradient(to right, #f59e0b, #ea580c)",
+                color: "#ffffff",
+                fontWeight: 800,
+                borderRadius: "9999px",
+                fontSize: "12px",
+                border: "none",
+                cursor: "pointer",
+                marginBottom: "8px",
+              }}
+            >
+              👑 Sign in as Master Creator (Nithish Kumar)
+            </button>
 
             <button
               onClick={() => setSuspensionAlert(null)}
               style={{
                 width: "100%",
-                padding: "12px",
-                backgroundColor: "#ffffff",
-                color: "#000000",
-                fontWeight: 800,
+                padding: "10px",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                color: "#ffffff",
+                fontWeight: 700,
                 borderRadius: "9999px",
                 fontSize: "12px",
                 border: "none",

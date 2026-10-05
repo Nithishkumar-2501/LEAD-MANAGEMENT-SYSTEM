@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic, Lock, AlertTriangle, ShieldAlert } from "lucide-react";
-import { isCollegeSuspendedForCurrentEnvironment, LICENSE_EVENT_KEY, CollegeClientLicense } from "@/lib/collegeLicenseService";
+import { isCollegeSuspendedForCurrentEnvironment, listenToCollegeLicenses, CollegeClientLicense } from "@/lib/collegeLicenseService";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import MetricCards from "@/components/MetricCards";
@@ -95,12 +95,14 @@ export default function DashboardPage() {
     isSuspended: boolean;
     platform: "WEB" | "MOBILE";
     college?: CollegeClientLicense;
+    isGlobal?: boolean;
+    reason?: string;
   }>({ isSuspended: false, platform: "WEB" });
 
   useEffect(() => {
     const evaluateSuspension = () => {
-      if (currentUserRole !== "CREATOR" && loggedInCampus) {
-        const check = isCollegeSuspendedForCurrentEnvironment(loggedInCampus);
+      if (currentUserRole !== "CREATOR") {
+        const check = isCollegeSuspendedForCurrentEnvironment(loggedInCampus || undefined);
         setInstitutionSuspension(check);
       } else {
         setInstitutionSuspension({ isSuspended: false, platform: "WEB" });
@@ -108,8 +110,10 @@ export default function DashboardPage() {
     };
 
     evaluateSuspension();
-    window.addEventListener(LICENSE_EVENT_KEY, evaluateSuspension);
-    return () => window.removeEventListener(LICENSE_EVENT_KEY, evaluateSuspension);
+    const unsubscribe = listenToCollegeLicenses(() => {
+      evaluateSuspension();
+    });
+    return () => unsubscribe();
   }, [currentUserRole, loggedInCampus]);
 
   // Security & Data Protection: Block copying, cutting, and context menu app-wide
@@ -776,53 +780,65 @@ export default function DashboardPage() {
     return <LoginModal onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Institutional Suspension Lockdown View (Creator stopped Web or Mobile access due to unpaid annual fees)
-  if (currentUserRole !== "CREATOR" && institutionSuspension.isSuspended && institutionSuspension.college) {
+  // Institutional Suspension Lockdown View (Creator stopped Web or Mobile access due to unpaid annual fees or emergency killswitch)
+  if (currentUserRole !== "CREATOR" && institutionSuspension.isSuspended) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center select-none">
-        <div className="max-w-xl w-full p-8 md:p-10 rounded-3xl bg-slate-900 border-2 border-rose-600/60 shadow-2xl shadow-rose-950/60 space-y-6">
-          <div className="w-20 h-20 rounded-3xl bg-rose-950/60 border border-rose-500/40 text-rose-500 mx-auto flex items-center justify-center animate-pulse">
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center select-none">
+        <div className="max-w-xl w-full p-6 sm:p-10 rounded-3xl bg-slate-900 border-2 border-rose-600/70 shadow-2xl shadow-rose-950/70 space-y-6">
+          <div className="w-20 h-20 rounded-3xl bg-rose-950/80 border-2 border-rose-500/50 text-rose-500 mx-auto flex items-center justify-center animate-pulse">
             <Lock className="w-10 h-10" />
           </div>
 
           <div className="space-y-2">
-            <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-rose-500/20 text-rose-400 border border-rose-500/30">
-              Access Suspended by SPHEREX Creator
+            <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase bg-rose-500/20 text-rose-400 border border-rose-500/40">
+              {institutionSuspension.isGlobal ? "System Lockout by Master Creator" : "Access Suspended by SPHEREX Creator"}
             </span>
             <h1 className="text-2xl md:text-3xl font-black text-white">
-              {institutionSuspension.college.collegeName}
+              {institutionSuspension.college ? institutionSuspension.college.collegeName : "SPHEREX ADMISSION OS"}
             </h1>
             <p className="text-xs md:text-sm text-slate-300">
-              Access to the SPHEREX {institutionSuspension.platform === "MOBILE" ? "Native Mobile App" : "Web Application"} has been temporarily stopped by the Root Creator.
+              Access to the SPHEREX <strong>{institutionSuspension.platform === "MOBILE" ? "Native Mobile App" : "Web Application"}</strong> has been stopped across all systems by the Master Creator.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-left space-y-2 text-xs">
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-left space-y-2.5 text-xs">
             <div className="flex justify-between">
               <span className="text-slate-400">Suspension Reason:</span>
-              <span className="font-bold text-rose-400">Annual Software Subscription Pending</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Outstanding Balance Due:</span>
-              <span className="font-mono font-bold text-white text-sm">
-                ₹{institutionSuspension.college.outstandingBalance.toLocaleString("en-IN")}.00
+              <span className="font-bold text-rose-400 text-right">
+                {institutionSuspension.reason || (institutionSuspension.isGlobal ? "Emergency System Suspension by Creator" : "Annual Software Subscription Pending")}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Payment Due Date:</span>
-              <span className="font-mono text-amber-400">{institutionSuspension.college.paymentDueDate}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Institutional Contact:</span>
-              <span className="text-slate-300">{institutionSuspension.college.contactEmail}</span>
+            {institutionSuspension.college && (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Outstanding Balance Due:</span>
+                  <span className="font-mono font-bold text-white text-sm">
+                    ₹{institutionSuspension.college.outstandingBalance.toLocaleString("en-IN")}.00
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Payment Due Date:</span>
+                  <span className="font-mono text-amber-400">{institutionSuspension.college.paymentDueDate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Institutional Contact:</span>
+                  <span className="text-slate-300">{institutionSuspension.college.contactEmail}</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between pt-1 border-t border-slate-800/80">
+              <span className="text-slate-400">Platform Stopped:</span>
+              <span className="font-bold text-amber-300">
+                {institutionSuspension.platform === "MOBILE" ? "📱 Native Android / iOS App" : "💻 Web Application (All Browsers)"}
+              </span>
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-amber-200 text-xs">
-            ℹ️ As soon as the institutional subscription payment is cleared with the SPHEREX Master Creator (<strong>Nithish Kumar</strong>), full application access will be opened immediately.
+          <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-amber-200 text-xs text-left leading-relaxed">
+            ℹ️ As soon as the institutional software subscription payment is cleared with the SPHEREX Master Creator (<strong>Nithish Kumar</strong>), full application access will be opened immediately on all systems.
           </div>
 
-          <div className="pt-2 flex justify-center">
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               onClick={handleLogout}
