@@ -81,14 +81,58 @@ import {
 } from "@/lib/mockData";
 
 export default function DashboardPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        sessionStorage.getItem("vsb_admin_auth") === "true" ||
+        localStorage.getItem("vsb_admin_auth") === "true"
+      );
+    }
+    return false;
+  });
   const [activeTab, setActiveTab] = useState<ActiveTab>("ADMIN_DASHBOARD");
-  const [selectedCampus, setSelectedCampus] = useState<CampusLocation>("KARUR");
+  const [selectedCampus, setSelectedCampus] = useState<CampusLocation>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        (sessionStorage.getItem("vsb_logged_in_campus") as CampusLocation) ||
+        (localStorage.getItem("vsb_logged_in_campus") as CampusLocation) ||
+        "KARUR"
+      );
+    }
+    return "KARUR";
+  });
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
-  const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER" | "CREATOR">("ADMIN");
-  const [loggedInUsername, setLoggedInUsername] = useState<string>("adminkarur@123");
+  const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">(() => {
+    if (typeof window !== "undefined") {
+      return (
+        (sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE") ||
+        (localStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE") ||
+        "KARUR"
+      );
+    }
+    return "KARUR";
+  });
+  const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER" | "CREATOR">(() => {
+    if (typeof window !== "undefined") {
+      return (
+        (sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR") ||
+        (localStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR") ||
+        "ADMIN"
+      );
+    }
+    return "ADMIN";
+  });
+  const [loggedInUsername, setLoggedInUsername] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        sessionStorage.getItem("vsb_logged_in_user") ||
+        localStorage.getItem("vsb_logged_in_user") ||
+        ""
+      );
+    }
+    return "";
+  });
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Sub-modules role: Creator has full administrative privileges across all CRM screens

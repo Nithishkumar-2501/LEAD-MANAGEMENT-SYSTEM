@@ -222,25 +222,32 @@ export async function pushLicensesToCloud(
     }).catch(() => {});
   } catch (e) {}
 
-  // 2. Cloud Firestore (Primary source of truth for both web and mobile app)
-  try {
-    await setDoc(doc(db, "system_licenses", "college_registry"), payload, { merge: true });
-    // Also save individual global lockout document
-    await setDoc(doc(db, "system_licenses", "global_lockout"), sanitizeForFirebase(globalLockout), { merge: true });
-    // Also save campus-specific documents for instant direct reads
-    for (const c of colleges) {
-      if (c.campus) {
-        await setDoc(doc(db, "system_licenses", c.campus), sanitizeForFirebase(c), { merge: true }).catch(() => {});
-      }
+  // 2. Realtime Database (Sub-50ms instant WebSocket broadcast across all connected apps)
+  const rtdbTask = (async () => {
+    try {
+      await set(ref(rtdb, "spherex_licenses"), payload);
+    } catch (e) {
+      console.warn("RTDB license push notice:", e);
     }
-  } catch (e) {
-    console.warn("Firestore license push error:", e);
-  }
+  })();
 
-  // 3. Realtime Database (Safe fallback)
-  try {
-    set(ref(rtdb, "spherex_licenses"), payload).catch(() => {});
-  } catch (e) {}
+  // 3. Cloud Firestore (Parallel atomic write)
+  const firestoreTask = (async () => {
+    try {
+      const fsTasks = [
+        setDoc(doc(db, "system_licenses", "college_registry"), payload, { merge: true }),
+        setDoc(doc(db, "system_licenses", "global_lockout"), sanitizeForFirebase(globalLockout), { merge: true }),
+        ...colleges
+          .filter((c) => c.campus)
+          .map((c) => setDoc(doc(db, "system_licenses", c.campus), sanitizeForFirebase(c), { merge: true })),
+      ];
+      await Promise.allSettled(fsTasks);
+    } catch (e) {
+      console.warn("Firestore license push error:", e);
+    }
+  })();
+
+  await Promise.allSettled([rtdbTask, firestoreTask]);
 }
 
 /**
@@ -401,7 +408,7 @@ export function listenToCollegeLicenses(
     });
   }
 
-  // 4. Realtime Firestore Listener
+  // 4a. Realtime Firestore Listener
   let fsUnsub = () => {};
   try {
     fsUnsub = onSnapshot(
@@ -426,7 +433,32 @@ export function listenToCollegeLicenses(
     );
   } catch (e) {}
 
-  // 5. Periodic Heartbeat Polling (every 2.5s) to guarantee instant lockout across mobile & web
+  // 4b. Firebase Realtime Database Listener (Sub-100ms ultra-fast killswitch listener)
+  let rtdbUnsub = () => {};
+  try {
+    rtdbUnsub = onValue(
+      ref(rtdb, "spherex_licenses"),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          if (Array.isArray(data?.colleges) && data.colleges.length > 0) {
+            const gl: GlobalLockoutState = {
+              isGlobalWebStopped: Boolean(data.globalLockout?.isGlobalWebStopped),
+              isGlobalMobileStopped: Boolean(data.globalLockout?.isGlobalMobileStopped),
+              reason: String(data.globalLockout?.reason || ""),
+              stoppedAt: data.globalLockout?.stoppedAt || undefined,
+            };
+            handleUpdate(data.colleges, gl);
+          }
+        }
+      },
+      (err) => {
+        console.warn("RTDB license listener notice:", err);
+      }
+    );
+  } catch (e) {}
+
+  // 5. Periodic Heartbeat Polling (every 1.2s) to guarantee instant lockout across mobile & web
   const pollInterval = setInterval(async () => {
     if (isUnsubscribed) return;
     try {
@@ -435,7 +467,7 @@ export function listenToCollegeLicenses(
         handleUpdate(res.colleges, res.globalLockout);
       }
     } catch (e) {}
-  }, 2500);
+  }, 1200);
 
   return () => {
     isUnsubscribed = true;
@@ -444,6 +476,7 @@ export function listenToCollegeLicenses(
       window.removeEventListener(LICENSE_EVENT_KEY, eventHandler);
     }
     fsUnsub();
+    rtdbUnsub();
   };
 }
 
@@ -568,6 +601,25 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
       }
 
       return { isSuspended: false, platform, college };
+    }
+  }
+
+  // 3. Fallback when campus is not yet provided (e.g. on initial Login page before typing ID):
+  // If ALL registered colleges have Web or Mobile stopped, lock out access
+  const allRegisteredColleges = getAllCollegeLicenses();
+  if (allRegisteredColleges.length > 0) {
+    const allStopped = allRegisteredColleges.every((c) =>
+      isMobile ? c.isMobileApplicationStopped : c.isWebApplicationStopped
+    );
+    if (allStopped) {
+      return {
+        isSuspended: true,
+        platform,
+        isGlobal: true,
+        reason: isMobile
+          ? "Native Mobile Application access stopped across all institutions by Master Creator."
+          : "Web Application access stopped across all institutions by Master Creator.",
+      };
     }
   }
 

@@ -71,37 +71,50 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       setUsername(savedUser);
     }
 
-    // Subscribe to live cloud license and global lockout updates
+    const detectCampus = (userStr: string): "KARUR" | "COIMBATORE" | undefined => {
+      const clean = (userStr || "").trim().toLowerCase();
+      if (clean.includes("karur") || clean.includes("mech") || clean.includes("cse") || clean.includes("eee") || clean.includes("civil") || clean.includes("bme") || clean.includes("biotech") || clean.includes("ds")) {
+        return "KARUR";
+      }
+      if (clean.includes("covai") || clean.includes("coimbatore") || clean.includes("ece") || clean.includes("cyber") || clean.includes("aero")) {
+        return "COIMBATORE";
+      }
+      return undefined;
+    };
+
+    const recheckStatus = () => {
+      const isCreator = username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator");
+      if (isCreator) {
+        setSuspensionAlert(null);
+        return;
+      }
+      const check = isCollegeSuspendedForCurrentEnvironment(detectCampus(username));
+      if (check.isSuspended) {
+        setSuspensionAlert({
+          isOpen: true,
+          college: check.college,
+          platform: check.platform,
+          isGlobal: check.isGlobal,
+          reason: check.reason,
+        });
+      } else {
+        setSuspensionAlert(null);
+      }
+    };
+
+    // Subscribe to live cloud license and global lockout updates (Sub-100ms listener)
     const unsubscribe = listenToCollegeLicenses((_colleges, latestGlobal) => {
       setGlobalLockout(latestGlobal);
-      const check = isCollegeSuspendedForCurrentEnvironment();
-      if (check.isSuspended) {
-        setSuspensionAlert({
-          isOpen: true,
-          college: check.college,
-          platform: check.platform,
-          isGlobal: check.isGlobal,
-          reason: check.reason,
-        });
-      }
+      recheckStatus();
     });
 
-    // Immediately force-fetch from Cloud Firestore
+    // Immediately force-fetch from Cloud Firestore and Realtime Database
     forceFetchLatestLicenseFromCloud().then(() => {
-      const check = isCollegeSuspendedForCurrentEnvironment();
-      if (check.isSuspended) {
-        setSuspensionAlert({
-          isOpen: true,
-          college: check.college,
-          platform: check.platform,
-          isGlobal: check.isGlobal,
-          reason: check.reason,
-        });
-      }
+      recheckStatus();
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [username]);
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
