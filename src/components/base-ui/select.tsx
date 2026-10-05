@@ -158,15 +158,15 @@ export interface SelectItemProps extends React.HTMLAttributes<HTMLDivElement> {
 export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
   ({ className, children, value, ...props }, ref) => {
     const context = React.useContext(SelectContext)
-    if (!context) return null
-
-    const isSelected = context.value === value
+    const isSelected = context?.value === value
 
     React.useEffect(() => {
-      if (isSelected && typeof children === "string") {
+      if (context && isSelected && typeof children === "string") {
         context.setSelectedLabel(children)
       }
     }, [isSelected, children, context])
+
+    if (!context) return null
 
     return (
       <div
