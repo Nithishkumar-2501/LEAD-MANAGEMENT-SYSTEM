@@ -35,6 +35,8 @@ import NoraAiDatabaseModal from "@/components/NoraAiDatabaseModal";
 import LeadLimitOverageModal from "@/components/LeadLimitOverageModal";
 import CreatorControlModule from "@/components/CreatorControlModule";
 import CsvLeadsImportModal from "@/components/CsvLeadsImportModal";
+import CreatorLeadsSummaryView from "@/components/CreatorLeadsSummaryView";
+import CreatorTeachersSummaryView from "@/components/CreatorTeachersSummaryView";
 import {
   evaluateLeadQuota,
   recordOverageLeadsToAnnualRenewal,
@@ -1007,19 +1009,27 @@ export default function DashboardPage() {
 
         {/* LEAD MANAGER MODULE (MERGED CONTACT DIRECTORY & STUDENT APPLICATIONS) */}
         {(activeTab === "CONTACTS" || activeTab === "STUDENTS" || (activeTab as string) === "CONTACT_DIRECTORY" || (activeTab as string) === "LEADS") && (
-          <ContactDirectoryModule
-            initialContacts={filteredApplicants}
-            selectedCampus={selectedCampus}
-            currentUserRole={effectiveSubRole}
-            loggedInUsername={loggedInUsername}
-            onActionTrigger={handleActionTrigger}
-            onTriggerToast={triggerToast}
-            onSelectApplicant={handleSelectApplicant}
-            onImportLeads={handleRequestCsvImport}
-            onDeleteContact={handleDeleteApplicant}
-            onReloadLeads={handleReloadLeads}
-            onOpenNoraAi={handleOpenNora}
-          />
+          currentUserRole === "CREATOR" ? (
+            <CreatorLeadsSummaryView
+              applicants={applicants}
+              selectedCampus={selectedCampus}
+              onNavigateCreatorControl={() => setActiveTab("CREATOR_CONTROL")}
+            />
+          ) : (
+            <ContactDirectoryModule
+              initialContacts={filteredApplicants}
+              selectedCampus={selectedCampus}
+              currentUserRole={effectiveSubRole}
+              loggedInUsername={loggedInUsername}
+              onActionTrigger={handleActionTrigger}
+              onTriggerToast={triggerToast}
+              onSelectApplicant={handleSelectApplicant}
+              onImportLeads={handleRequestCsvImport}
+              onDeleteContact={handleDeleteApplicant}
+              onReloadLeads={handleReloadLeads}
+              onOpenNoraAi={handleOpenNora}
+            />
+          )
         )}
 
         {/* APPLICATION MANAGER MODULE (ADMIN ONLY - IMAGES 1 & 2) */}
@@ -1035,16 +1045,23 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* TEACHER DIRECTORY MODULE (ADMIN ONLY) */}
-        {activeTab === "TEACHERS" && (currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
-          <TeacherModule
-            loggedInCampus={loggedInCampus}
-            currentUserRole={effectiveSubRole}
-            loggedInUsername={loggedInUsername}
-            onTriggerToast={triggerToast}
-            applicants={filteredApplicants}
-            onSelectApplicant={handleSelectApplicant}
-          />
+        {/* TEACHER DIRECTORY MODULE (CREATOR GETS USAGE COUNT ONLY, ADMIN GETS FULL DIRECTORY) */}
+        {activeTab === "TEACHERS" && (
+          currentUserRole === "CREATOR" ? (
+            <CreatorTeachersSummaryView
+              selectedCampus={selectedCampus}
+              onNavigateCreatorControl={() => setActiveTab("CREATOR_CONTROL")}
+            />
+          ) : (
+            <TeacherModule
+              loggedInCampus={loggedInCampus}
+              currentUserRole={effectiveSubRole}
+              loggedInUsername={loggedInUsername}
+              onTriggerToast={triggerToast}
+              applicants={filteredApplicants}
+              onSelectApplicant={handleSelectApplicant}
+            />
+          )
         )}
 
         {/* CAMPUS & COURSES MODULE */}

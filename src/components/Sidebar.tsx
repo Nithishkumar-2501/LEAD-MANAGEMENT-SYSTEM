@@ -284,7 +284,42 @@ export default function Sidebar({
             activeBorder: "border-amber-400",
             activeGlow: "shadow-amber-500/30",
           },
-          ...admissionSubItems,
+          {
+            id: "CONTACTS" as ActiveTab,
+            label: "Total Leads Count",
+            sublabel: "Lead Volume & Quotas (Count Only)",
+            icon: UserCheck,
+            color: "from-indigo-500 to-purple-600",
+            activeBorder: "border-indigo-400",
+            activeGlow: "shadow-indigo-500/30",
+          },
+          {
+            id: "TEACHERS" as ActiveTab,
+            label: "Teacher Usage Count",
+            sublabel: "Active Faculty Count (Count Only)",
+            icon: BookOpen,
+            color: "from-purple-500 to-pink-600",
+            activeBorder: "border-purple-400",
+            activeGlow: "shadow-purple-500/30",
+          },
+          {
+            id: "CAMPUSES" as ActiveTab,
+            label: "Campus & Courses",
+            sublabel: "Campus Programs",
+            icon: Building2,
+            color: "from-amber-500 to-orange-600",
+            activeBorder: "border-amber-400",
+            activeGlow: "shadow-amber-500/30",
+          },
+          {
+            id: "PAYMENTS" as ActiveTab,
+            label: "Student Fee Payments",
+            sublabel: "Paid Students & Fee Receipts",
+            icon: CreditCard,
+            color: "from-emerald-500 to-teal-600",
+            activeBorder: "border-emerald-400",
+            activeGlow: "shadow-emerald-500/30",
+          },
         ]
       : admissionSubItems;
 
