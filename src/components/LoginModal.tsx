@@ -83,6 +83,11 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     };
 
     const recheckStatus = () => {
+      // In Web, never show full-screen suspension modal before the user enters their credentials.
+      // This allows the Master Creator to freely type credentials and log in on Web!
+      if (!isCapacitorNative()) {
+        return;
+      }
       const isCreator = username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator");
       if (isCreator) {
         setSuspensionAlert(null);
@@ -130,33 +135,46 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       return;
     }
 
-    // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Never exposed to College Admins or Teachers)
-    const rawCleanUser = inputUser.toLowerCase().replace(/[@\s_-]/g, "");
+    // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Restricted strictly to Web Portal)
+    const rawCleanUser = inputUser.toLowerCase().replace(/[@\s_.-]/g, "");
     const rawCleanPass = inputPass.trim();
 
     const isCreatorId =
       rawCleanUser === "spherexnithish#" ||
       rawCleanUser === "spherexnithish" ||
+      rawCleanUser === "spherex#" ||
+      rawCleanUser === "spherex" ||
       rawCleanUser === "creator" ||
       rawCleanUser === "creatorspherexcom" ||
       rawCleanUser === "creatorvsbecin" ||
       rawCleanUser === "nithish" ||
       rawCleanUser === "nithishkumar" ||
-      rawCleanUser === "spherex" ||
-      rawCleanUser === "rootcreator";
-
-    const isCreatorPass =
-      rawCleanPass === "spherex#2501" ||
-      rawCleanPass === "Spherex#2501" ||
-      rawCleanPass.toLowerCase() === "spherex#2501" ||
-      rawCleanPass === "spherex2501" ||
-      rawCleanPass === "spherex@2501" ||
-      rawCleanPass === "creator@123" ||
-      rawCleanPass === "creator123" ||
-      rawCleanPass === "admin@123" ||
-      rawCleanPass === "vsb@2026";
+      rawCleanUser === "nithishkumar2501" ||
+      rawCleanUser === "rootcreator" ||
+      rawCleanUser.includes("spherexnithish") ||
+      rawCleanUser.includes("spherex") ||
+      rawCleanUser.includes("creator");
 
     if (isCreatorId) {
+      // In the App model (native mobile app), Creator is strictly disabled!
+      if (isCapacitorNative()) {
+        setLoading(false);
+        setError("Master Creator Control is strictly web-only. Please open on a desktop or web browser.");
+        return;
+      }
+
+      const isCreatorPass =
+        rawCleanPass === "spherex#2501" ||
+        rawCleanPass === "Spherex#2501" ||
+        rawCleanPass.toLowerCase() === "spherex#2501" ||
+        rawCleanPass === "spherex2501" ||
+        rawCleanPass === "spherex@2501" ||
+        rawCleanPass === "spherexnithish#" ||
+        rawCleanPass === "creator@123" ||
+        rawCleanPass === "creator123" ||
+        rawCleanPass === "admin@123" ||
+        rawCleanPass === "vsb@2026";
+
       if (isCreatorPass) {
         setLoading(false);
         // Save session strictly in sessionStorage so closing app requires login on next open
@@ -172,7 +190,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         return;
       } else {
         setLoading(false);
-        setError("Invalid Master Creator Password. Please enter 'spherex#2501' (or click Quick Demo Login).");
+        setError("Invalid Master Creator Password. Please enter 'spherex#2501'.");
         return;
       }
     }
@@ -567,31 +585,33 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                   ? "Native Mobile Application access has been stopped across all systems by the Master Creator."
                   : "Web Application access has been stopped across all systems by the Master Creator."}
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setUsername("spherexnithish#");
-                  setPassword("spherex#2501");
-                  setError(null);
-                }}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "10px",
-                  background: "linear-gradient(to right, #f59e0b, #ea580c)",
-                  color: "#ffffff",
-                  fontSize: "11px",
-                  fontWeight: 800,
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
-                }}
-              >
-                👑 Master Creator Sign In (Nithish Kumar)
-              </button>
+              {!isCapacitorNative() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUsername("spherexnithish#");
+                    setPassword("spherex#2501");
+                    setError(null);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    background: "linear-gradient(to right, #f59e0b, #ea580c)",
+                    color: "#ffffff",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                  }}
+                >
+                  👑 Master Creator Sign In (Web Only)
+                </button>
+              )}
             </motion.div>
           )}
 
@@ -629,32 +649,34 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               marginBottom: "16px",
             }}
           >
-            <button
-              type="button"
-              onClick={() => autoFill("spherexnithish#", "spherex#2501")}
-              style={{
-                gridColumn: "span 2",
-                padding: "10px 14px",
-                borderRadius: "12px",
-                background: (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator"))
-                  ? "linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(234, 88, 12, 0.35))"
-                  : "rgba(245, 158, 11, 0.1)",
-                border: (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator"))
-                  ? "1.5px solid #fbbf24"
-                  : "1px solid rgba(245, 158, 11, 0.3)",
-                color: "#fde68a",
-                fontSize: "12px",
-                fontWeight: 800,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              <span>👑 Master Creator Login (spherexnithish#)</span>
-            </button>
+            {!isCapacitorNative() && (
+              <button
+                type="button"
+                onClick={() => autoFill("spherexnithish#", "spherex#2501")}
+                style={{
+                  gridColumn: "span 2",
+                  padding: "10px 14px",
+                  borderRadius: "12px",
+                  background: (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator"))
+                    ? "linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(234, 88, 12, 0.35))"
+                    : "rgba(245, 158, 11, 0.1)",
+                  border: (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator"))
+                    ? "1.5px solid #fbbf24"
+                    : "1px solid rgba(245, 158, 11, 0.3)",
+                  color: "#fde68a",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                <span>👑 Master Creator Login (Web Only)</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -691,7 +713,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </button>
           </motion.div>
 
-          {(username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator")) && (
+          {!isCapacitorNative() && (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator")) && (
             <div
               style={{
                 marginBottom: "14px",
@@ -1320,35 +1342,37 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               ℹ️ Please contact SPHEREX Master Creator (<strong>Nithish Kumar</strong>) to settle institutional renewal. Once cleared in the Creator portal, application access will be opened immediately on all systems.
             </p>
 
-            <button
-              onClick={() => {
-                setUsername("spherexnithish#");
-                setPassword("spherex#2501");
-                try {
-                  localStorage.removeItem("vsb_admin_auth");
-                  sessionStorage.setItem("vsb_admin_auth", "true");
-                  sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
-                  sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
-                  sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
-                } catch (e) {}
-                setSuspensionAlert(null);
-                onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
-              }}
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "linear-gradient(to right, #f59e0b, #ea580c)",
-                color: "#ffffff",
-                fontWeight: 800,
-                borderRadius: "9999px",
-                fontSize: "12px",
-                border: "none",
-                cursor: "pointer",
-                marginBottom: "8px",
-              }}
-            >
-              👑 Sign in as Master Creator (Nithish Kumar)
-            </button>
+            {!isCapacitorNative() && (
+              <button
+                onClick={() => {
+                  setUsername("spherexnithish#");
+                  setPassword("spherex#2501");
+                  try {
+                    localStorage.removeItem("vsb_admin_auth");
+                    sessionStorage.setItem("vsb_admin_auth", "true");
+                    sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
+                    sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
+                    sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                  } catch (e) {}
+                  setSuspensionAlert(null);
+                  onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
+                }}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  background: "linear-gradient(to right, #f59e0b, #ea580c)",
+                  color: "#ffffff",
+                  fontWeight: 800,
+                  borderRadius: "9999px",
+                  fontSize: "12px",
+                  border: "none",
+                  cursor: "pointer",
+                  marginBottom: "8px",
+                }}
+              >
+                👑 Sign in as Master Creator (Web Only)
+              </button>
+            )}
 
             <button
               onClick={async () => {

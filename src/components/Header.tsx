@@ -24,6 +24,7 @@ import Tooltip from "@/components/Tooltip";
 import VoiceSearchBar from "@/components/VoiceSearchBar";
 import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
 import { MAX_FREE_LEAD_LIMIT, getEffectiveLeadCount } from "@/lib/leadQuotaService";
+import { isCapacitorNative } from "@/lib/mobileFetch";
 
 interface HeaderProps {
   user: User;
@@ -128,7 +129,7 @@ export default function Header({
     { id: "CONTACTS" as ActiveTab, label: "Lead Manager", icon: UserCheck, roles: ["ADMIN", "TEACHER"] },
     { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen, roles: ["ADMIN"] },
     { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2, roles: ["ADMIN", "TEACHER"] },
-    { id: "CREATOR_CONTROL" as ActiveTab, label: "Creator Control", icon: Crown, roles: ["CREATOR"] },
+    { id: "CREATOR_CONTROL" as ActiveTab, label: "Creator Control", icon: Crown, roles: isCapacitorNative() ? [] : ["CREATOR"] },
     { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard, roles: ["ADMIN", "CREATOR"] },
     { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings, roles: ["ADMIN", "CREATOR"] },
   ];
@@ -176,7 +177,7 @@ export default function Header({
         {/* Right: Controls (Campus Selector, Ask Nora AI, Search, Logout) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Master Creator Badge */}
-          {currentUserRole === "CREATOR" && (
+          {currentUserRole === "CREATOR" && !isCapacitorNative() && (
             <Tooltip text="Master Creator & Developer Account Active (spherexnithish#)">
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border border-amber-400 text-amber-300 font-bold text-xs shadow-md shadow-amber-500/10 shrink-0">
                 <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />

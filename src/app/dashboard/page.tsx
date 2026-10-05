@@ -44,7 +44,7 @@ import {
   MAX_FREE_LEAD_LIMIT,
 } from "@/lib/leadQuotaService";
 import { logoutWithRealtimeAuth } from "@/lib/authService";
-import { mobileSafeFetch } from "@/lib/mobileFetch";
+import { mobileSafeFetch, isCapacitorNative } from "@/lib/mobileFetch";
 import { redirectToWhatsApp, getDefaultAdmissionWhatsAppText } from "@/lib/whatsappSender";
 import { redirectToSms, getDefaultAdmissionSmsText } from "@/lib/smsSender";
 import {
@@ -588,6 +588,7 @@ export default function DashboardPage() {
 
     if (role === "CREATOR") {
       setActiveTab("CREATOR_CONTROL");
+      setInstitutionSuspension({ isSuspended: false, platform: "WEB" });
       triggerToast("👑 Welcome Master Creator (Nithish Kumar)! Full System Control Unlocked.");
     } else if (role === "TEACHER") {
       setActiveTab("USER_DASHBOARD");
@@ -1084,8 +1085,8 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible when logged in as Creator) */}
-        {activeTab === "CREATOR_CONTROL" && currentUserRole === "CREATOR" && (
+        {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible in Web when logged in as Creator) */}
+        {activeTab === "CREATOR_CONTROL" && currentUserRole === "CREATOR" && !isCapacitorNative() && (
           <CreatorControlModule
             onTriggerToast={triggerToast}
             currentLeadsCount={applicants.length}
@@ -1232,7 +1233,7 @@ export default function DashboardPage() {
           <Plus className="w-6 h-6" />
         </button>
 
-        {currentUserRole === "CREATOR" ? (
+        {currentUserRole === "CREATOR" && !isCapacitorNative() ? (
           <button
             type="button"
             onClick={() => setActiveTab("CREATOR_CONTROL")}
@@ -1334,26 +1335,29 @@ export default function DashboardPage() {
             </div>
 
             <div className="pt-2 space-y-2.5">
-              <button
-                type="button"
-                onClick={() => {
-                  try {
-                    localStorage.removeItem("vsb_admin_auth");
-                    sessionStorage.setItem("vsb_admin_auth", "true");
-                    sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
-                    sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
-                    sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
-                  } catch (e) {}
-                  setCurrentUserRole("CREATOR");
-                  setLoggedInUsername("spherexnithish#");
-                  setActiveTab("CREATOR_CONTROL");
-                  triggerToast("👑 Logged in as Master Creator (Nithish Kumar)!");
-                }}
-                className="w-full py-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-xs shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
-              >
-                <Crown className="w-4 h-4" />
-                <span>👑 Sign in as Master Creator (Nithish Kumar)</span>
-              </button>
+              {!isCapacitorNative() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      localStorage.removeItem("vsb_admin_auth");
+                      sessionStorage.setItem("vsb_admin_auth", "true");
+                      sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
+                      sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
+                      sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                    } catch (e) {}
+                    setCurrentUserRole("CREATOR");
+                    setLoggedInUsername("spherexnithish#");
+                    setActiveTab("CREATOR_CONTROL");
+                    setInstitutionSuspension({ isSuspended: false, platform: "WEB" });
+                    triggerToast("👑 Logged in as Master Creator (Nithish Kumar)!");
+                  }}
+                  className="w-full py-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-xs shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
+                >
+                  <Crown className="w-4 h-4" />
+                  <span>👑 Sign in as Master Creator (Web Only)</span>
+                </button>
+              )}
 
               <button
                 type="button"

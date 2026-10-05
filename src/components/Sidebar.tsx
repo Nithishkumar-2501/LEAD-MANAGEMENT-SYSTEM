@@ -46,6 +46,7 @@ import VoiceSearchBar from "@/components/VoiceSearchBar";
 import { NoiseBackground } from "@/components/ui/noise-background";
 import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
 import { MAX_FREE_LEAD_LIMIT, getEffectiveLeadCount } from "@/lib/leadQuotaService";
+import { isCapacitorNative } from "@/lib/mobileFetch";
 
 interface SidebarProps {
   user: User;
@@ -275,15 +276,19 @@ export default function Sidebar({
       ? admissionSubItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "TEACHERS")
       : currentUserRole === "CREATOR"
       ? [
-          {
-            id: "CREATOR_CONTROL" as ActiveTab,
-            label: "👑 Creator Control",
-            sublabel: "Master Architecture & License",
-            icon: Crown,
-            color: "from-amber-500 to-orange-600",
-            activeBorder: "border-amber-400",
-            activeGlow: "shadow-amber-500/30",
-          },
+          ...(!isCapacitorNative()
+            ? [
+                {
+                  id: "CREATOR_CONTROL" as ActiveTab,
+                  label: "👑 Creator Control",
+                  sublabel: "Master Architecture & License",
+                  icon: Crown,
+                  color: "from-amber-500 to-orange-600",
+                  activeBorder: "border-amber-400",
+                  activeGlow: "shadow-amber-500/30",
+                },
+              ]
+            : []),
           {
             id: "CONTACTS" as ActiveTab,
             label: "Total Leads Count",
