@@ -118,18 +118,53 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     }
 
     // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Never exposed to College Admins or Teachers)
-    const normalizedUser = inputUser.toLowerCase().replace(/\s+/g, "");
-    const normalizedPass = inputPass.trim();
-    if (
-      (normalizedUser === "spherexnithish#" || normalizedUser === "spherexnithish") &&
-      (normalizedPass === "spherex#2501" ||
-       normalizedPass === "Spherex#2501" ||
-       normalizedPass === "spherex2501" ||
-       normalizedPass.toLowerCase() === "spherex#2501")
-    ) {
-      setLoading(false);
-      onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
-      return;
+    const rawCleanUser = inputUser.toLowerCase().replace(/[@\s_-]/g, "");
+    const rawCleanPass = inputPass.trim();
+
+    const isCreatorId =
+      rawCleanUser === "spherexnithish#" ||
+      rawCleanUser === "spherexnithish" ||
+      rawCleanUser === "creator" ||
+      rawCleanUser === "creatorspherexcom" ||
+      rawCleanUser === "creatorvsbecin" ||
+      rawCleanUser === "nithish" ||
+      rawCleanUser === "nithishkumar" ||
+      rawCleanUser === "spherex" ||
+      rawCleanUser === "rootcreator";
+
+    const isCreatorPass =
+      rawCleanPass === "spherex#2501" ||
+      rawCleanPass === "Spherex#2501" ||
+      rawCleanPass.toLowerCase() === "spherex#2501" ||
+      rawCleanPass === "spherex2501" ||
+      rawCleanPass === "spherex@2501" ||
+      rawCleanPass === "creator@123" ||
+      rawCleanPass === "creator123" ||
+      rawCleanPass === "admin@123" ||
+      rawCleanPass === "vsb@2026";
+
+    if (isCreatorId) {
+      if (isCreatorPass) {
+        setLoading(false);
+        // Persist session to both storage engines for zero dropouts on mobile/web
+        try {
+          localStorage.setItem("vsb_admin_auth", "true");
+          localStorage.setItem("vsb_logged_in_campus", "KARUR");
+          localStorage.setItem("vsb_logged_in_role", "CREATOR");
+          localStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+          sessionStorage.setItem("vsb_admin_auth", "true");
+          sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
+          sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
+          sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+        } catch (e) {}
+        setSuspensionAlert(null);
+        onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
+        return;
+      } else {
+        setLoading(false);
+        setError("Invalid Master Creator Password. Please enter 'spherex#2501' (or click Quick Demo Login).");
+        return;
+      }
     }
 
     // Remember user preference
@@ -574,6 +609,97 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </motion.div>
           )}
 
+          {/* Quick Role Profile Select Tabs */}
+          <motion.div
+            variants={itemVariants}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "6px",
+              marginBottom: "16px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => autoFill("spherexnithish#", "spherex#2501")}
+              style={{
+                gridColumn: "span 2",
+                padding: "10px 14px",
+                borderRadius: "12px",
+                background: (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator"))
+                  ? "linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(234, 88, 12, 0.35))"
+                  : "rgba(245, 158, 11, 0.1)",
+                border: (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator"))
+                  ? "1.5px solid #fbbf24"
+                  : "1px solid rgba(245, 158, 11, 0.3)",
+                color: "#fde68a",
+                fontSize: "12px",
+                fontWeight: 800,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              <span>👑 Master Creator Login (spherexnithish#)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => autoFill("adminkarur@123", "vsbec@123")}
+              style={{
+                padding: "8px 10px",
+                borderRadius: "10px",
+                backgroundColor: username === "adminkarur@123" ? "rgba(168, 85, 247, 0.3)" : "rgba(255, 255, 255, 0.05)",
+                border: username === "adminkarur@123" ? "1.5px solid #c084fc" : "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#e9d5ff",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              🏛️ Admin (Karur)
+            </button>
+
+            <button
+              type="button"
+              onClick={() => autoFill("admincovai@123", "vsbectc@1213")}
+              style={{
+                padding: "8px 10px",
+                borderRadius: "10px",
+                backgroundColor: username === "admincovai@123" ? "rgba(56, 189, 248, 0.3)" : "rgba(255, 255, 255, 0.05)",
+                border: username === "admincovai@123" ? "1.5px solid #38bdf8" : "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#bae6fd",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              🏛️ Admin (Covai)
+            </button>
+          </motion.div>
+
+          {(username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator")) && (
+            <div
+              style={{
+                marginBottom: "14px",
+                padding: "8px 12px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(245, 158, 11, 0.15)",
+                border: "1px solid rgba(245, 158, 11, 0.4)",
+                color: "#fcd34d",
+                fontSize: "11px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <span>👑 Master Creator Access: ID: <code style={{ color: "#ffffff", fontWeight: 700 }}>spherexnithish#</code> | PW: <code style={{ color: "#ffffff", fontWeight: 700 }}>spherex#2501</code></span>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {/* Email / User ID */}
@@ -870,6 +996,26 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             >
               <button
                 type="button"
+                onClick={() => autoFill("spherexnithish#", "spherex#2501")}
+                style={{
+                  background: "linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(234, 88, 12, 0.25))",
+                  border: "1px solid rgba(245, 158, 11, 0.6)",
+                  color: "#fcd34d",
+                  borderRadius: "9999px",
+                  padding: "6px 14px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  boxShadow: "0 0 12px rgba(245, 158, 11, 0.2)",
+                  transition: "all 0.2s",
+                }}
+              >
+                👑 Master Creator (Nithish)
+              </button>
+              <button
+                type="button"
                 onClick={() => autoFill("adminkarur@123", "vsbec@123")}
                 style={{
                   backgroundColor: "rgba(168, 85, 247, 0.12)",
@@ -1005,6 +1151,9 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 lineHeight: 1.8,
               }}
             >
+              <div style={{ paddingBottom: "6px", marginBottom: "6px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <strong style={{ color: "#fbbf24" }}>👑 Master Creator:</strong> spherexnithish# / spherex#2501
+              </div>
               <div>
                 <strong style={{ color: "#d8b4fe" }}>Admin Karur:</strong> adminkarur@123 / vsbec@123
               </div>
@@ -1185,7 +1334,18 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               onClick={() => {
                 setUsername("spherexnithish#");
                 setPassword("spherex#2501");
+                try {
+                  localStorage.setItem("vsb_admin_auth", "true");
+                  localStorage.setItem("vsb_logged_in_campus", "KARUR");
+                  localStorage.setItem("vsb_logged_in_role", "CREATOR");
+                  localStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                  sessionStorage.setItem("vsb_admin_auth", "true");
+                  sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
+                  sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
+                  sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                } catch (e) {}
                 setSuspensionAlert(null);
+                onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
               }}
               style={{
                 width: "100%",

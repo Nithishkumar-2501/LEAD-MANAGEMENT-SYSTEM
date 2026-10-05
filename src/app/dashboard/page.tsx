@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic, Lock, AlertTriangle, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic, Lock, AlertTriangle, ShieldAlert, Crown } from "lucide-react";
 import {
   isCollegeSuspendedForCurrentEnvironment,
   listenToCollegeLicenses,
@@ -540,12 +540,12 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    const authSession = sessionStorage.getItem("vsb_admin_auth");
+    const authSession = sessionStorage.getItem("vsb_admin_auth") || localStorage.getItem("vsb_admin_auth");
     if (authSession === "true") {
       setIsAuthenticated(true);
-      const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
-      const role = sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR";
-      const user = sessionStorage.getItem("vsb_logged_in_user");
+      const campus = (sessionStorage.getItem("vsb_logged_in_campus") || localStorage.getItem("vsb_logged_in_campus")) as "KARUR" | "COIMBATORE";
+      const role = (sessionStorage.getItem("vsb_logged_in_role") || localStorage.getItem("vsb_logged_in_role")) as "ADMIN" | "TEACHER" | "CREATOR";
+      const user = sessionStorage.getItem("vsb_logged_in_user") || localStorage.getItem("vsb_logged_in_user");
       if (campus) {
         setLoggedInCampus(campus);
         setSelectedCampus(campus);
@@ -573,9 +573,9 @@ export default function DashboardPage() {
   // Sync teacher status to ON_LEAVE if the browser tab is closed/unloaded
   useEffect(() => {
     const handleBeforeUnload = () => {
-      const role = sessionStorage.getItem("vsb_logged_in_role");
-      const user = sessionStorage.getItem("vsb_logged_in_user");
-      const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
+      const role = sessionStorage.getItem("vsb_logged_in_role") || localStorage.getItem("vsb_logged_in_role");
+      const user = sessionStorage.getItem("vsb_logged_in_user") || localStorage.getItem("vsb_logged_in_user");
+      const campus = (sessionStorage.getItem("vsb_logged_in_campus") || localStorage.getItem("vsb_logged_in_campus")) as "KARUR" | "COIMBATORE";
       if (role === "TEACHER" && user) {
         updateTeacherOnlineStatus(user, campus, "ON_LEAVE").catch(() => {});
       }
@@ -591,6 +591,13 @@ export default function DashboardPage() {
     sessionStorage.setItem("vsb_logged_in_campus", campus);
     sessionStorage.setItem("vsb_logged_in_role", role);
     sessionStorage.setItem("vsb_logged_in_user", username);
+    try {
+      localStorage.setItem("vsb_admin_auth", "true");
+      localStorage.setItem("vsb_logged_in_campus", campus);
+      localStorage.setItem("vsb_logged_in_role", role);
+      localStorage.setItem("vsb_logged_in_user", username);
+    } catch (e) {}
+
     setLoggedInCampus(campus);
     setCurrentUserRole(role);
     setLoggedInUsername(username);
@@ -618,9 +625,9 @@ export default function DashboardPage() {
   };
 
   const handleLogout = async () => {
-    const role = currentUserRole || (sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR");
-    const user = loggedInUsername || sessionStorage.getItem("vsb_logged_in_user");
-    const campus = loggedInCampus || (sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE");
+    const role = currentUserRole || (sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR") || (localStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR");
+    const user = loggedInUsername || sessionStorage.getItem("vsb_logged_in_user") || localStorage.getItem("vsb_logged_in_user");
+    const campus = loggedInCampus || (sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE") || (localStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE");
 
     // Automatically set teacher status to ON_LEAVE upon logging out
     if (role === "TEACHER" && user) {
@@ -639,6 +646,12 @@ export default function DashboardPage() {
     sessionStorage.removeItem("vsb_logged_in_campus");
     sessionStorage.removeItem("vsb_logged_in_role");
     sessionStorage.removeItem("vsb_logged_in_user");
+    try {
+      localStorage.removeItem("vsb_admin_auth");
+      localStorage.removeItem("vsb_logged_in_campus");
+      localStorage.removeItem("vsb_logged_in_role");
+      localStorage.removeItem("vsb_logged_in_user");
+    } catch (e) {}
     setIsAuthenticated(false);
     triggerToast(
       role === "TEACHER"
@@ -1237,7 +1250,20 @@ export default function DashboardPage() {
           <Plus className="w-6 h-6" />
         </button>
 
-        {currentUserRole === "ADMIN" ? (
+        {currentUserRole === "CREATOR" ? (
+          <button
+            type="button"
+            onClick={() => setActiveTab("CREATOR_CONTROL")}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+              activeTab === "CREATOR_CONTROL"
+                ? "text-amber-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Crown className="w-5 h-5 text-amber-400" />
+            <span className="text-[10px] tracking-tight">Licensing</span>
+          </button>
+        ) : currentUserRole === "ADMIN" ? (
           <button
             type="button"
             onClick={() => setActiveTab("ADMIN_DASHBOARD")}
@@ -1265,7 +1291,20 @@ export default function DashboardPage() {
           </button>
         )}
 
-        {currentUserRole === "ADMIN" && (
+        {currentUserRole === "CREATOR" ? (
+          <button
+            type="button"
+            onClick={() => setActiveTab("TEACHERS")}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+              activeTab === "TEACHERS"
+                ? "text-purple-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <BookOpen className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Usage</span>
+          </button>
+        ) : currentUserRole === "ADMIN" ? (
           <button
             type="button"
             onClick={() => setActiveTab("TEACHERS")}
@@ -1278,8 +1317,76 @@ export default function DashboardPage() {
             <BookOpen className="w-5 h-5" />
             <span className="text-[10px] tracking-tight">Faculty</span>
           </button>
-        )}
+        ) : null}
       </nav>
+
+      {/* REAL-TIME LOCKOUT OVERLAY FOR ACTIVE DASHBOARD SESSIONS */}
+      {institutionSuspension.isSuspended && currentUserRole !== "CREATOR" && (
+        <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 select-none">
+          <div className="w-full max-w-lg bg-slate-900 border-2 border-rose-500 rounded-3xl p-6 sm:p-8 text-center text-white shadow-2xl shadow-rose-950/50 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-500 mx-auto flex items-center justify-center shadow-lg shadow-rose-500/20">
+              <Lock className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1">
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                {institutionSuspension.isGlobal ? "Emergency Global System Halt" : "Institutional Access Stopped"}
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-white mt-2">
+                {institutionSuspension.college ? institutionSuspension.college.collegeName : "SPHEREX CRM APPLICATION"}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300">
+                {institutionSuspension.platform === "MOBILE" ? "Native Mobile App" : "Web Application"} access has been stopped by the Master Creator.
+              </p>
+            </div>
+
+            <div className="bg-slate-950/80 rounded-2xl p-4 text-left text-xs space-y-2 border border-slate-800">
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-slate-400 shrink-0">Lockout Reason:</span>
+                <span className="font-bold text-rose-400 text-right">{institutionSuspension.reason || "Application access stopped by Master Creator."}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Platform Restricted:</span>
+                <span className="font-bold text-sky-400">{institutionSuspension.platform === "MOBILE" ? "📱 Native Mobile App" : "💻 Web Application"}</span>
+              </div>
+            </div>
+
+            <div className="pt-2 space-y-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.setItem("vsb_admin_auth", "true");
+                    localStorage.setItem("vsb_logged_in_campus", "KARUR");
+                    localStorage.setItem("vsb_logged_in_role", "CREATOR");
+                    localStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                    sessionStorage.setItem("vsb_admin_auth", "true");
+                    sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
+                    sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
+                    sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                  } catch (e) {}
+                  setCurrentUserRole("CREATOR");
+                  setLoggedInUsername("spherexnithish#");
+                  setActiveTab("CREATOR_CONTROL");
+                  triggerToast("👑 Logged in as Master Creator (Nithish Kumar)!");
+                }}
+                className="w-full py-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-xs shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
+              >
+                <Crown className="w-4 h-4" />
+                <span>👑 Sign in as Master Creator (Nithish Kumar)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer transition-colors"
+              >
+                Log Out &amp; Return to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
