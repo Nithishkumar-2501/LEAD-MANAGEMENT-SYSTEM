@@ -3187,7 +3187,7 @@ export default function ContactDirectoryModule({
               </button>
             </div>
 
-            {/* Right: Show Rows Selector & Voice Access matching Image 1 */}
+            {/* Right: Show Rows Selector */}
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-white">
                 <span className="text-xs text-slate-500 font-medium">Show Rows:</span>

@@ -77,9 +77,14 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     }
 
     // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Never exposed to College Admins or Teachers)
+    const normalizedUser = inputUser.toLowerCase().replace(/\s+/g, "");
+    const normalizedPass = inputPass.trim();
     if (
-      (inputUser.toLowerCase() === "spherexnithish#" || inputUser === "spherexnithish#") &&
-      inputPass === "spherex#2501"
+      (normalizedUser === "spherexnithish#" || normalizedUser === "spherexnithish") &&
+      (normalizedPass === "spherex#2501" ||
+       normalizedPass === "Spherex#2501" ||
+       normalizedPass === "spherex2501" ||
+       normalizedPass.toLowerCase() === "spherex#2501")
     ) {
       setLoading(false);
       onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");

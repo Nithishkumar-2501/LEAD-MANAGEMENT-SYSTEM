@@ -1534,7 +1534,7 @@ export default function CreatorControlModule({
                   <span>Platform 1: Responsive Web Application</span>
                 </div>
                 <p className="text-xs text-slate-300">
-                  Full institutional admission portal for Desktop, Laptop, and Tablet browsers. Multi-campus admissions, teacher allocations, voice access, and real-time Firestore sync.
+                  Full institutional admission portal for Desktop, Laptop, and Tablet browsers. Multi-campus admissions, teacher allocations, and real-time Firestore sync.
                 </p>
                 <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
                   Status: Standard Enterprise Distribution

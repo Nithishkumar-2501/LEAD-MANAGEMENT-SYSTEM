@@ -301,6 +301,10 @@ export default function DashboardPage() {
       if (activeTab === "USER_DASHBOARD") {
         setActiveTab("ADMIN_DASHBOARD");
       }
+    } else if (currentUserRole === "CREATOR") {
+      if (activeTab === "ADMIN_DASHBOARD" || activeTab === "USER_DASHBOARD") {
+        setActiveTab("CREATOR_CONTROL");
+      }
     }
   }, [currentUserRole, activeTab]);
 
@@ -533,6 +537,11 @@ export default function DashboardPage() {
       }
       if (role) {
         setCurrentUserRole(role);
+        if (role === "CREATOR") {
+          setActiveTab("CREATOR_CONTROL");
+        } else if (role === "TEACHER") {
+          setActiveTab("USER_DASHBOARD");
+        }
       }
       if (user) {
         setLoggedInUsername(user);

@@ -16,7 +16,6 @@ export interface VoiceSearchBarProps {
   onClear?: () => void;
   onVoiceSearchStart?: () => void;
   onVoiceSearchEnd?: (transcript: string) => void;
-  onOpenVoiceModal?: () => void;
   ariaLabel?: string;
   containerWidth?: string;
 }
@@ -35,7 +34,6 @@ export default function VoiceSearchBar({
   onClear,
   onVoiceSearchStart,
   onVoiceSearchEnd,
-  onOpenVoiceModal,
   ariaLabel = 'Search',
   containerWidth,
 }: VoiceSearchBarProps) {
@@ -81,11 +79,6 @@ export default function VoiceSearchBar({
   const handleMicToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (onOpenVoiceModal) {
-      onOpenVoiceModal();
-      return;
-    }
 
     if (isListening) {
       // Stop listening
