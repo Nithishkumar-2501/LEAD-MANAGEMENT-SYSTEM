@@ -12,7 +12,7 @@
  * 6. Real-time synchronization across Firestore, Realtime Database, and API so ANY system, phone, or browser locks immediately.
  */
 
-import { isCapacitorNative } from "./mobileFetch";
+import { isCapacitorNative, isMobileDeviceOrApp } from "./mobileFetch";
 import { db, rtdb } from "@/lib/firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { ref, get, set, onValue } from "firebase/database";
@@ -157,22 +157,6 @@ export function getGlobalLockoutState(): GlobalLockoutState {
 }
 
 /**
- * Save Global Lockout state to localStorage, Firebase Firestore, RTDB, and API.
- */
-export function saveGlobalLockoutState(lockout: GlobalLockoutState): void {
-  memoryGlobalLockout = lockout;
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(lockout));
-      window.dispatchEvent(new CustomEvent(LICENSE_EVENT_KEY, { detail: { colleges: memoryColleges, globalLockout: lockout } }));
-    } catch (e) {}
-  }
-
-  // Asynchronously broadcast to Cloud Firestore, Realtime Database, and API
-  pushLicensesToCloud(memoryColleges, lockout);
-}
-
-/**
  * Retrieve all registered client colleges and their payment/access statuses.
  */
 export function getAllCollegeLicenses(): CollegeClientLicense[] {
@@ -216,8 +200,12 @@ export function getAllCollegeLicenses(): CollegeClientLicense[] {
 
 /**
  * Broadcast license updates to Cloud Firestore, Realtime Database, and Next.js API.
+ * Ensures an atomic snapshot payload containing BOTH colleges and globalLockout.
  */
-async function pushLicensesToCloud(colleges: CollegeClientLicense[], globalLockout: GlobalLockoutState): Promise<void> {
+export async function pushLicensesToCloud(
+  colleges: CollegeClientLicense[],
+  globalLockout: GlobalLockoutState
+): Promise<void> {
   const payload = sanitizeForFirebase({
     colleges,
     globalLockout,
@@ -225,7 +213,7 @@ async function pushLicensesToCloud(colleges: CollegeClientLicense[], globalLocko
     updatedBy: "SPHEREX_MASTER_CREATOR",
   });
 
-  // 1. Next.js API Route
+  // 1. Next.js API Route (if accessible on Web)
   try {
     fetch("/api/creator/licenses", {
       method: "POST",
@@ -234,33 +222,135 @@ async function pushLicensesToCloud(colleges: CollegeClientLicense[], globalLocko
     }).catch(() => {});
   } catch (e) {}
 
-  // 2. Cloud Firestore
+  // 2. Cloud Firestore (Primary source of truth for both web and mobile app)
   try {
-    setDoc(doc(db, "system_licenses", "college_registry"), payload, { merge: true }).catch(() => {});
-  } catch (e) {}
+    await setDoc(doc(db, "system_licenses", "college_registry"), payload, { merge: true });
+    // Also save individual global lockout document
+    await setDoc(doc(db, "system_licenses", "global_lockout"), sanitizeForFirebase(globalLockout), { merge: true });
+    // Also save campus-specific documents for instant direct reads
+    for (const c of colleges) {
+      if (c.campus) {
+        await setDoc(doc(db, "system_licenses", c.campus), sanitizeForFirebase(c), { merge: true }).catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.warn("Firestore license push error:", e);
+  }
 
-  // 3. Realtime Database
+  // 3. Realtime Database (Safe fallback)
   try {
     set(ref(rtdb, "spherex_licenses"), payload).catch(() => {});
   } catch (e) {}
 }
 
 /**
- * Save updated college registry and broadcast event to all listeners.
+ * Atomic save of both colleges registry and globalLockout to avoid race conditions.
  */
-export function saveCollegeLicenses(licenses: CollegeClientLicense[]): void {
-  memoryColleges = licenses;
+export function saveAllLicensesAndLockout(
+  colleges: CollegeClientLicense[],
+  globalLockout: GlobalLockoutState
+): void {
+  memoryColleges = colleges;
+  memoryGlobalLockout = globalLockout;
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(licenses));
-      window.dispatchEvent(new CustomEvent(LICENSE_EVENT_KEY, { detail: { colleges: licenses, globalLockout: memoryGlobalLockout } }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(colleges));
+      localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(globalLockout));
+      window.dispatchEvent(
+        new CustomEvent(LICENSE_EVENT_KEY, {
+          detail: { colleges, globalLockout },
+        })
+      );
     } catch (err) {
-      console.warn("Failed to save college licenses registry:", err);
+      console.warn("Failed to save license registry to localStorage:", err);
     }
   }
 
-  // Push to cloud infrastructure
-  pushLicensesToCloud(licenses, memoryGlobalLockout);
+  // Broadcast to Cloud Firestore, RTDB, and API
+  pushLicensesToCloud(colleges, globalLockout);
+}
+
+/**
+ * Save Global Lockout state to localStorage and cloud.
+ */
+export function saveGlobalLockoutState(lockout: GlobalLockoutState): void {
+  saveAllLicensesAndLockout(memoryColleges, lockout);
+}
+
+/**
+ * Save updated college registry to localStorage and cloud.
+ */
+export function saveCollegeLicenses(licenses: CollegeClientLicense[]): void {
+  saveAllLicensesAndLockout(licenses, memoryGlobalLockout);
+}
+
+/**
+ * Direct Force-Fetch from Cloud Firestore:
+ * Call this immediately on app launch or prior to login so mobile and web
+ * NEVER rely on stale local defaults.
+ */
+export async function forceFetchLatestLicenseFromCloud(): Promise<{
+  colleges: CollegeClientLicense[];
+  globalLockout: GlobalLockoutState;
+}> {
+  try {
+    const docSnap = await getDoc(doc(db, "system_licenses", "college_registry"));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (Array.isArray(data?.colleges) && data.colleges.length > 0) {
+        const gl: GlobalLockoutState = {
+          isGlobalWebStopped: Boolean(data.globalLockout?.isGlobalWebStopped),
+          isGlobalMobileStopped: Boolean(data.globalLockout?.isGlobalMobileStopped),
+          reason: String(data.globalLockout?.reason || ""),
+          stoppedAt: data.globalLockout?.stoppedAt || undefined,
+        };
+        memoryColleges = data.colleges;
+        memoryGlobalLockout = gl;
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.colleges));
+            localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(gl));
+            window.dispatchEvent(
+              new CustomEvent(LICENSE_EVENT_KEY, {
+                detail: { colleges: data.colleges, globalLockout: gl },
+              })
+            );
+          } catch (e) {}
+        }
+        return { colleges: data.colleges, globalLockout: gl };
+      }
+    }
+  } catch (err) {
+    console.warn("Direct Firestore license load note:", err);
+  }
+
+  // Secondary fallback: Next.js API (if running on Web)
+  try {
+    const res = await fetch("/api/creator/licenses", { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.colleges)) {
+        const gl: GlobalLockoutState = {
+          isGlobalWebStopped: Boolean(json.globalLockout?.isGlobalWebStopped),
+          isGlobalMobileStopped: Boolean(json.globalLockout?.isGlobalMobileStopped),
+          reason: String(json.globalLockout?.reason || ""),
+          stoppedAt: json.globalLockout?.stoppedAt || undefined,
+        };
+        memoryColleges = json.colleges;
+        memoryGlobalLockout = gl;
+        if (typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(json.colleges));
+          localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(gl));
+        }
+        return { colleges: json.colleges, globalLockout: gl };
+      }
+    }
+  } catch (e) {}
+
+  return {
+    colleges: getAllCollegeLicenses(),
+    globalLockout: getGlobalLockoutState(),
+  };
 }
 
 /**
@@ -287,7 +377,14 @@ export function listenToCollegeLicenses(
   // 1. Initial trigger with cached data
   callback(getAllCollegeLicenses(), getGlobalLockoutState());
 
-  // 2. Window CustomEvent listener (intra-tab communication)
+  // 2. Force instant pull from Cloud Firestore on start
+  forceFetchLatestLicenseFromCloud().then((res) => {
+    if (!isUnsubscribed) {
+      handleUpdate(res.colleges, res.globalLockout);
+    }
+  });
+
+  // 3. Window CustomEvent listener (intra-tab communication)
   const eventHandler = (e: any) => {
     if (e.detail?.colleges && e.detail?.globalLockout) {
       callback(e.detail.colleges, e.detail.globalLockout);
@@ -304,7 +401,7 @@ export function listenToCollegeLicenses(
     });
   }
 
-  // 3. Realtime Firestore Listener
+  // 4. Realtime Firestore Listener
   let fsUnsub = () => {};
   try {
     fsUnsub = onSnapshot(
@@ -329,51 +426,16 @@ export function listenToCollegeLicenses(
     );
   } catch (e) {}
 
-  // 4. Realtime Database Listener
-  let rtdbUnsub = () => {};
-  try {
-    const rtdbRef = ref(rtdb, "spherex_licenses");
-    rtdbUnsub = onValue(
-      rtdbRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const val = snapshot.val();
-          if (Array.isArray(val?.colleges) && val.colleges.length > 0) {
-            const gl: GlobalLockoutState = {
-              isGlobalWebStopped: Boolean(val.globalLockout?.isGlobalWebStopped),
-              isGlobalMobileStopped: Boolean(val.globalLockout?.isGlobalMobileStopped),
-              reason: String(val.globalLockout?.reason || ""),
-              stoppedAt: val.globalLockout?.stoppedAt || undefined,
-            };
-            handleUpdate(val.colleges, gl);
-          }
-        }
-      },
-      (err) => {
-        console.warn("RTDB license listener notice:", err);
-      }
-    );
-  } catch (e) {}
-
-  // 5. Periodic Heartbeat Polling (every 3.5s) to guarantee updates through proxies & firewalls
+  // 5. Periodic Heartbeat Polling (every 2.5s) to guarantee instant lockout across mobile & web
   const pollInterval = setInterval(async () => {
     if (isUnsubscribed) return;
     try {
-      const res = await fetch("/api/creator/licenses", { cache: "no-store" });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && Array.isArray(json.colleges)) {
-          const gl: GlobalLockoutState = {
-            isGlobalWebStopped: Boolean(json.globalLockout?.isGlobalWebStopped),
-            isGlobalMobileStopped: Boolean(json.globalLockout?.isGlobalMobileStopped),
-            reason: String(json.globalLockout?.reason || ""),
-            stoppedAt: json.globalLockout?.stoppedAt || undefined,
-          };
-          handleUpdate(json.colleges, gl);
-        }
+      const res = await forceFetchLatestLicenseFromCloud();
+      if (!isUnsubscribed && res.colleges.length > 0) {
+        handleUpdate(res.colleges, res.globalLockout);
       }
     } catch (e) {}
-  }, 3500);
+  }, 2500);
 
   return () => {
     isUnsubscribed = true;
@@ -382,7 +444,6 @@ export function listenToCollegeLicenses(
       window.removeEventListener(LICENSE_EVENT_KEY, eventHandler);
     }
     fsUnsub();
-    rtdbUnsub();
   };
 }
 
@@ -403,8 +464,16 @@ export function getCollegeLicenseById(id: string): CollegeClientLicense | undefi
 }
 
 /**
- * Check if a college's access is stopped for the current platform (Web or Mobile).
- * Checks Global Lockout first, and specific college lockout second.
+ * Universal Environment Suspension Check:
+ * Determines if access is stopped for the current environment (Web or Mobile).
+ * 
+ * Hierarchy:
+ * 1. Global Emergency Freeze (Web AND Mobile stopped globally) -> ALWAYS LOCKS EVERYONE.
+ * 2. Global Mobile Stopped -> Locks Native Mobile App + Mobile Browsers.
+ * 3. Global Web Stopped -> Locks Desktop Web Browsers.
+ * 4. College Frozen (Web AND Mobile stopped for college) -> LOCKS THAT COLLEGE ON ALL PLATFORMS.
+ * 5. College Mobile Stopped -> Locks Native Mobile App + Mobile Browsers for that college.
+ * 6. College Web Stopped -> Locks Web for that college.
  */
 export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
   isSuspended: boolean;
@@ -413,26 +482,45 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
   isGlobal?: boolean;
   reason?: string;
 } {
-  const isMobile = isCapacitorNative();
-  const platform = isMobile ? "MOBILE" : "WEB";
+  const isMobile = isMobileDeviceOrApp();
+  const platform: "WEB" | "MOBILE" = isMobile ? "MOBILE" : "WEB";
 
-  // 1. MASTER GLOBAL LOCKOUT CHECK (Applies to all systems and colleges)
+  // 1. MASTER GLOBAL LOCKOUT CHECK (Applies to all systems and colleges worldwide)
   const global = getGlobalLockoutState();
+
+  // A. Emergency Global Freeze: BOTH Web and Mobile stopped everywhere
+  if (global.isGlobalWebStopped && global.isGlobalMobileStopped) {
+    return {
+      isSuspended: true,
+      platform,
+      isGlobal: true,
+      reason:
+        global.reason ||
+        "EMERGENCY SYSTEM LOCKDOWN: Master Creator (SPHEREX Nithish Kumar) has stopped all Web and Mobile applications globally.",
+    };
+  }
+
+  // B. Global Mobile Stoppage: Mobile app stopped on all devices worldwide
   if (isMobile && global.isGlobalMobileStopped) {
     return {
       isSuspended: true,
       platform: "MOBILE",
       isGlobal: true,
-      reason: global.reason || "Mobile Application stopped globally across all systems by Master Creator (SPHEREX Nithish Kumar).",
+      reason:
+        global.reason ||
+        "Mobile Application stopped globally across all systems by Master Creator (SPHEREX Nithish Kumar).",
     };
   }
 
+  // C. Global Web Stoppage: Web application stopped across all computers worldwide
   if (!isMobile && global.isGlobalWebStopped) {
     return {
       isSuspended: true,
       platform: "WEB",
       isGlobal: true,
-      reason: global.reason || "Web Application stopped globally across all systems by Master Creator (SPHEREX Nithish Kumar).",
+      reason:
+        global.reason ||
+        "Web Application stopped globally across all systems by Master Creator (SPHEREX Nithish Kumar).",
     };
   }
 
@@ -440,23 +528,42 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
   if (campus) {
     const college = getCollegeLicenseByCampus(campus);
     if (college) {
+      // Both Web and Mobile stopped for this college -> Complete institutional lockout
+      if (college.isWebApplicationStopped && college.isMobileApplicationStopped) {
+        return {
+          isSuspended: true,
+          platform,
+          college,
+          isGlobal: false,
+          reason:
+            college.suspensionReason ||
+            `Full application access (Web & Mobile) stopped for ${college.collegeName} by Master Creator due to pending annual license renewal.`,
+        };
+      }
+
+      // Mobile stopped for this college
       if (isMobile && college.isMobileApplicationStopped) {
         return {
           isSuspended: true,
           platform: "MOBILE",
           college,
           isGlobal: false,
-          reason: college.suspensionReason || "Native Mobile App stopped by Master Creator due to pending annual renewal payment.",
+          reason:
+            college.suspensionReason ||
+            `Native Mobile App stopped for ${college.collegeName} by Master Creator due to pending annual renewal payment.`,
         };
       }
 
+      // Web stopped for this college
       if (!isMobile && college.isWebApplicationStopped) {
         return {
           isSuspended: true,
           platform: "WEB",
           college,
           isGlobal: false,
-          reason: college.suspensionReason || "Web Application stopped by Master Creator due to pending annual renewal payment.",
+          reason:
+            college.suspensionReason ||
+            `Web Application stopped for ${college.collegeName} by Master Creator due to pending annual renewal payment.`,
         };
       }
 
@@ -481,13 +588,13 @@ export function setCollegeWebApplicationStatus(
       return {
         ...c,
         isWebApplicationStopped: isStopped,
-        suspensionReason: isStopped ? reason : "",
+        suspensionReason: isStopped ? reason : c.isMobileApplicationStopped ? c.suspensionReason : "",
         suspendedAt: isStopped ? new Date().toISOString() : undefined,
       };
     }
     return c;
   });
-  saveCollegeLicenses(updated);
+  saveAllLicensesAndLockout(updated, memoryGlobalLockout);
   return updated;
 }
 
@@ -505,13 +612,13 @@ export function setCollegeMobileApplicationStatus(
       return {
         ...c,
         isMobileApplicationStopped: isStopped,
-        suspensionReason: isStopped ? reason : "",
+        suspensionReason: isStopped ? reason : c.isWebApplicationStopped ? c.suspensionReason : "",
         suspendedAt: isStopped ? new Date().toISOString() : undefined,
       };
     }
     return c;
   });
-  saveCollegeLicenses(updated);
+  saveAllLicensesAndLockout(updated, memoryGlobalLockout);
   return updated;
 }
 
@@ -536,7 +643,7 @@ export function freezeCollegeEntireApplication(
     }
     return c;
   });
-  saveCollegeLicenses(updated);
+  saveAllLicensesAndLockout(updated, memoryGlobalLockout);
   return updated;
 }
 
@@ -554,7 +661,7 @@ export function setGlobalWebStatus(
     reason: isStopped ? reason : current.isGlobalMobileStopped ? current.reason : "",
     stoppedAt: isStopped ? new Date().toISOString() : undefined,
   };
-  saveGlobalLockoutState(updated);
+  saveAllLicensesAndLockout(memoryColleges, updated);
   return updated;
 }
 
@@ -572,7 +679,7 @@ export function setGlobalMobileStatus(
     reason: isStopped ? reason : current.isGlobalWebStopped ? current.reason : "",
     stoppedAt: isStopped ? new Date().toISOString() : undefined,
   };
-  saveGlobalLockoutState(updated);
+  saveAllLicensesAndLockout(memoryColleges, updated);
   return updated;
 }
 
@@ -598,16 +705,17 @@ export function freezeAllApplicationsGlobally(
     suspendedAt: isFrozen ? new Date().toISOString() : undefined,
   }));
 
-  saveCollegeLicenses(colleges);
-  saveGlobalLockoutState(globalLockout);
-
+  saveAllLicensesAndLockout(colleges, globalLockout);
   return { colleges, globalLockout };
 }
 
 /**
  * Creator Action: Restore ALL Applications Globally - Open Web and Mobile everywhere with 1 click.
  */
-export function restoreAllApplicationsGlobally(): { colleges: CollegeClientLicense[]; globalLockout: GlobalLockoutState } {
+export function restoreAllApplicationsGlobally(): {
+  colleges: CollegeClientLicense[];
+  globalLockout: GlobalLockoutState;
+} {
   return freezeAllApplicationsGlobally(false, "");
 }
 
@@ -647,14 +755,16 @@ export function recordCollegePaymentAndOpenApp(
     return c;
   });
 
-  saveCollegeLicenses(updated);
+  saveAllLicensesAndLockout(updated, memoryGlobalLockout);
   return { updatedList: updated, targetCollege };
 }
 
 /**
  * Creator Action: Register a new College using SPHEREX CRM.
  */
-export function registerNewCollegeClient(newCollege: Partial<CollegeClientLicense>): CollegeClientLicense[] {
+export function registerNewCollegeClient(
+  newCollege: Partial<CollegeClientLicense>
+): CollegeClientLicense[] {
   const colleges = getAllCollegeLicenses();
   const id = newCollege.id || `COLLEGE_${Date.now()}`;
   const total = (newCollege.baseAnnualFee || 150000) + (newCollege.overageSurcharge || 0);
@@ -684,6 +794,6 @@ export function registerNewCollegeClient(newCollege: Partial<CollegeClientLicens
   };
 
   const updated = [...colleges, created];
-  saveCollegeLicenses(updated);
+  saveAllLicensesAndLockout(updated, memoryGlobalLockout);
   return updated;
 }

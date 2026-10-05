@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic, Lock, AlertTriangle, ShieldAlert } from "lucide-react";
-import { isCollegeSuspendedForCurrentEnvironment, listenToCollegeLicenses, CollegeClientLicense } from "@/lib/collegeLicenseService";
+import {
+  isCollegeSuspendedForCurrentEnvironment,
+  listenToCollegeLicenses,
+  forceFetchLatestLicenseFromCloud,
+  CollegeClientLicense,
+} from "@/lib/collegeLicenseService";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import MetricCards from "@/components/MetricCards";
@@ -110,6 +115,10 @@ export default function DashboardPage() {
     };
 
     evaluateSuspension();
+    forceFetchLatestLicenseFromCloud().then(() => {
+      evaluateSuspension();
+    });
+
     const unsubscribe = listenToCollegeLicenses(() => {
       evaluateSuspension();
     });
@@ -839,6 +848,21 @@ export default function DashboardPage() {
           </div>
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                await forceFetchLatestLicenseFromCloud();
+                const recheck = isCollegeSuspendedForCurrentEnvironment(loggedInCampus || undefined);
+                setInstitutionSuspension(recheck);
+                if (!recheck.isSuspended) {
+                  triggerToast("✨ Access restored! Resuming application...");
+                }
+              }}
+              className="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all cursor-pointer"
+            >
+              🔄 Re-check Cloud License
+            </button>
+
             <button
               type="button"
               onClick={handleLogout}

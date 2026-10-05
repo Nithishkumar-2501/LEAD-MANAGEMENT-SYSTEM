@@ -9,6 +9,7 @@ import {
   isCollegeSuspendedForCurrentEnvironment,
   listenToCollegeLicenses,
   getGlobalLockoutState,
+  forceFetchLatestLicenseFromCloud,
   CollegeClientLicense,
   GlobalLockoutState,
 } from "@/lib/collegeLicenseService";
@@ -73,6 +74,30 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     // Subscribe to live cloud license and global lockout updates
     const unsubscribe = listenToCollegeLicenses((_colleges, latestGlobal) => {
       setGlobalLockout(latestGlobal);
+      const check = isCollegeSuspendedForCurrentEnvironment();
+      if (check.isSuspended) {
+        setSuspensionAlert({
+          isOpen: true,
+          college: check.college,
+          platform: check.platform,
+          isGlobal: check.isGlobal,
+          reason: check.reason,
+        });
+      }
+    });
+
+    // Immediately force-fetch from Cloud Firestore
+    forceFetchLatestLicenseFromCloud().then(() => {
+      const check = isCollegeSuspendedForCurrentEnvironment();
+      if (check.isSuspended) {
+        setSuspensionAlert({
+          isOpen: true,
+          college: check.college,
+          platform: check.platform,
+          isGlobal: check.isGlobal,
+          reason: check.reason,
+        });
+      }
     });
 
     return () => unsubscribe();
@@ -161,6 +186,9 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       setError("Invalid credentials. Please check your user ID / email and password.");
       return;
     }
+
+    // Force real-time fetch directly from Cloud Firestore before authenticating
+    await forceFetchLatestLicenseFromCloud();
 
     // Check if the college's Web or Mobile application has been stopped by the Root Creator
     const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(targetCampus);
@@ -1010,14 +1038,14 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       )}
 
       {/* Institutional Suspension Lockdown Modal (Creator Stopped Application) */}
-      {suspensionAlert?.isOpen && suspensionAlert.college && (
+      {suspensionAlert?.isOpen && (
         <div
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 99999,
-            backgroundColor: "rgba(3, 7, 18, 0.88)",
-            backdropFilter: "blur(12px)",
+            backgroundColor: "rgba(3, 7, 18, 0.94)",
+            backdropFilter: "blur(16px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -1032,7 +1060,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               borderRadius: "24px",
               border: "2px solid #ef4444",
               padding: "28px",
-              boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.35)",
+              boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.45)",
               color: "#ffffff",
               textAlign: "center",
             }}
@@ -1069,7 +1097,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 marginBottom: "12px",
               }}
             >
-              {suspensionAlert.isGlobal ? "System Lockout by Master Creator" : "Access Suspended by SPHEREX Root"}
+              {suspensionAlert.isGlobal ? "Emergency System Lockdown" : "Access Suspended by SPHEREX Root"}
             </span>
 
             <h3
@@ -1080,7 +1108,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 marginBottom: "6px",
               }}
             >
-              {suspensionAlert.college ? suspensionAlert.college.collegeName : "SPHEREX ADMISSION OS"}
+              {suspensionAlert.college ? suspensionAlert.college.collegeName : "SPHEREX ADMISSION OS (ALL INSTITUTIONS)"}
             </h3>
 
             <p
@@ -1095,7 +1123,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               <strong style={{ color: "#ffffff" }}>
                 {suspensionAlert.platform === "MOBILE" ? "Native Mobile App" : "Web Application"}
               </strong>{" "}
-              has been stopped across all systems by the Master Creator.
+              has been stopped by the Master Creator.
             </p>
 
             <div
@@ -1112,8 +1140,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             >
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Suspension Reason:</span>
-                <span style={{ fontWeight: 700, color: "#f87171" }}>
-                  {suspensionAlert.reason || "Annual Software Subscription Pending"}
+                <span style={{ fontWeight: 700, color: "#f87171", textAlign: "right" }}>
+                  {suspensionAlert.reason || (suspensionAlert.isGlobal ? "Master Emergency Freeze by Creator" : "Annual Software Subscription Pending")}
                 </span>
               </div>
               {suspensionAlert.college && (
@@ -1150,7 +1178,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 lineHeight: 1.5,
               }}
             >
-              ℹ️ Please contact SPHEREX Master Creator (<strong>Nithish Kumar</strong>) to settle your institutional payment. Once cleared, application access will be opened immediately on all systems.
+              ℹ️ Please contact SPHEREX Master Creator (<strong>Nithish Kumar</strong>) to settle institutional renewal. Once cleared in the Creator portal, application access will be opened immediately on all systems.
             </p>
 
             <button
@@ -1176,7 +1204,21 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </button>
 
             <button
-              onClick={() => setSuspensionAlert(null)}
+              onClick={async () => {
+                await forceFetchLatestLicenseFromCloud();
+                const recheck = isCollegeSuspendedForCurrentEnvironment();
+                if (!recheck.isSuspended) {
+                  setSuspensionAlert(null);
+                } else {
+                  setSuspensionAlert({
+                    isOpen: true,
+                    college: recheck.college,
+                    platform: recheck.platform,
+                    isGlobal: recheck.isGlobal,
+                    reason: recheck.reason,
+                  });
+                }
+              }}
               style={{
                 width: "100%",
                 padding: "10px",
@@ -1189,7 +1231,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 cursor: "pointer",
               }}
             >
-              Acknowledge &amp; Close
+              🔄 Refresh &amp; Re-check Cloud Status
             </button>
           </div>
         </div>
