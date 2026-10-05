@@ -65,61 +65,22 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       localStorage.setItem("vsb_teacher_coimbatore_pw", "vsbteacher@1213");
     }
 
-    // Load saved username if rememberMe was previously set
+    // Load saved username only once on initial component mount
     const savedUser = localStorage.getItem("spherex_saved_user");
     if (savedUser) {
       setUsername(savedUser);
     }
 
-    const detectCampus = (userStr: string): "KARUR" | "COIMBATORE" | undefined => {
-      const clean = (userStr || "").trim().toLowerCase();
-      if (clean.includes("karur") || clean.includes("mech") || clean.includes("cse") || clean.includes("eee") || clean.includes("civil") || clean.includes("bme") || clean.includes("biotech") || clean.includes("ds")) {
-        return "KARUR";
-      }
-      if (clean.includes("covai") || clean.includes("coimbatore") || clean.includes("ece") || clean.includes("cyber") || clean.includes("aero")) {
-        return "COIMBATORE";
-      }
-      return undefined;
-    };
-
-    const recheckStatus = () => {
-      // In Web, never show full-screen suspension modal before the user enters their credentials.
-      // This allows the Master Creator to freely type credentials and log in on Web!
-      if (!isCapacitorNative()) {
-        return;
-      }
-      const isCreator = username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator");
-      if (isCreator) {
-        setSuspensionAlert(null);
-        return;
-      }
-      const check = isCollegeSuspendedForCurrentEnvironment(detectCampus(username));
-      if (check.isSuspended) {
-        setSuspensionAlert({
-          isOpen: true,
-          college: check.college,
-          platform: check.platform,
-          isGlobal: check.isGlobal,
-          reason: check.reason,
-        });
-      } else {
-        setSuspensionAlert(null);
-      }
-    };
-
     // Subscribe to live cloud license and global lockout updates (Sub-100ms listener)
     const unsubscribe = listenToCollegeLicenses((_colleges, latestGlobal) => {
       setGlobalLockout(latestGlobal);
-      recheckStatus();
     });
 
-    // Immediately force-fetch from Cloud Firestore and Realtime Database
-    forceFetchLatestLicenseFromCloud().then(() => {
-      recheckStatus();
-    });
+    // Immediately fetch from Cloud Firestore without blocking typing
+    forceFetchLatestLicenseFromCloud().catch((e) => console.warn("License fetch notice:", e));
 
     return () => unsubscribe();
-  }, [username]);
+  }, []); // Run ONCE on mount so typing, Backspace, and editing are never overwritten
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -841,6 +802,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 id="login-email"
                 type="text"
                 required
+                autoComplete="username"
+                spellCheck={false}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="adminkarur@123"
@@ -894,6 +857,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                   id="login-password"
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="current-password"
+                  spellCheck={false}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
