@@ -74,13 +74,19 @@ export async function loginWithRealtimeAuth(
   }
 }
 
-// Save authentication session locally
+// Save authentication session for current browser window only
 function saveLocalSession(session: AuthSession) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("vsb_logged_in_user", session.username);
-  localStorage.setItem("vsb_logged_in_role", session.role);
-  localStorage.setItem("vsb_logged_in_campus", session.campus);
-  localStorage.setItem("vsb_auth_timestamp", new Date().toISOString());
+  sessionStorage.setItem("vsb_logged_in_user", session.username);
+  sessionStorage.setItem("vsb_logged_in_role", session.role);
+  sessionStorage.setItem("vsb_logged_in_campus", session.campus);
+  sessionStorage.setItem("vsb_auth_timestamp", new Date().toISOString());
+  try {
+    localStorage.removeItem("vsb_admin_auth");
+    localStorage.removeItem("vsb_logged_in_user");
+    localStorage.removeItem("vsb_logged_in_role");
+    localStorage.removeItem("vsb_logged_in_campus");
+  } catch (e) {}
 }
 
 // Real-time logout handler
@@ -91,10 +97,18 @@ export async function logoutWithRealtimeAuth(): Promise<void> {
     // Ignore signout errors
   } finally {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("vsb_logged_in_user");
-      localStorage.removeItem("vsb_logged_in_role");
-      localStorage.removeItem("vsb_logged_in_campus");
-      localStorage.removeItem("vsb_auth_timestamp");
+      sessionStorage.removeItem("vsb_logged_in_user");
+      sessionStorage.removeItem("vsb_logged_in_role");
+      sessionStorage.removeItem("vsb_logged_in_campus");
+      sessionStorage.removeItem("vsb_auth_timestamp");
+      sessionStorage.removeItem("vsb_admin_auth");
+      try {
+        localStorage.removeItem("vsb_admin_auth");
+        localStorage.removeItem("vsb_logged_in_user");
+        localStorage.removeItem("vsb_logged_in_role");
+        localStorage.removeItem("vsb_logged_in_campus");
+        localStorage.removeItem("vsb_auth_timestamp");
+      } catch (e) {}
     }
   }
 }

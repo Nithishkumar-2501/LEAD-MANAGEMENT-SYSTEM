@@ -81,58 +81,15 @@ import {
 } from "@/lib/mockData";
 
 export default function DashboardPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return (
-        sessionStorage.getItem("vsb_admin_auth") === "true" ||
-        localStorage.getItem("vsb_admin_auth") === "true"
-      );
-    }
-    return false;
-  });
+  // Always start with login page required whenever the application is opened
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ADMIN_DASHBOARD");
-  const [selectedCampus, setSelectedCampus] = useState<CampusLocation>(() => {
-    if (typeof window !== "undefined") {
-      return (
-        (sessionStorage.getItem("vsb_logged_in_campus") as CampusLocation) ||
-        (localStorage.getItem("vsb_logged_in_campus") as CampusLocation) ||
-        "KARUR"
-      );
-    }
-    return "KARUR";
-  });
+  const [selectedCampus, setSelectedCampus] = useState<CampusLocation>("KARUR");
   const [selectedStageFilter, setSelectedStageFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">(() => {
-    if (typeof window !== "undefined") {
-      return (
-        (sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE") ||
-        (localStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE") ||
-        "KARUR"
-      );
-    }
-    return "KARUR";
-  });
-  const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER" | "CREATOR">(() => {
-    if (typeof window !== "undefined") {
-      return (
-        (sessionStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR") ||
-        (localStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR") ||
-        "ADMIN"
-      );
-    }
-    return "ADMIN";
-  });
-  const [loggedInUsername, setLoggedInUsername] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return (
-        sessionStorage.getItem("vsb_logged_in_user") ||
-        localStorage.getItem("vsb_logged_in_user") ||
-        ""
-      );
-    }
-    return "";
-  });
+  const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
+  const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER" | "CREATOR">("ADMIN");
+  const [loggedInUsername, setLoggedInUsername] = useState<string>("");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Sub-modules role: Creator has full administrative privileges across all CRM screens
@@ -584,42 +541,22 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    const authSession = sessionStorage.getItem("vsb_admin_auth") || localStorage.getItem("vsb_admin_auth");
-    if (authSession === "true") {
-      setIsAuthenticated(true);
-      const campus = (sessionStorage.getItem("vsb_logged_in_campus") || localStorage.getItem("vsb_logged_in_campus")) as "KARUR" | "COIMBATORE";
-      const role = (sessionStorage.getItem("vsb_logged_in_role") || localStorage.getItem("vsb_logged_in_role")) as "ADMIN" | "TEACHER" | "CREATOR";
-      const user = sessionStorage.getItem("vsb_logged_in_user") || localStorage.getItem("vsb_logged_in_user");
-      if (campus) {
-        setLoggedInCampus(campus);
-        setSelectedCampus(campus);
-      }
-      if (role) {
-        setCurrentUserRole(role);
-        if (role === "CREATOR") {
-          setActiveTab("CREATOR_CONTROL");
-        } else if (role === "TEACHER") {
-          setActiveTab("USER_DASHBOARD");
-        }
-      }
-      if (user) {
-        setLoggedInUsername(user);
-        // Automatically ensure teacher status is ACTIVE while authenticated
-        if (role === "TEACHER") {
-          updateTeacherOnlineStatus(user, campus, "ACTIVE").catch(() => {});
-        }
-      }
-    } else {
-      setIsAuthenticated(false);
-    }
+    // Ensure lingering persistent auth is purged so reopening app always requires fresh login
+    try {
+      localStorage.removeItem("vsb_admin_auth");
+      localStorage.removeItem("vsb_logged_in_user");
+      localStorage.removeItem("vsb_logged_in_role");
+      localStorage.removeItem("vsb_logged_in_campus");
+    } catch (e) {}
+    setIsAuthenticated(false);
   }, []);
 
   // Sync teacher status to ON_LEAVE if the browser tab is closed/unloaded
   useEffect(() => {
     const handleBeforeUnload = () => {
-      const role = sessionStorage.getItem("vsb_logged_in_role") || localStorage.getItem("vsb_logged_in_role");
-      const user = sessionStorage.getItem("vsb_logged_in_user") || localStorage.getItem("vsb_logged_in_user");
-      const campus = (sessionStorage.getItem("vsb_logged_in_campus") || localStorage.getItem("vsb_logged_in_campus")) as "KARUR" | "COIMBATORE";
+      const role = sessionStorage.getItem("vsb_logged_in_role");
+      const user = sessionStorage.getItem("vsb_logged_in_user");
+      const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
       if (role === "TEACHER" && user) {
         updateTeacherOnlineStatus(user, campus, "ON_LEAVE").catch(() => {});
       }
@@ -635,11 +572,12 @@ export default function DashboardPage() {
     sessionStorage.setItem("vsb_logged_in_campus", campus);
     sessionStorage.setItem("vsb_logged_in_role", role);
     sessionStorage.setItem("vsb_logged_in_user", username);
+    // Explicitly do not persist to localStorage so closing and reopening always prompts for login!
     try {
-      localStorage.setItem("vsb_admin_auth", "true");
-      localStorage.setItem("vsb_logged_in_campus", campus);
-      localStorage.setItem("vsb_logged_in_role", role);
-      localStorage.setItem("vsb_logged_in_user", username);
+      localStorage.removeItem("vsb_admin_auth");
+      localStorage.removeItem("vsb_logged_in_user");
+      localStorage.removeItem("vsb_logged_in_role");
+      localStorage.removeItem("vsb_logged_in_campus");
     } catch (e) {}
 
     setLoggedInCampus(campus);
@@ -1400,10 +1338,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => {
                   try {
-                    localStorage.setItem("vsb_admin_auth", "true");
-                    localStorage.setItem("vsb_logged_in_campus", "KARUR");
-                    localStorage.setItem("vsb_logged_in_role", "CREATOR");
-                    localStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                    localStorage.removeItem("vsb_admin_auth");
                     sessionStorage.setItem("vsb_admin_auth", "true");
                     sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
                     sessionStorage.setItem("vsb_logged_in_role", "CREATOR");

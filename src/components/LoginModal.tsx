@@ -159,12 +159,9 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     if (isCreatorId) {
       if (isCreatorPass) {
         setLoading(false);
-        // Persist session to both storage engines for zero dropouts on mobile/web
+        // Save session strictly in sessionStorage so closing app requires login on next open
         try {
-          localStorage.setItem("vsb_admin_auth", "true");
-          localStorage.setItem("vsb_logged_in_campus", "KARUR");
-          localStorage.setItem("vsb_logged_in_role", "CREATOR");
-          localStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+          localStorage.removeItem("vsb_admin_auth");
           sessionStorage.setItem("vsb_admin_auth", "true");
           sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
           sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
@@ -1348,10 +1345,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 setUsername("spherexnithish#");
                 setPassword("spherex#2501");
                 try {
-                  localStorage.setItem("vsb_admin_auth", "true");
-                  localStorage.setItem("vsb_logged_in_campus", "KARUR");
-                  localStorage.setItem("vsb_logged_in_role", "CREATOR");
-                  localStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                  localStorage.removeItem("vsb_admin_auth");
                   sessionStorage.setItem("vsb_admin_auth", "true");
                   sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
                   sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
