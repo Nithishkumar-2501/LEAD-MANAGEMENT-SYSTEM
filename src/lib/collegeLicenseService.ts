@@ -515,8 +515,9 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
   isGlobal?: boolean;
   reason?: string;
 } {
-  const isMobile = isMobileDeviceOrApp();
-  const platform: "WEB" | "MOBILE" = isMobile ? "MOBILE" : "WEB";
+  const isNativeApp = isCapacitorNative();
+  const isMobile = isNativeApp || isMobileDeviceOrApp();
+  const platform: "WEB" | "MOBILE" = isNativeApp ? "MOBILE" : "WEB";
 
   // 1. MASTER GLOBAL LOCKOUT CHECK (Applies to all systems and colleges worldwide)
   const global = getGlobalLockoutState();
@@ -534,7 +535,7 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
   }
 
   // B. Global Mobile Stoppage: Mobile app stopped on all devices worldwide
-  if (isMobile && global.isGlobalMobileStopped) {
+  if ((isNativeApp || isMobile) && global.isGlobalMobileStopped) {
     return {
       isSuspended: true,
       platform: "MOBILE",
@@ -545,15 +546,15 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
     };
   }
 
-  // C. Global Web Stoppage: Web application stopped across all computers worldwide
-  if (!isMobile && global.isGlobalWebStopped) {
+  // C. Global Web Stoppage: Web application stopped across all computers & browsers worldwide
+  if (!isNativeApp && global.isGlobalWebStopped) {
     return {
       isSuspended: true,
       platform: "WEB",
       isGlobal: true,
       reason:
         global.reason ||
-        "Web Application stopped globally across all systems by Master Creator (SPHEREX Nithish Kumar).",
+        "Web Application host stopped globally across all systems by Master Creator (SPHEREX Nithish Kumar).",
     };
   }
 
@@ -575,7 +576,7 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
       }
 
       // Mobile stopped for this college
-      if (isMobile && college.isMobileApplicationStopped) {
+      if ((isNativeApp || isMobile) && college.isMobileApplicationStopped) {
         return {
           isSuspended: true,
           platform: "MOBILE",
@@ -588,7 +589,7 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
       }
 
       // Web stopped for this college
-      if (!isMobile && college.isWebApplicationStopped) {
+      if (!isNativeApp && college.isWebApplicationStopped) {
         return {
           isSuspended: true,
           platform: "WEB",

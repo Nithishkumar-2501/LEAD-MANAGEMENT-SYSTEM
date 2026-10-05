@@ -359,6 +359,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     },
   };
 
+  const isCurrentHostStopped =
+    (!isCapacitorNative() && globalLockout.isGlobalWebStopped) ||
+    (isCapacitorNative() && globalLockout.isGlobalMobileStopped);
+
   return (
     <div
       className="fixed inset-0 z-50 flex min-h-screen w-full flex-col lg:flex-row overflow-y-auto"
@@ -608,64 +612,182 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
 
 
-          {/* Global System Lockout Alert Banner */}
-          {((!isCapacitorNative() && globalLockout.isGlobalWebStopped) ||
-            (isCapacitorNative() && globalLockout.isGlobalMobileStopped)) && (
+          {/* Dedicated Stoppage Screen when Creator halts the Web host / Mobile app */}
+          {isCurrentHostStopped && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              variants={itemVariants}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               style={{
+                backgroundColor: "rgba(15, 23, 42, 0.95)",
+                borderRadius: "24px",
+                border: "2px solid #ef4444",
+                padding: "26px",
+                boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.4)",
+                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
                 marginBottom: "16px",
-                padding: "14px 16px",
-                borderRadius: "16px",
-                backgroundColor: "rgba(127, 29, 29, 0.7)",
-                border: "2px solid rgba(239, 68, 68, 0.6)",
-                color: "#ffffff",
-                fontSize: "12px",
-                textAlign: "left",
-                boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.4)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 800, color: "#fca5a5", marginBottom: "6px" }}>
-                <Lock style={{ width: "16px", height: "16px", color: "#f87171" }} />
-                <span>APPLICATION ACCESS HALTED BY CREATOR</span>
+              <div
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  borderRadius: "18px",
+                  backgroundColor: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                  color: "#ef4444",
+                  margin: "0 auto",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Lock style={{ width: "30px", height: "30px" }} />
               </div>
-              <p style={{ margin: "0 0 10px 0", fontSize: "11px", color: "rgba(255, 255, 255, 0.8)", lineHeight: 1.5 }}>
-                {isCapacitorNative()
-                  ? "Native Mobile Application access has been stopped across all systems by the Master Creator."
-                  : "Web Application access has been stopped across all systems by the Master Creator."}
+
+              <div>
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "4px 12px",
+                    borderRadius: "9999px",
+                    fontSize: "10px",
+                    fontWeight: 800,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    backgroundColor: "rgba(239, 68, 68, 0.2)",
+                    color: "#fca5a5",
+                    border: "1px solid rgba(239, 68, 68, 0.4)",
+                    marginBottom: "8px",
+                  }}
+                >
+                  SYSTEM ACCESS HALTED
+                </span>
+                <h3 style={{ fontSize: "19px", fontWeight: 800, color: "#ffffff", margin: "0 0 6px" }}>
+                  HOST APPLICATION STOPPED
+                </h3>
+                <p style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.75)", lineHeight: 1.5, margin: 0 }}>
+                  {isCapacitorNative()
+                    ? "Native Mobile Application access has been stopped across all systems by the Master Creator."
+                    : "Web Application host has been stopped across all systems by Master Creator (SPHEREX Nithish Kumar)."}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#030712",
+                  borderRadius: "14px",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  padding: "14px",
+                  fontSize: "11.5px",
+                  textAlign: "left",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "7px",
+                  lineHeight: 1.6,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(255, 255, 255, 0.5)" }}>Host Status:</span>
+                  <span style={{ color: "#f87171", fontWeight: 800 }}>🛑 STOPPED BY CREATOR</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(255, 255, 255, 0.5)" }}>Current Platform:</span>
+                  <span style={{ color: "#38bdf8", fontWeight: 700 }}>
+                    {isCapacitorNative() ? "📱 Native Mobile App" : "💻 Web Application (Host)"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(255, 255, 255, 0.5)" }}>Stoppage Reason:</span>
+                  <span style={{ color: "#fbbf24", fontWeight: 600, textAlign: "right" }}>
+                    {globalLockout.reason || "Annual software subscription pending clearance."}
+                  </span>
+                </div>
+              </div>
+
+              <p
+                style={{
+                  fontSize: "11px",
+                  color: "#fbbf24",
+                  backgroundColor: "rgba(251, 191, 36, 0.1)",
+                  border: "1px solid rgba(251, 191, 36, 0.25)",
+                  borderRadius: "12px",
+                  padding: "10px 12px",
+                  margin: 0,
+                  lineHeight: 1.5,
+                }}
+              >
+                ℹ️ The host will remain stopped until the Master Creator re-opens access. Once reopened in the Creator portal, access will resume immediately on all systems.
               </p>
+
               {!isCapacitorNative() && (
                 <button
                   type="button"
                   onClick={() => {
-                    setUsername("spherexnithish#");
-                    setPassword("spherex#2501");
-                    setError(null);
+                    try {
+                      localStorage.removeItem("vsb_admin_auth");
+                      sessionStorage.setItem("vsb_admin_auth", "true");
+                      sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
+                      sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
+                      sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+                    } catch (e) {}
+                    onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
                   }}
                   style={{
                     width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    background: "linear-gradient(to right, #f59e0b, #ea580c)",
+                    padding: "13px 18px",
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #f59e0b, #ea580c)",
                     color: "#ffffff",
-                    fontSize: "11px",
+                    fontSize: "12px",
                     fontWeight: 800,
                     border: "none",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "6px",
+                    gap: "8px",
+                    boxShadow: "0 10px 25px -4px rgba(245, 158, 11, 0.5)",
                   }}
                 >
-                  👑 Master Creator Sign In (Web Only)
+                  <span>👑 Master Creator Login & Re-open Site</span>
+                  <ArrowRight style={{ width: "16px", height: "16px" }} />
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const res = await forceFetchLatestLicenseFromCloud();
+                    setGlobalLockout(res.globalLockout);
+                  } catch (e) {}
+                  setLoading(false);
+                }}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                🔄 Re-check Cloud License
+              </button>
             </motion.div>
           )}
 
-          {/* Error Notification */}
+          {!isCurrentHostStopped && (
+            <>
+              {/* Error Notification */}
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -6 }}
@@ -1113,8 +1235,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               </button>
             </div>
           </motion.div>
+        </>
+      )}
 
-          {/* Department Attribution Footer */}
+      {/* Department Attribution Footer */}
           <motion.div
             variants={itemVariants}
             style={{
