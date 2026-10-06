@@ -970,8 +970,8 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 p-3 sm:p-6 pb-28 sm:pb-6 w-full max-w-full space-y-4 sm:space-y-6 overflow-x-hidden">
-        {/* ADMISSIONS & ADMIN DASHBOARD MODULE (ADMIN & CREATOR) */}
-        {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && (currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
+        {/* ADMISSIONS & ADMIN DASHBOARD MODULE (ADMIN ONLY) */}
+        {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && currentUserRole === "ADMIN" && (
           <AdminDashboardView
             metrics={dynamicMetrics}
             statusCounts={dynamicStatusCounts}
@@ -1053,9 +1053,9 @@ export default function DashboardPage() {
           )
         )}
 
-        {/* APPLICATION MANAGER MODULE (ADMIN & CREATOR) */}
+        {/* APPLICATION MANAGER MODULE (ADMIN ONLY) */}
         {(activeTab === "APPLICATION_MANAGER" || activeTab === "APPLICATION_OFFLINE_LOGS") &&
-          (currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
+          currentUserRole === "ADMIN" && (
           <ApplicationManagerModule
             loggedInCampus={selectedCampus}
             onTriggerToast={triggerToast}
@@ -1090,8 +1090,8 @@ export default function DashboardPage() {
           <CampusCourseModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
         )}
 
-        {/* STUDENT FEE PAYMENTS MODULE */}
-        {activeTab === "PAYMENTS" && (
+        {/* STUDENT FEE PAYMENTS MODULE (ADMIN ONLY) */}
+        {activeTab === "PAYMENTS" && currentUserRole !== "CREATOR" && (
           <PaymentBillingModule
             loggedInCampus={loggedInCampus}
             onTriggerToast={triggerToast}

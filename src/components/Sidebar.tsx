@@ -137,7 +137,9 @@ export default function Sidebar({
   }, []);
 
   const trimmedQuery = menuSearchQuery.trim().toLowerCase();
-  const visibleApplicants = currentUserRole === "TEACHER"
+  const visibleApplicants = currentUserRole === "CREATOR"
+    ? []
+    : currentUserRole === "TEACHER"
     ? (applicants || []).filter((a) => isLeadAssignedToTeacher(a, loggedInUsername, loggedInCampus))
     : (applicants || []);
   const matchingApplicants =
@@ -184,7 +186,7 @@ export default function Sidebar({
       color: "from-sky-500 to-blue-600",
       activeBorder: "border-sky-400",
       activeGlow: "shadow-sky-500/30",
-      roles: ["ADMIN", "CREATOR"],
+      roles: ["ADMIN"],
     },
     {
       id: "USER_DASHBOARD" as ActiveTab,
@@ -204,7 +206,7 @@ export default function Sidebar({
       color: "from-purple-500 to-pink-600",
       activeBorder: "border-purple-400",
       activeGlow: "shadow-purple-500/30",
-      roles: ["ADMIN", "CREATOR"],
+      roles: ["ADMIN"],
     },
     {
       id: "ECHO_DASHBOARD" as ActiveTab,
@@ -214,7 +216,7 @@ export default function Sidebar({
       color: "from-emerald-500 to-teal-600",
       activeBorder: "border-emerald-400",
       activeGlow: "shadow-emerald-500/30",
-      roles: ["ADMIN", "TEACHER", "CREATOR"],
+      roles: ["ADMIN", "TEACHER"],
     },
     {
       id: "AI_INTELLIGENCE" as ActiveTab,
@@ -224,7 +226,7 @@ export default function Sidebar({
       color: "from-fuchsia-500 to-indigo-600",
       activeBorder: "border-fuchsia-400",
       activeGlow: "shadow-fuchsia-500/30",
-      roles: ["ADMIN", "TEACHER", "CREATOR"],
+      roles: ["ADMIN", "TEACHER"],
     },
   ];
 
@@ -297,8 +299,8 @@ export default function Sidebar({
             : []),
           {
             id: "CONTACTS" as ActiveTab,
-            label: "Total Leads Count",
-            sublabel: "Lead Volume & Quotas (Count Only)",
+            label: "Total Student Count",
+            sublabel: "Overall Student Volume (Count Only)",
             icon: UserCheck,
             color: "from-indigo-500 to-purple-600",
             activeBorder: "border-indigo-400",
@@ -316,20 +318,11 @@ export default function Sidebar({
           {
             id: "CAMPUSES" as ActiveTab,
             label: "Campus & Courses",
-            sublabel: "Campus Programs",
+            sublabel: "Accredited Programs",
             icon: Building2,
             color: "from-amber-500 to-orange-600",
             activeBorder: "border-amber-400",
             activeGlow: "shadow-amber-500/30",
-          },
-          {
-            id: "PAYMENTS" as ActiveTab,
-            label: "Student Fee Payments",
-            sublabel: "Paid Students & Fee Receipts",
-            icon: CreditCard,
-            color: "from-emerald-500 to-teal-600",
-            activeBorder: "border-emerald-400",
-            activeGlow: "shadow-emerald-500/30",
           },
         ]
       : admissionSubItems;
@@ -726,7 +719,8 @@ export default function Sidebar({
           </div>
 
           {/* PARENT MENU ITEM 1: DASHBOARD */}
-          <div className="relative space-y-1.5">
+          {currentUserRole !== "CREATOR" && dashboardSubItems.length > 0 && (
+            <div className="relative space-y-1.5">
             {isCollapsed ? (
               <Tooltip text="Dashboard" position="right">
                 <button
@@ -950,6 +944,7 @@ export default function Sidebar({
               </div>
             )}
           </div>
+          )}
 
           {/* PARENT MENU ITEM: ADMISSION CRM */}
           <div className="relative space-y-1.5">
@@ -1178,8 +1173,8 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* PARENT MENU ITEM: APPLICATION MANAGER (ADMIN & CREATOR) */}
-          {(currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
+          {/* PARENT MENU ITEM: APPLICATION MANAGER (ADMIN ONLY) */}
+          {currentUserRole === "ADMIN" && (
             <div className="relative space-y-1.5 pt-2 border-t border-slate-200 dark:border-white/10 mt-2">
               {isCollapsed ? (
                 <Tooltip text="Application Manager" position="right">
@@ -1410,7 +1405,8 @@ export default function Sidebar({
           )}
 
           {/* PARENT MENU ITEM 2: CONTACT & SOCIAL MEDIA PLATFORM */}
-          <div className="relative space-y-1.5 pt-2 border-t border-slate-200 dark:border-white/10 mt-2">
+          {currentUserRole !== "CREATOR" && (
+            <div className="relative space-y-1.5 pt-2 border-t border-slate-200 dark:border-white/10 mt-2">
             {isCollapsed ? (
               <Tooltip text="Contact & Social Media Platform" position="right">
                 <button
@@ -1635,6 +1631,7 @@ export default function Sidebar({
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Sidebar Footer: Unified Compact Bar with Settings Icon Option & Logout */}

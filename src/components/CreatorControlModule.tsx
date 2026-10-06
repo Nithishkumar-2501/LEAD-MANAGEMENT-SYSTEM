@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { CampusLocation, Lead, Application } from "@/types/crm";
+import { useState, useEffect, useMemo } from "react";
+import { CampusLocation, Lead, Application, CourseProgram, Teacher } from "@/types/crm";
 import {
   getAnnualRenewalData,
   setSimulatedQuotaMode,
@@ -16,7 +16,10 @@ import {
   normalizeAllFirebasePhones,
   fetchPaymentsFromFirebase,
   fetchTeachersFromFirebase,
+  fetchCoursesFromFirebase,
+  DEFAULT_COURSES,
 } from "@/lib/firebaseSync";
+import { MOCK_TEACHERS } from "@/lib/mockData";
 import {
   CollegeClientLicense,
   GlobalLockoutState,
@@ -62,6 +65,7 @@ import {
   Lock,
   Unlock,
   Building,
+  Building2,
   Users,
   Smartphone,
   Globe,
@@ -81,6 +85,8 @@ import {
   ShieldCheck,
   QrCode,
   Upload,
+  BookOpen,
+  GraduationCap,
 } from "lucide-react";
 
 interface CreatorControlModuleProps {
@@ -138,7 +144,10 @@ export default function CreatorControlModule({
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isBypassQuotaActive, setIsBypassQuotaActive] = useState(false);
   const [isNormalizing, setIsNormalizing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"COLLEGES" | "QR_PAYMENTS" | "QUOTA" | "LICENSING" | "DATABASE" | "SECURITY">("COLLEGES");
+  const [activeTab, setActiveTab] = useState<"COLLEGES" | "COURSES" | "QR_PAYMENTS" | "QUOTA" | "LICENSING" | "DATABASE" | "SECURITY">("COLLEGES");
+  // Faculty & Courses Live State for Master Creator Telemetry
+  const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
+  const [courses, setCourses] = useState<CourseProgram[]>(DEFAULT_COURSES);
   const [creatorLogs, setCreatorLogs] = useState<Array<{ id: string; time: string; action: string; type: "info" | "warn" | "success" }>>([
     {
       id: "log_1",
@@ -177,6 +186,19 @@ export default function CreatorControlModule({
       if (res?.globalLockout) setGlobalLockout(res.globalLockout);
     }).catch(() => {});
 
+    // Live fetch of faculty and degree programs for Creator telemetry
+    fetchTeachersFromFirebase()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setTeachers(data);
+      })
+      .catch((e) => console.warn("Notice loading faculty in creator view:", e));
+
+    fetchCoursesFromFirebase()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setCourses(data);
+      })
+      .catch((e) => console.warn("Notice loading courses in creator view:", e));
+
     return () => {
       window.removeEventListener(QR_SETTINGS_EVENT, handleQrUpdate);
       window.removeEventListener(QR_PAYMENT_EVENT, handleQrUpdate);
@@ -205,9 +227,68 @@ export default function CreatorControlModule({
     ]);
   };
 
-  const effectiveTotalLeads = getEffectiveLeadCount(currentLeadsCount);
+  // 1. TOTAL STUDENT COUNT (COUNT ONLY, ZERO PERSONAL STUDENT DATA)
+  const effectiveTotalLeads = getEffectiveLeadCount(currentLeadsCount || applicants.length);
+  const totalStudentsCount = effectiveTotalLeads;
+  const karurStudentsCount = applicants.filter((a) => a.campus === "KARUR").length;
+  const covaiStudentsCount = applicants.filter((a) => a.campus === "COIMBATORE").length;
   const percentQuotaUsed = Math.min(100, Number(((effectiveTotalLeads / customQuotaLimit) * 100).toFixed(1)));
   const isCapReached = effectiveTotalLeads >= customQuotaLimit;
+  const remainingFreeQuota = Math.max(0, customQuotaLimit - effectiveTotalLeads);
+
+  // Student Funnel Stages Breakdown (pure aggregate counts)
+  const studentFunnelCounts = useMemo(() => {
+    const counts = { inquiry: 0, counseling: 0, applications: 0, admitted: 0 };
+    applicants.forEach((a) => {
+      const st = (a.status || "NEW").toUpperCase();
+      if (st === "NEW" || st === "INQUIRY") counts.inquiry++;
+      else if (st === "CONTACTED" || st === "COUNSELING") counts.counseling++;
+      else if (st === "APPLICATION" || st === "IN_REVIEW") counts.applications++;
+      else counts.admitted++;
+    });
+    return counts;
+  }, [applicants]);
+
+  // 2. TEACHER COUNT (FACULTY METRICS)
+  const totalTeachersCount = teachers.length;
+  const activeTeachersCount = teachers.filter((t) => (t.status || "").toUpperCase() === "ACTIVE").length;
+  const offlineTeachersCount = Math.max(0, totalTeachersCount - activeTeachersCount);
+  const karurTeachersCount = teachers.filter((t) => t.campus === "KARUR").length;
+  const covaiTeachersCount = teachers.filter((t) => t.campus === "COIMBATORE").length;
+
+  // Faculty Department Staffing breakdown (counts only)
+  const departmentStaffCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    teachers.forEach((t) => {
+      const dept = t.department || "General Engineering";
+      map[dept] = (map[dept] || 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, [teachers]);
+
+  // 3. COURSES & DEMAND METRICS
+  const totalCoursesCount = courses.length;
+  const totalKarurSeats = courses.reduce((acc, c) => acc + (c.karurSeats || 0), 0);
+  const totalCoimbatoreSeats = courses.reduce((acc, c) => acc + (c.coimbatoreSeats || 0), 0);
+
+  const courseDemandMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    courses.forEach((c) => {
+      map[c.name] = 0;
+    });
+    applicants.forEach((a) => {
+      const target = (a.courseInterest || "").toLowerCase().trim();
+      const matched = courses.find(
+        (c) =>
+          c.name.toLowerCase() === target ||
+          target.includes(c.code.toLowerCase()) ||
+          c.code.toLowerCase().includes(target)
+      );
+      const name = matched ? matched.name : (a.courseInterest || "General Engineering");
+      map[name] = (map[name] || 0) + 1;
+    });
+    return map;
+  }, [courses, applicants]);
 
   // Total finances across all client colleges
   const totalAnnualBilled = colleges.reduce((acc, c) => acc + (c.totalPayableAmount || 0), 0);
@@ -647,25 +728,57 @@ export default function CreatorControlModule({
     addLog(`Generated official PDF invoice for ${college.collegeName}.`, "info");
   };
 
-  // Full Database JSON Snapshot Export
+  // Full Database JSON Snapshot Export (Sanitized: ZERO personal student records)
   const handleExportDatabaseSnapshot = () => {
     const backupData = {
       exportedAt: new Date().toISOString(),
       creator: "spherexnithish# (Nithish Kumar)",
-      totalApplicants: applicants.length,
-      colleges,
+      totalStudentCount: totalStudentsCount,
+      totalTeacherCount: totalTeachersCount,
+      totalCoursesCount: totalCoursesCount,
+      studentCountsByCampus: {
+        KARUR: karurStudentsCount,
+        COIMBATORE: covaiStudentsCount,
+      },
+      teacherCountsByCampus: {
+        KARUR: karurTeachersCount,
+        COIMBATORE: covaiTeachersCount,
+      },
+      collegesUsingProduct: colleges.map((c) => ({
+        id: c.id,
+        collegeName: c.collegeName,
+        shortCode: c.shortCode,
+        campus: c.campus,
+        location: c.location,
+        isWebApplicationStopped: c.isWebApplicationStopped,
+        isMobileApplicationStopped: c.isMobileApplicationStopped,
+        baseAnnualFee: c.baseAnnualFee,
+        amountPaid: c.amountPaid,
+        outstandingBalance: c.outstandingBalance,
+        paymentStatus: c.paymentStatus,
+        studentsCount: applicants.filter((a) => a.campus === c.campus).length,
+        teachersCount: teachers.filter((t) => t.campus === c.campus).length,
+      })),
+      coursesCatalog: courses.map((c) => ({
+        code: c.code,
+        name: c.name,
+        dept: c.dept,
+        karurSeats: c.karurSeats,
+        coimbatoreSeats: c.coimbatoreSeats,
+        tuitionFee: c.tuitionFee,
+        studentDemandCount: courseDemandMap[c.name] || 0,
+      })),
       annualRenewalBilling: annualBilling,
-      applicantsSnapshot: applicants,
     };
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `SPHEREX_CREATOR_SNAPSHOT_${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `SPHEREX_CREATOR_TELEMETRY_${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    onTriggerToast("💾 Exported full Creator JSON database snapshot!");
-    addLog("Creator downloaded full JSON database snapshot.", "success");
+    onTriggerToast("💾 Exported Creator telemetry JSON snapshot (Privacy Protected: 0 student records)!");
+    addLog("Creator downloaded aggregate telemetry JSON snapshot.", "success");
   };
 
   return (
@@ -752,16 +865,18 @@ export default function CreatorControlModule({
       </div>
 
       {/* ============================================================== */}
+      {/* ============================================================== */}
       {/* 2. CREATOR NAVIGATION TABS                                     */}
       {/* ============================================================== */}
       <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-bold">
         {[
-          { id: "COLLEGES", label: "🏛️ Client Colleges & Subscriptions", icon: Building },
-          { id: "QR_PAYMENTS", label: "💳 QR Code & Lead Revenue", icon: QrCode },
-          { id: "QUOTA", label: "1,00,000 Quota & Overage Engine", icon: Sliders },
-          { id: "LICENSING", label: "Dual-Platform Software Licensing", icon: DollarSign },
-          { id: "DATABASE", label: "Firebase Health & Diagnostics", icon: Database },
-          { id: "SECURITY", label: "Emergency Overrides & Logs", icon: ShieldAlert },
+          { id: "COLLEGES", label: "🏛️ Overview & Colleges", icon: Building },
+          { id: "COURSES", label: "📚 Academic Courses Catalog", icon: GraduationCap },
+          { id: "QR_PAYMENTS", label: "💳 QR Code & Lead Pricing", icon: QrCode },
+          { id: "QUOTA", label: "📊 1,00,000 Quota Engine", icon: Sliders },
+          { id: "LICENSING", label: "📄 Dual-Platform Software Licensing", icon: DollarSign },
+          { id: "DATABASE", label: "⚡ Firebase Health & Diagnostics", icon: Database },
+          { id: "SECURITY", label: "🛡️ Emergency Overrides & Logs", icon: ShieldAlert },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -783,62 +898,150 @@ export default function CreatorControlModule({
       </div>
 
       {/* ============================================================== */}
-      {/* TAB 1: CLIENT COLLEGES & PAYMENT CONTROLS (PRIMARY VIEW)       */}
+      {/* TAB 1: CLIENT COLLEGES & EXECUTIVE TELEMETRY (PRIMARY VIEW)    */}
       {/* ============================================================== */}
       {activeTab === "COLLEGES" && (
         <div className="space-y-6 animate-in fade-in duration-150">
-          {/* Financial & Tenant KPI Bar */}
+          {/* 4 CORE EXECUTIVE PILLARS: STUDENTS, TEACHERS, COURSES, COLLEGES */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Active Client Colleges
-              </p>
-              <h3 className="text-2xl font-black text-white font-mono">
-                {colleges.length} <span className="text-xs font-normal text-slate-400">Institutions</span>
-              </h3>
-              <p className="text-xs text-amber-400 font-semibold flex items-center gap-1">
-                <span>Karur, Coimbatore & Registered Tenants</span>
-              </p>
+            {/* PILLAR 1: TOTAL STUDENT COUNT (COUNT ONLY) */}
+            <div className="p-5 rounded-3xl border-2 border-indigo-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 shadow-xl shadow-indigo-950/20 space-y-3 relative overflow-hidden group hover:border-indigo-500/50 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Total Student Count</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  <span>Privacy Protected</span>
+                </span>
+              </div>
+              <div>
+                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                  {totalStudentsCount.toLocaleString("en-IN")}
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Overall student leads across all campuses</p>
+              </div>
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-slate-400">Karur Campus:</span>
+                  <span className="font-mono font-bold text-amber-300">{karurStudentsCount} students</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-slate-400">Coimbatore Campus:</span>
+                  <span className="font-mono font-bold text-sky-300">{covaiStudentsCount} students</span>
+                </div>
+                <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                  <span>Capacity ({percentQuotaUsed}%):</span>
+                  <span className="font-mono font-bold text-emerald-400">{remainingFreeQuota.toLocaleString("en-IN")} Free</span>
+                </div>
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Total Annual Subscription Billed
-              </p>
-              <h3 className="text-2xl font-black text-emerald-400 font-mono">
-                ₹{totalAnnualBilled.toLocaleString("en-IN")}
-              </h3>
-              <p className="text-xs text-slate-400">Includes Base License + Overages</p>
+            {/* PILLAR 2: TEACHER COUNT */}
+            <div className="p-5 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/40 shadow-xl shadow-purple-950/20 space-y-3 relative overflow-hidden group hover:border-purple-500/50 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Teacher Count</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>Live Faculty</span>
+                </span>
+              </div>
+              <div>
+                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                  {totalTeachersCount}
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Active faculty using SPHEREX CRM</p>
+              </div>
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-slate-400">Karur Faculty:</span>
+                  <span className="font-mono font-bold text-amber-300">{karurTeachersCount} teachers</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-slate-400">Coimbatore Faculty:</span>
+                  <span className="font-mono font-bold text-sky-300">{covaiTeachersCount} teachers</span>
+                </div>
+                <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                  <span>Active Now:</span>
+                  <span className="font-mono font-bold text-emerald-400">{activeTeachersCount} Online</span>
+                </div>
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Total Revenue Cleared (Paid)
-              </p>
-              <h3 className="text-2xl font-black text-sky-400 font-mono">
-                ₹{totalRevenueCollected.toLocaleString("en-IN")}
-              </h3>
-              <p className="text-xs text-emerald-400 font-bold">
-                {totalOutstandingBalance === 0 ? "100% Cleared" : `Outstanding: ₹${totalOutstandingBalance.toLocaleString("en-IN")}`}
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Application Access Status
-              </p>
-              <h3 className="text-xl font-black text-white font-mono flex items-center gap-2">
-                {totalWebStoppedCount === 0 && totalMobileStoppedCount === 0 ? (
-                  <span className="text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-5 h-5" /> All Operational
+            {/* PILLAR 3: COURSES */}
+            <div className="p-5 rounded-3xl border-2 border-sky-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/40 shadow-xl shadow-sky-950/20 space-y-3 relative overflow-hidden group hover:border-sky-500/50 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-sky-300 flex items-center gap-1.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Academic Courses</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1">
+                  <span>AICTE / NBA</span>
+                </span>
+              </div>
+              <div>
+                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                  {totalCoursesCount}
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Accredited degree programs offered</p>
+              </div>
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-slate-400">Top Program:</span>
+                  <span className="font-bold text-white truncate max-w-[130px]">B.E. Computer Science</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-slate-400">Total Seats:</span>
+                  <span className="font-mono font-bold text-amber-300">
+                    {(totalKarurSeats + totalCoimbatoreSeats).toLocaleString("en-IN")} seats
                   </span>
-                ) : (
-                  <span className="text-rose-400 flex items-center gap-1.5">
-                    <AlertTriangle className="w-5 h-5" /> {totalWebStoppedCount} Web / {totalMobileStoppedCount} Mobile Stopped
+                </div>
+                <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                  <span>Programs Scope:</span>
+                  <span className="font-mono font-bold text-sky-400">B.E. & B.Tech Tech</span>
+                </div>
+              </div>
+            </div>
+
+            {/* PILLAR 4: COLLEGES USING MY PRODUCT */}
+            <div className="p-5 rounded-3xl border-2 border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 shadow-xl shadow-amber-950/20 space-y-3 relative overflow-hidden group hover:border-amber-500/50 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                  <Building className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Colleges Using Product</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <span>Active Clients</span>
+                </span>
+              </div>
+              <div>
+                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                  {colleges.length}
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Institutions running SPHEREX OS</p>
+              </div>
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-slate-400">Web CRM Status:</span>
+                  <span className={totalWebStoppedCount === 0 ? "font-bold text-emerald-400" : "font-bold text-rose-400"}>
+                    {totalWebStoppedCount === 0 ? "🟢 All Online" : `🛑 ${totalWebStoppedCount} Stopped`}
                   </span>
-                )}
-              </h3>
-              <p className="text-[11px] text-slate-400">Controlled exclusively by Creator</p>
+                </div>
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-slate-400">Mobile Apps:</span>
+                  <span className={totalMobileStoppedCount === 0 ? "font-bold text-emerald-400" : "font-bold text-rose-400"}>
+                    {totalMobileStoppedCount === 0 ? "🟢 All Active" : `🛑 ${totalMobileStoppedCount} Stopped`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                  <span>Annual Cleared:</span>
+                  <span className="font-mono font-bold text-emerald-400">₹{totalRevenueCollected.toLocaleString("en-IN")}</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1110,19 +1313,40 @@ export default function CreatorControlModule({
                       </h4>
 
                       <div className="space-y-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Total Enrolled Leads:</span>
-                          <span className="font-mono font-bold text-white">
-                            {applicants.filter((a) => a.campus === college.campus).length} Records
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>Total Students:</span>
+                          </span>
+                          <span className="font-mono font-bold text-indigo-300">
+                            {applicants.filter((a) => a.campus === college.campus).length.toLocaleString("en-IN")} leads
                           </span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 flex items-center gap-1.5">
+                            <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                            <span>Faculty Teachers:</span>
+                          </span>
+                          <span className="font-mono font-bold text-purple-300">
+                            {teachers.filter((t) => t.campus === college.campus).length} active staff
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 flex items-center gap-1.5">
+                            <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
+                            <span>Degree Programs:</span>
+                          </span>
+                          <span className="font-mono font-bold text-sky-300">
+                            {courses.filter((c) => college.campus === "KARUR" ? c.karurSeats > 0 : c.coimbatoreSeats > 0).length || courses.length} courses
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1 border-t border-slate-800">
                           <span className="text-slate-400">Web CRM Deployment:</span>
                           <span className={isWebStopped ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
                             {isWebStopped ? "🛑 Stopped by Creator" : "🟢 Active & Online"}
                           </span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <span className="text-slate-400">Native Mobile Apps:</span>
                           <span className={isMobileStopped ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
                             {isMobileStopped ? "🛑 Stopped by Creator" : "🟢 Active (Android/iOS)"}
@@ -1236,6 +1460,257 @@ export default function CreatorControlModule({
                         </button>
                       </div>
                     </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Institutional Academic Courses & Student Demand Overview */}
+          <div className="p-6 rounded-3xl border border-slate-800 bg-slate-900/90 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center font-bold">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>Academic Courses Catalog & Student Interest Volume</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                      {totalCoursesCount} Programs
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Accredited engineering & technology degree programs offered across client institutions
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="px-3 py-1 rounded-xl bg-slate-800 text-slate-300 font-mono font-bold">
+                  Karur: {totalKarurSeats} seats
+                </span>
+                <span className="px-3 py-1 rounded-xl bg-slate-800 text-slate-300 font-mono font-bold">
+                  Coimbatore: {totalCoimbatoreSeats} seats
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-slate-800">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-950 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                  <tr>
+                    <th className="p-3">Course Code</th>
+                    <th className="p-3">Degree Program</th>
+                    <th className="p-3">Department</th>
+                    <th className="p-3 text-center">Karur Seats</th>
+                    <th className="p-3 text-center">Coimbatore Seats</th>
+                    <th className="p-3">Tuition Fee / Year</th>
+                    <th className="p-3 text-right">Student Demand (Count)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 text-slate-200">
+                  {courses.map((course) => {
+                    const demand = courseDemandMap[course.name] || 0;
+                    return (
+                      <tr key={course.code} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-3 font-mono font-bold text-amber-400">
+                          {course.code}
+                        </td>
+                        <td className="p-3 font-semibold text-white">
+                          {course.name}
+                        </td>
+                        <td className="p-3 text-slate-400">
+                          {course.dept}
+                        </td>
+                        <td className="p-3 text-center font-mono font-bold text-amber-300">
+                          {course.karurSeats}
+                        </td>
+                        <td className="p-3 text-center font-mono font-bold text-sky-300">
+                          {course.coimbatoreSeats}
+                        </td>
+                        <td className="p-3 font-mono text-emerald-400">
+                          {course.tuitionFee?.startsWith("₹") ? course.tuitionFee : `₹${course.tuitionFee || "85,000"}`}
+                        </td>
+                        <td className="p-3 text-right">
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-black bg-indigo-950 text-indigo-300 border border-indigo-800">
+                            {demand} Students
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Student Admission Funnel & Faculty Telemetry (Pure Aggregate Counts) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Student Admission Pipeline Volume */}
+            <div className="p-6 rounded-3xl border border-slate-800 bg-slate-900/90 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                  <h4 className="text-sm font-bold text-white">Student Admission Funnel (Total Volume)</h4>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  {totalStudentsCount} Total Students
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">1. New Inquiries</p>
+                  <p className="text-xl font-mono font-black text-white">{studentFunnelCounts.inquiry}</p>
+                  <p className="text-[10px] text-slate-500">Fresh candidate inquiries</p>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">2. In Counseling</p>
+                  <p className="text-xl font-mono font-black text-amber-400">{studentFunnelCounts.counseling}</p>
+                  <p className="text-[10px] text-slate-500">Counselor engagement active</p>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">3. Applications</p>
+                  <p className="text-xl font-mono font-black text-sky-400">{studentFunnelCounts.applications}</p>
+                  <p className="text-[10px] text-slate-500">Forms submitted & verifying</p>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">4. Confirmed Seats</p>
+                  <p className="text-xl font-mono font-black text-emerald-400">{studentFunnelCounts.admitted}</p>
+                  <p className="text-[10px] text-slate-500">Admissions finalized</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Teacher Staffing by Department */}
+            <div className="p-6 rounded-3xl border border-slate-800 bg-slate-900/90 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <BookOpen className="w-5 h-5 text-purple-400" />
+                  <h4 className="text-sm font-bold text-white">Teacher Count by Department</h4>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  {totalTeachersCount} Faculty Members
+                </span>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                {departmentStaffCounts.slice(0, 5).map(([dept, count]) => {
+                  const pct = Math.round((count / (totalTeachersCount || 1)) * 100);
+                  return (
+                    <div key={dept} className="space-y-1">
+                      <div className="flex justify-between items-center text-slate-300">
+                        <span className="font-medium text-slate-200">{dept}</span>
+                        <span className="font-mono font-bold text-purple-300">{count} teachers ({pct}%)</span>
+                      </div>
+                      <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                        <div className="h-full bg-purple-500 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB: ACADEMIC COURSES & SEAT ALLOCATION CATALOG                */}
+      {/* ============================================================== */}
+      {activeTab === "COURSES" && (
+        <div className="space-y-6 animate-in fade-in duration-150">
+          {/* Courses KPI Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                Total Accredited Programs
+              </p>
+              <h3 className="text-2xl font-black text-sky-400 font-mono">
+                {totalCoursesCount} <span className="text-xs font-normal text-slate-400">Degrees</span>
+              </h3>
+              <p className="text-xs text-slate-400">B.E. & B.Tech approved degrees</p>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                VSB Karur Total Seats
+              </p>
+              <h3 className="text-2xl font-black text-amber-400 font-mono">
+                {totalKarurSeats.toLocaleString("en-IN")} <span className="text-xs font-normal text-slate-400">Seats</span>
+              </h3>
+              <p className="text-xs text-slate-400">Engineering College Campus</p>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                VSB Coimbatore Total Seats
+              </p>
+              <h3 className="text-2xl font-black text-indigo-400 font-mono">
+                {totalCoimbatoreSeats.toLocaleString("en-IN")} <span className="text-xs font-normal text-slate-400">Seats</span>
+              </h3>
+              <p className="text-xs text-slate-400">Technical Campus</p>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                Combined Intake Capacity
+              </p>
+              <h3 className="text-2xl font-black text-emerald-400 font-mono">
+                {(totalKarurSeats + totalCoimbatoreSeats).toLocaleString("en-IN")} <span className="text-xs font-normal text-slate-400">Students</span>
+              </h3>
+              <p className="text-xs text-emerald-400 font-semibold">Anna University Sanctioned</p>
+            </div>
+          </div>
+
+          {/* Programs Grid Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {courses.map((course) => {
+              const demand = courseDemandMap[course.name] || 0;
+              return (
+                <div
+                  key={course.code}
+                  className="p-5 rounded-3xl border border-slate-800 bg-slate-900/90 hover:border-slate-700 transition-all space-y-4 flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-black bg-sky-500/10 text-sky-400 border border-sky-500/30">
+                        {course.code}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300">
+                        {course.meta || "4 Years / 8 Sem"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-base font-bold text-white leading-snug">{course.name}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5 font-medium">{course.dept}</p>
+                    </div>
+
+                    <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-2 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Karur Seats:</span>
+                        <span className="font-mono font-bold text-amber-300">{course.karurSeats} Intake</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Coimbatore Seats:</span>
+                        <span className="font-mono font-bold text-sky-300">{course.coimbatoreSeats} Intake</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-1.5 border-t border-slate-800">
+                        <span className="text-slate-400">Tuition Fee:</span>
+                        <span className="font-mono font-bold text-emerald-400">
+                          {course.tuitionFee?.startsWith("₹") ? course.tuitionFee : `₹${course.tuitionFee || "85,000"}`}/yr
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                    <span className="text-[11px] text-slate-400 font-medium">Student Demand:</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-indigo-950 text-indigo-300 border border-indigo-800">
+                      {demand} Student Inquiries
+                    </span>
                   </div>
                 </div>
               );
@@ -1482,7 +1957,7 @@ export default function CreatorControlModule({
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-slate-950 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                     <tr>
-                      <th className="p-3">Candidate</th>
+                      <th className="p-3">Lead Token / ID</th>
                       <th className="p-3">Campus / College</th>
                       <th className="p-3">Course</th>
                       <th className="p-3">Amount (INR)</th>
@@ -1496,8 +1971,11 @@ export default function CreatorControlModule({
                     {leadQrPayments.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
                         <td className="p-3">
-                          <strong className="text-white">{p.leadName}</strong>
-                          <p className="text-[10px] text-slate-400 font-mono">{p.leadPhone}</p>
+                          <strong className="text-white font-mono">#LEAD-{p.id.slice(0, 8).toUpperCase()}</strong>
+                          <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" />
+                            <span>Privacy Protected</span>
+                          </p>
                         </td>
                         <td className="p-3">
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">

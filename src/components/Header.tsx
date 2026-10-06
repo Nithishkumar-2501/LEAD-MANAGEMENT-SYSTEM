@@ -76,7 +76,9 @@ export default function Header({
   const isLimitReached = liveLeadCount >= MAX_FREE_LEAD_LIMIT;
 
   const trimmedQuery = searchQuery.trim().toLowerCase();
-  const visibleApplicants = currentUserRole === "TEACHER"
+  const visibleApplicants = currentUserRole === "CREATOR"
+    ? []
+    : currentUserRole === "TEACHER"
     ? (applicants || []).filter((item) => isLeadAssignedToTeacher(item, loggedInUsername, loggedInCampus))
     : (applicants || []);
   const searchResults =
