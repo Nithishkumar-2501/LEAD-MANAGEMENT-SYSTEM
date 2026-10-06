@@ -20,11 +20,10 @@
       "paymentDueDate": "2026-12-31",
       "lastPaymentDate": "2026-04-15",
       "paymentReference": "NEFT-VSBEC-2026-00412",
-      "isWebApplicationStopped": true,
-      "isMobileApplicationStopped": true,
-      "suspensionReason": "Annual software license payment defaulted. Access restricted by SPHEREX Creator.",
-      "notes": "Active institutional client. Karur campus annual subscription fully cleared.",
-      "suspendedAt": "2026-10-06T08:25:16.616Z"
+      "isWebApplicationStopped": false,
+      "isMobileApplicationStopped": false,
+      "suspensionReason": "",
+      "notes": "Active institutional client. Karur campus annual subscription fully cleared."
     },
     {
       "id": "VSB_COIMBATORE",
@@ -46,19 +45,17 @@
       "paymentDueDate": "2026-11-30",
       "lastPaymentDate": "2026-04-20",
       "paymentReference": "NEFT-VSBCTC-2026-00891",
-      "isWebApplicationStopped": true,
-      "isMobileApplicationStopped": true,
-      "suspensionReason": "Annual software license payment defaulted. Access restricted by SPHEREX Creator.",
-      "notes": "Active institutional client. Coimbatore campus annual license valid through 2026.",
-      "suspendedAt": "2026-10-06T08:25:18.495Z"
+      "isWebApplicationStopped": false,
+      "isMobileApplicationStopped": false,
+      "suspensionReason": "",
+      "notes": "Active institutional client. Coimbatore campus annual license valid through 2026."
     }
   ],
   "globalLockout": {
     "isGlobalWebStopped": false,
     "isGlobalMobileStopped": false,
     "reason": "",
-    "stoppedAt": "2026-10-05T13:47:34.985Z",
-    "updatedAtMs": 1791275118495
+    "updatedAtMs": 1791280290036
   },
-  "savedAt": "2026-10-06T08:39:42.090Z"
+  "savedAt": "2026-10-06T09:51:39.808Z"
 }
