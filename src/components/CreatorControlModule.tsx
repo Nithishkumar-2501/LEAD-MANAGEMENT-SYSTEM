@@ -170,6 +170,12 @@ export default function CreatorControlModule({
       setGlobalLockout(latestGlobal);
     });
 
+    // Immediately fetch latest persisted licenses from disk and server
+    forceFetchLatestLicenseFromCloud().then((res) => {
+      if (res?.colleges) setColleges(res.colleges);
+      if (res?.globalLockout) setGlobalLockout(res.globalLockout);
+    }).catch(() => {});
+
     return () => {
       window.removeEventListener(QR_SETTINGS_EVENT, handleQrUpdate);
       window.removeEventListener(QR_PAYMENT_EVENT, handleQrUpdate);
@@ -885,12 +891,12 @@ export default function CreatorControlModule({
                 onClick={handleToggleGlobalWeb}
                 className={`py-3.5 px-4 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${
                   globalLockout.isGlobalWebStopped
-                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30"
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30 ring-2 ring-emerald-400"
                     : "bg-slate-900 hover:bg-rose-950 border border-slate-700 hover:border-rose-600 text-slate-200 hover:text-rose-200"
                 }`}
               >
                 <Globe className="w-4 h-4" />
-                <span>{globalLockout.isGlobalWebStopped ? "🟢 RESTORE ALL WEB APPS" : "🛑 STOP ALL WEB APPS"}</span>
+                <span>{globalLockout.isGlobalWebStopped ? "🟢 RESTORE ALL WEB APPS" : "🛑 Click to STOP ALL WEB APPS"}</span>
               </button>
 
               {/* Global Mobile Toggle */}
@@ -899,12 +905,12 @@ export default function CreatorControlModule({
                 onClick={handleToggleGlobalMobile}
                 className={`py-3.5 px-4 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${
                   globalLockout.isGlobalMobileStopped
-                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30"
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30 ring-2 ring-emerald-400"
                     : "bg-slate-900 hover:bg-rose-950 border border-slate-700 hover:border-rose-600 text-slate-200 hover:text-rose-200"
                 }`}
               >
                 <Smartphone className="w-4 h-4" />
-                <span>{globalLockout.isGlobalMobileStopped ? "🟢 RESTORE ALL MOBILE APPS" : "🛑 STOP ALL MOBILE APPS"}</span>
+                <span>{globalLockout.isGlobalMobileStopped ? "🟢 RESTORE ALL MOBILE APPS" : "🛑 Click to STOP ALL MOBILE APPS"}</span>
               </button>
 
               {/* Emergency Freeze All */}
@@ -1150,9 +1156,26 @@ export default function CreatorControlModule({
                   </div>
 
                   {/* Bottom Action Bar: UNILATERAL CREATOR STOP / OPEN CONTROLS */}
-                  <div className="pt-5 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-400">Creator Access Controls:</span>
+                  <div className="pt-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-slate-800/80">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <span className="text-xs font-bold text-slate-400">Current Access State:</span>
+                      <div className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1.5 ${
+                        isWebStopped
+                          ? "bg-rose-950/80 border-rose-600 text-rose-300 animate-pulse"
+                          : "bg-emerald-950/40 border-emerald-700 text-emerald-300"
+                      }`}>
+                        <Globe className="w-3 h-3" />
+                        <span>Web: {isWebStopped ? "🛑 STOPPED (Blocked)" : "🟢 ACTIVE"}</span>
+                      </div>
+
+                      <div className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1.5 ${
+                        isMobileStopped
+                          ? "bg-rose-950/80 border-rose-600 text-rose-300 animate-pulse"
+                          : "bg-emerald-950/40 border-emerald-700 text-emerald-300"
+                      }`}>
+                        <Smartphone className="w-3 h-3" />
+                        <span>Mobile: {isMobileStopped ? "🛑 STOPPED (Blocked)" : "🟢 ACTIVE"}</span>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2.5">
@@ -1162,12 +1185,12 @@ export default function CreatorControlModule({
                         onClick={() => handleToggleWebApp(college)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                           isWebStopped
-                            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20"
-                            : "bg-slate-800 hover:bg-rose-950 text-slate-200 hover:text-rose-300 border border-slate-700 hover:border-rose-700"
+                            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400"
+                            : "bg-slate-800 hover:bg-rose-950 text-slate-200 hover:text-rose-200 border border-slate-700 hover:border-rose-600"
                         }`}
                       >
                         <Globe className="w-3.5 h-3.5" />
-                        <span>{isWebStopped ? "🟢 Open Web App" : "🔴 Stop Web App"}</span>
+                        <span>{isWebStopped ? "🟢 Restore & Open Web App" : "🛑 Click to STOP Web App"}</span>
                       </button>
 
                       {/* Mobile App Toggle */}
@@ -1176,12 +1199,12 @@ export default function CreatorControlModule({
                         onClick={() => handleToggleMobileApp(college)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                           isMobileStopped
-                            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20"
-                            : "bg-slate-800 hover:bg-rose-950 text-slate-200 hover:text-rose-300 border border-slate-700 hover:border-rose-700"
+                            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400"
+                            : "bg-slate-800 hover:bg-rose-950 text-slate-200 hover:text-rose-200 border border-slate-700 hover:border-rose-600"
                         }`}
                       >
                         <Smartphone className="w-3.5 h-3.5" />
-                        <span>{isMobileStopped ? "🟢 Open Mobile App" : "🔴 Stop Mobile App"}</span>
+                        <span>{isMobileStopped ? "🟢 Restore & Open Mobile App" : "🛑 Click to STOP Mobile App"}</span>
                       </button>
 
                       {/* Freeze All (Web & Mobile) */}
@@ -1190,12 +1213,12 @@ export default function CreatorControlModule({
                         onClick={() => handleToggleEntireInstitution(college)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
                           isEntirelyStopped
-                            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30"
-                            : "bg-rose-900/90 hover:bg-rose-800 text-white border border-rose-700 shadow-md shadow-rose-950/40"
+                            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 ring-2 ring-emerald-400"
+                            : "bg-rose-950 hover:bg-rose-900 text-rose-200 hover:text-white border border-rose-700 shadow-md shadow-rose-950/40"
                         }`}
                       >
                         <Power className="w-3.5 h-3.5" />
-                        <span>{isEntirelyStopped ? "✨ Re-Open Entire Institution" : "🚨 Stop All (Web & Mobile)"}</span>
+                        <span>{isEntirelyStopped ? "✨ Re-Open Institution (Restore All)" : "🚨 Click to STOP ALL (Web + Mobile)"}</span>
                       </button>
 
                       {/* Record Payment Button */}
