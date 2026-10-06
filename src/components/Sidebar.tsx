@@ -1677,7 +1677,7 @@ export default function Sidebar({
               {/* Menu Items List */}
               <div className="space-y-1.5">
                 {/* Admin Settings Console */}
-                {currentUserRole === "ADMIN" && (
+                {(currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
                   <button
                     onClick={() => {
                       handleNavClick("SETTINGS");
@@ -1758,7 +1758,15 @@ export default function Sidebar({
                 {/* Download App Link */}
                 <button
                   onClick={() => {
-                    alert("Meritto Mobile App APK download initiated for Android & iOS.");
+                    if (typeof document !== "undefined") {
+                      const link = document.createElement("a");
+                      link.href = "/SPHEREX.apk";
+                      link.download = "SPHEREX_CRM.apk";
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
+                    handleNavClick("SETTINGS");
                     setIsSettingsMenuOpen(false);
                   }}
                   className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all group cursor-pointer ${
@@ -1786,7 +1794,7 @@ export default function Sidebar({
               <div className="mt-2.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
                 <span className="truncate">{loggedInUsername}</span>
                 <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold text-[9px] border border-indigo-500/30">
-                  {currentUserRole === "ADMIN" ? "Admin" : "Teacher"}
+                  {currentUserRole === "ADMIN" ? "Admin" : currentUserRole === "CREATOR" ? "Creator" : "Teacher"}
                 </span>
               </div>
             </div>
@@ -1803,7 +1811,10 @@ export default function Sidebar({
               {/* Settings Icon Button */}
               <Tooltip text="Settings & Tools" position="right">
                 <button
-                  onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+                  onClick={() => {
+                    handleNavClick("SETTINGS");
+                    setIsSettingsMenuOpen(!isSettingsMenuOpen);
+                  }}
                   className={`p-2 rounded-xl border transition-all cursor-pointer relative ${
                     isSettingsMenuOpen || activeTab === "SETTINGS"
                       ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 border-rose-400 scale-105"
@@ -1947,7 +1958,10 @@ export default function Sidebar({
                   position="top"
                 >
                   <button
-                    onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+                    onClick={() => {
+                      handleNavClick("SETTINGS");
+                      setIsSettingsMenuOpen(!isSettingsMenuOpen);
+                    }}
                     aria-label="Settings and Preferences"
                     className={`p-2 rounded-xl border transition-all cursor-pointer relative group ${
                       isSettingsMenuOpen || activeTab === "SETTINGS"
