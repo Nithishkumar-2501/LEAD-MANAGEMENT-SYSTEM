@@ -131,25 +131,15 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       return;
     }
 
-    // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Restricted strictly to Web Portal)
+    // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Restricted strictly to kongunithishkumar0607@gmail.com on Web Portal)
+    const normalizedInputUser = inputUser.toLowerCase().trim();
     const rawCleanUser = inputUser.toLowerCase().replace(/[@\s_.-]/g, "");
     const rawCleanPass = inputPass.trim();
 
     const isCreatorId =
-      rawCleanUser === "spherexnithish#" ||
-      rawCleanUser === "spherexnithish" ||
-      rawCleanUser === "spherex#" ||
-      rawCleanUser === "spherex" ||
-      rawCleanUser === "creator" ||
-      rawCleanUser === "creatorspherexcom" ||
-      rawCleanUser === "creatorvsbecin" ||
-      rawCleanUser === "nithish" ||
-      rawCleanUser === "nithishkumar" ||
-      rawCleanUser === "nithishkumar2501" ||
-      rawCleanUser === "rootcreator" ||
-      rawCleanUser.includes("spherexnithish") ||
-      rawCleanUser.includes("spherex") ||
-      rawCleanUser.includes("creator");
+      normalizedInputUser === "kongunithishkumar0607@gmail.com" ||
+      normalizedInputUser === "spherexnithish#" ||
+      rawCleanUser === "kongunithishkumar0607gmailcom";
 
     if (isCreatorId) {
       // In the App model (native mobile app), Creator is strictly disabled!
@@ -166,9 +156,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         rawCleanPass === "spherex2501" ||
         rawCleanPass === "spherex@2501" ||
         rawCleanPass === "spherexnithish#" ||
-        rawCleanPass === "creator@123" ||
-        rawCleanPass === "creator123" ||
-        rawCleanPass === "admin@123" ||
+        rawCleanPass === "nithish@2501" ||
+        rawCleanPass === "nithish2501" ||
         rawCleanPass === "vsb@2026";
 
       if (isCreatorPass) {
@@ -179,10 +168,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
           sessionStorage.setItem("vsb_admin_auth", "true");
           sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
           sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
-          sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+          sessionStorage.setItem("vsb_logged_in_user", "kongunithishkumar0607@gmail.com");
         } catch (e) {}
         setSuspensionAlert(null);
-        onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
+        onLoginSuccess("KARUR", "CREATOR", "kongunithishkumar0607@gmail.com");
         return;
       } else {
         setLoading(false);
@@ -661,7 +650,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </motion.div>
           )}
 
-          {/* Quick Role Profile Select Tabs */}
+          {/* Quick Role Profile Select Tabs (Karur / Covai / Faculty) */}
           <motion.div
             variants={itemVariants}
             style={{
@@ -671,34 +660,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               marginBottom: "16px",
             }}
           >
-            {!isCapacitorNative() && (
-              <button
-                type="button"
-                onClick={() => autoFill("spherexnithish#", "spherex#2501")}
-                style={{
-                  gridColumn: "span 2",
-                  padding: "10px 14px",
-                  borderRadius: "12px",
-                  background: (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator"))
-                    ? "linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(234, 88, 12, 0.35))"
-                    : "rgba(245, 158, 11, 0.1)",
-                  border: (username.toLowerCase().includes("spherex") || username.toLowerCase().includes("creator"))
-                    ? "1.5px solid #fbbf24"
-                    : "1px solid rgba(245, 158, 11, 0.3)",
-                  color: "#fde68a",
-                  fontSize: "12px",
-                  fontWeight: 800,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                }}
-              >
-                <span>👑 Master Creator Login (Web Only)</span>
-              </button>
-            )}
 
             <button
               type="button"
@@ -1373,37 +1334,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               ℹ️ Please contact SPHEREX Master Creator (<strong>Nithish Kumar</strong>) to settle institutional renewal. Once cleared in the Creator portal, application access will be opened immediately on all systems.
             </p>
 
-            {!isCapacitorNative() && (
-              <button
-                onClick={() => {
-                  setUsername("spherexnithish#");
-                  setPassword("spherex#2501");
-                  try {
-                    localStorage.removeItem("vsb_admin_auth");
-                    sessionStorage.setItem("vsb_admin_auth", "true");
-                    sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
-                    sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
-                    sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
-                  } catch (e) {}
-                  setSuspensionAlert(null);
-                  onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
-                }}
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  background: "linear-gradient(to right, #f59e0b, #ea580c)",
-                  color: "#ffffff",
-                  fontWeight: 800,
-                  borderRadius: "9999px",
-                  fontSize: "12px",
-                  border: "none",
-                  cursor: "pointer",
-                  marginBottom: "8px",
-                }}
-              >
-                👑 Sign in as Master Creator (Web Only)
-              </button>
-            )}
+
 
             <button
               onClick={async () => {

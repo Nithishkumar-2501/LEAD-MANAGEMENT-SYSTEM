@@ -312,20 +312,24 @@ export default function DashboardPage() {
         activeTab === "MARKETING_DASHBOARD" ||
         activeTab === "APPLICATION_MANAGER" ||
         activeTab === "PAYMENTS" ||
-        activeTab === "SETTINGS"
+        activeTab === "SETTINGS" ||
+        activeTab === "CREATOR_CONTROL"
       ) {
         setActiveTab("USER_DASHBOARD");
       }
     } else if (currentUserRole === "ADMIN") {
-      if (activeTab === "USER_DASHBOARD") {
+      if (activeTab === "USER_DASHBOARD" || activeTab === "CREATOR_CONTROL") {
         setActiveTab("ADMIN_DASHBOARD");
       }
     } else if (currentUserRole === "CREATOR") {
-      if (activeTab === "ADMIN_DASHBOARD" || activeTab === "USER_DASHBOARD") {
-        setActiveTab("CREATOR_CONTROL");
+      const isMasterCreator =
+        loggedInUsername?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com" ||
+        sessionStorage.getItem("vsb_logged_in_user")?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com";
+      if (!isMasterCreator && activeTab === "CREATOR_CONTROL") {
+        setActiveTab("ADMIN_DASHBOARD");
       }
     }
-  }, [currentUserRole, activeTab]);
+  }, [currentUserRole, activeTab, loggedInUsername]);
 
   // Reusable Firebase and Database sync helper
   const applyFirebaseLeads = useCallback((fbLeads: StudentRecord[]) => {
@@ -966,8 +970,8 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 p-3 sm:p-6 pb-28 sm:pb-6 w-full max-w-full space-y-4 sm:space-y-6 overflow-x-hidden">
-        {/* ADMISSIONS & ADMIN DASHBOARD MODULE (ADMIN ONLY) */}
-        {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && currentUserRole === "ADMIN" && (
+        {/* ADMISSIONS & ADMIN DASHBOARD MODULE (ADMIN & CREATOR) */}
+        {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && (currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
           <AdminDashboardView
             metrics={dynamicMetrics}
             statusCounts={dynamicStatusCounts}
@@ -1049,9 +1053,9 @@ export default function DashboardPage() {
           )
         )}
 
-        {/* APPLICATION MANAGER MODULE (ADMIN ONLY - IMAGES 1 & 2) */}
+        {/* APPLICATION MANAGER MODULE (ADMIN & CREATOR) */}
         {(activeTab === "APPLICATION_MANAGER" || activeTab === "APPLICATION_OFFLINE_LOGS") &&
-          currentUserRole === "ADMIN" && (
+          (currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
           <ApplicationManagerModule
             loggedInCampus={selectedCampus}
             onTriggerToast={triggerToast}
@@ -1106,8 +1110,12 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible in Web when logged in as Creator) */}
-        {activeTab === "CREATOR_CONTROL" && currentUserRole === "CREATOR" && !isCapacitorNative() && (
+        {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible in Web for kongunithishkumar0607@gmail.com) */}
+        {activeTab === "CREATOR_CONTROL" &&
+          currentUserRole === "CREATOR" &&
+          (loggedInUsername?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com" ||
+           sessionStorage.getItem("vsb_logged_in_user")?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com") &&
+          !isCapacitorNative() && (
           <CreatorControlModule
             onTriggerToast={triggerToast}
             currentLeadsCount={applicants.length}
@@ -1356,30 +1364,6 @@ export default function DashboardPage() {
             </div>
 
             <div className="pt-2 space-y-2.5">
-              {!isCapacitorNative() && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    try {
-                      localStorage.removeItem("vsb_admin_auth");
-                      sessionStorage.setItem("vsb_admin_auth", "true");
-                      sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
-                      sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
-                      sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
-                    } catch (e) {}
-                    setCurrentUserRole("CREATOR");
-                    setLoggedInUsername("spherexnithish#");
-                    setActiveTab("CREATOR_CONTROL");
-                    setInstitutionSuspension({ isSuspended: false, platform: "WEB" });
-                    triggerToast("👑 Logged in as Master Creator (Nithish Kumar)!");
-                  }}
-                  className="w-full py-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-xs shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
-                >
-                  <Crown className="w-4 h-4" />
-                  <span>👑 Sign in as Master Creator (Web Only)</span>
-                </button>
-              )}
-
               <button
                 type="button"
                 onClick={handleLogout}

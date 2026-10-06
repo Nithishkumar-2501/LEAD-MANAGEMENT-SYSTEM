@@ -184,7 +184,7 @@ export default function Sidebar({
       color: "from-sky-500 to-blue-600",
       activeBorder: "border-sky-400",
       activeGlow: "shadow-sky-500/30",
-      roles: ["ADMIN"],
+      roles: ["ADMIN", "CREATOR"],
     },
     {
       id: "USER_DASHBOARD" as ActiveTab,
@@ -204,7 +204,7 @@ export default function Sidebar({
       color: "from-purple-500 to-pink-600",
       activeBorder: "border-purple-400",
       activeGlow: "shadow-purple-500/30",
-      roles: ["ADMIN"],
+      roles: ["ADMIN", "CREATOR"],
     },
     {
       id: "ECHO_DASHBOARD" as ActiveTab,
@@ -214,7 +214,7 @@ export default function Sidebar({
       color: "from-emerald-500 to-teal-600",
       activeBorder: "border-emerald-400",
       activeGlow: "shadow-emerald-500/30",
-      roles: ["ADMIN", "TEACHER"],
+      roles: ["ADMIN", "TEACHER", "CREATOR"],
     },
     {
       id: "AI_INTELLIGENCE" as ActiveTab,
@@ -224,7 +224,7 @@ export default function Sidebar({
       color: "from-fuchsia-500 to-indigo-600",
       activeBorder: "border-fuchsia-400",
       activeGlow: "shadow-fuchsia-500/30",
-      roles: ["ADMIN", "TEACHER"],
+      roles: ["ADMIN", "TEACHER", "CREATOR"],
     },
   ];
 
@@ -271,12 +271,17 @@ export default function Sidebar({
     },
   ];
 
+  const isMasterCreator =
+    currentUserRole === "CREATOR" &&
+    (loggedInUsername?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com" ||
+     user?.email?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com");
+
   const filteredSubItems =
     currentUserRole === "TEACHER"
       ? admissionSubItems.filter((item) => item.id !== "PAYMENTS" && item.id !== "TEACHERS")
       : currentUserRole === "CREATOR"
       ? [
-          ...(!isCapacitorNative()
+          ...(isMasterCreator && !isCapacitorNative()
             ? [
                 {
                   id: "CREATOR_CONTROL" as ActiveTab,
@@ -1172,8 +1177,8 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* PARENT MENU ITEM: APPLICATION MANAGER (ADMIN ONLY - MATCHING IMAGE 1) */}
-          {currentUserRole === "ADMIN" && (
+          {/* PARENT MENU ITEM: APPLICATION MANAGER (ADMIN & CREATOR) */}
+          {(currentUserRole === "ADMIN" || currentUserRole === "CREATOR") && (
             <div className="relative space-y-1.5 pt-2 border-t border-slate-200 dark:border-white/10 mt-2">
               {isCollapsed ? (
                 <Tooltip text="Application Manager" position="right">

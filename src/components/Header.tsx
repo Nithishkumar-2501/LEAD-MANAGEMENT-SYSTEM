@@ -123,13 +123,18 @@ export default function Header({
     }
   };
 
+  const isMasterCreator =
+    currentUserRole === "CREATOR" &&
+    (user?.email?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com" ||
+     user?.name?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com");
+
   const navItems = [
-    { id: "ADMIN_DASHBOARD" as ActiveTab, label: "Admin Dashboard", icon: ShieldCheck, roles: ["ADMIN"] },
+    { id: "ADMIN_DASHBOARD" as ActiveTab, label: "Admin Dashboard", icon: ShieldCheck, roles: ["ADMIN", "CREATOR"] },
     { id: "USER_DASHBOARD" as ActiveTab, label: "Lead Dashboard", icon: UserCheck, roles: ["TEACHER"] },
-    { id: "CONTACTS" as ActiveTab, label: "Lead Manager", icon: UserCheck, roles: ["ADMIN", "TEACHER"] },
-    { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen, roles: ["ADMIN"] },
-    { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2, roles: ["ADMIN", "TEACHER"] },
-    { id: "CREATOR_CONTROL" as ActiveTab, label: "Creator Control", icon: Crown, roles: isCapacitorNative() ? [] : ["CREATOR"] },
+    { id: "CONTACTS" as ActiveTab, label: "Lead Manager", icon: UserCheck, roles: ["ADMIN", "TEACHER", "CREATOR"] },
+    { id: "TEACHERS" as ActiveTab, label: "Teacher Directory", icon: BookOpen, roles: ["ADMIN", "CREATOR"] },
+    { id: "CAMPUSES" as ActiveTab, label: "Campus & Courses", icon: Building2, roles: ["ADMIN", "TEACHER", "CREATOR"] },
+    { id: "CREATOR_CONTROL" as ActiveTab, label: "Creator Control", icon: Crown, roles: isMasterCreator && !isCapacitorNative() ? ["CREATOR"] : [] },
     { id: "PAYMENTS" as ActiveTab, label: "Fee Payments", icon: CreditCard, roles: ["ADMIN", "CREATOR"] },
     { id: "SETTINGS" as ActiveTab, label: "Admin Settings", icon: Settings, roles: ["ADMIN", "CREATOR"] },
   ];
