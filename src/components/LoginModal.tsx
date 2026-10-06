@@ -138,7 +138,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
     const isCreatorId =
       normalizedInputUser === "kongunithishkumar0607@gmail.com" ||
-      normalizedInputUser === "spherexnithish#" ||
       rawCleanUser === "kongunithishkumar0607gmailcom";
 
     if (isCreatorId) {
@@ -1155,9 +1154,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 lineHeight: 1.8,
               }}
             >
-              <div style={{ paddingBottom: "6px", marginBottom: "6px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
-                <strong style={{ color: "#fbbf24" }}>👑 Master Creator:</strong> spherexnithish# / spherex#2501
-              </div>
               <div>
                 <strong style={{ color: "#d8b4fe" }}>Admin Karur:</strong> adminkarur@123 / vsbec@123
               </div>
