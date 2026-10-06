@@ -125,8 +125,8 @@ export default function Header({
 
   const isMasterCreator =
     currentUserRole === "CREATOR" &&
-    (user?.email?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com" ||
-     user?.name?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com");
+    (user?.email?.toLowerCase().trim() === "spherexnithish#" ||
+     user?.name?.toLowerCase().trim() === "spherexnithish#");
 
   const navItems = [
     { id: "ADMIN_DASHBOARD" as ActiveTab, label: "Admin Dashboard", icon: ShieldCheck, roles: ["ADMIN", "CREATOR"] },
@@ -183,11 +183,11 @@ export default function Header({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Master Creator Badge */}
           {currentUserRole === "CREATOR" && isMasterCreator && !isCapacitorNative() && (
-            <Tooltip text={`Master Creator Account Active (${loggedInUsername || "kongunithishkumar0607@gmail.com"})`}>
+            <Tooltip text={`Master Creator Account Active (${loggedInUsername || "spherexnithish#"})`}>
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border border-amber-400 text-amber-300 font-bold text-xs shadow-md shadow-amber-500/10 shrink-0">
                 <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span className="font-mono text-[11px] sm:text-xs font-black truncate max-w-[180px]">
-                  {loggedInUsername || "kongunithishkumar0607@gmail.com"}
+                  {loggedInUsername || "spherexnithish#"}
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-amber-500/30 text-amber-300 text-[9px] font-black uppercase">
                   Creator

@@ -273,8 +273,9 @@ export default function Sidebar({
 
   const isMasterCreator =
     currentUserRole === "CREATOR" &&
-    (loggedInUsername?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com" ||
-     user?.email?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com");
+    (loggedInUsername?.toLowerCase().trim() === "spherexnithish#" ||
+     user?.name?.toLowerCase().trim() === "spherexnithish#" ||
+     user?.email?.toLowerCase().trim() === "spherexnithish#");
 
   const filteredSubItems =
     currentUserRole === "TEACHER"

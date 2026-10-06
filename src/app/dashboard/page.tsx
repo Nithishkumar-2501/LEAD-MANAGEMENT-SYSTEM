@@ -323,8 +323,8 @@ export default function DashboardPage() {
       }
     } else if (currentUserRole === "CREATOR") {
       const isMasterCreator =
-        loggedInUsername?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com" ||
-        sessionStorage.getItem("vsb_logged_in_user")?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com";
+        loggedInUsername?.toLowerCase().trim() === "spherexnithish#" ||
+        sessionStorage.getItem("vsb_logged_in_user")?.toLowerCase().trim() === "spherexnithish#";
       if (!isMasterCreator && activeTab === "CREATOR_CONTROL") {
         setActiveTab("ADMIN_DASHBOARD");
       }
@@ -1110,11 +1110,11 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible in Web for kongunithishkumar0607@gmail.com) */}
+        {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible in Web for spherexnithish#) */}
         {activeTab === "CREATOR_CONTROL" &&
           currentUserRole === "CREATOR" &&
-          (loggedInUsername?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com" ||
-           sessionStorage.getItem("vsb_logged_in_user")?.toLowerCase().trim() === "kongunithishkumar0607@gmail.com") &&
+          (loggedInUsername?.toLowerCase().trim() === "spherexnithish#" ||
+           sessionStorage.getItem("vsb_logged_in_user")?.toLowerCase().trim() === "spherexnithish#") &&
           !isCapacitorNative() && (
           <CreatorControlModule
             onTriggerToast={triggerToast}

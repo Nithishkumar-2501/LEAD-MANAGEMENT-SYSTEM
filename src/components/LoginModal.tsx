@@ -131,20 +131,14 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       return;
     }
 
-    // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Restricted strictly to kongunithishkumar0607@gmail.com on Web Portal)
+    // 0. EXCLUSIVE MASTER CREATOR AUTHENTICATION (Restricted strictly to spherexnithish# on Web Portal)
     const normalizedInputUser = inputUser.toLowerCase().trim();
     const rawCleanUser = inputUser.toLowerCase().replace(/[@\s_.-]/g, "");
     const rawCleanPass = inputPass.trim();
 
     const isCreatorId =
-      normalizedInputUser === "kongunithishkumar0607@gmail.com" ||
-      normalizedInputUser === "kongunithishkumar0607" ||
-      normalizedInputUser === "kongunithishkumar" ||
       normalizedInputUser === "spherexnithish#" ||
       normalizedInputUser === "spherexnithish" ||
-      rawCleanUser === "kongunithishkumar0607gmailcom" ||
-      rawCleanUser === "kongunithishkumar0607" ||
-      rawCleanUser === "kongunithishkumar" ||
       rawCleanUser === "spherexnithish";
 
     if (isCreatorId) {
@@ -174,10 +168,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
           sessionStorage.setItem("vsb_admin_auth", "true");
           sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
           sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
-          sessionStorage.setItem("vsb_logged_in_user", "kongunithishkumar0607@gmail.com");
+          sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
         } catch (e) {}
         setSuspensionAlert(null);
-        onLoginSuccess("KARUR", "CREATOR", "kongunithishkumar0607@gmail.com");
+        onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
         return;
       } else {
         setLoading(false);
