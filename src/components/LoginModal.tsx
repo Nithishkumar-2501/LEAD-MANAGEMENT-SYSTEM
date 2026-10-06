@@ -138,7 +138,14 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
     const isCreatorId =
       normalizedInputUser === "kongunithishkumar0607@gmail.com" ||
-      rawCleanUser === "kongunithishkumar0607gmailcom";
+      normalizedInputUser === "kongunithishkumar0607" ||
+      normalizedInputUser === "kongunithishkumar" ||
+      normalizedInputUser === "spherexnithish#" ||
+      normalizedInputUser === "spherexnithish" ||
+      rawCleanUser === "kongunithishkumar0607gmailcom" ||
+      rawCleanUser === "kongunithishkumar0607" ||
+      rawCleanUser === "kongunithishkumar" ||
+      rawCleanUser === "spherexnithish";
 
     if (isCreatorId) {
       // In the App model (native mobile app), Creator is strictly disabled!
@@ -148,16 +155,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         return;
       }
 
+      const normPass = rawCleanPass.toLowerCase().replace(/\s+/g, "");
       const isCreatorPass =
-        rawCleanPass === "spherex#2501" ||
-        rawCleanPass === "Spherex#2501" ||
-        rawCleanPass.toLowerCase() === "spherex#2501" ||
-        rawCleanPass === "spherex2501" ||
-        rawCleanPass === "spherex@2501" ||
-        rawCleanPass === "spherexnithish#" ||
-        rawCleanPass === "nithish@2501" ||
-        rawCleanPass === "nithish2501" ||
-        rawCleanPass === "vsb@2026";
+        normPass === "spherex#2501" ||
+        normPass === "spherex2501" ||
+        normPass === "spherex@2501" ||
+        normPass === "spherexnithish#" ||
+        normPass === "spherexnithish" ||
+        normPass === "nithish@2501" ||
+        normPass === "nithish2501" ||
+        normPass === "vsb@2026";
 
       if (isCreatorPass) {
         setLoading(false);
