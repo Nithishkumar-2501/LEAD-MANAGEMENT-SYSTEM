@@ -4,7 +4,7 @@ import path from "path";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "auto";
 export const revalidate = 0;
 
 export interface GlobalLockoutState {
