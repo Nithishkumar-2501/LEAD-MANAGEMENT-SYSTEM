@@ -10,10 +10,33 @@ import {
   listenToCollegeLicenses,
   getGlobalLockoutState,
   forceFetchLatestLicenseFromCloud,
+  getAllCollegeLicenses,
   CollegeClientLicense,
   GlobalLockoutState,
 } from "@/lib/collegeLicenseService";
 import { isCapacitorNative } from "@/lib/mobileFetch";
+
+export const FACULTY_ACCOUNTS: Record<string, { pass: string; campus: "KARUR" | "COIMBATORE" }> = {
+  "rajesh.mech@vsbec.in": { pass: "rajesh@vsb2026", campus: "KARUR" },
+  "arulmurugan.cse@vsbec.in": { pass: "arul@vsb2026", campus: "KARUR" },
+  "meenakshi.ece@vsbec.in": { pass: "meenakshi@vsb2026", campus: "COIMBATORE" },
+  "gayathri.it@vsbec.in": { pass: "gayathri@vsb2026", campus: "KARUR" },
+  "karthik.ai@vsbec.in": { pass: "karthik@vsb2026", campus: "KARUR" },
+  "saravanan.eee@vsbec.in": { pass: "saravanan@vsb2026", campus: "KARUR" },
+  "anitha.bme@vsbec.in": { pass: "anitha@vsb2026", campus: "KARUR" },
+  "senthil.civil@vsbec.in": { pass: "senthil@vsb2026", campus: "KARUR" },
+  "kavitha.cyber@vsbec.in": { pass: "kavitha@vsb2026", campus: "COIMBATORE" },
+  "ramesh.robotics@vsbec.in": { pass: "ramesh@vsb2026", campus: "KARUR" },
+  "divya.chem@vsbec.in": { pass: "divya@vsb2026", campus: "KARUR" },
+  "manikandan.aero@vsbec.in": { pass: "mani@vsb2026", campus: "COIMBATORE" },
+  "priya.biotech@vsbec.in": { pass: "priya@vsb2026", campus: "KARUR" },
+  "suresh.ds@vsbec.in": { pass: "suresh@vsb2026", campus: "KARUR" },
+  "deepa.it@vsbec.in": { pass: "deepa@vsb2026", campus: "COIMBATORE" },
+  "prakash.cse@vsbec.in": { pass: "prakash@vsb2026", campus: "COIMBATORE" },
+  "teacherkarur@123": { pass: "vsbteacher@123", campus: "KARUR" },
+  "teachercovai@123": { pass: "vsbteacher@1213", campus: "COIMBATORE" },
+  "teacher_rajesh@123": { pass: "vsbteacher@123", campus: "KARUR" },
+};
 
 interface LoginModalProps {
   onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => void;
@@ -27,6 +50,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [colleges, setColleges] = useState<CollegeClientLicense[]>(() => getAllCollegeLicenses());
   const [globalLockout, setGlobalLockout] = useState<GlobalLockoutState>(() => getGlobalLockoutState());
   const [suspensionAlert, setSuspensionAlert] = useState<{
     isOpen: boolean;
@@ -72,12 +96,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     }
 
     // Subscribe to live cloud license and global lockout updates (Sub-100ms listener)
-    const unsubscribe = listenToCollegeLicenses((_colleges, latestGlobal) => {
+    const unsubscribe = listenToCollegeLicenses((updatedColleges, latestGlobal) => {
+      setColleges(updatedColleges);
       setGlobalLockout(latestGlobal);
     });
 
     // Immediately fetch from Cloud Firestore without blocking typing
-    forceFetchLatestLicenseFromCloud().catch((e) => console.warn("License fetch notice:", e));
+    forceFetchLatestLicenseFromCloud().then((res) => {
+      if (res?.colleges) setColleges(res.colleges);
+      if (res?.globalLockout) setGlobalLockout(res.globalLockout);
+    }).catch((e) => console.warn("License fetch notice:", e));
 
     return () => unsubscribe();
   }, []); // Run ONCE on mount so typing, Backspace, and editing are never overwritten
@@ -168,28 +196,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     const karurPass = (localStorage.getItem("vsb_admin_karur_pw") || "vsbec@123").trim();
     const covaiUser = (localStorage.getItem("vsb_admin_coimbatore_id") || "admincovai@123").trim();
     const covaiPass = (localStorage.getItem("vsb_admin_coimbatore_pw") || "vsbectc@1213").trim();
-
-    const FACULTY_ACCOUNTS: Record<string, { pass: string; campus: "KARUR" | "COIMBATORE" }> = {
-      "rajesh.mech@vsbec.in": { pass: "rajesh@vsb2026", campus: "KARUR" },
-      "arulmurugan.cse@vsbec.in": { pass: "arul@vsb2026", campus: "KARUR" },
-      "meenakshi.ece@vsbec.in": { pass: "meenakshi@vsb2026", campus: "COIMBATORE" },
-      "gayathri.it@vsbec.in": { pass: "gayathri@vsb2026", campus: "KARUR" },
-      "karthik.ai@vsbec.in": { pass: "karthik@vsb2026", campus: "KARUR" },
-      "saravanan.eee@vsbec.in": { pass: "saravanan@vsb2026", campus: "KARUR" },
-      "anitha.bme@vsbec.in": { pass: "anitha@vsb2026", campus: "KARUR" },
-      "senthil.civil@vsbec.in": { pass: "senthil@vsb2026", campus: "KARUR" },
-      "kavitha.cyber@vsbec.in": { pass: "kavitha@vsb2026", campus: "COIMBATORE" },
-      "ramesh.robotics@vsbec.in": { pass: "ramesh@vsb2026", campus: "KARUR" },
-      "divya.chem@vsbec.in": { pass: "divya@vsb2026", campus: "KARUR" },
-      "manikandan.aero@vsbec.in": { pass: "mani@vsb2026", campus: "COIMBATORE" },
-      "priya.biotech@vsbec.in": { pass: "priya@vsb2026", campus: "KARUR" },
-      "suresh.ds@vsbec.in": { pass: "suresh@vsb2026", campus: "KARUR" },
-      "deepa.it@vsbec.in": { pass: "deepa@vsb2026", campus: "COIMBATORE" },
-      "prakash.cse@vsbec.in": { pass: "prakash@vsb2026", campus: "COIMBATORE" },
-      "teacherkarur@123": { pass: "vsbteacher@123", campus: "KARUR" },
-      "teachercovai@123": { pass: "vsbteacher@1213", campus: "COIMBATORE" },
-      "teacher_rajesh@123": { pass: "vsbteacher@123", campus: "KARUR" },
-    };
 
     let targetCampus: "KARUR" | "COIMBATORE" | null = null;
     let targetRole: "ADMIN" | "TEACHER" | null = null;
@@ -302,14 +308,20 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
     // Check if the college's Web or Mobile application has been stopped by the Root Creator
     const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(targetCampus);
-    if (suspensionCheck.isSuspended) {
+    if (suspensionCheck.isSuspended || isSelectedCampusStopped) {
       setLoading(false);
+      const campusObj = colleges.find(
+        (c) => c.campus.toUpperCase() === targetCampus || c.id.toUpperCase() === `VSB_${targetCampus}`
+      );
       setSuspensionAlert({
         isOpen: true,
-        college: suspensionCheck.college,
-        platform: suspensionCheck.platform,
-        isGlobal: suspensionCheck.isGlobal,
-        reason: suspensionCheck.reason,
+        college: suspensionCheck.college || campusObj,
+        platform: suspensionCheck.platform || (isNative ? "MOBILE" : "WEB"),
+        isGlobal: suspensionCheck.isGlobal || isCurrentHostStopped,
+        reason:
+          suspensionCheck.reason ||
+          campusObj?.suspensionReason ||
+          "Application access stopped by SPHEREX Master Creator.",
       });
       return;
     }
@@ -359,9 +371,45 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     },
   };
 
+  const isNative = isCapacitorNative();
+  const karurCollege = colleges.find((c) => c.campus === "KARUR" || c.id === "VSB_KARUR");
+  const covaiCollege = colleges.find((c) => c.campus === "COIMBATORE" || c.id === "VSB_COIMBATORE");
+
+  const isKarurStopped = isNative
+    ? Boolean(karurCollege?.isMobileApplicationStopped)
+    : Boolean(karurCollege?.isWebApplicationStopped);
+
+  const isCovaiStopped = isNative
+    ? Boolean(covaiCollege?.isMobileApplicationStopped)
+    : Boolean(covaiCollege?.isWebApplicationStopped);
+
+  const allCollegesStopped =
+    colleges.length > 0 &&
+    colleges.every((c) => (isNative ? c.isMobileApplicationStopped : c.isWebApplicationStopped));
+
   const isCurrentHostStopped =
-    (!isCapacitorNative() && globalLockout.isGlobalWebStopped) ||
-    (isCapacitorNative() && globalLockout.isGlobalMobileStopped);
+    (!isNative && globalLockout.isGlobalWebStopped) ||
+    (isNative && globalLockout.isGlobalMobileStopped) ||
+    allCollegesStopped;
+
+  // Real-time detection of whether currently entered credentials belong to a suspended campus
+  const cleanInputUser = username.toLowerCase().trim();
+  const targetCampusDetected: "KARUR" | "COIMBATORE" | null = (() => {
+    if (cleanInputUser.includes("karur") || cleanInputUser === "adminkarur@123" || cleanInputUser === "teacherkarur@123" || cleanInputUser === "teacher_rajesh@123") return "KARUR";
+    if (cleanInputUser.includes("covai") || cleanInputUser.includes("coimbatore") || cleanInputUser === "admincovai@123" || cleanInputUser === "teachercovai@123") return "COIMBATORE";
+    if (cleanInputUser.includes("vsbec.in") || cleanInputUser.includes("vsbctc.com")) {
+      const fac = FACULTY_ACCOUNTS[cleanInputUser];
+      if (fac) return fac.campus;
+    }
+    return null;
+  })();
+
+  const isSelectedCampusStopped = (() => {
+    if (isCurrentHostStopped) return true;
+    if (targetCampusDetected === "KARUR") return isKarurStopped;
+    if (targetCampusDetected === "COIMBATORE") return isCovaiStopped;
+    return false;
+  })();
 
   return (
     <div
@@ -856,15 +904,41 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               style={{
                 padding: "8px 10px",
                 borderRadius: "10px",
-                backgroundColor: username === "adminkarur@123" ? "rgba(168, 85, 247, 0.3)" : "rgba(255, 255, 255, 0.05)",
-                border: username === "adminkarur@123" ? "1.5px solid #c084fc" : "1px solid rgba(255, 255, 255, 0.1)",
-                color: "#e9d5ff",
+                backgroundColor: isKarurStopped
+                  ? "rgba(239, 68, 68, 0.2)"
+                  : username === "adminkarur@123"
+                  ? "rgba(168, 85, 247, 0.3)"
+                  : "rgba(255, 255, 255, 0.05)",
+                border: isKarurStopped
+                  ? "1.5px solid #ef4444"
+                  : username === "adminkarur@123"
+                  ? "1.5px solid #c084fc"
+                  : "1px solid rgba(255, 255, 255, 0.1)",
+                color: isKarurStopped ? "#fca5a5" : "#e9d5ff",
                 fontSize: "11px",
                 fontWeight: 700,
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
               }}
             >
-              🏛️ Admin (Karur)
+              <span>🏛️ Karur</span>
+              {isKarurStopped && (
+                <span
+                  style={{
+                    fontSize: "9px",
+                    padding: "1px 5px",
+                    borderRadius: "9999px",
+                    backgroundColor: "#ef4444",
+                    color: "#ffffff",
+                    fontWeight: 800,
+                  }}
+                >
+                  STOPPED
+                </span>
+              )}
             </button>
 
             <button
@@ -873,15 +947,41 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               style={{
                 padding: "8px 10px",
                 borderRadius: "10px",
-                backgroundColor: username === "admincovai@123" ? "rgba(56, 189, 248, 0.3)" : "rgba(255, 255, 255, 0.05)",
-                border: username === "admincovai@123" ? "1.5px solid #38bdf8" : "1px solid rgba(255, 255, 255, 0.1)",
-                color: "#bae6fd",
+                backgroundColor: isCovaiStopped
+                  ? "rgba(239, 68, 68, 0.2)"
+                  : username === "admincovai@123"
+                  ? "rgba(56, 189, 248, 0.3)"
+                  : "rgba(255, 255, 255, 0.05)",
+                border: isCovaiStopped
+                  ? "1.5px solid #ef4444"
+                  : username === "admincovai@123"
+                  ? "1.5px solid #38bdf8"
+                  : "1px solid rgba(255, 255, 255, 0.1)",
+                color: isCovaiStopped ? "#fca5a5" : "#bae6fd",
                 fontSize: "11px",
                 fontWeight: 700,
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
               }}
             >
-              🏛️ Admin (Covai)
+              <span>🏛️ Covai</span>
+              {isCovaiStopped && (
+                <span
+                  style={{
+                    fontSize: "9px",
+                    padding: "1px 5px",
+                    borderRadius: "9999px",
+                    backgroundColor: "#ef4444",
+                    color: "#ffffff",
+                    fontWeight: 800,
+                  }}
+                >
+                  STOPPED
+                </span>
+              )}
             </button>
           </motion.div>
 
@@ -1048,21 +1148,65 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               </span>
             </motion.div>
 
+            {/* Campus Stopped Warning Notice */}
+            {isSelectedCampusStopped && !isCurrentHostStopped && (
+              <motion.div
+                variants={itemVariants}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: "14px",
+                  backgroundColor: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.5)",
+                  color: "#fca5a5",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "10px",
+                  lineHeight: "1.4",
+                }}
+              >
+                <Lock style={{ width: "18px", height: "18px", flexShrink: 0, color: "#ef4444", marginTop: "2px" }} />
+                <div>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      color: "#f87171",
+                      textTransform: "uppercase",
+                      fontSize: "11px",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    Application Access Stopped
+                  </div>
+                  <div>
+                    {targetCampusDetected === "KARUR"
+                      ? "V.S.B. Engineering College (Karur)"
+                      : targetCampusDetected === "COIMBATORE"
+                      ? "V.S.B. Technical Campus (Coimbatore)"
+                      : "This Institution"}{" "}
+                    access has been stopped by Master Creator due to pending annual renewal payment.
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Login Button - High Contrast Bold White Pill with Black Text & Arrow */}
             <motion.div variants={itemVariants} style={{ marginTop: "10px" }}>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isSelectedCampusStopped}
                 style={{
                   width: "100%",
                   borderRadius: "9999px",
-                  backgroundColor: "#ffffff",
-                  color: "#000000",
+                  backgroundColor: isSelectedCampusStopped ? "#dc2626" : "#ffffff",
+                  color: isSelectedCampusStopped ? "#ffffff" : "#000000",
                   padding: "14px 24px",
                   fontSize: "14px",
                   fontWeight: 700,
                   border: "none",
-                  boxShadow: "0 4px 25px rgba(255, 255, 255, 0.18)",
+                  boxShadow: isSelectedCampusStopped
+                    ? "0 4px 25px rgba(220, 38, 38, 0.3)"
+                    : "0 4px 25px rgba(255, 255, 255, 0.18)",
                   cursor: loading ? "not-allowed" : "pointer",
                   opacity: loading ? 0.75 : 1,
                   transition: "all 0.2s ease",
@@ -1078,12 +1222,25 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                       style={{
                         width: "16px",
                         height: "16px",
-                        color: "#000000",
+                        color: isSelectedCampusStopped ? "#ffffff" : "#000000",
                         animation: "spin 1s linear infinite",
                       }}
                     />
-                    <span style={{ color: "#000000", fontWeight: 700, fontSize: "14px" }}>
+                    <span
+                      style={{
+                        color: isSelectedCampusStopped ? "#ffffff" : "#000000",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                      }}
+                    >
                       Authenticating...
+                    </span>
+                  </>
+                ) : isSelectedCampusStopped ? (
+                  <>
+                    <Lock style={{ width: "16px", height: "16px", color: "#ffffff" }} />
+                    <span style={{ color: "#ffffff", fontWeight: 700, fontSize: "13px" }}>
+                      🛑 Access Stopped by Creator
                     </span>
                   </>
                 ) : (
@@ -1537,9 +1694,9 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
             <button
               onClick={async () => {
-                await forceFetchLatestLicenseFromCloud();
-                const recheck = isCollegeSuspendedForCurrentEnvironment();
-                if (!recheck.isSuspended) {
+                const res = await forceFetchLatestLicenseFromCloud();
+                const recheck = isCollegeSuspendedForCurrentEnvironment(targetCampusDetected || undefined);
+                if (!recheck.isSuspended && !isSelectedCampusStopped) {
                   setSuspensionAlert(null);
                 } else {
                   setSuspensionAlert({

@@ -1,0 +1,62 @@
+{
+  "colleges": [
+    {
+      "id": "VSB_KARUR",
+      "campus": "KARUR",
+      "collegeName": "V.S.B. Engineering College",
+      "shortCode": "VSBEC",
+      "location": "Karur, Tamil Nadu (NH-67)",
+      "adminUsername": "adminkarur@123",
+      "contactEmail": "principal@vsbec.com",
+      "contactPhone": "+91 99422 21289",
+      "platformCoverage": "Dual Platform: Web Application + Native Android/iOS Mobile App",
+      "baseAnnualFee": 150000,
+      "extraLeadsCount": 0,
+      "overageSurcharge": 0,
+      "totalPayableAmount": 150000,
+      "amountPaid": 150000,
+      "outstandingBalance": 0,
+      "paymentStatus": "PAID",
+      "paymentDueDate": "2026-12-31",
+      "lastPaymentDate": "2026-04-15",
+      "paymentReference": "NEFT-VSBEC-2026-00412",
+      "isWebApplicationStopped": false,
+      "isMobileApplicationStopped": false,
+      "suspensionReason": "",
+      "notes": "Active institutional client. Karur campus annual subscription fully cleared."
+    },
+    {
+      "id": "VSB_COIMBATORE",
+      "campus": "COIMBATORE",
+      "collegeName": "V.S.B. College of Engineering Technical Campus",
+      "shortCode": "VSBCTC",
+      "location": "Coimbatore, Tamil Nadu (Pollachi Main Road)",
+      "adminUsername": "admincovai@123",
+      "contactEmail": "principal@vsbctc.com",
+      "contactPhone": "+91 99422 21288",
+      "platformCoverage": "Dual Platform: Web Application + Native Android/iOS Mobile App",
+      "baseAnnualFee": 150000,
+      "extraLeadsCount": 0,
+      "overageSurcharge": 0,
+      "totalPayableAmount": 150000,
+      "amountPaid": 150000,
+      "outstandingBalance": 0,
+      "paymentStatus": "PAID",
+      "paymentDueDate": "2026-11-30",
+      "lastPaymentDate": "2026-04-20",
+      "paymentReference": "NEFT-VSBCTC-2026-00891",
+      "isWebApplicationStopped": false,
+      "isMobileApplicationStopped": false,
+      "suspensionReason": "",
+      "notes": "Active institutional client. Coimbatore campus annual license valid through 2026."
+    }
+  ],
+  "globalLockout": {
+    "isGlobalWebStopped": false,
+    "isGlobalMobileStopped": false,
+    "reason": "",
+    "stoppedAt": "2026-10-05T13:47:34.985Z",
+    "updatedAtMs": 1791210755290
+  },
+  "savedAt": "2026-10-06T04:11:05.117Z"
+}

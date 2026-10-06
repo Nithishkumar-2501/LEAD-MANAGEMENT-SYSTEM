@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { db, rtdb } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, get, set } from "firebase/database";
@@ -8,6 +10,7 @@ export interface GlobalLockoutState {
   isGlobalMobileStopped: boolean;
   reason: string;
   stoppedAt?: string;
+  updatedAtMs?: number;
 }
 
 const DEFAULT_COLLEGES = [
@@ -63,9 +66,61 @@ const DEFAULT_COLLEGES = [
   },
 ];
 
+const PERSISTENT_LICENSE_FILE = path.join(process.cwd(), "prisma", "system_licenses.json");
+
+function loadPersistentFromFile(): { colleges: any[]; globalLockout: GlobalLockoutState } | null {
+  try {
+    if (fs.existsSync(PERSISTENT_LICENSE_FILE)) {
+      const raw = fs.readFileSync(PERSISTENT_LICENSE_FILE, "utf-8");
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.colleges)) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("Notice reading persistent license file:", err);
+  }
+  return null;
+}
+
+function savePersistentToFile(colleges: any[], globalLockout: GlobalLockoutState): void {
+  try {
+    const dir = path.dirname(PERSISTENT_LICENSE_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(
+      PERSISTENT_LICENSE_FILE,
+      JSON.stringify({ colleges, globalLockout, savedAt: new Date().toISOString() }, null, 2),
+      "utf-8"
+    );
+  } catch (err) {
+    console.warn("Notice saving persistent license file:", err);
+  }
+}
+
+// Merge incoming colleges safely over DEFAULT_COLLEGES so essential metadata is never wiped
+function mergeWithDefaultColleges(incoming: any[]): any[] {
+  if (!Array.isArray(incoming) || incoming.length === 0) return DEFAULT_COLLEGES;
+  return DEFAULT_COLLEGES.map((def) => {
+    const found = incoming.find(
+      (c) => (c.id && c.id === def.id) || (c.campus && c.campus.toUpperCase() === def.campus.toUpperCase())
+    );
+    if (!found) return def;
+    return {
+      ...def,
+      ...found,
+      isWebApplicationStopped: Boolean(found.isWebApplicationStopped),
+      isMobileApplicationStopped: Boolean(found.isMobileApplicationStopped),
+      suspensionReason: found.suspensionReason || def.suspensionReason || "",
+    };
+  });
+}
+
 // In-memory cache for ultra-fast server response and offline resilience
-let cachedColleges = DEFAULT_COLLEGES;
-let cachedGlobalLockout: GlobalLockoutState = {
+const initialFileCache = loadPersistentFromFile();
+let cachedColleges = initialFileCache ? mergeWithDefaultColleges(initialFileCache.colleges) : DEFAULT_COLLEGES;
+let cachedGlobalLockout: GlobalLockoutState = initialFileCache?.globalLockout || {
   isGlobalWebStopped: false,
   isGlobalMobileStopped: false,
   reason: "",
@@ -84,36 +139,44 @@ function sanitizeForFirestore(obj: any): any {
 
 export async function GET() {
   try {
-    // 1. Try reading from Firestore
-    try {
-      const docRef = doc(db, "system_licenses", "college_registry");
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        if (Array.isArray(data?.colleges) && data.colleges.length > 0) {
-          cachedColleges = data.colleges;
-        }
-        if (data?.globalLockout) {
-          cachedGlobalLockout = {
-            isGlobalWebStopped: Boolean(data.globalLockout.isGlobalWebStopped),
-            isGlobalMobileStopped: Boolean(data.globalLockout.isGlobalMobileStopped),
-            reason: String(data.globalLockout.reason || ""),
-            stoppedAt: data.globalLockout.stoppedAt || undefined,
-          };
-        }
+    // 1. Read from local persistent file and in-memory cache (ultra-fast sub-millisecond response)
+    const fromFile = loadPersistentFromFile();
+    if (fromFile) {
+      cachedColleges = mergeWithDefaultColleges(fromFile.colleges);
+      if (fromFile.globalLockout) {
+        cachedGlobalLockout = {
+          isGlobalWebStopped: Boolean(fromFile.globalLockout.isGlobalWebStopped),
+          isGlobalMobileStopped: Boolean(fromFile.globalLockout.isGlobalMobileStopped),
+          reason: String(fromFile.globalLockout.reason || ""),
+          stoppedAt: fromFile.globalLockout.stoppedAt || undefined,
+          updatedAtMs: fromFile.globalLockout.updatedAtMs,
+        };
       }
-    } catch (fsErr) {
-      // 2. Fallback to Firebase Realtime Database
+    } else {
+      // Only if no local file exists on disk, attempt one-time Firestore pull
       try {
-        const rtdbRef = ref(rtdb, "spherex_licenses");
-        const rtdbSnap = await get(rtdbRef);
-        if (rtdbSnap.exists()) {
-          const val = rtdbSnap.val();
-          if (Array.isArray(val?.colleges)) cachedColleges = val.colleges;
-          if (val?.globalLockout) cachedGlobalLockout = val.globalLockout;
+        const snap = await Promise.race([
+          getDoc(doc(db, "system_licenses", "college_registry")),
+          new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)),
+        ]);
+        if (snap?.exists?.()) {
+          const data = snap.data();
+          if (Array.isArray(data?.colleges) && data.colleges.length > 0) {
+            cachedColleges = mergeWithDefaultColleges(data.colleges);
+          }
+          if (data?.globalLockout) {
+            cachedGlobalLockout = {
+              isGlobalWebStopped: Boolean(data.globalLockout.isGlobalWebStopped),
+              isGlobalMobileStopped: Boolean(data.globalLockout.isGlobalMobileStopped),
+              reason: String(data.globalLockout.reason || ""),
+              stoppedAt: data.globalLockout.stoppedAt || undefined,
+              updatedAtMs: data.globalLockout.updatedAtMs,
+            };
+          }
+          savePersistentToFile(cachedColleges, cachedGlobalLockout);
         }
-      } catch (rtErr) {
-        // Fallback to cached memory
+      } catch (fsErr) {
+        // Fallback to in-memory defaults
       }
     }
 
@@ -142,37 +205,46 @@ export async function POST(request: Request) {
     const { colleges, globalLockout } = body;
 
     if (Array.isArray(colleges)) {
-      cachedColleges = colleges;
+      cachedColleges = mergeWithDefaultColleges(colleges);
     }
     if (globalLockout) {
       cachedGlobalLockout = {
         isGlobalWebStopped: Boolean(globalLockout.isGlobalWebStopped),
         isGlobalMobileStopped: Boolean(globalLockout.isGlobalMobileStopped),
         reason: String(globalLockout.reason || ""),
-        stoppedAt: globalLockout.stoppedAt || (globalLockout.isGlobalWebStopped || globalLockout.isGlobalMobileStopped ? new Date().toISOString() : undefined),
+        stoppedAt:
+          globalLockout.stoppedAt ||
+          (globalLockout.isGlobalWebStopped || globalLockout.isGlobalMobileStopped
+            ? new Date().toISOString()
+            : undefined),
+        updatedAtMs: globalLockout.updatedAtMs || Date.now(),
       };
     }
 
-    // Persist to Cloud Firestore
+    // Immediately persist to disk on the host machine
+    savePersistentToFile(cachedColleges, cachedGlobalLockout);
+
+    // Persist to Cloud Firestore in background with safe 2500ms race timeout
     const payload = sanitizeForFirestore({
       colleges: cachedColleges,
       globalLockout: cachedGlobalLockout,
       updatedAt: new Date().toISOString(),
+      updatedAtMs: Date.now(),
       updatedBy: "SPHEREX_MASTER_CREATOR",
     });
 
-    try {
-      await setDoc(doc(db, "system_licenses", "college_registry"), payload, { merge: true });
-    } catch (fsErr) {
-      console.warn("Firestore license save notice:", fsErr);
-    }
+    Promise.race([
+      setDoc(doc(db, "system_licenses", "college_registry"), payload, { merge: true }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500)),
+    ]).catch((fsErr) => {
+      console.warn("Firestore license background save notice:", fsErr);
+    });
 
-    // Persist to Firebase Realtime Database
-    try {
-      await set(ref(rtdb, "spherex_licenses"), payload);
-    } catch (rtErr) {
-      console.warn("RTDB license save notice:", rtErr);
-    }
+    // Attempt RTDB with 1000ms safe race timeout (never block)
+    Promise.race([
+      set(ref(rtdb, "spherex_licenses"), payload),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)),
+    ]).catch(() => {});
 
     return NextResponse.json({
       success: true,

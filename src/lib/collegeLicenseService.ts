@@ -52,6 +52,7 @@ export interface GlobalLockoutState {
   isGlobalMobileStopped: boolean;
   reason: string;
   stoppedAt?: string;
+  updatedAtMs?: number;
 }
 
 const STORAGE_KEY = "spherex_college_licenses_registry";
@@ -117,9 +118,38 @@ export const DEFAULT_GLOBAL_LOCKOUT: GlobalLockoutState = {
   reason: "",
 };
 
+// Merge incoming colleges safely over DEFAULT_COLLEGES so essential metadata is never lost
+export function mergeCollegesWithDefaults(incoming: any[]): CollegeClientLicense[] {
+  if (!Array.isArray(incoming) || incoming.length === 0) return DEFAULT_COLLEGES;
+  return DEFAULT_COLLEGES.map((def) => {
+    const found = incoming.find(
+      (c) => (c.id && c.id === def.id) || (c.campus && c.campus.toUpperCase() === def.campus.toUpperCase())
+    );
+    if (!found) return def;
+    const total = (found.baseAnnualFee || def.baseAnnualFee || 150000) + (found.overageSurcharge || 0);
+    const paid = found.amountPaid ?? def.amountPaid ?? 0;
+    const outstanding = Math.max(0, total - paid);
+    let status: CollegePaymentStatus = found.paymentStatus || def.paymentStatus || "PENDING";
+    if (outstanding === 0) status = "PAID";
+    else if (new Date(found.paymentDueDate || def.paymentDueDate).getTime() < Date.now()) status = "OVERDUE";
+
+    return {
+      ...def,
+      ...found,
+      totalPayableAmount: total,
+      outstandingBalance: outstanding,
+      paymentStatus: status,
+      isWebApplicationStopped: Boolean(found.isWebApplicationStopped),
+      isMobileApplicationStopped: Boolean(found.isMobileApplicationStopped),
+      suspensionReason: found.suspensionReason || def.suspensionReason || "",
+    };
+  });
+}
+
 // In-memory runtime cache
 let memoryColleges: CollegeClientLicense[] = DEFAULT_COLLEGES;
 let memoryGlobalLockout: GlobalLockoutState = DEFAULT_GLOBAL_LOCKOUT;
+let lastLocalActionTime = 0; // Monotonic guard preventing polling from reverting recent user actions
 
 // Safe sanitization for Firebase
 function sanitizeForFirebase(obj: any): any {
@@ -147,6 +177,7 @@ export function getGlobalLockoutState(): GlobalLockoutState {
         isGlobalMobileStopped: Boolean(parsed.isGlobalMobileStopped),
         reason: String(parsed.reason || ""),
         stoppedAt: parsed.stoppedAt || undefined,
+        updatedAtMs: parsed.updatedAtMs,
       };
       return memoryGlobalLockout;
     }
@@ -171,23 +202,7 @@ export function getAllCollegeLicenses(): CollegeClientLicense[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      const mapped = parsed.map((item) => {
-        const total = (item.baseAnnualFee || 150000) + (item.overageSurcharge || 0);
-        const paid = item.amountPaid ?? 0;
-        const outstanding = Math.max(0, total - paid);
-        let status: CollegePaymentStatus = item.paymentStatus || "PENDING";
-        if (outstanding === 0) status = "PAID";
-        else if (new Date(item.paymentDueDate).getTime() < Date.now()) status = "OVERDUE";
-
-        return {
-          ...item,
-          totalPayableAmount: total,
-          outstandingBalance: outstanding,
-          paymentStatus: status,
-          isWebApplicationStopped: Boolean(item.isWebApplicationStopped),
-          isMobileApplicationStopped: Boolean(item.isMobileApplicationStopped),
-        };
-      });
+      const mapped = mergeCollegesWithDefaults(parsed);
       memoryColleges = mapped;
       return mapped;
     }
@@ -206,44 +221,52 @@ export async function pushLicensesToCloud(
   colleges: CollegeClientLicense[],
   globalLockout: GlobalLockoutState
 ): Promise<void> {
+  const mergedColleges = mergeCollegesWithDefaults(colleges);
   const payload = sanitizeForFirebase({
-    colleges,
+    colleges: mergedColleges,
     globalLockout,
     updatedAt: new Date().toISOString(),
+    updatedAtMs: Date.now(),
     updatedBy: "SPHEREX_MASTER_CREATOR",
   });
 
-  // 1. Next.js API Route (if accessible on Web)
+  // 1. Next.js API Route (if accessible on Web) with fast error suppression
   try {
     fetch("/api/creator/licenses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ colleges, globalLockout }),
+      body: JSON.stringify({ colleges: mergedColleges, globalLockout }),
     }).catch(() => {});
   } catch (e) {}
 
-  // 2. Realtime Database (Sub-50ms instant WebSocket broadcast across all connected apps)
+  // 2. Realtime Database (Sub-50ms instant WebSocket broadcast across all connected apps, guarded with 1000ms timeout)
   const rtdbTask = (async () => {
     try {
-      await set(ref(rtdb, "spherex_licenses"), payload);
+      await Promise.race([
+        set(ref(rtdb, "spherex_licenses"), payload),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)),
+      ]);
     } catch (e) {
-      console.warn("RTDB license push notice:", e);
+      // RTDB optional fallback
     }
   })();
 
-  // 3. Cloud Firestore (Parallel atomic write)
+  // 3. Cloud Firestore (Parallel atomic write guarded with 2500ms timeout)
   const firestoreTask = (async () => {
     try {
       const fsTasks = [
         setDoc(doc(db, "system_licenses", "college_registry"), payload, { merge: true }),
         setDoc(doc(db, "system_licenses", "global_lockout"), sanitizeForFirebase(globalLockout), { merge: true }),
-        ...colleges
+        ...mergedColleges
           .filter((c) => c.campus)
           .map((c) => setDoc(doc(db, "system_licenses", c.campus), sanitizeForFirebase(c), { merge: true })),
       ];
-      await Promise.allSettled(fsTasks);
+      await Promise.race([
+        Promise.allSettled(fsTasks),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500)),
+      ]);
     } catch (e) {
-      console.warn("Firestore license push error:", e);
+      console.warn("Firestore license push error notice:", e);
     }
   })();
 
@@ -257,15 +280,23 @@ export function saveAllLicensesAndLockout(
   colleges: CollegeClientLicense[],
   globalLockout: GlobalLockoutState
 ): void {
-  memoryColleges = colleges;
-  memoryGlobalLockout = globalLockout;
+  lastLocalActionTime = Date.now();
+  const merged = mergeCollegesWithDefaults(colleges);
+  const lockoutWithTimestamp: GlobalLockoutState = {
+    ...globalLockout,
+    updatedAtMs: Date.now(),
+  };
+
+  memoryColleges = merged;
+  memoryGlobalLockout = lockoutWithTimestamp;
+
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(colleges));
-      localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(globalLockout));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(lockoutWithTimestamp));
       window.dispatchEvent(
         new CustomEvent(LICENSE_EVENT_KEY, {
-          detail: { colleges, globalLockout },
+          detail: { colleges: merged, globalLockout: lockoutWithTimestamp },
         })
       );
     } catch (err) {
@@ -274,7 +305,7 @@ export function saveAllLicensesAndLockout(
   }
 
   // Broadcast to Cloud Firestore, RTDB, and API
-  pushLicensesToCloud(colleges, globalLockout);
+  pushLicensesToCloud(merged, lockoutWithTimestamp);
 }
 
 /**
@@ -292,7 +323,7 @@ export function saveCollegeLicenses(licenses: CollegeClientLicense[]): void {
 }
 
 /**
- * Direct Force-Fetch from Cloud Firestore:
+ * Direct Force-Fetch from Cloud Firestore / API:
  * Call this immediately on app launch or prior to login so mobile and web
  * NEVER rely on stale local defaults.
  */
@@ -300,9 +331,95 @@ export async function forceFetchLatestLicenseFromCloud(): Promise<{
   colleges: CollegeClientLicense[];
   globalLockout: GlobalLockoutState;
 }> {
+  // If the user made a local change in the last 4 seconds, don't let cloud latency overwrite it
+  if (Date.now() - lastLocalActionTime < 4000) {
+    return {
+      colleges: memoryColleges,
+      globalLockout: memoryGlobalLockout,
+    };
+  }
+
+  // 1. Primary on Web: Direct Next.js API route reading persistent disk file on host machine (sub-millisecond)
+  if (typeof window !== "undefined" && !isCapacitorNative()) {
+    try {
+      const res = await Promise.race([
+        fetch("/api/creator/licenses", { cache: "no-store" }),
+        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500)),
+      ]);
+      if (res && res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.colleges)) {
+          const gl: GlobalLockoutState = {
+            isGlobalWebStopped: Boolean(json.globalLockout?.isGlobalWebStopped),
+            isGlobalMobileStopped: Boolean(json.globalLockout?.isGlobalMobileStopped),
+            reason: String(json.globalLockout?.reason || ""),
+            stoppedAt: json.globalLockout?.stoppedAt || undefined,
+            updatedAtMs: json.globalLockout?.updatedAtMs,
+          };
+          const merged = mergeCollegesWithDefaults(json.colleges);
+          memoryColleges = merged;
+          memoryGlobalLockout = gl;
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+              localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(gl));
+              window.dispatchEvent(
+                new CustomEvent(LICENSE_EVENT_KEY, {
+                  detail: { colleges: merged, globalLockout: gl },
+                })
+              );
+            } catch (e) {}
+          }
+          return { colleges: merged, globalLockout: gl };
+        }
+      }
+    } catch (e) {
+      // Continue to RTDB / Firestore
+    }
+  }
+
+  // 2. Secondary: Firebase Realtime Database (Sub-50ms instant socket fetch for mobile & web)
   try {
-    const docSnap = await getDoc(doc(db, "system_licenses", "college_registry"));
-    if (docSnap.exists()) {
+    const rtdbSnap = await Promise.race([
+      get(ref(rtdb, "spherex_licenses")),
+      new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500)),
+    ]);
+    if (rtdbSnap && rtdbSnap.exists()) {
+      const val = rtdbSnap.val();
+      if (Array.isArray(val?.colleges) && val.colleges.length > 0) {
+        const gl: GlobalLockoutState = {
+          isGlobalWebStopped: Boolean(val.globalLockout?.isGlobalWebStopped),
+          isGlobalMobileStopped: Boolean(val.globalLockout?.isGlobalMobileStopped),
+          reason: String(val.globalLockout?.reason || ""),
+          stoppedAt: val.globalLockout?.stoppedAt || undefined,
+          updatedAtMs: val.globalLockout?.updatedAtMs,
+        };
+        const merged = mergeCollegesWithDefaults(val.colleges);
+        memoryColleges = merged;
+        memoryGlobalLockout = gl;
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+            localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(gl));
+            window.dispatchEvent(
+              new CustomEvent(LICENSE_EVENT_KEY, {
+                detail: { colleges: merged, globalLockout: gl },
+              })
+            );
+          } catch (e) {}
+        }
+        return { colleges: merged, globalLockout: gl };
+      }
+    }
+  } catch (err) {}
+
+  // 3. Fallback: Cloud Firestore with 1500ms timeout
+  try {
+    const docSnap = await Promise.race([
+      getDoc(doc(db, "system_licenses", "college_registry")),
+      new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500)),
+    ]);
+    if (docSnap?.exists?.()) {
       const data = docSnap.data();
       if (Array.isArray(data?.colleges) && data.colleges.length > 0) {
         const gl: GlobalLockoutState = {
@@ -310,49 +427,26 @@ export async function forceFetchLatestLicenseFromCloud(): Promise<{
           isGlobalMobileStopped: Boolean(data.globalLockout?.isGlobalMobileStopped),
           reason: String(data.globalLockout?.reason || ""),
           stoppedAt: data.globalLockout?.stoppedAt || undefined,
+          updatedAtMs: data.globalLockout?.updatedAtMs,
         };
-        memoryColleges = data.colleges;
+        const merged = mergeCollegesWithDefaults(data.colleges);
+        memoryColleges = merged;
         memoryGlobalLockout = gl;
         if (typeof window !== "undefined") {
           try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.colleges));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
             localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(gl));
             window.dispatchEvent(
               new CustomEvent(LICENSE_EVENT_KEY, {
-                detail: { colleges: data.colleges, globalLockout: gl },
+                detail: { colleges: merged, globalLockout: gl },
               })
             );
           } catch (e) {}
         }
-        return { colleges: data.colleges, globalLockout: gl };
+        return { colleges: merged, globalLockout: gl };
       }
     }
-  } catch (err) {
-    console.warn("Direct Firestore license load note:", err);
-  }
-
-  // Secondary fallback: Next.js API (if running on Web)
-  try {
-    const res = await fetch("/api/creator/licenses", { cache: "no-store" });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && Array.isArray(json.colleges)) {
-        const gl: GlobalLockoutState = {
-          isGlobalWebStopped: Boolean(json.globalLockout?.isGlobalWebStopped),
-          isGlobalMobileStopped: Boolean(json.globalLockout?.isGlobalMobileStopped),
-          reason: String(json.globalLockout?.reason || ""),
-          stoppedAt: json.globalLockout?.stoppedAt || undefined,
-        };
-        memoryColleges = json.colleges;
-        memoryGlobalLockout = gl;
-        if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(json.colleges));
-          localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(gl));
-        }
-        return { colleges: json.colleges, globalLockout: gl };
-      }
-    }
-  } catch (e) {}
+  } catch (err) {}
 
   return {
     colleges: getAllCollegeLicenses(),
@@ -369,16 +463,21 @@ export function listenToCollegeLicenses(
 ): () => void {
   let isUnsubscribed = false;
 
-  const handleUpdate = (colleges: CollegeClientLicense[], globalLockout: GlobalLockoutState) => {
-    memoryColleges = colleges;
-    memoryGlobalLockout = globalLockout;
+  const handleUpdate = (incomingColleges: CollegeClientLicense[], incomingGlobalLockout: GlobalLockoutState) => {
+    // If the creator just toggled a button locally in the past 4 seconds, ignore older incoming echoes
+    if (Date.now() - lastLocalActionTime < 4000) {
+      return;
+    }
+    const merged = mergeCollegesWithDefaults(incomingColleges);
+    memoryColleges = merged;
+    memoryGlobalLockout = incomingGlobalLockout;
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(colleges));
-        localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(globalLockout));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(incomingGlobalLockout));
       } catch (e) {}
     }
-    callback(colleges, globalLockout);
+    callback(merged, incomingGlobalLockout);
   };
 
   // 1. Initial trigger with cached data
@@ -422,6 +521,7 @@ export function listenToCollegeLicenses(
               isGlobalMobileStopped: Boolean(data.globalLockout?.isGlobalMobileStopped),
               reason: String(data.globalLockout?.reason || ""),
               stoppedAt: data.globalLockout?.stoppedAt || undefined,
+              updatedAtMs: data.globalLockout?.updatedAtMs,
             };
             handleUpdate(data.colleges, gl);
           }
@@ -447,27 +547,29 @@ export function listenToCollegeLicenses(
               isGlobalMobileStopped: Boolean(data.globalLockout?.isGlobalMobileStopped),
               reason: String(data.globalLockout?.reason || ""),
               stoppedAt: data.globalLockout?.stoppedAt || undefined,
+              updatedAtMs: data.globalLockout?.updatedAtMs,
             };
             handleUpdate(data.colleges, gl);
           }
         }
       },
       (err) => {
-        console.warn("RTDB license listener notice:", err);
+        // RTDB notice suppressed
       }
     );
   } catch (e) {}
 
-  // 5. Periodic Heartbeat Polling (every 1.2s) to guarantee instant lockout across mobile & web
+  // 5. Periodic Heartbeat Polling (every 4s) to guarantee consistent state across mobile & web without rapid flap
   const pollInterval = setInterval(async () => {
     if (isUnsubscribed) return;
+    if (Date.now() - lastLocalActionTime < 4000) return;
     try {
       const res = await forceFetchLatestLicenseFromCloud();
       if (!isUnsubscribed && res.colleges.length > 0) {
         handleUpdate(res.colleges, res.globalLockout);
       }
     } catch (e) {}
-  }, 1200);
+  }, 4000);
 
   return () => {
     isUnsubscribed = true;
@@ -483,9 +585,18 @@ export function listenToCollegeLicenses(
 /**
  * Find license by campus key ("KARUR" | "COIMBATORE").
  */
-export function getCollegeLicenseByCampus(campus: string): CollegeClientLicense | undefined {
+export function getCollegeLicenseByCampus(campusOrId?: string): CollegeClientLicense | undefined {
+  if (!campusOrId) return undefined;
   const colleges = getAllCollegeLicenses();
-  return colleges.find((c) => c.campus.toUpperCase() === campus.toUpperCase());
+  const clean = campusOrId.toUpperCase().trim();
+  return colleges.find(
+    (c) =>
+      c.campus.toUpperCase() === clean ||
+      c.id.toUpperCase() === clean ||
+      c.shortCode.toUpperCase() === clean ||
+      clean.includes(c.campus.toUpperCase()) ||
+      c.id.toUpperCase().includes(clean)
+  );
 }
 
 /**

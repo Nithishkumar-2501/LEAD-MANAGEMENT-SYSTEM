@@ -568,6 +568,16 @@ export default function DashboardPage() {
   }, []);
 
   const handleLoginSuccess = async (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => {
+    // Security check: non-creator users cannot log into a suspended college or host
+    if (role !== "CREATOR") {
+      const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(campus);
+      if (suspensionCheck.isSuspended) {
+        setInstitutionSuspension(suspensionCheck);
+        triggerToast("🛑 Application access has been stopped by Master Creator.");
+        return;
+      }
+    }
+
     sessionStorage.setItem("vsb_admin_auth", "true");
     sessionStorage.setItem("vsb_logged_in_campus", campus);
     sessionStorage.setItem("vsb_logged_in_role", role);
