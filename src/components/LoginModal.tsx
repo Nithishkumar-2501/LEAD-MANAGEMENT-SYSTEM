@@ -11,7 +11,6 @@ import {
   getGlobalLockoutState,
   forceFetchLatestLicenseFromCloud,
   getAllCollegeLicenses,
-  restoreAllApplicationsGlobally,
   CollegeClientLicense,
   GlobalLockoutState,
 } from "@/lib/collegeLicenseService";
@@ -51,13 +50,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forceShowLoginForm, setForceShowLoginForm] = useState(false);
-  const [showQuickRestoreModal, setShowQuickRestoreModal] = useState(false);
-  const [quickRestorePassword, setQuickRestorePassword] = useState("");
-  const [quickRestoreError, setQuickRestoreError] = useState("");
-  const [quickRestoreSuccess, setQuickRestoreSuccess] = useState(false);
   const [colleges, setColleges] = useState<CollegeClientLicense[]>(() => getAllCollegeLicenses());
-  const [globalLockout, setGlobalLockout] = useState<GlobalLockoutState>(() => getGlobalLockoutState());
+  const [, setGlobalLockout] = useState<GlobalLockoutState>(() => getGlobalLockoutState());
   const [suspensionAlert, setSuspensionAlert] = useState<{
     isOpen: boolean;
     college?: CollegeClientLicense;
@@ -314,7 +308,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
     // Check if the college's Web or Mobile application has been stopped by the Root Creator
     const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(targetCampus);
-    if (suspensionCheck.isSuspended || isSelectedCampusStopped) {
+    if (suspensionCheck.isSuspended) {
       setLoading(false);
       const campusObj = colleges.find(
         (c) => c.campus.toUpperCase() === targetCampus || c.id.toUpperCase() === `VSB_${targetCampus}`
@@ -323,7 +317,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         isOpen: true,
         college: suspensionCheck.college || campusObj,
         platform: suspensionCheck.platform || (isNative ? "MOBILE" : "WEB"),
-        isGlobal: suspensionCheck.isGlobal || isCurrentHostStopped,
+        isGlobal: suspensionCheck.isGlobal,
         reason:
           suspensionCheck.reason ||
           campusObj?.suspensionReason ||
@@ -378,44 +372,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   };
 
   const isNative = isCapacitorNative();
-  const karurCollege = colleges.find((c) => c.campus === "KARUR" || c.id === "VSB_KARUR");
-  const covaiCollege = colleges.find((c) => c.campus === "COIMBATORE" || c.id === "VSB_COIMBATORE");
-
-  const isKarurStopped = isNative
-    ? Boolean(karurCollege?.isMobileApplicationStopped)
-    : Boolean(karurCollege?.isWebApplicationStopped);
-
-  const isCovaiStopped = isNative
-    ? Boolean(covaiCollege?.isMobileApplicationStopped)
-    : Boolean(covaiCollege?.isWebApplicationStopped);
-
-  const allCollegesStopped =
-    colleges.length > 0 &&
-    colleges.every((c) => (isNative ? c.isMobileApplicationStopped : c.isWebApplicationStopped));
-
-  const isCurrentHostStopped =
-    (!isNative && globalLockout.isGlobalWebStopped) ||
-    (isNative && globalLockout.isGlobalMobileStopped) ||
-    allCollegesStopped;
-
-  // Real-time detection of whether currently entered credentials belong to a suspended campus
-  const cleanInputUser = username.toLowerCase().trim();
-  const targetCampusDetected: "KARUR" | "COIMBATORE" | null = (() => {
-    if (cleanInputUser.includes("karur") || cleanInputUser === "adminkarur@123" || cleanInputUser === "teacherkarur@123" || cleanInputUser === "teacher_rajesh@123") return "KARUR";
-    if (cleanInputUser.includes("covai") || cleanInputUser.includes("coimbatore") || cleanInputUser === "admincovai@123" || cleanInputUser === "teachercovai@123") return "COIMBATORE";
-    if (cleanInputUser.includes("vsbec.in") || cleanInputUser.includes("vsbctc.com")) {
-      const fac = FACULTY_ACCOUNTS[cleanInputUser];
-      if (fac) return fac.campus;
-    }
-    return null;
-  })();
-
-  const isSelectedCampusStopped = (() => {
-    if (isCurrentHostStopped) return true;
-    if (targetCampusDetected === "KARUR") return isKarurStopped;
-    if (targetCampusDetected === "COIMBATORE") return isCovaiStopped;
-    return false;
-  })();
 
   return (
     <div
@@ -665,334 +621,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </h2>
           </motion.div>
 
-          {/* Dedicated Stoppage Screen when Creator halts the Web host / Mobile app */}
-          {isCurrentHostStopped && (
-            <motion.div
-              variants={itemVariants}
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              style={{
-                backgroundColor: "rgba(15, 23, 42, 0.95)",
-                borderRadius: "24px",
-                border: "2px solid #ef4444",
-                padding: "26px",
-                boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.4)",
-                textAlign: "center",
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
-                marginBottom: "16px",
-              }}
-            >
-              <div
-                style={{
-                  width: "60px",
-                  height: "60px",
-                  borderRadius: "18px",
-                  backgroundColor: "rgba(239, 68, 68, 0.15)",
-                  border: "1px solid rgba(239, 68, 68, 0.4)",
-                  color: "#ef4444",
-                  margin: "0 auto",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Lock style={{ width: "30px", height: "30px" }} />
-              </div>
-
-              <div>
-                <span
-                  style={{
-                    display: "inline-block",
-                    padding: "5px 14px",
-                    borderRadius: "9999px",
-                    fontSize: "10.5px",
-                    fontWeight: 900,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    backgroundColor: "rgba(239, 68, 68, 0.25)",
-                    color: "#fca5a5",
-                    border: "1px solid rgba(239, 68, 68, 0.6)",
-                    marginBottom: "8px",
-                  }}
-                >
-                  SYSTEM ACCESS HALTED
-                </span>
-                <h3
-                  className="text-xl sm:text-2xl font-black text-rose-400 tracking-wide"
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: 900,
-                    color: "#f87171",
-                    textShadow: "0 0 16px rgba(239, 68, 68, 0.4)",
-                    margin: "0 0 6px",
-                  }}
-                >
-                  HOST APPLICATION STOPPED
-                </h3>
-                <p style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.8)", lineHeight: 1.5, margin: 0 }}>
-                  {isCapacitorNative()
-                    ? "Native Mobile Application access has been stopped across all systems by the Master Creator."
-                    : "Web Application host has been stopped across all systems by Master Creator (SPHEREX Nithish Kumar)."}
-                </p>
-              </div>
-
-              <div
-                style={{
-                  backgroundColor: "#030712",
-                  borderRadius: "14px",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  padding: "14px",
-                  fontSize: "11.5px",
-                  textAlign: "left",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "7px",
-                  lineHeight: 1.6,
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Host Status:</span>
-                  <span style={{ color: "#f87171", fontWeight: 800 }}>🛑 STOPPED BY CREATOR</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Current Platform:</span>
-                  <span style={{ color: "#38bdf8", fontWeight: 700 }}>
-                    {isCapacitorNative() ? "📱 Native Mobile App" : "💻 Web Application (Host)"}
-                  </span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Stoppage Reason:</span>
-                  <span style={{ color: "#fbbf24", fontWeight: 600, textAlign: "right" }}>
-                    {globalLockout.reason || "Annual software subscription pending clearance."}
-                  </span>
-                </div>
-              </div>
-
-              <p
-                style={{
-                  fontSize: "11px",
-                  color: "#fbbf24",
-                  backgroundColor: "rgba(251, 191, 36, 0.1)",
-                  border: "1px solid rgba(251, 191, 36, 0.25)",
-                  borderRadius: "12px",
-                  padding: "10px 12px",
-                  margin: 0,
-                  lineHeight: 1.5,
-                }}
-              >
-                ℹ️ The host will remain stopped until the Master Creator re-opens access. Once reopened in the Creator portal, access will resume immediately on all systems.
-              </p>
-
-              {/* Creator Actions & Quick Restore Dialog */}
-              {showQuickRestoreModal ? (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setQuickRestoreError("");
-                    if (quickRestorePassword.trim() === "spherex#2501") {
-                      const res = restoreAllApplicationsGlobally();
-                      setColleges(res.colleges);
-                      setGlobalLockout(res.globalLockout);
-                      setQuickRestoreSuccess(true);
-                      setTimeout(() => {
-                        setShowQuickRestoreModal(false);
-                        setQuickRestorePassword("");
-                        setQuickRestoreSuccess(false);
-                      }, 1000);
-                    } else {
-                      setQuickRestoreError("Invalid Creator Password. Enter 'spherex#2501'.");
-                    }
-                  }}
-                  style={{
-                    backgroundColor: "#030712",
-                    borderRadius: "14px",
-                    border: "1px solid rgba(245, 158, 11, 0.4)",
-                    padding: "14px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                  }}
-                >
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#fbbf24", textAlign: "left" }}>
-                    ⚡ Master Creator Quick Restore
-                  </div>
-                  <input
-                    type="password"
-                    placeholder="Enter Creator Password (spherex#2501)"
-                    value={quickRestorePassword}
-                    onChange={(e) => setQuickRestorePassword(e.target.value)}
-                    autoFocus
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      borderRadius: "10px",
-                      backgroundColor: "rgba(255, 255, 255, 0.08)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                      color: "#ffffff",
-                      fontSize: "12px",
-                      outline: "none",
-                    }}
-                  />
-                  {quickRestoreError && (
-                    <div style={{ color: "#f87171", fontSize: "11px", textAlign: "left" }}>
-                      ⚠️ {quickRestoreError}
-                    </div>
-                  )}
-                  {quickRestoreSuccess && (
-                    <div style={{ color: "#34d399", fontSize: "11px", fontWeight: 700, textAlign: "left" }}>
-                      ✅ Applications Restored! Reopening...
-                    </div>
-                  )}
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      type="submit"
-                      style={{
-                        flex: 1,
-                        padding: "10px",
-                        borderRadius: "10px",
-                        background: "linear-gradient(135deg, #10b981, #059669)",
-                        color: "#ffffff",
-                        fontSize: "11px",
-                        fontWeight: 800,
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Confirm & Re-open
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowQuickRestoreModal(false);
-                        setQuickRestoreError("");
-                      }}
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: "10px",
-                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                        color: "#ffffff",
-                        fontSize: "11px",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
-                  {!isCapacitorNative() && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUsername("spherexnithish#");
-                        setPassword("spherex#2501");
-                        setForceShowLoginForm(true);
-                        try {
-                          localStorage.removeItem("vsb_admin_auth");
-                          sessionStorage.setItem("vsb_admin_auth", "true");
-                          sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
-                          sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
-                          sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
-                        } catch (e) {}
-                        onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
-                      }}
-                      style={{
-                        width: "100%",
-                        padding: "13px 18px",
-                        borderRadius: "12px",
-                        background: "linear-gradient(135deg, #f59e0b, #ea580c)",
-                        color: "#ffffff",
-                        fontSize: "12px",
-                        fontWeight: 800,
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        boxShadow: "0 10px 25px -4px rgba(245, 158, 11, 0.5)",
-                      }}
-                    >
-                      <span>👑 Master Creator Login & Re-open Site</span>
-                      <ArrowRight style={{ width: "16px", height: "16px" }} />
-                    </button>
-                  )}
-
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      type="button"
-                      onClick={() => setShowQuickRestoreModal(true)}
-                      style={{
-                        flex: 1,
-                        padding: "10px 12px",
-                        borderRadius: "10px",
-                        background: "linear-gradient(135deg, #10b981, #059669)",
-                        color: "#ffffff",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      ⚡ Quick-Restore Access
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setForceShowLoginForm(!forceShowLoginForm)}
-                      style={{
-                        flex: 1,
-                        padding: "10px 12px",
-                        borderRadius: "10px",
-                        backgroundColor: forceShowLoginForm ? "rgba(99, 102, 241, 0.3)" : "rgba(255, 255, 255, 0.1)",
-                        border: forceShowLoginForm ? "1px solid #6366f1" : "1px solid rgba(255, 255, 255, 0.15)",
-                        color: "#ffffff",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {forceShowLoginForm ? "🔼 Hide Form" : "🔐 Show Login Form"}
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setLoading(true);
-                      try {
-                        const res = await forceFetchLatestLicenseFromCloud();
-                        if (res?.colleges) setColleges(res.colleges);
-                        if (res?.globalLockout) setGlobalLockout(res.globalLockout);
-                      } catch (e) {}
-                      setLoading(false);
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "9px",
-                      borderRadius: "10px",
-                      backgroundColor: "rgba(255, 255, 255, 0.06)",
-                      border: "1px solid rgba(255, 255, 255, 0.12)",
-                      color: "#94a3b8",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    🔄 Re-check Cloud License
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {(!isCurrentHostStopped || forceShowLoginForm) && (
-            <>
-              {/* Error Notification */}
+          {/* Error Notification */}
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -6 }}
@@ -1061,17 +690,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               style={{
                 padding: "8px 10px",
                 borderRadius: "10px",
-                backgroundColor: isKarurStopped
-                  ? "rgba(239, 68, 68, 0.2)"
-                  : username === "adminkarur@123"
+                backgroundColor: username === "adminkarur@123"
                   ? "rgba(168, 85, 247, 0.3)"
                   : "rgba(255, 255, 255, 0.05)",
-                border: isKarurStopped
-                  ? "1.5px solid #ef4444"
-                  : username === "adminkarur@123"
+                border: username === "adminkarur@123"
                   ? "1.5px solid #c084fc"
                   : "1px solid rgba(255, 255, 255, 0.1)",
-                color: isKarurStopped ? "#fca5a5" : "#e9d5ff",
+                color: "#e9d5ff",
                 fontSize: "11px",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -1082,20 +707,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               }}
             >
               <span>🏛️ Karur</span>
-              {isKarurStopped && (
-                <span
-                  style={{
-                    fontSize: "9px",
-                    padding: "1px 5px",
-                    borderRadius: "9999px",
-                    backgroundColor: "#ef4444",
-                    color: "#ffffff",
-                    fontWeight: 800,
-                  }}
-                >
-                  STOPPED
-                </span>
-              )}
             </button>
 
             <button
@@ -1104,17 +715,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               style={{
                 padding: "8px 10px",
                 borderRadius: "10px",
-                backgroundColor: isCovaiStopped
-                  ? "rgba(239, 68, 68, 0.2)"
-                  : username === "admincovai@123"
+                backgroundColor: username === "admincovai@123"
                   ? "rgba(56, 189, 248, 0.3)"
                   : "rgba(255, 255, 255, 0.05)",
-                border: isCovaiStopped
-                  ? "1.5px solid #ef4444"
-                  : username === "admincovai@123"
+                border: username === "admincovai@123"
                   ? "1.5px solid #38bdf8"
                   : "1px solid rgba(255, 255, 255, 0.1)",
-                color: isCovaiStopped ? "#fca5a5" : "#bae6fd",
+                color: "#bae6fd",
                 fontSize: "11px",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -1125,20 +732,6 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               }}
             >
               <span>🏛️ Covai</span>
-              {isCovaiStopped && (
-                <span
-                  style={{
-                    fontSize: "9px",
-                    padding: "1px 5px",
-                    borderRadius: "9999px",
-                    backgroundColor: "#ef4444",
-                    color: "#ffffff",
-                    fontWeight: 800,
-                  }}
-                >
-                  STOPPED
-                </span>
-              )}
             </button>
           </motion.div>
 
@@ -1305,65 +898,21 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               </span>
             </motion.div>
 
-            {/* Campus Stopped Warning Notice */}
-            {isSelectedCampusStopped && !isCurrentHostStopped && (
-              <motion.div
-                variants={itemVariants}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: "14px",
-                  backgroundColor: "rgba(239, 68, 68, 0.15)",
-                  border: "1px solid rgba(239, 68, 68, 0.5)",
-                  color: "#fca5a5",
-                  fontSize: "12px",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "10px",
-                  lineHeight: "1.4",
-                }}
-              >
-                <Lock style={{ width: "18px", height: "18px", flexShrink: 0, color: "#ef4444", marginTop: "2px" }} />
-                <div>
-                  <div
-                    style={{
-                      fontWeight: 800,
-                      color: "#f87171",
-                      textTransform: "uppercase",
-                      fontSize: "11px",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    Application Access Stopped
-                  </div>
-                  <div>
-                    {targetCampusDetected === "KARUR"
-                      ? "V.S.B. Engineering College (Karur)"
-                      : targetCampusDetected === "COIMBATORE"
-                      ? "V.S.B. Technical Campus (Coimbatore)"
-                      : "This Institution"}{" "}
-                    access has been stopped by Master Creator due to pending annual renewal payment.
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
             {/* Login Button - High Contrast Bold White Pill with Black Text & Arrow */}
             <motion.div variants={itemVariants} style={{ marginTop: "10px" }}>
               <button
                 type="submit"
-                disabled={loading || isSelectedCampusStopped}
+                disabled={loading}
                 style={{
                   width: "100%",
                   borderRadius: "9999px",
-                  backgroundColor: isSelectedCampusStopped ? "#dc2626" : "#ffffff",
-                  color: isSelectedCampusStopped ? "#ffffff" : "#000000",
+                  backgroundColor: "#ffffff",
+                  color: "#000000",
                   padding: "14px 24px",
                   fontSize: "14px",
                   fontWeight: 700,
                   border: "none",
-                  boxShadow: isSelectedCampusStopped
-                    ? "0 4px 25px rgba(220, 38, 38, 0.3)"
-                    : "0 4px 25px rgba(255, 255, 255, 0.18)",
+                  boxShadow: "0 4px 25px rgba(255, 255, 255, 0.18)",
                   cursor: loading ? "not-allowed" : "pointer",
                   opacity: loading ? 0.75 : 1,
                   transition: "all 0.2s ease",
@@ -1379,25 +928,18 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                       style={{
                         width: "16px",
                         height: "16px",
-                        color: isSelectedCampusStopped ? "#ffffff" : "#000000",
+                        color: "#000000",
                         animation: "spin 1s linear infinite",
                       }}
                     />
                     <span
                       style={{
-                        color: isSelectedCampusStopped ? "#ffffff" : "#000000",
+                        color: "#000000",
                         fontWeight: 700,
                         fontSize: "14px",
                       }}
                     >
                       Authenticating...
-                    </span>
-                  </>
-                ) : isSelectedCampusStopped ? (
-                  <>
-                    <Lock style={{ width: "16px", height: "16px", color: "#ffffff" }} />
-                    <span style={{ color: "#ffffff", fontWeight: 700, fontSize: "13px" }}>
-                      🛑 Access Stopped by Creator
                     </span>
                   </>
                 ) : (
@@ -1549,10 +1091,8 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               </button>
             </div>
           </motion.div>
-        </>
-      )}
 
-      {/* Department Attribution Footer */}
+          {/* Department Attribution Footer */}
           <motion.div
             variants={itemVariants}
             style={{
@@ -1851,9 +1391,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
             <button
               onClick={async () => {
-                const res = await forceFetchLatestLicenseFromCloud();
-                const recheck = isCollegeSuspendedForCurrentEnvironment(targetCampusDetected || undefined);
-                if (!recheck.isSuspended && !isSelectedCampusStopped) {
+                await forceFetchLatestLicenseFromCloud();
+                const targetCampus = suspensionAlert?.college?.campus || "KARUR";
+                const recheck = isCollegeSuspendedForCurrentEnvironment(targetCampus);
+                if (!recheck.isSuspended) {
                   setSuspensionAlert(null);
                 } else {
                   setSuspensionAlert({
@@ -1875,9 +1416,28 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 fontSize: "12px",
                 border: "none",
                 cursor: "pointer",
+                marginBottom: "8px",
               }}
             >
               🔄 Refresh &amp; Re-check Cloud Status
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSuspensionAlert(null)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                backgroundColor: "transparent",
+                color: "rgba(255, 255, 255, 0.6)",
+                fontWeight: 600,
+                borderRadius: "9999px",
+                fontSize: "12px",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                cursor: "pointer",
+              }}
+            >
+              Close &amp; Return to Login
             </button>
           </div>
         </div>
