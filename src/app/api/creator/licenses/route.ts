@@ -177,7 +177,7 @@ export async function GET() {
     // 1. Primary: Fetch LIVE data directly from Cloud Firestore REST API (works seamlessly on Vercel host)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
 
       const res = await fetch(FIRESTORE_DOC_URL, {
         method: "GET",

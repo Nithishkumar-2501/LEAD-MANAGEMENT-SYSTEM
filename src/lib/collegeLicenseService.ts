@@ -171,6 +171,11 @@ export function getGlobalLockoutState(): GlobalLockoutState {
     const raw = localStorage.getItem(GLOBAL_LOCKOUT_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
+      // If memoryGlobalLockout is active/open (false), do not let a stale stopped state in localStorage override it
+      if (!memoryGlobalLockout.isGlobalWebStopped && !memoryGlobalLockout.isGlobalMobileStopped && (parsed.isGlobalWebStopped || parsed.isGlobalMobileStopped)) {
+        localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(memoryGlobalLockout));
+        return memoryGlobalLockout;
+      }
       memoryGlobalLockout = {
         isGlobalWebStopped: Boolean(parsed.isGlobalWebStopped),
         isGlobalMobileStopped: Boolean(parsed.isGlobalMobileStopped),
@@ -548,7 +553,11 @@ export function getCollegeLicenseById(id: string): CollegeClientLicense | undefi
  * 5. College Mobile Stopped -> Locks Native Mobile App + Mobile Browsers for that college.
  * 6. College Web Stopped -> Locks Web for that college.
  */
-export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
+export function isCollegeSuspendedForCurrentEnvironment(
+  campus?: string,
+  overrideColleges?: CollegeClientLicense[],
+  overrideGlobal?: GlobalLockoutState
+): {
   isSuspended: boolean;
   platform: "WEB" | "MOBILE";
   college?: CollegeClientLicense;
@@ -560,7 +569,7 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
   const platform: "WEB" | "MOBILE" = isNativeApp ? "MOBILE" : "WEB";
 
   // 1. MASTER GLOBAL LOCKOUT CHECK (Applies to all systems and colleges worldwide)
-  const global = getGlobalLockoutState();
+  const global = overrideGlobal || getGlobalLockoutState();
 
   // A. Emergency Global Freeze: BOTH Web and Mobile stopped everywhere
   if (global.isGlobalWebStopped && global.isGlobalMobileStopped) {
@@ -600,7 +609,17 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
 
   // 2. SPECIFIC COLLEGE CLIENT CHECK
   if (campus) {
-    const college = getCollegeLicenseByCampus(campus);
+    const list = overrideColleges || getAllCollegeLicenses();
+    const clean = campus.toUpperCase().trim();
+    const college = list.find(
+      (c) =>
+        c.campus.toUpperCase() === clean ||
+        c.id.toUpperCase() === clean ||
+        c.shortCode.toUpperCase() === clean ||
+        clean.includes(c.campus.toUpperCase()) ||
+        c.id.toUpperCase().includes(clean)
+    );
+
     if (college) {
       // Both Web and Mobile stopped for this college -> Complete institutional lockout
       if (college.isWebApplicationStopped && college.isMobileApplicationStopped) {
@@ -647,7 +666,7 @@ export function isCollegeSuspendedForCurrentEnvironment(campus?: string): {
 
   // 3. Fallback when campus is not yet provided (e.g. on initial Login page before typing ID):
   // If ALL registered colleges have Web or Mobile stopped, lock out access
-  const allRegisteredColleges = getAllCollegeLicenses();
+  const allRegisteredColleges = overrideColleges || getAllCollegeLicenses();
   if (allRegisteredColleges.length > 0) {
     const allStopped = allRegisteredColleges.every((c) =>
       isMobile ? c.isMobileApplicationStopped : c.isWebApplicationStopped

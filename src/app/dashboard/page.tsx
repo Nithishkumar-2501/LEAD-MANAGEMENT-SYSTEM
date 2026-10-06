@@ -7,6 +7,7 @@ import {
   listenToCollegeLicenses,
   forceFetchLatestLicenseFromCloud,
   CollegeClientLicense,
+  GlobalLockoutState,
 } from "@/lib/collegeLicenseService";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
@@ -108,9 +109,9 @@ export default function DashboardPage() {
   }>({ isSuspended: false, platform: "WEB" });
 
   useEffect(() => {
-    const evaluateSuspension = () => {
+    const evaluateSuspension = (overrideColleges?: CollegeClientLicense[], overrideGlobal?: GlobalLockoutState) => {
       if (currentUserRole !== "CREATOR") {
-        const check = isCollegeSuspendedForCurrentEnvironment(loggedInCampus || undefined);
+        const check = isCollegeSuspendedForCurrentEnvironment(loggedInCampus || undefined, overrideColleges, overrideGlobal);
         setInstitutionSuspension(check);
       } else {
         setInstitutionSuspension({ isSuspended: false, platform: "WEB" });
@@ -118,12 +119,14 @@ export default function DashboardPage() {
     };
 
     evaluateSuspension();
-    forceFetchLatestLicenseFromCloud().then(() => {
-      evaluateSuspension();
+    forceFetchLatestLicenseFromCloud().then((res) => {
+      if (res) {
+        evaluateSuspension(res.colleges, res.globalLockout);
+      }
     });
 
-    const unsubscribe = listenToCollegeLicenses(() => {
-      evaluateSuspension();
+    const unsubscribe = listenToCollegeLicenses((updatedColleges, updatedGlobalLockout) => {
+      evaluateSuspension(updatedColleges, updatedGlobalLockout);
     });
     return () => unsubscribe();
   }, [currentUserRole, loggedInCampus]);
@@ -570,7 +573,15 @@ export default function DashboardPage() {
   const handleLoginSuccess = async (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => {
     // Security check: non-creator users cannot log into a suspended college or host
     if (role !== "CREATOR") {
-      const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(campus);
+      let freshColleges: CollegeClientLicense[] | undefined;
+      let freshGlobal: GlobalLockoutState | undefined;
+      try {
+        const fresh = await forceFetchLatestLicenseFromCloud();
+        freshColleges = fresh?.colleges;
+        freshGlobal = fresh?.globalLockout;
+      } catch (e) {}
+
+      const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(campus, freshColleges, freshGlobal);
       if (suspensionCheck.isSuspended) {
         setInstitutionSuspension(suspensionCheck);
         triggerToast("🛑 Application access has been stopped by Master Creator.");
@@ -859,8 +870,8 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={async () => {
-                await forceFetchLatestLicenseFromCloud();
-                const recheck = isCollegeSuspendedForCurrentEnvironment(loggedInCampus || undefined);
+                const res = await forceFetchLatestLicenseFromCloud();
+                const recheck = isCollegeSuspendedForCurrentEnvironment(loggedInCampus || undefined, res?.colleges, res?.globalLockout);
                 setInstitutionSuspension(recheck);
                 if (!recheck.isSuspended) {
                   triggerToast("✨ Access restored! Resuming application...");

@@ -104,7 +104,14 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     // Immediately fetch from Cloud Firestore without blocking typing
     forceFetchLatestLicenseFromCloud().then((res) => {
       if (res?.colleges) setColleges(res.colleges);
-      if (res?.globalLockout) setGlobalLockout(res.globalLockout);
+      if (res?.globalLockout) {
+        setGlobalLockout(res.globalLockout);
+        if (!res.globalLockout.isGlobalWebStopped && !res.globalLockout.isGlobalMobileStopped) {
+          try {
+            localStorage.setItem("spherex_global_lockout_registry", JSON.stringify(res.globalLockout));
+          } catch (e) {}
+        }
+      }
     }).catch((e) => console.warn("License fetch notice:", e));
 
     return () => unsubscribe();
@@ -297,20 +304,29 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     }
 
     // Force real-time fetch directly from Cloud Firestore with safe 1.5s timeout
+    // Force real-time fetch directly from Cloud Firestore / API with safe timeout
+    let freshColleges = colleges;
+    let freshGlobal = getGlobalLockoutState();
     try {
-      await Promise.race([
+      const freshCloud = await Promise.race([
         forceFetchLatestLicenseFromCloud(),
-        new Promise((res) => setTimeout(res, 1500)),
+        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000)),
       ]);
+      if (freshCloud?.colleges && freshCloud?.globalLockout) {
+        freshColleges = freshCloud.colleges;
+        freshGlobal = freshCloud.globalLockout;
+        setColleges(freshCloud.colleges);
+        setGlobalLockout(freshCloud.globalLockout);
+      }
     } catch (e) {
       console.warn("Cloud license check notice:", e);
     }
 
     // Check if the college's Web or Mobile application has been stopped by the Root Creator
-    const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(targetCampus);
+    const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(targetCampus, freshColleges, freshGlobal);
     if (suspensionCheck.isSuspended) {
       setLoading(false);
-      const campusObj = colleges.find(
+      const campusObj = freshColleges.find(
         (c) => c.campus.toUpperCase() === targetCampus || c.id.toUpperCase() === `VSB_${targetCampus}`
       );
       setSuspensionAlert({
@@ -1391,9 +1407,9 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
             <button
               onClick={async () => {
-                await forceFetchLatestLicenseFromCloud();
+                const res = await forceFetchLatestLicenseFromCloud();
                 const targetCampus = suspensionAlert?.college?.campus || "KARUR";
-                const recheck = isCollegeSuspendedForCurrentEnvironment(targetCampus);
+                const recheck = isCollegeSuspendedForCurrentEnvironment(targetCampus, res?.colleges, res?.globalLockout);
                 if (!recheck.isSuspended) {
                   setSuspensionAlert(null);
                 } else {
