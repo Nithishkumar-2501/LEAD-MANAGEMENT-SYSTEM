@@ -22,6 +22,7 @@ import {
   GlobalLockoutState,
   getAllCollegeLicenses,
   getGlobalLockoutState,
+  forceFetchLatestLicenseFromCloud,
   setCollegeWebApplicationStatus,
   setCollegeMobileApplicationStatus,
   freezeCollegeEntireApplication,

@@ -13,9 +13,8 @@
  */
 
 import { isCapacitorNative, isMobileDeviceOrApp } from "./mobileFetch";
-import { db, rtdb } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import { ref, get, set, onValue } from "firebase/database";
 
 export type CollegePaymentStatus = "PAID" | "PENDING" | "OVERDUE";
 
@@ -230,28 +229,20 @@ export async function pushLicensesToCloud(
     updatedBy: "SPHEREX_MASTER_CREATOR",
   });
 
-  // 1. Next.js API Route (if accessible on Web) with fast error suppression
-  try {
-    fetch("/api/creator/licenses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ colleges: mergedColleges, globalLockout }),
-    }).catch(() => {});
-  } catch (e) {}
-
-  // 2. Realtime Database (Sub-50ms instant WebSocket broadcast across all connected apps, guarded with 1000ms timeout)
-  const rtdbTask = (async () => {
+  // 1. Next.js API Route (Syncs Vercel serverless host and updates Firestore REST)
+  const apiTask = (async () => {
     try {
-      await Promise.race([
-        set(ref(rtdb, "spherex_licenses"), payload),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)),
-      ]);
+      await fetch("/api/creator/licenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ colleges: mergedColleges, globalLockout }),
+      });
     } catch (e) {
-      // RTDB optional fallback
+      // Local or native network catch
     }
   })();
 
-  // 3. Cloud Firestore (Parallel atomic write guarded with 2500ms timeout)
+  // 2. Cloud Firestore SDK (Direct client SDK write with 2500ms safety timeout)
   const firestoreTask = (async () => {
     try {
       const fsTasks = [
@@ -270,7 +261,7 @@ export async function pushLicensesToCloud(
     }
   })();
 
-  await Promise.allSettled([rtdbTask, firestoreTask]);
+  await Promise.allSettled([apiTask, firestoreTask]);
 }
 
 /**
@@ -304,7 +295,7 @@ export function saveAllLicensesAndLockout(
     }
   }
 
-  // Broadcast to Cloud Firestore, RTDB, and API
+  // Broadcast to Cloud Firestore and API
   pushLicensesToCloud(merged, lockoutWithTimestamp);
 }
 
@@ -339,12 +330,12 @@ export async function forceFetchLatestLicenseFromCloud(): Promise<{
     };
   }
 
-  // 1. Primary on Web: Direct Next.js API route reading persistent disk file on host machine (sub-millisecond)
+  // 1. Primary on Web: Direct Next.js API route (proxies live Cloud Firestore with no-store cache)
   if (typeof window !== "undefined" && !isCapacitorNative()) {
     try {
       const res = await Promise.race([
         fetch("/api/creator/licenses", { cache: "no-store" }),
-        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500)),
+        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000)),
       ]);
       if (res && res.ok) {
         const json = await res.json();
@@ -374,50 +365,15 @@ export async function forceFetchLatestLicenseFromCloud(): Promise<{
         }
       }
     } catch (e) {
-      // Continue to RTDB / Firestore
+      // Continue to direct Cloud Firestore SDK fallback
     }
   }
 
-  // 2. Secondary: Firebase Realtime Database (Sub-50ms instant socket fetch for mobile & web)
-  try {
-    const rtdbSnap = await Promise.race([
-      get(ref(rtdb, "spherex_licenses")),
-      new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500)),
-    ]);
-    if (rtdbSnap && rtdbSnap.exists()) {
-      const val = rtdbSnap.val();
-      if (Array.isArray(val?.colleges) && val.colleges.length > 0) {
-        const gl: GlobalLockoutState = {
-          isGlobalWebStopped: Boolean(val.globalLockout?.isGlobalWebStopped),
-          isGlobalMobileStopped: Boolean(val.globalLockout?.isGlobalMobileStopped),
-          reason: String(val.globalLockout?.reason || ""),
-          stoppedAt: val.globalLockout?.stoppedAt || undefined,
-          updatedAtMs: val.globalLockout?.updatedAtMs,
-        };
-        const merged = mergeCollegesWithDefaults(val.colleges);
-        memoryColleges = merged;
-        memoryGlobalLockout = gl;
-        if (typeof window !== "undefined") {
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-            localStorage.setItem(GLOBAL_LOCKOUT_KEY, JSON.stringify(gl));
-            window.dispatchEvent(
-              new CustomEvent(LICENSE_EVENT_KEY, {
-                detail: { colleges: merged, globalLockout: gl },
-              })
-            );
-          } catch (e) {}
-        }
-        return { colleges: merged, globalLockout: gl };
-      }
-    }
-  } catch (err) {}
-
-  // 3. Fallback: Cloud Firestore with 1500ms timeout
+  // 2. Direct Cloud Firestore SDK fetch (ideal for Mobile apps and fallback on web)
   try {
     const docSnap = await Promise.race([
       getDoc(doc(db, "system_licenses", "college_registry")),
-      new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500)),
+      new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000)),
     ]);
     if (docSnap?.exists?.()) {
       const data = docSnap.data();
@@ -507,7 +463,7 @@ export function listenToCollegeLicenses(
     });
   }
 
-  // 4a. Realtime Firestore Listener
+  // 4. Realtime Firestore Live Snapshot Listener (Sub-100ms instant cloud synchronization)
   let fsUnsub = () => {};
   try {
     fsUnsub = onSnapshot(
@@ -533,33 +489,7 @@ export function listenToCollegeLicenses(
     );
   } catch (e) {}
 
-  // 4b. Firebase Realtime Database Listener (Sub-100ms ultra-fast killswitch listener)
-  let rtdbUnsub = () => {};
-  try {
-    rtdbUnsub = onValue(
-      ref(rtdb, "spherex_licenses"),
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          if (Array.isArray(data?.colleges) && data.colleges.length > 0) {
-            const gl: GlobalLockoutState = {
-              isGlobalWebStopped: Boolean(data.globalLockout?.isGlobalWebStopped),
-              isGlobalMobileStopped: Boolean(data.globalLockout?.isGlobalMobileStopped),
-              reason: String(data.globalLockout?.reason || ""),
-              stoppedAt: data.globalLockout?.stoppedAt || undefined,
-              updatedAtMs: data.globalLockout?.updatedAtMs,
-            };
-            handleUpdate(data.colleges, gl);
-          }
-        }
-      },
-      (err) => {
-        // RTDB notice suppressed
-      }
-    );
-  } catch (e) {}
-
-  // 5. Periodic Heartbeat Polling (every 4s) to guarantee consistent state across mobile & web without rapid flap
+  // 5. Periodic Heartbeat Polling (every 4s) to guarantee consistent state across mobile & web
   const pollInterval = setInterval(async () => {
     if (isUnsubscribed) return;
     if (Date.now() - lastLocalActionTime < 4000) return;
@@ -578,7 +508,6 @@ export function listenToCollegeLicenses(
       window.removeEventListener(LICENSE_EVENT_KEY, eventHandler);
     }
     fsUnsub();
-    rtdbUnsub();
   };
 }
 
