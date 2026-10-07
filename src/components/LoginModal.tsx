@@ -48,6 +48,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [colleges, setColleges] = useState<CollegeClientLicense[]>(() => getAllCollegeLicenses());
@@ -120,6 +121,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setError(null);
+    setIsAuthError(false);
     setLoading(true);
 
     const inputUser = username.trim();
@@ -127,7 +129,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
     if (!inputUser || !inputPass) {
       setLoading(false);
-      setError("Please enter both ID/email and password.");
+      setIsAuthError(true);
       return;
     }
 
@@ -145,7 +147,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       // In the App model (native mobile app), Creator is strictly disabled!
       if (isCapacitorNative()) {
         setLoading(false);
-        setError("Master Creator Control is strictly web-only. Please open on a desktop or web browser.");
+        setIsAuthError(true);
         return;
       }
 
@@ -175,7 +177,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         return;
       } else {
         setLoading(false);
-        setError("Invalid Master Creator Password. Please enter 'spherex#2501'.");
+        setIsAuthError(true);
         return;
       }
     }
@@ -288,7 +290,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
     if (!targetCampus || !targetRole) {
       setLoading(false);
-      setError("Invalid credentials. Please check your user ID / email and password.");
+      setIsAuthError(true);
       return;
     }
 
@@ -350,6 +352,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     setUsername(u);
     setPassword(p);
     setError(null);
+    setIsAuthError(false);
   };
 
   const containerVariants: Variants = {
@@ -626,29 +629,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             </h2>
           </motion.div>
 
-          {/* Error Notification */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                marginBottom: "16px",
-                padding: "12px 16px",
-                borderRadius: "14px",
-                backgroundColor: "rgba(127, 29, 29, 0.6)",
-                border: "1px solid rgba(239, 68, 68, 0.4)",
-                color: "#fca5a5",
-                fontSize: "12px",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <AlertCircle style={{ width: "16px", height: "16px", flexShrink: 0, color: "#f87171" }} />
-              <span>{error}</span>
-            </motion.div>
-          )}
+
 
           {/* Quick Role Profile Select Tabs (Karur / Covai / Faculty) */}
           <motion.div
@@ -715,7 +696,12 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
 
           {/* Form */}
-          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <motion.form
+            onSubmit={handleLogin}
+            animate={isAuthError ? { x: [-10, 10, -8, 8, -4, 4, 0] } : { x: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
             {/* Email / User ID */}
             <motion.div variants={itemVariants} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <label
@@ -724,8 +710,9 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                   fontSize: "11px",
                   fontWeight: 700,
                   letterSpacing: "0.08em",
-                  color: "rgba(255, 255, 255, 0.75)",
+                  color: isAuthError ? "#f87171" : "rgba(255, 255, 255, 0.75)",
                   textTransform: "uppercase",
+                  transition: "color 0.2s ease",
                 }}
               >
                 EMAIL OR USER ID
@@ -737,18 +724,23 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 autoComplete="username"
                 spellCheck={false}
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  if (isAuthError) setIsAuthError(false);
+                }}
                 placeholder="adminkarur@123"
                 style={{
                   width: "100%",
                   borderRadius: "14px",
-                  border: "1px solid rgba(255, 255, 255, 0.16)",
-                  backgroundColor: "#0d1117",
+                  border: isAuthError ? "1.5px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.16)",
+                  backgroundColor: isAuthError ? "rgba(239, 68, 68, 0.06)" : "#0d1117",
+                  boxShadow: isAuthError ? "0 0 14px rgba(239, 68, 68, 0.3)" : "none",
                   padding: "13px 16px",
                   fontSize: "14px",
                   color: "#ffffff",
                   outline: "none",
                   boxSizing: "border-box",
+                  transition: "border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease",
                 }}
               />
             </motion.div>
@@ -792,18 +784,23 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                   autoComplete="current-password"
                   spellCheck={false}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (isAuthError) setIsAuthError(false);
+                  }}
                   placeholder="••••••••••••"
                   style={{
                     width: "100%",
                     borderRadius: "14px",
-                    border: "1px solid rgba(255, 255, 255, 0.16)",
-                    backgroundColor: "#0d1117",
+                    border: isAuthError ? "1.5px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.16)",
+                    backgroundColor: isAuthError ? "rgba(239, 68, 68, 0.06)" : "#0d1117",
+                    boxShadow: isAuthError ? "0 0 14px rgba(239, 68, 68, 0.3)" : "none",
                     padding: "13px 44px 13px 16px",
                     fontSize: "14px",
                     color: "#ffffff",
                     outline: "none",
                     boxSizing: "border-box",
+                    transition: "border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease",
                   }}
                 />
                 <button
@@ -943,7 +940,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 )}
               </button>
             </motion.div>
-          </form>
+          </motion.form>
 
           {/* Security Badges */}
           <motion.div
