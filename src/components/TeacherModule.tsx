@@ -222,25 +222,6 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [search, setSearch] = useState("");
   // Default to Mechanical Engineering so the user immediately gets their requested department view
   const [selectedDept, setSelectedDept] = useState("Mechanical Engineering");
-  const [deptSearch, setDeptSearch] = useState("");
-  const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
-  const deptDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close department dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (deptDropdownRef.current && !deptDropdownRef.current.contains(event.target as Node)) {
-        setIsDeptDropdownOpen(false);
-      }
-    }
-    if (isDeptDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isDeptDropdownOpen]);
-
   const [selectedCampusFilter, setSelectedCampusFilter] = useState<"ALL" | "KARUR" | "COIMBATORE">("ALL");
   const [facultyScope, setFacultyScope] = useState<"ALL" | "MINE">("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -514,12 +495,6 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     return map;
   }, [teachers]);
 
-  // Filtered departments list for search input in department side navigation
-  const filteredDeptList = useMemo(() => {
-    const q = deptSearch.toLowerCase().trim();
-    if (!q) return departments;
-    return departments.filter((d) => d.toLowerCase().includes(q));
-  }, [departments, deptSearch]);
 
   const filteredTeachers = useMemo(() => {
     return teachers
@@ -900,15 +875,9 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                     Department Faculty Directory
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsDeptDropdownOpen((prev) => !prev)}
-                    className="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer flex items-center gap-1 group"
-                    title="Click to change department"
-                  >
-                    <span>{selectedDept === "ALL" ? "All Academic Departments" : selectedDept}</span>
-                    <ChevronDown className="w-3 h-3 group-hover:translate-y-0.5 transition-transform" />
-                  </button>
+                  <span className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">
+                    {selectedDept === "ALL" ? "All Academic Departments" : selectedDept}
+                  </span>
                 </div>
 
                 <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
@@ -943,212 +912,41 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
               {/* Action Controls & Filters */}
               <div className="flex flex-wrap items-center gap-2.5">
-                {/* Academic Department Dropdown Selector */}
-                <div className="relative w-full sm:w-auto" ref={deptDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)}
-                    className={`w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer font-bold text-xs ${
-                      isDeptDropdownOpen
-                        ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20"
-                        : "bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 text-slate-800 dark:text-slate-200 shadow-xs"
-                    }`}
-                    title="Filter faculty by department"
-                    aria-expanded={isDeptDropdownOpen}
+                {/* Academic Department Drop-down List */}
+                <div className="relative w-full sm:w-auto">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-600 dark:text-indigo-400">
+                    <GraduationCap className="w-4 h-4" />
+                  </div>
+                  <select
+                    id="department-dropdown-select"
+                    value={selectedDept}
+                    onChange={(e) => {
+                      setSelectedDept(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full sm:w-auto appearance-none bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs hover:border-indigo-400 dark:hover:border-indigo-500 transition-all"
+                    title="Select Department (Drop-down list)"
                   >
-                    <div className="flex items-center gap-2 min-w-0 max-w-[200px] sm:max-w-[220px] md:max-w-[260px] truncate">
-                      {selectedDept === "ALL" ? (
-                        <>
-                          <div className="p-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
-                            <Layers className="w-3.5 h-3.5" />
-                          </div>
-                          <span className="truncate font-extrabold text-slate-900 dark:text-white">All Departments</span>
-                        </>
-                      ) : (
-                        (() => {
-                          const meta = getDepartmentMeta(selectedDept);
-                          const IconComp = meta.icon;
-                          return (
-                            <>
-                              <div className={`p-1 rounded-lg shrink-0 ${meta.bg} ${meta.color} border ${meta.border}`}>
-                                <IconComp className="w-3.5 h-3.5" />
-                              </div>
-                              <span className="text-xs shrink-0">{meta.emoji}</span>
-                              <span className="truncate font-extrabold text-slate-900 dark:text-white">{selectedDept}</span>
-                            </>
-                          );
-                        })()
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0 ml-1">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
-                        {selectedDept === "ALL" ? teachers.length : (departmentCounts.get(selectedDept) || 0)}
-                      </span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
-                          isDeptDropdownOpen ? "rotate-180 text-indigo-500" : ""
-                        }`}
-                      />
-                    </div>
-                  </button>
-
-                  {/* Dropdown Menu Popover */}
-                  {isDeptDropdownOpen && (
-                    <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-full sm:w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-2.5 space-y-2 animate-in fade-in zoom-in-95 duration-150">
-                      {/* Dropdown Header */}
-                      <div className="flex items-center justify-between px-2 py-1 border-b border-slate-100 dark:border-slate-800/80 mb-1">
-                        <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-slate-200">
-                          <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />
-                          <span>Academic Departments</span>
-                        </div>
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                          {departments.length}
-                        </span>
-                      </div>
-
-                      {/* Search Departments inside Dropdown */}
-                      <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                        <input
-                          type="text"
-                          value={deptSearch}
-                          onChange={(e) => setDeptSearch(e.target.value)}
-                          placeholder="Filter departments..."
-                          autoFocus
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-7 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                        />
-                        {deptSearch && (
-                          <button
-                            type="button"
-                            onClick={() => setDeptSearch("")}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Department Navigation List inside Dropdown */}
-                      <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
-                        {/* All Departments Option */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedDept("ALL");
-                            setCurrentPage(1);
-                            setIsDeptDropdownOpen(false);
-                            setDeptSearch("");
-                          }}
-                          className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                            selectedDept === "ALL"
-                              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30"
-                              : "hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200"
-                          }`}
+                    <option value="ALL" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold">
+                      All Departments ({teachers.length} Teachers)
+                    </option>
+                    {departments.map((deptName) => {
+                      const count = departmentCounts.get(deptName) || 0;
+                      const meta = getDepartmentMeta(deptName);
+                      return (
+                        <option
+                          key={deptName}
+                          value={deptName}
+                          className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold"
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div
-                              className={`p-1.5 rounded-lg shrink-0 transition-all ${
-                                selectedDept === "ALL"
-                                  ? "bg-white/20 text-white shadow-xs"
-                                  : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
-                              }`}
-                            >
-                              <Layers className="w-4 h-4" />
-                            </div>
-                            <div className="truncate">
-                              <span className="font-extrabold truncate block">All Departments</span>
-                              <span className={`text-[10px] block ${selectedDept === "ALL" ? "text-indigo-100" : "text-slate-500 dark:text-slate-400"}`}>
-                                Full college faculty
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[11px] font-black shrink-0 ${
-                                selectedDept === "ALL"
-                                  ? "bg-white text-indigo-950 shadow-xs"
-                                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                              }`}
-                            >
-                              {teachers.length}
-                            </span>
-                            {selectedDept === "ALL" && <Check className="w-3.5 h-3.5 text-white" />}
-                          </div>
-                        </button>
-
-                        {/* Individual Department Options */}
-                        {filteredDeptList.map((deptName) => {
-                          const isSelected = selectedDept.toLowerCase().trim() === deptName.toLowerCase().trim();
-                          const count = departmentCounts.get(deptName) || 0;
-                          const meta = getDepartmentMeta(deptName);
-                          const IconComp = meta.icon;
-
-                          return (
-                            <button
-                              key={deptName}
-                              type="button"
-                              onClick={() => {
-                                setSelectedDept(deptName);
-                                setCurrentPage(1);
-                                setIsDeptDropdownOpen(false);
-                                setDeptSearch("");
-                              }}
-                              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                                isSelected
-                                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30"
-                                  : "hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                                <div
-                                  className={`p-1.5 rounded-lg shrink-0 transition-all ${
-                                    isSelected
-                                      ? "bg-white/20 text-white shadow-xs"
-                                      : `${meta.bg} ${meta.color} border ${meta.border}`
-                                  }`}
-                                >
-                                  <IconComp className="w-4 h-4" />
-                                </div>
-                                <div className="truncate">
-                                  <div className="flex items-center gap-1.5 truncate">
-                                    <span className="text-xs">{meta.emoji}</span>
-                                    <span className="font-extrabold truncate block leading-tight">
-                                      {deptName}
-                                    </span>
-                                  </div>
-                                  <span className={`text-[10px] block ${isSelected ? "text-indigo-100" : "text-slate-500 dark:text-slate-400"}`}>
-                                    {count} {count === 1 ? "Teacher" : "Teachers"}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[11px] font-black shrink-0 ${
-                                    isSelected
-                                      ? "bg-white text-indigo-950 shadow-xs"
-                                      : count > 0
-                                      ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50"
-                                      : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                                  }`}
-                                >
-                                  {count}
-                                </span>
-                                {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
-                              </div>
-                            </button>
-                          );
-                        })}
-
-                        {filteredDeptList.length === 0 && (
-                          <div className="p-4 text-center text-xs text-slate-400">
-                            No departments matching "{deptSearch}"
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                          {meta.emoji} {deptName} ({count} {count === 1 ? "Teacher" : "Teachers"})
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </div>
 
                 {/* Search Teacher in Department */}
