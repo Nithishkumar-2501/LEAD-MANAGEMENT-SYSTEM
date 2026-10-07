@@ -76,7 +76,7 @@ export default function CreatorLeadsSummaryView({
   }, [filtered]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16 animate-in fade-in duration-150">
+    <div data-creator-view="true" className="creator-page-text space-y-6 max-w-7xl mx-auto pb-16 animate-in fade-in duration-150">
       {/* 1. CREATOR PRIVACY HEADER */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 p-6 md:p-8 border-2 border-indigo-500/30 shadow-2xl shadow-indigo-950/20">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -132,72 +132,72 @@ export default function CreatorLeadsSummaryView({
       {/* 2. PRIMARY LEAD COUNT KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Overall Leads */}
-        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-2">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-extrabold uppercase">
+        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-md space-y-2">
+          <div className="flex items-center justify-between text-slate-800 dark:text-slate-300 text-xs font-black uppercase tracking-wider">
             <span>Overall Leads Ingested</span>
-            <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400">
+            <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
               <Users className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-3xl font-black text-white font-mono">
+          <h3 className="text-3xl font-black text-slate-950 dark:text-white font-mono">
             {totalLeads.toLocaleString("en-IN")}
           </h3>
-          <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
             <span>Annual Free Quota:</span>
-            <span className="font-mono font-bold text-sky-400">{MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}</span>
+            <span className="font-mono font-black text-sky-700 dark:text-sky-400">{MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}</span>
           </div>
         </div>
 
         {/* Remaining Quota */}
-        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-2">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-extrabold uppercase">
+        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-md space-y-2">
+          <div className="flex items-center justify-between text-slate-800 dark:text-slate-300 text-xs font-black uppercase tracking-wider">
             <span>Free Quota Remaining</span>
-            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-3xl font-black text-emerald-400 font-mono">
+          <h3 className="text-3xl font-black text-emerald-700 dark:text-emerald-400 font-mono">
             {remainingQuota.toLocaleString("en-IN")}
           </h3>
-          <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
             <span>Capacity Utilized:</span>
-            <span className="font-mono font-bold text-emerald-400">{percentUsed}%</span>
+            <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">{percentUsed}%</span>
           </div>
         </div>
 
         {/* Karur Campus Count */}
-        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-2">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-extrabold uppercase">
+        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-md space-y-2">
+          <div className="flex items-center justify-between text-slate-800 dark:text-slate-300 text-xs font-black uppercase tracking-wider">
             <span>Karur Main Campus</span>
-            <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
+            <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <Building className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-3xl font-black text-amber-400 font-mono">
+          <h3 className="text-3xl font-black text-amber-700 dark:text-amber-400 font-mono">
             {karurCount.toLocaleString("en-IN")}
           </h3>
-          <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
             <span>Share of Total:</span>
-            <span className="font-mono font-bold text-white">
+            <span className="font-mono font-black text-slate-950 dark:text-white">
               {totalLeads > 0 ? ((karurCount / totalLeads) * 100).toFixed(1) : 0}%
             </span>
           </div>
         </div>
 
         {/* Coimbatore Campus Count */}
-        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-2">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-extrabold uppercase">
+        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-md space-y-2">
+          <div className="flex items-center justify-between text-slate-800 dark:text-slate-300 text-xs font-black uppercase tracking-wider">
             <span>Coimbatore Campus</span>
-            <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
+            <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
               <Building className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-3xl font-black text-indigo-400 font-mono">
+          <h3 className="text-3xl font-black text-indigo-700 dark:text-indigo-400 font-mono">
             {covaiCount.toLocaleString("en-IN")}
           </h3>
-          <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
             <span>Share of Total:</span>
-            <span className="font-mono font-bold text-white">
+            <span className="font-mono font-black text-slate-950 dark:text-white">
               {totalLeads > 0 ? ((covaiCount / totalLeads) * 100).toFixed(1) : 0}%
             </span>
           </div>
@@ -205,100 +205,100 @@ export default function CreatorLeadsSummaryView({
       </div>
 
       {/* 3. LEADS COUNT BY ADMISSION STAGE (COUNT ONLY) */}
-      <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-5">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
               <BarChart2 className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white">Lead Funnel Distribution (Candidate Counts)</h3>
-              <p className="text-xs text-slate-400">Total volume across admission pipeline stages</p>
+              <h3 className="text-base font-black text-slate-950 dark:text-white">Lead Funnel Distribution (Candidate Counts)</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold">Total volume across admission pipeline stages</p>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-800 text-slate-300">
+          <span className="px-3 py-1 rounded-lg text-xs font-mono font-black bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
             {filtered.length} Filtered Leads
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Inquiry Leads</span>
-            <p className="text-2xl font-black font-mono text-sky-400">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 space-y-1 shadow-xs">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Inquiry Leads</span>
+            <p className="text-2xl font-black font-mono text-sky-700 dark:text-sky-400">
               {(stageCounts.NEW + stageCounts.INQUIRY).toLocaleString("en-IN")}
             </p>
-            <p className="text-[10px] text-slate-500">Initial student inquiries</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold">Initial student inquiries</p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Contacted</span>
-            <p className="text-2xl font-black font-mono text-amber-400">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 space-y-1 shadow-xs">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Contacted</span>
+            <p className="text-2xl font-black font-mono text-amber-700 dark:text-amber-400">
               {(stageCounts.CONTACTED + stageCounts.COUNSELING).toLocaleString("en-IN")}
             </p>
-            <p className="text-[10px] text-slate-500">Faculty counseling outreach</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold">Faculty counseling outreach</p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Applications Filed</span>
-            <p className="text-2xl font-black font-mono text-indigo-400">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 space-y-1 shadow-xs">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Applications Filed</span>
+            <p className="text-2xl font-black font-mono text-indigo-700 dark:text-indigo-400">
               {(stageCounts.APPLICATION + stageCounts.IN_REVIEW).toLocaleString("en-IN")}
             </p>
-            <p className="text-[10px] text-slate-500">Document & marks review</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold">Document &amp; marks review</p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Admitted / Enrolled</span>
-            <p className="text-2xl font-black font-mono text-emerald-400">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 space-y-1 shadow-xs">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Admitted / Enrolled</span>
+            <p className="text-2xl font-black font-mono text-emerald-700 dark:text-emerald-400">
               {(stageCounts.ADMITTED + stageCounts.ENROLLED).toLocaleString("en-IN")}
             </p>
-            <p className="text-[10px] text-emerald-500 font-semibold">Confirmed admission</p>
+            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold">Confirmed admission</p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Closed / Dropped</span>
-            <p className="text-2xl font-black font-mono text-rose-400">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 space-y-1 shadow-xs">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Closed / Dropped</span>
+            <p className="text-2xl font-black font-mono text-rose-700 dark:text-rose-400">
               {(stageCounts.REJECTED).toLocaleString("en-IN")}
             </p>
-            <p className="text-[10px] text-slate-500">Opted for other college</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold">Opted for other college</p>
           </div>
         </div>
       </div>
 
       {/* 4. COURSE DEMAND VOLUME (COUNTS ONLY - NO INDIVIDUAL DATA) */}
-      <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <PieChartIcon className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white">Course Demand Breakdown (Candidate Volume)</h3>
-              <p className="text-xs text-slate-400">Total inquiries and applications aggregated per engineering program</p>
+              <h3 className="text-base font-black text-slate-950 dark:text-white">Course Demand Breakdown (Candidate Volume)</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold">Total inquiries and applications aggregated per engineering program</p>
             </div>
           </div>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-slate-700 dark:text-slate-300 font-mono font-bold">
             {courseCounts.length} Active Streams
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {courseCounts.map(([courseName, count], idx) => {
+          {courseCounts.map(([courseName, count]) => {
             const pct = totalLeads > 0 ? ((count / totalLeads) * 100).toFixed(1) : "0";
             return (
               <div
                 key={courseName}
-                className="p-3.5 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between gap-3 hover:border-slate-700 transition-colors"
+                className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 hover:border-indigo-400 dark:hover:border-slate-700 transition-colors shadow-xs"
               >
                 <div className="space-y-0.5 min-w-0">
-                  <p className="text-xs font-bold text-white truncate" title={courseName}>
+                  <p className="text-xs font-black text-slate-900 dark:text-white truncate" title={courseName}>
                     {courseName}
                   </p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
                     {pct}% of platform inquiries
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="px-2.5 py-1 rounded-lg bg-sky-950 text-sky-300 border border-sky-800 font-mono font-black text-xs">
+                  <span className="px-2.5 py-1 rounded-lg bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-800 font-mono font-black text-xs shadow-xs">
                     {count} Leads
                   </span>
                 </div>
