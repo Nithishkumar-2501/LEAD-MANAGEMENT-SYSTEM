@@ -2000,17 +2000,29 @@ export default function ContactDirectoryModule({
             <span>{isReloading ? "Syncing Firebase..." : `Live sync: ${lastSyncTime}`}</span>
           </div>
 
-          {/* Firebase DB Live Quota Counter */}
-          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-indigo-500/10 dark:from-blue-900/30 dark:via-emerald-900/30 dark:to-indigo-900/30 px-3 py-1.5 rounded-full border border-blue-500/20 dark:border-blue-400/20 text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-slate-500 dark:text-slate-400">Firebase DB:</span>
-            <span className="font-extrabold text-blue-600 dark:text-sky-400">{contacts.length.toLocaleString()}</span>
-            <span className="text-slate-400">/</span>
-            <span className="font-semibold text-slate-600 dark:text-slate-300">{MAX_FREE_LEAD_LIMIT.toLocaleString()} Capacity</span>
-          </div>
+          {/* Live Quota Counter: Assigned Contacts for TEACHER, Firebase DB Quota for ADMIN */}
+          {currentUserRole === "TEACHER" ? (
+            <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-blue-500/10 dark:from-indigo-900/30 dark:via-purple-900/30 dark:to-blue-900/30 px-3 py-1.5 rounded-full border border-indigo-500/20 dark:border-indigo-400/20 text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+              </span>
+              <span className="text-slate-500 dark:text-slate-400">Assigned Contacts:</span>
+              <span className="font-extrabold text-indigo-600 dark:text-sky-400">{contacts.length.toLocaleString()}</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">Allocated</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-indigo-500/10 dark:from-blue-900/30 dark:via-emerald-900/30 dark:to-indigo-900/30 px-3 py-1.5 rounded-full border border-blue-500/20 dark:border-blue-400/20 text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-slate-500 dark:text-slate-400">Firebase DB:</span>
+              <span className="font-extrabold text-blue-600 dark:text-sky-400">{contacts.length.toLocaleString()}</span>
+              <span className="text-slate-400">/</span>
+              <span className="font-semibold text-slate-600 dark:text-slate-300">{MAX_FREE_LEAD_LIMIT.toLocaleString()} Capacity</span>
+            </div>
+          )}
         </div>
 
         {/* Right: Primary Action Toolbar */}
@@ -2389,9 +2401,13 @@ export default function ContactDirectoryModule({
           >
             <span className="text-xl">🌟</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs font-black">All Leads</span>
+              <span className="block text-xs font-black">
+                {currentUserRole === "TEACHER" ? "Assigned Leads" : "All Leads"}
+              </span>
               <span className={`text-[10px] font-bold ${selectedStatus === "ALL" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
-                {contacts.length.toLocaleString()} / {MAX_FREE_LEAD_LIMIT.toLocaleString()} (Live DB)
+                {currentUserRole === "TEACHER"
+                  ? `${contacts.length.toLocaleString()} Assigned`
+                  : `${contacts.length.toLocaleString()} / ${MAX_FREE_LEAD_LIMIT.toLocaleString()} (Live DB)`}
               </span>
             </div>
           </button>

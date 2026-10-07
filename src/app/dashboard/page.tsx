@@ -481,18 +481,26 @@ export default function DashboardPage() {
     };
   }, [isAuthenticated, applyFirebaseLeads]);
 
+  // Strictly isolate teacher assigned leads so teachers only ever see their own assigned contacts
+  const teacherAssignedLeads = useMemo(() => {
+    if (currentUserRole !== "TEACHER") return applicants;
+    return applicants.filter((item) => isLeadAssignedToTeacher(item, loggedInUsername, loggedInCampus));
+  }, [applicants, currentUserRole, loggedInUsername, loggedInCampus]);
+
+  const roleScopedLeads = currentUserRole === "TEACHER" ? teacherAssignedLeads : applicants;
+
   // Dynamic calculations based on selected campus
-  const activeCampusLeads = applicants.filter((item) => selectedCampus === "ALL" || !item.campus || item.campus === selectedCampus);
-  const totalLeadCount = activeCampusLeads.length > 0 ? activeCampusLeads.length : applicants.length;
+  const activeCampusLeads = roleScopedLeads.filter((item) => selectedCampus === "ALL" || !item.campus || item.campus === selectedCampus);
+  const totalLeadCount = activeCampusLeads.length;
 
   const dynamicMetrics: SummaryMetrics = {
     totalLeads: totalLeadCount,
     leadsTrend: 14.2,
-    applicationsVerified: activeCampusLeads.filter(a => a.status === "ADMITTED" || a.status === "IN_REVIEW").length || Math.min(10, totalLeadCount),
+    applicationsVerified: activeCampusLeads.filter(a => a.status === "ADMITTED" || a.status === "IN_REVIEW").length,
     docsVerifiedTrend: 8.5,
-    seatsFilled: activeCampusLeads.filter(a => a.status === "ADMITTED").length || Math.min(5, totalLeadCount),
+    seatsFilled: activeCampusLeads.filter(a => a.status === "ADMITTED").length,
     seatsFilledTrend: 18.0,
-    totalRevenue: (activeCampusLeads.filter(a => a.status === "ADMITTED").length || Math.min(5, totalLeadCount)) * 95000,
+    totalRevenue: (activeCampusLeads.filter(a => a.status === "ADMITTED").length) * 95000,
     revenueTrend: 12.4,
   };
 
@@ -939,7 +947,7 @@ export default function DashboardPage() {
         onThemeChange={handleThemeChange}
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
-        applicants={applicants}
+        applicants={currentUserRole === "TEACHER" ? teacherAssignedLeads : applicants}
         onSelectApplicant={handleSelectApplicant}
         onOpenNoraAi={() => handleOpenNora()}
       />
@@ -963,7 +971,7 @@ export default function DashboardPage() {
           onThemeChange={handleThemeChange}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
           onOpenAddLeadModal={() => setIsQuickLeadModalOpen(true)}
-          applicants={applicants}
+          applicants={currentUserRole === "TEACHER" ? teacherAssignedLeads : applicants}
           onSelectApplicant={handleSelectApplicant}
           onOpenNoraAi={handleOpenNora}
         />

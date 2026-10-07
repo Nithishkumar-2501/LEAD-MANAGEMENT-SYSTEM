@@ -238,7 +238,7 @@ export default function Sidebar({
     {
       id: "CONTACTS" as ActiveTab,
       label: "Lead Manager",
-      sublabel: "1,00,000 Lead Capacity Tier",
+      sublabel: currentUserRole === "TEACHER" ? "Assigned Contacts" : "1,00,000 Lead Capacity Tier",
       icon: UserCheck,
       color: "from-indigo-500 to-purple-600",
       activeBorder: "border-indigo-400",
@@ -1873,43 +1873,73 @@ export default function Sidebar({
                 </button>
               </NoiseBackground>
 
-              {/* LIVE FIREBASE LEADS QUOTA WIDGET (X / 1,00,000) */}
-              <button
-                type="button"
-                onClick={() => handleNavClick("CONTACTS")}
-                className={`w-full p-2.5 rounded-2xl border text-left transition-all cursor-pointer group ${
-                  isLight
-                    ? "bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
-                    : "bg-slate-900/90 hover:bg-slate-800/80 border-white/10"
-                }`}
-                title="Live Firebase Lead Quota: 1,00,000 Capacity. Click to view All Leads."
-              >
-                <div className="flex items-center justify-between text-[11px] font-extrabold mb-1">
-                  <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
-                    <span className="relative flex h-2 w-2">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-400" : "bg-emerald-400"}`} />
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-500" : "bg-emerald-500"}`} />
+              {/* LIVE LEADS INDICATOR: Assigned Contacts for TEACHER, Firebase DB Quota for ADMIN */}
+              {currentUserRole === "TEACHER" ? (
+                <button
+                  type="button"
+                  onClick={() => handleNavClick("CONTACTS")}
+                  className={`w-full p-2.5 rounded-2xl border text-left transition-all cursor-pointer group ${
+                    isLight
+                      ? "bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
+                      : "bg-slate-900/90 hover:bg-slate-800/80 border-white/10"
+                  }`}
+                  title={`My Assigned Contacts: ${visibleApplicants.length.toLocaleString("en-IN")} student leads allocated by Admissions Admin.`}
+                >
+                  <div className="flex items-center justify-between text-[11px] font-extrabold mb-1">
+                    <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-indigo-400" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+                      </span>
+                      <span>Assigned Contacts</span>
                     </span>
-                    <span>Firebase Live DB</span>
-                  </span>
-                  <span className={`font-mono font-black ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "text-rose-500" : "text-emerald-500"}`}>
-                    {liveLeadCount.toLocaleString("en-IN")}
-                  </span>
-                </div>
+                    <span className="font-mono font-black text-indigo-600 dark:text-indigo-400">
+                      {visibleApplicants.length.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                    <span>Admin Allocated</span>
+                    <span className="text-indigo-500 dark:text-indigo-400 font-bold">Active Portfolio</span>
+                  </div>
+                </button>
+              ) : currentUserRole === "CREATOR" ? null : (
+                <button
+                  type="button"
+                  onClick={() => handleNavClick("CONTACTS")}
+                  className={`w-full p-2.5 rounded-2xl border text-left transition-all cursor-pointer group ${
+                    isLight
+                      ? "bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
+                      : "bg-slate-900/90 hover:bg-slate-800/80 border-white/10"
+                  }`}
+                  title="Live Firebase Lead Quota: 1,00,000 Capacity. Click to view All Leads."
+                >
+                  <div className="flex items-center justify-between text-[11px] font-extrabold mb-1">
+                    <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                      <span className="relative flex h-2 w-2">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-400" : "bg-emerald-400"}`} />
+                        <span className={`relative inline-flex rounded-full h-2 w-2 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-500" : "bg-emerald-500"}`} />
+                      </span>
+                      <span>Firebase Live DB</span>
+                    </span>
+                    <span className={`font-mono font-black ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "text-rose-500" : "text-emerald-500"}`}>
+                      {liveLeadCount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
 
-                {/* Progress bar */}
-                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden my-1">
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-500 w-full" : "bg-emerald-500"}`}
-                    style={{ width: `${Math.min(100, (liveLeadCount / MAX_FREE_LEAD_LIMIT) * 100)}%` }}
-                  />
-                </div>
+                  {/* Progress bar */}
+                  <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden my-1">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-500 w-full" : "bg-emerald-500"}`}
+                      style={{ width: `${Math.min(100, (liveLeadCount / MAX_FREE_LEAD_LIMIT) * 100)}%` }}
+                    />
+                  </div>
 
-                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
-                  <span>Cap: {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}</span>
-                  <span>{Math.max(0, MAX_FREE_LEAD_LIMIT - liveLeadCount).toLocaleString("en-IN")} Left</span>
-                </div>
-              </button>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                    <span>Cap: {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}</span>
+                    <span>{Math.max(0, MAX_FREE_LEAD_LIMIT - liveLeadCount).toLocaleString("en-IN")} Left</span>
+                  </div>
+                </button>
+              )}
 
               <div
                 className={`flex items-center justify-between gap-2 p-2 rounded-2xl border transition-all ${

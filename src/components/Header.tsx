@@ -364,36 +364,61 @@ export default function Header({
             <span className="text-xs whitespace-nowrap">Ask Nora AI</span>
           </button>
 
-          {/* Live Firebase Lead Quota Indicator (X / 1,00,000) */}
-          <button
-            type="button"
-            onClick={() => onTabChange("CONTACTS")}
-            className={`press-spring flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border transition-all cursor-pointer shadow-xs shrink-0 ${
-              isLimitReached
-                ? "bg-rose-500/10 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300"
-                : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:border-indigo-400"
-            }`}
-            title={`Live Firebase Database: ${liveLeadCount.toLocaleString("en-IN")} out of 1,00,000 leads in database (${remainingFreeQuota.toLocaleString("en-IN")} remaining). Click to view Lead Directory.`}
-          >
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLimitReached ? "bg-rose-400" : "bg-emerald-400"}`} />
-              <span className={`relative inline-flex rounded-full h-2 w-2 ${isLimitReached ? "bg-rose-500" : "bg-emerald-500"}`} />
-            </span>
-            <div className="flex items-center gap-1.5 text-xs font-black">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden xl:inline">
-                🔥 Live DB:
+          {/* Header Leads Counter: Assigned Contacts for TEACHER, Live DB Quota for ADMIN */}
+          {currentUserRole === "TEACHER" ? (
+            <button
+              type="button"
+              onClick={() => onTabChange("CONTACTS")}
+              className="press-spring flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
+              title={`My Assigned Contacts: ${visibleApplicants.length.toLocaleString("en-IN")} leads allocated by Admissions Admin. Click to view Lead Directory.`}
+            >
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-indigo-400" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
               </span>
-              <span className={`font-mono ${isLimitReached ? "text-rose-600 dark:text-rose-400 font-black" : "text-emerald-600 dark:text-emerald-400 font-extrabold"}`}>
-                {liveLeadCount.toLocaleString("en-IN")}
+              <div className="flex items-center gap-1.5 text-xs font-black">
+                <span className="text-[11px] text-indigo-600 dark:text-indigo-400 hidden xl:inline">
+                  📌 Assigned:
+                </span>
+                <span className="font-mono text-indigo-600 dark:text-indigo-300 font-extrabold">
+                  {visibleApplicants.length.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-200/70 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold hidden sm:inline">
+                Leads
               </span>
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                / {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}
+            </button>
+          ) : currentUserRole === "CREATOR" ? null : (
+            <button
+              type="button"
+              onClick={() => onTabChange("CONTACTS")}
+              className={`press-spring flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border transition-all cursor-pointer shadow-xs shrink-0 ${
+                isLimitReached
+                  ? "bg-rose-500/10 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300"
+                  : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:border-indigo-400"
+              }`}
+              title={`Live Firebase Database: ${liveLeadCount.toLocaleString("en-IN")} out of 1,00,000 leads in database (${remainingFreeQuota.toLocaleString("en-IN")} remaining). Click to view Lead Directory.`}
+            >
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLimitReached ? "bg-rose-400" : "bg-emerald-400"}`} />
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isLimitReached ? "bg-rose-500" : "bg-emerald-500"}`} />
               </span>
-            </div>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hidden sm:inline">
-              Leads
-            </span>
-          </button>
+              <div className="flex items-center gap-1.5 text-xs font-black">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden xl:inline">
+                  🔥 Live DB:
+                </span>
+                <span className={`font-mono ${isLimitReached ? "text-rose-600 dark:text-rose-400 font-black" : "text-emerald-600 dark:text-emerald-400 font-extrabold"}`}>
+                  {liveLeadCount.toLocaleString("en-IN")}
+                </span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                  / {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hidden sm:inline">
+                Leads
+              </span>
+            </button>
+          )}
 
           {/* Search Icon — mobile/tablet */}
           <button

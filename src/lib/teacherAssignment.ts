@@ -55,91 +55,108 @@ export function isLeadAssignedToTeacher(
   if (!teacherUsername) return false;
 
   const cleanUser = teacherUsername.toLowerCase().trim();
+  if (!cleanUser) return false;
+
   const assigned = (lead.assignedTo || "").toLowerCase().trim();
   const counselorId = (lead.counselorId || "").toLowerCase().trim();
 
-  // If lead is unassigned or assigned to someone else
-  if (!assigned && !counselorId) return false;
+  // Known non-teacher or unassigned sentinel values
+  const UNASSIGNED_OR_ADMIN_TOKENS = new Set([
+    "",
+    "unassigned",
+    "none",
+    "not assigned",
+    "usr_admin_vsb",
+    "usr_creator",
+    "admin",
+    "admin@vsb.ac.in",
+    "admissions admin",
+    "creator",
+    "creator@vsb.ac.in",
+  ]);
 
-  // 1. Direct match on assignedTo or counselorId
-  if (assigned === cleanUser || counselorId === cleanUser) return true;
+  // If lead is unassigned or assigned to generic admin/creator on both fields, reject immediately
+  const hasAssigned = assigned !== "" && !UNASSIGNED_OR_ADMIN_TOKENS.has(assigned);
+  const hasCounselor = counselorId !== "" && !UNASSIGNED_OR_ADMIN_TOKENS.has(counselorId);
 
-  // 2. Exact match on clean IDs
-  if (assigned.includes(cleanUser) || cleanUser.includes(assigned)) return true;
+  if (!hasAssigned && !hasCounselor) {
+    return false;
+  }
 
-  // 3. Known faculty accounts mapping
+  // Build the strict aliases for the logged-in teacher
+  const teacherAliases = new Set<string>();
+  teacherAliases.add(cleanUser);
+
+  // Known account mappings
   if (cleanUser === "teacherkarur@123") {
-    return (
-      assigned === "teacherkarur@123" ||
-      assigned.includes("dhanabal") ||
-      assigned.includes("arulmurugan") ||
-      assigned.includes("karur")
-    );
+    teacherAliases.add("teacherkarur@123");
+    teacherAliases.add("dr dhanabal m assistant professor mech");
+    teacherAliases.add("dr dhanabal m");
+    teacherAliases.add("dr. dhanabal m");
+    teacherAliases.add("dr dhanabal");
+    teacherAliases.add("dhanabal");
+    teacherAliases.add("fac-karur-01");
+  } else if (cleanUser === "teachercovai@123") {
+    teacherAliases.add("teachercovai@123");
+    teacherAliases.add("meenakshi.ece@vsbec.in");
+    teacherAliases.add("dr. s. meenakshi");
+    teacherAliases.add("dr s meenakshi");
+    teacherAliases.add("dr. meenakshi");
+    teacherAliases.add("dr meenakshi");
+    teacherAliases.add("meenakshi");
+  } else if (cleanUser === "teacher_rajesh@123" || cleanUser.includes("rajesh")) {
+    teacherAliases.add("teacher_rajesh@123");
+    teacherAliases.add("rajesh.mech@vsbec.in");
+    teacherAliases.add("prof. p. rajesh");
+    teacherAliases.add("prof p rajesh");
+    teacherAliases.add("prof. rajesh");
+    teacherAliases.add("p. rajesh");
+    teacherAliases.add("rajesh");
   }
 
-  if (cleanUser === "teachercovai@123") {
-    return (
-      assigned === "teachercovai@123" ||
-      assigned.includes("meenakshi") ||
-      assigned.includes("covai") ||
-      assigned.includes("coimbatore")
-    );
-  }
-
-  if (cleanUser === "teacher_rajesh@123" || cleanUser.includes("rajesh")) {
-    return (
-      assigned.includes("rajesh") ||
-      assigned === "teacher_rajesh@123" ||
-      assigned === "rajesh.mech@vsbec.in"
-    );
-  }
-
-  if (cleanUser === "arulmurugan.cse@vsbec.in" || cleanUser.includes("arul")) {
-    return (
-      assigned.includes("arul") ||
-      assigned === "arulmurugan.cse@vsbec.in" ||
-      assigned === "teacherkarur@123"
-    );
-  }
-
-  if (cleanUser === "meenakshi.ece@vsbec.in" || cleanUser.includes("meenakshi")) {
-    return (
-      assigned.includes("meenakshi") ||
-      assigned === "meenakshi.ece@vsbec.in" ||
-      assigned === "teachercovai@123"
-    );
-  }
-
-  // 4. Match against faculty directory
+  // Match against faculty directory
   const faculty = FACULTY_DIRECTORY.find(
     (f) =>
-      f.id.toLowerCase() === cleanUser ||
-      f.name.toLowerCase() === cleanUser ||
-      cleanUser.includes(f.id.split("@")[0])
+      f.id.toLowerCase().trim() === cleanUser ||
+      f.name.toLowerCase().trim() === cleanUser ||
+      cleanUser.includes(f.id.split("@")[0].toLowerCase())
   );
 
   if (faculty) {
-    const fName = faculty.name.toLowerCase();
-    const fId = faculty.id.toLowerCase();
-    if (assigned === fId || assigned.includes(fId)) return true;
-    if (assigned === fName || assigned.includes(fName) || fName.includes(assigned)) return true;
+    const fId = faculty.id.toLowerCase().trim();
+    const fName = faculty.name.toLowerCase().trim();
+    teacherAliases.add(fId);
+    teacherAliases.add(fName);
+    const prefix = fId.split("@")[0];
+    if (prefix.length >= 4) {
+      teacherAliases.add(prefix);
+    }
   }
 
-  // 5. Check if assignedTo matches any faculty whose ID or name matches cleanUser
-  const assignedFaculty = FACULTY_DIRECTORY.find(
-    (f) =>
-      f.name.toLowerCase() === assigned ||
-      f.id.toLowerCase() === assigned ||
-      assigned.includes(f.name.toLowerCase())
-  );
-  if (assignedFaculty) {
-    if (
-      assignedFaculty.id.toLowerCase() === cleanUser ||
-      assignedFaculty.name.toLowerCase() === cleanUser ||
-      cleanUser.includes(assignedFaculty.id.split("@")[0])
-    ) {
-      return true;
+  // Helper function to test candidate value against aliases
+  const matchesTeacher = (candidate: string): boolean => {
+    if (!candidate || UNASSIGNED_OR_ADMIN_TOKENS.has(candidate)) return false;
+
+    // Exact match
+    if (candidate === cleanUser || teacherAliases.has(candidate)) return true;
+
+    // Substring match for substantial tokens (minimum 5 chars to avoid loose collisions)
+    for (const alias of teacherAliases) {
+      if (alias.length >= 5) {
+        if (candidate.includes(alias) || alias.includes(candidate)) {
+          return true;
+        }
+      }
     }
+    return false;
+  };
+
+  if (hasAssigned && matchesTeacher(assigned)) {
+    return true;
+  }
+
+  if (hasCounselor && matchesTeacher(counselorId)) {
+    return true;
   }
 
   return false;

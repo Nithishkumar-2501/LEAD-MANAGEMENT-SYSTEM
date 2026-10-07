@@ -276,9 +276,9 @@ export default function UserDashboardView({
   // Top Tabs: "MY_DASHBOARD" | "PRODUCTIVITY_REPORT"
   const [activeDashboardTab, setActiveDashboardTab] = useState<"MY_DASHBOARD" | "PRODUCTIVITY_REPORT">("MY_DASHBOARD");
 
-  // Data Source Mode Switcher: "DATABASE" (Real Live DB) vs "INSTITUTIONAL" (NoPaperForms 235k baseline)
+  // Data Source Mode Switcher: For TEACHER, always strictly lock to DATABASE mode (their assigned leads)
   const [dataSourceMode, setDataSourceMode] = useState<"DATABASE" | "INSTITUTIONAL">("DATABASE");
-  const isDbMode = dataSourceMode === "DATABASE";
+  const isDbMode = currentUserRole === "TEACHER" ? true : dataSourceMode === "DATABASE";
 
   // Counselor User Filter for Segregations ("ALL" or Counselor ID)
   const [selectedCounselorFilter, setSelectedCounselorFilter] = useState<string>("ALL");
@@ -391,11 +391,11 @@ export default function UserDashboardView({
   // EFFECTIVE APPLICANTS (FILTERED BY SELECTED COUNSELOR)
   // =========================================================================
   const effectiveApplicants = useMemo(() => {
-    if (selectedCounselorFilter === "ALL") {
+    if (currentUserRole === "TEACHER" || selectedCounselorFilter === "ALL") {
       return applicants;
     }
     return applicants.filter((a) => getCounselorForLead(a) === selectedCounselorFilter);
-  }, [applicants, selectedCounselorFilter]);
+  }, [applicants, selectedCounselorFilter, currentUserRole]);
 
   // Lead metrics for active view
   const totalDbLeads = effectiveApplicants.length;
@@ -444,16 +444,16 @@ export default function UserDashboardView({
         { label: "Not Reachable", count: Math.round(contactedLeadsCount * 0.5), color: "#ec4899", barColor: "bg-pink-500" },
         { label: "Untouched", count: newLeadsCount, color: "#38bdf8", barColor: "bg-sky-400" },
         { label: "Document Review", count: Math.round(inReviewLeadsCount * 0.3), color: "#f97316", barColor: "bg-orange-500" },
-        { label: "Walkin", count: effectiveApplicants.filter((a) => a.source?.toLowerCase().includes("walk")).length || 1, color: "#84cc16", barColor: "bg-lime-500" },
-        { label: "After NEET", count: effectiveApplicants.filter((a) => a.courseInterest?.toLowerCase().includes("bio")).length || 1, color: "#eab308", barColor: "bg-yellow-500" },
+        { label: "Walkin", count: effectiveApplicants.filter((a) => a.source?.toLowerCase().includes("walk")).length, color: "#84cc16", barColor: "bg-lime-500" },
+        { label: "After NEET", count: effectiveApplicants.filter((a) => a.courseInterest?.toLowerCase().includes("bio")).length, color: "#eab308", barColor: "bg-yellow-500" },
         { label: "Not Decided", count: inReviewLeadsCount, color: "#6366f1", barColor: "bg-indigo-500" },
         { label: "Counseling applied", count: effectiveApplicants.filter((a) => a.appliedCounselling || a.source?.toLowerCase().includes("tnea")).length, color: "#f59e0b", barColor: "bg-amber-500" },
         { label: "Scrutiny Verification", count: Math.round(inReviewLeadsCount * 0.2), color: "#10b981", barColor: "bg-emerald-500" },
-        { label: "Interested to Join VSB", count: Math.max(1, Math.round(contactedLeadsCount * 0.3)), color: "#22c55e", barColor: "bg-green-500" },
+        { label: "Interested to Join VSB", count: Math.round(contactedLeadsCount * 0.3), color: "#22c55e", barColor: "bg-green-500" },
         { label: "Test Lead", count: effectiveApplicants.filter((a) => a.name.toLowerCase().includes("test")).length, color: "#64748b", barColor: "bg-slate-500" },
-        { label: "Studying +1", count: effectiveApplicants.filter((a) => a.school?.includes("11")).length || 1, color: "#0ea5e9", barColor: "bg-sky-500" },
-        { label: "Direct Referral", count: effectiveApplicants.filter((a) => a.source?.toLowerCase().includes("referral")).length || 1, color: "#fb923c", barColor: "bg-orange-400" },
-        { label: "WhatsApp contact", count: effectiveApplicants.filter((a) => a.source?.toLowerCase().includes("whatsapp")).length || 1, color: "#f43f5e", barColor: "bg-rose-500" },
+        { label: "Studying +1", count: effectiveApplicants.filter((a) => a.school?.includes("11")).length, color: "#0ea5e9", barColor: "bg-sky-500" },
+        { label: "Direct Referral", count: effectiveApplicants.filter((a) => a.source?.toLowerCase().includes("referral")).length, color: "#fb923c", barColor: "bg-orange-400" },
+        { label: "WhatsApp contact", count: effectiveApplicants.filter((a) => a.source?.toLowerCase().includes("whatsapp")).length, color: "#f43f5e", barColor: "bg-rose-500" },
       ];
       const maxCount = Math.max(...stages.map((s) => s.count), 1);
       return { stages, maxCount, total };
@@ -492,18 +492,18 @@ export default function UserDashboardView({
     if (isDbMode) {
       const total = Math.max(totalDbLeads, 1);
       const subStages = [
-        { label: "Wrong Number (Closed)", count: Math.max(1, Math.round(rejectedLeadsCount * 0.6)), color: "#f59e0b", barColor: "bg-amber-500" },
-        { label: "Number Busy (Not Reachable)", count: Math.max(1, Math.round(contactedLeadsCount * 0.3)), color: "#f43f5e", barColor: "bg-rose-500" },
-        { label: "Medical (Not Interested in Engineering)", count: effectiveApplicants.filter((a) => a.courseInterest?.toLowerCase().includes("bio") && a.status === "REJECTED").length || 1, color: "#0ea5e9", barColor: "bg-sky-500" },
-        { label: "Number Switched Off (Not Reachable)", count: Math.max(1, Math.round(contactedLeadsCount * 0.4)), color: "#10b981", barColor: "bg-emerald-500" },
+        { label: "Wrong Number (Closed)", count: Math.round(rejectedLeadsCount * 0.6), color: "#f59e0b", barColor: "bg-amber-500" },
+        { label: "Number Busy (Not Reachable)", count: Math.round(contactedLeadsCount * 0.3), color: "#f43f5e", barColor: "bg-rose-500" },
+        { label: "Medical (Not Interested in Engineering)", count: effectiveApplicants.filter((a) => a.courseInterest?.toLowerCase().includes("bio") && a.status === "REJECTED").length, color: "#0ea5e9", barColor: "bg-sky-500" },
+        { label: "Number Switched Off (Not Reachable)", count: Math.round(contactedLeadsCount * 0.4), color: "#10b981", barColor: "bg-emerald-500" },
         { label: "Coimbatore Campus (Walkin)", count: effectiveApplicants.filter((a) => a.campus === "COIMBATORE").length, color: "#84cc16", barColor: "bg-lime-500" },
-        { label: "Not Maths Group (Closed)", count: Math.max(1, Math.round(rejectedLeadsCount * 0.4)), color: "#059669", barColor: "bg-emerald-600" },
-        { label: "Invalid Email (Closed)", count: effectiveApplicants.filter((a) => !a.email || !a.email.includes("@")).length || 1, color: "#8b5cf6", barColor: "bg-purple-500" },
-        { label: "After Result (Not Decided)", count: Math.max(1, Math.round(inReviewLeadsCount * 0.5)), color: "#6366f1", barColor: "bg-indigo-500" },
-        { label: "Agri (Not Interested in Engineering)", count: effectiveApplicants.filter((a) => a.courseInterest?.toLowerCase().includes("agri")).length || 1, color: "#14b8a6", barColor: "bg-teal-500" },
-        { label: "Studying in VSB (Closed)", count: Math.max(1, Math.round(admittedLeadsCount * 0.3)), color: "#06b6d4", barColor: "bg-cyan-500" },
-        { label: "Within a Week (Interested to Join VSB)", count: Math.max(1, Math.round(contactedLeadsCount * 0.2)), color: "#22c55e", barColor: "bg-green-500" },
-        { label: "Message 1 sent (WhatsApp contact)", count: effectiveApplicants.filter((a) => a.source?.toLowerCase().includes("whatsapp")).length || 1, color: "#ec4899", barColor: "bg-pink-500" },
+        { label: "Not Maths Group (Closed)", count: Math.round(rejectedLeadsCount * 0.4), color: "#059669", barColor: "bg-emerald-600" },
+        { label: "Invalid Email (Closed)", count: effectiveApplicants.filter((a) => !a.email || !a.email.includes("@")).length, color: "#8b5cf6", barColor: "bg-purple-500" },
+        { label: "After Result (Not Decided)", count: Math.round(inReviewLeadsCount * 0.5), color: "#6366f1", barColor: "bg-indigo-500" },
+        { label: "Agri (Not Interested in Engineering)", count: effectiveApplicants.filter((a) => a.courseInterest?.toLowerCase().includes("agri")).length, color: "#14b8a6", barColor: "bg-teal-500" },
+        { label: "Studying in VSB (Closed)", count: Math.round(admittedLeadsCount * 0.3), color: "#06b6d4", barColor: "bg-cyan-500" },
+        { label: "Within a Week (Interested to Join VSB)", count: Math.round(contactedLeadsCount * 0.2), color: "#22c55e", barColor: "bg-green-500" },
+        { label: "Message 1 sent (WhatsApp contact)", count: effectiveApplicants.filter((a) => a.source?.toLowerCase().includes("whatsapp")).length, color: "#ec4899", barColor: "bg-pink-500" },
       ];
       const maxCount = Math.max(...subStages.map((s) => s.count), 1);
       return { subStages, maxCount, total };
@@ -965,32 +965,39 @@ export default function UserDashboardView({
           </button>
         </div>
 
-        {/* Database Mode Switcher */}
+        {/* Database Mode Switcher / Teacher Assigned Badge */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800/60 p-1 border border-slate-200 dark:border-slate-700/60">
-            <button
-              onClick={() => setDataSourceMode("DATABASE")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                isDbMode
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Main Database ({applicants.length})
-            </button>
-            <button
-              onClick={() => setDataSourceMode("INSTITUTIONAL")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                !isDbMode
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <Globe className="w-3.5 h-3.5" />
-              Institutional Baseline (235k)
-            </button>
-          </div>
+          {currentUserRole === "TEACHER" ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Assigned Contacts: <strong className="font-mono text-indigo-900 dark:text-indigo-100">{applicants.length.toLocaleString()} Leads</strong></span>
+            </div>
+          ) : (
+            <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800/60 p-1 border border-slate-200 dark:border-slate-700/60">
+              <button
+                onClick={() => setDataSourceMode("DATABASE")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isDbMode
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Main Database ({applicants.length})
+              </button>
+              <button
+                onClick={() => setDataSourceMode("INSTITUTIONAL")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  !isDbMode
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                Institutional Baseline (235k)
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1001,7 +1008,7 @@ export default function UserDashboardView({
         {/* Header with Title & Legend & Filter Dropdowns */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            User Wise Lead and Application Count
+            {currentUserRole === "TEACHER" ? "Assigned Lead Allocation & Performance" : "User Wise Lead and Application Count"}
           </h3>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -1215,7 +1222,7 @@ export default function UserDashboardView({
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-sky-500" />
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-            User wise Segregation
+            {currentUserRole === "TEACHER" ? "My Assigned Leads Segregation" : "User wise Segregation"}
           </h3>
           {activeCounselorProfile && (
             <span className="ml-2 px-2.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 text-[10px] font-extrabold border border-sky-300 dark:border-sky-800 flex items-center gap-1">
