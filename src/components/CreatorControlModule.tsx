@@ -782,7 +782,7 @@ export default function CreatorControlModule({
   };
 
   return (
-    <div data-creator-view="true" className="creator-page-text space-y-6 max-w-7xl mx-auto pb-16">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* ============================================================== */}
       {/* 1. CREATOR IDENTITY BANNER (STRICTLY ISOLATED & EXCLUSIVE)     */}
       {/* ============================================================== */}

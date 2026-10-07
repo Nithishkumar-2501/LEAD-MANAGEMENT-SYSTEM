@@ -394,30 +394,12 @@ html.light .text-slate-600 {
 }
 
 html.light .text-slate-500 {
-  color: #475569 !important;
+  color: #64748b !important;
 }
 
 html.light .text-slate-400,
 html.light .text-slate-300 {
-  color: #334155 !important;
-}
-
-/* Master Creator Telemetry Page High-Contrast Readability */
-html.light [data-creator-view] .text-slate-400,
-html.light [data-creator-view] .text-slate-500 {
-  color: #334155 !important;
-  font-weight: 600;
-}
-html.light [data-creator-view] .text-slate-600,
-html.light [data-creator-view] .text-slate-700 {
-  color: #0f172a !important;
-  font-weight: 700;
-}
-html.light [data-creator-view] p.text-white,
-html.light [data-creator-view] span.text-white:not(.bg-gradient-to-r *):not(button *),
-html.light [data-creator-view] h3.text-white,
-html.light [data-creator-view] h4.text-white {
-  color: #020617 !important;
+  color: #94a3b8 !important;
 }
 
 /* STUDENT NAME & CREDENTIALS HIGH-CONTRAST READABILITY */

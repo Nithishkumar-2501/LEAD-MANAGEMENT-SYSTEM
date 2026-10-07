@@ -75,7 +75,7 @@ export default function CreatorTeachersSummaryView({
   }, [filteredTeachers]);
 
   return (
-    <div data-creator-view="true" className="creator-page-text space-y-6 max-w-7xl mx-auto pb-16 animate-in fade-in duration-150">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 animate-in fade-in duration-150">
       {/* 1. CREATOR PRIVACY HEADER */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/40 p-6 md:p-8 border-2 border-purple-500/30 shadow-2xl shadow-purple-950/20">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -131,74 +131,74 @@ export default function CreatorTeachersSummaryView({
       {/* 2. PRIMARY TEACHER COUNT KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Teachers Using App */}
-        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-md space-y-2">
-          <div className="flex items-center justify-between text-slate-800 dark:text-slate-300 text-xs font-black uppercase tracking-wider">
+        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-2">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-extrabold uppercase">
             <span>Teachers Using Application</span>
-            <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+            <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
               <Users className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-3xl font-black text-slate-950 dark:text-white font-mono">
-            {totalTeachers} <span className="text-sm font-bold text-slate-600 dark:text-slate-400">Faculty</span>
+          <h3 className="text-3xl font-black text-white font-mono">
+            {totalTeachers} <span className="text-sm font-normal text-slate-400">Faculty</span>
           </h3>
-          <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
+          <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
             <span>Platform Coverage:</span>
-            <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">100% Deployed</span>
+            <span className="font-mono font-bold text-emerald-400">100% Deployed</span>
           </div>
         </div>
 
         {/* Active & Online Count */}
-        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-md space-y-2">
-          <div className="flex items-center justify-between text-slate-800 dark:text-slate-300 text-xs font-black uppercase tracking-wider">
+        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-2">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-extrabold uppercase">
             <span>Active &amp; Online</span>
-            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
               <CheckCircle2 className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-3xl font-black text-emerald-700 dark:text-emerald-400 font-mono">
-            {activeCount} <span className="text-sm font-bold text-slate-600 dark:text-slate-400">Active</span>
+          <h3 className="text-3xl font-black text-emerald-400 font-mono">
+            {activeCount} <span className="text-sm font-normal text-slate-400">Active</span>
           </h3>
-          <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
+          <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
             <span>Active Utilization:</span>
-            <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">
+            <span className="font-mono font-bold text-emerald-400">
               {totalTeachers > 0 ? ((activeCount / totalTeachers) * 100).toFixed(0) : 0}%
             </span>
           </div>
         </div>
 
         {/* Karur Campus Faculty Count */}
-        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-md space-y-2">
-          <div className="flex items-center justify-between text-slate-800 dark:text-slate-300 text-xs font-black uppercase tracking-wider">
+        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-2">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-extrabold uppercase">
             <span>Karur Campus Faculty</span>
-            <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
               <Building className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-3xl font-black text-amber-700 dark:text-amber-400 font-mono">
-            {karurFacultyCount} <span className="text-sm font-bold text-slate-600 dark:text-slate-400">Staff</span>
+          <h3 className="text-3xl font-black text-amber-400 font-mono">
+            {karurFacultyCount} <span className="text-sm font-normal text-slate-400">Staff</span>
           </h3>
-          <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
+          <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
             <span>Campus Share:</span>
-            <span className="font-mono font-black text-slate-950 dark:text-white">
+            <span className="font-mono font-bold text-white">
               {totalTeachers > 0 ? ((karurFacultyCount / totalTeachers) * 100).toFixed(0) : 0}%
             </span>
           </div>
         </div>
 
         {/* Coimbatore Campus Faculty Count */}
-        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-md space-y-2">
-          <div className="flex items-center justify-between text-slate-800 dark:text-slate-300 text-xs font-black uppercase tracking-wider">
+        <div className="p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-2">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-extrabold uppercase">
             <span>Coimbatore Faculty</span>
-            <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+            <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
               <Building className="w-4 h-4" />
             </span>
           </div>
-          <h3 className="text-3xl font-black text-indigo-700 dark:text-indigo-400 font-mono">
-            {covaiFacultyCount} <span className="text-sm font-bold text-slate-600 dark:text-slate-400">Staff</span>
+          <h3 className="text-3xl font-black text-indigo-400 font-mono">
+            {covaiFacultyCount} <span className="text-sm font-normal text-slate-400">Staff</span>
           </h3>
-          <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-bold">
+          <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
             <span>Campus Share:</span>
-            <span className="font-mono font-black text-slate-950 dark:text-white">
+            <span className="font-mono font-bold text-white">
               {totalTeachers > 0 ? ((covaiFacultyCount / totalTeachers) * 100).toFixed(0) : 0}%
             </span>
           </div>
@@ -206,18 +206,18 @@ export default function CreatorTeachersSummaryView({
       </div>
 
       {/* 3. DEPARTMENT FACULTY COUNTS (COUNTS ONLY) */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+      <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
               <GraduationCap className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-950 dark:text-white">Department Faculty Usage Distribution</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold">Number of teachers assigned and active per engineering department</p>
+              <h3 className="text-base font-black text-white">Department Faculty Usage Distribution</h3>
+              <p className="text-xs text-slate-400">Number of teachers assigned and active per engineering department</p>
             </div>
           </div>
-          <span className="text-xs text-slate-700 dark:text-slate-300 font-mono font-bold">
+          <span className="text-xs text-slate-400 font-mono">
             {departmentCounts.length} Active Academic Departments
           </span>
         </div>
@@ -227,23 +227,23 @@ export default function CreatorTeachersSummaryView({
             return (
               <div
                 key={deptName}
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-purple-400 dark:hover:border-slate-700 transition-colors shadow-xs"
+                className="p-4 rounded-2xl bg-slate-950 border border-slate-850 space-y-2 hover:border-slate-700 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white truncate max-w-[200px]" title={deptName}>
+                  <h4 className="text-xs font-bold text-white truncate max-w-[200px]" title={deptName}>
                     {deptName}
                   </h4>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shadow-xs">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-950 text-purple-300 border border-purple-800">
                     {info.count} Faculty
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 font-mono font-bold">
-                  <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-black">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-850 font-mono">
+                  <span className="text-emerald-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
                     {info.active} Active Online
                   </span>
-                  <span className="text-slate-600 dark:text-slate-400">{info.count - info.active} Offline</span>
+                  <span>{info.count - info.active} Offline</span>
                 </div>
               </div>
             );
