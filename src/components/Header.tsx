@@ -18,6 +18,7 @@ import {
   Lock,
   ShieldCheck,
   Crown,
+  Bug,
 } from "lucide-react";
 import { User, ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import Tooltip from "@/components/Tooltip";
@@ -45,6 +46,7 @@ interface HeaderProps {
   applicants?: (Lead & { application: Application })[];
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
   onOpenNoraAi?: (initialQuery?: string) => void;
+  onOpenReportBug?: () => void;
 }
 
 export default function Header({
@@ -66,6 +68,7 @@ export default function Header({
   applicants = [],
   onSelectApplicant,
   onOpenNoraAi,
+  onOpenReportBug,
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -429,6 +432,20 @@ export default function Header({
           >
             <Search className="w-4 h-4" />
           </button>
+
+          {/* Report Bug / Incident Button */}
+          {onOpenReportBug && (
+            <Tooltip text="Raise a Bug / Incident to Master Creator">
+              <button
+                type="button"
+                onClick={onOpenReportBug}
+                className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+                aria-label="Report Bug"
+              >
+                <Bug className="w-4 h-4" />
+              </button>
+            </Tooltip>
+          )}
 
           {/* Logout Button */}
           <Tooltip text="Logout of V.S.B. Portal">

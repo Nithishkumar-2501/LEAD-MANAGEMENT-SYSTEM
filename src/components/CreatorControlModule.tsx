@@ -90,8 +90,19 @@ import {
   School,
   Share2,
   Compass,
+  Bug,
 } from "lucide-react";
 import { calculateAllSourcesTelemetry } from "@/lib/leadSourceAnalytics";
+import {
+  listenToBugReports,
+  updateBugStatus,
+  deleteBugReport,
+  calculateBugMetrics,
+  saveBugReport,
+  BugReport,
+  BugStatus,
+  BugSeverity,
+} from "@/lib/bugReportService";
 
 interface CreatorControlModuleProps {
   onTriggerToast: (msg: string) => void;
@@ -148,7 +159,16 @@ export default function CreatorControlModule({
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isBypassQuotaActive, setIsBypassQuotaActive] = useState(false);
   const [isNormalizing, setIsNormalizing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"COLLEGES" | "COURSES" | "QR_PAYMENTS" | "QUOTA" | "LICENSING" | "DATABASE" | "SECURITY">("COLLEGES");
+  const [activeTab, setActiveTab] = useState<"COLLEGES" | "COURSES" | "QR_PAYMENTS" | "QUOTA" | "LICENSING" | "DATABASE" | "SECURITY" | "BUGS">("COLLEGES");
+  
+  // Bug Reporting & Live Incident Triage State (User & Admin reported issues received by Master Creator)
+  const [bugs, setBugs] = useState<BugReport[]>([]);
+  const [bugStatusFilter, setBugStatusFilter] = useState<"ALL" | BugStatus>("ALL");
+  const [bugSeverityFilter, setBugSeverityFilter] = useState<"ALL" | BugSeverity>("ALL");
+  const [bugSearchQuery, setBugSearchQuery] = useState("");
+  const [editingNotes, setEditingNotes] = useState<Record<string, string>>({});
+
+  const bugMetrics = useMemo(() => calculateBugMetrics(bugs), [bugs]);
   // Faculty & Courses Live State for Master Creator Telemetry
   const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
   const [courses, setCourses] = useState<CourseProgram[]>(DEFAULT_COURSES);
@@ -203,10 +223,16 @@ export default function CreatorControlModule({
       })
       .catch((e) => console.warn("Notice loading courses in creator view:", e));
 
+    // Live continuous subscription to Bug Reports raised by Admin & Users
+    const unsubscribeBugs = listenToBugReports((latestBugs) => {
+      setBugs(latestBugs);
+    });
+
     return () => {
       window.removeEventListener(QR_SETTINGS_EVENT, handleQrUpdate);
       window.removeEventListener(QR_PAYMENT_EVENT, handleQrUpdate);
       unsubscribeLicenses();
+      unsubscribeBugs();
     };
   }, []);
 
@@ -816,6 +842,28 @@ export default function CreatorControlModule({
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   Full Authority Active
                 </span>
+                {/* LIVE SYSTEM BUGS INDICATOR */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("BUGS")}
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md ${
+                    bugMetrics.hasCriticalOpen
+                      ? "bg-rose-500/20 text-rose-300 border border-rose-500/60 ring-2 ring-rose-500/50 animate-pulse hover:bg-rose-500/30"
+                      : bugMetrics.openCount > 0
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30"
+                      : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+                  }`}
+                  title="Live Bugs reported by Admin & Faculty. Click to triage."
+                >
+                  <Bug className="w-3 h-3 text-rose-400" />
+                  <span>
+                    {bugMetrics.openCount === 0
+                      ? "0 Active Bugs"
+                      : `${bugMetrics.openCount} Open ${bugMetrics.openCount === 1 ? "Bug" : "Bugs"}${
+                          bugMetrics.criticalCount > 0 ? ` (${bugMetrics.criticalCount} CRITICAL)` : ""
+                        }`}
+                  </span>
+                </button>
               </div>
 
               <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-2">
@@ -830,6 +878,23 @@ export default function CreatorControlModule({
 
           {/* Quick Actions & Logout */}
           <div className="flex flex-wrap items-center gap-2.5">
+            {/* Direct Bugs Tracker Quick Button */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("BUGS")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-1.5 cursor-pointer ${
+                bugMetrics.hasCriticalOpen
+                  ? "bg-rose-600 hover:bg-rose-500 text-white ring-2 ring-rose-400 animate-pulse"
+                  : bugMetrics.openCount > 0
+                  ? "bg-amber-600 hover:bg-amber-500 text-white"
+                  : "bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+              }`}
+              title="Inspect user reported bugs and issues"
+            >
+              <Bug className="w-4 h-4" />
+              <span>Bugs ({bugMetrics.openCount})</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setIsAddCollegeModalOpen(true)}
@@ -880,6 +945,7 @@ export default function CreatorControlModule({
       <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-bold">
         {[
           { id: "COLLEGES", label: "🏛️ Overview & Colleges", icon: Building },
+          { id: "BUGS", label: `🐞 Bug Tracker (${bugMetrics.openCount})`, icon: Bug },
           { id: "COURSES", label: "📚 Academic Courses Catalog", icon: GraduationCap },
           { id: "QR_PAYMENTS", label: "💳 QR Code & Lead Pricing", icon: QrCode },
           { id: "QUOTA", label: "📊 1,00,000 Quota Engine", icon: Sliders },
@@ -1200,6 +1266,167 @@ export default function CreatorControlModule({
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* LIVE SYSTEM BUGS & INCIDENT TRIAGE STATUS (MAIN USAGE PAGE) */}
+          <div className="p-6 rounded-3xl border-2 border-rose-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/30 shadow-xl shadow-rose-950/20 space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-rose-900/40">
+              <div className="flex items-center gap-3.5">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
+                  bugMetrics.hasCriticalOpen
+                    ? "bg-rose-500/20 text-rose-400 border-rose-500/50 animate-pulse"
+                    : "bg-amber-500/20 text-amber-400 border-amber-500/40"
+                }`}>
+                  <Bug className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-base md:text-lg font-black text-white flex items-center gap-2">
+                    <span>Live Bug Ingestion &amp; Incident Triage</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                      bugMetrics.hasCriticalOpen
+                        ? "bg-rose-500/20 text-rose-300 border-rose-500/50 animate-pulse"
+                        : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                    }`}>
+                      {bugMetrics.openCount} Unresolved
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Real-time tickets filed by College Admins and Teachers across Karur and Coimbatore campuses.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    saveBugReport({
+                      title: "Test simulated bug from Master Creator console",
+                      description: "Telemetry and event-bus verification triggered by Master Creator.",
+                      severity: "LOW",
+                      category: "DASHBOARD_UI",
+                      reportedBy: "spherexnithish#",
+                      reportedRole: "CREATOR",
+                      campus: currentCampus,
+                    });
+                    onTriggerToast("🐞 Test bug simulation created!");
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                >
+                  + Simulate Test Bug
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("BUGS")}
+                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white text-xs font-black shadow-md flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                >
+                  <span>Open Bug Tracker</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Mini Bug KPI Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Reported</span>
+                <p className="text-2xl font-black font-mono text-white">{bugMetrics.total}</p>
+                <p className="text-[10px] text-slate-500">Historical tickets filed</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400">Open Tickets</span>
+                <p className="text-2xl font-black font-mono text-amber-400">{bugMetrics.openCount}</p>
+                <p className="text-[10px] text-slate-500">Awaiting creator action</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400">Critical Blockers</span>
+                <p className="text-2xl font-black font-mono text-rose-400">{bugMetrics.criticalCount}</p>
+                <p className="text-[10px] text-slate-500">Urgent attention needed</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">Resolved / Closed</span>
+                <p className="text-2xl font-black font-mono text-emerald-400">{bugMetrics.resolvedCount + bugMetrics.closedCount}</p>
+                <p className="text-[10px] text-emerald-500 font-semibold">Fix verified</p>
+              </div>
+            </div>
+
+            {/* Recent Open Bugs Quick List */}
+            <div className="space-y-2 pt-1">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Recent User-Reported Issues:</span>
+                <span className="text-[11px] text-slate-500 font-normal">
+                  Showing top active issues
+                </span>
+              </div>
+
+              {bugs.filter(b => b.status === "OPEN" || b.status === "IN_PROGRESS").length === 0 ? (
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>No open bugs reported by Admin or Faculty. All CRM subsystems operational.</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {bugs
+                    .filter(b => b.status === "OPEN" || b.status === "IN_PROGRESS")
+                    .slice(0, 3)
+                    .map((b) => (
+                      <div
+                        key={b.id}
+                        className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-slate-700 transition-colors"
+                      >
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-xs font-black text-white">{b.ticketNumber}</span>
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                              b.severity === "CRITICAL"
+                                ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                                : b.severity === "HIGH"
+                                ? "bg-orange-500/20 text-orange-300 border border-orange-500/40"
+                                : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                            }`}>
+                              {b.severity}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {b.campus} Campus • Filed by <strong className="text-slate-200">{b.reportedBy}</strong> ({b.reportedRole})
+                            </span>
+                          </div>
+                          <p className="text-xs font-bold text-slate-200 truncate">{b.title}</p>
+                          <p className="text-[11px] text-slate-400 line-clamp-1">{b.description}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {b.status === "OPEN" && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await updateBugStatus(b.id, "IN_PROGRESS", "Creator began investigation");
+                                onTriggerToast(`🔧 Set ticket ${b.ticketNumber} to IN_PROGRESS.`);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all cursor-pointer"
+                            >
+                              Start Fixing
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await updateBugStatus(b.id, "RESOLVED", "Issue verified and resolved");
+                              onTriggerToast(`✅ Ticket ${b.ticketNumber} marked as RESOLVED.`);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer"
+                          >
+                            Mark Resolved
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -2548,6 +2775,345 @@ export default function CreatorControlModule({
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB 8: BUG TRACKER & USER INCIDENT TRIAGE CENTER               */}
+      {/* ============================================================== */}
+      {activeTab === "BUGS" && (
+        <div className="space-y-6 animate-in fade-in duration-150">
+          {/* Header & KPI Summary */}
+          <div className="p-6 rounded-3xl border-2 border-rose-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950/40 shadow-2xl shadow-rose-950/30 space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-rose-900/50">
+              <div className="flex items-center gap-3.5">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
+                  bugMetrics.hasCriticalOpen
+                    ? "bg-rose-500/20 text-rose-400 border-rose-500/60 ring-2 ring-rose-500/40 animate-pulse"
+                    : "bg-amber-500/20 text-amber-400 border-amber-500/40"
+                }`}>
+                  <Bug className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
+                    <span>Master Creator Bug &amp; Incident Triage Center</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                      bugMetrics.hasCriticalOpen
+                        ? "bg-rose-500/20 text-rose-300 border-rose-500/50 animate-pulse"
+                        : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                    }`}>
+                      {bugMetrics.openCount} Active
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Live bug stream filed by College Admins and Teachers across all campuses. Updates synchronize instantly to Firebase and all devices.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const sample = await saveBugReport({
+                      title: `Simulated System Telemetry Check #${Math.floor(100 + Math.random() * 900)}`,
+                      description: "Automated verification ticket created from Master Creator console. Verifying real-time dispatch and notification bus.",
+                      severity: "LOW",
+                      category: "DASHBOARD_UI",
+                      reportedBy: "spherexnithish#",
+                      reportedRole: "CREATOR",
+                      campus: currentCampus,
+                    });
+                    onTriggerToast(`🐞 Created test bug ticket #${sample.ticketNumber}!`);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4 text-emerald-400" />
+                  <span>+ File Test Bug</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 5 KPI Metric Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Filed</span>
+                <p className="text-2xl font-black font-mono text-white">{bugMetrics.total}</p>
+                <p className="text-[10px] text-slate-500">Historical tickets</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">Open Tickets</span>
+                <p className="text-2xl font-black font-mono text-amber-400">{bugMetrics.openCount}</p>
+                <p className="text-[10px] text-slate-500">Pending review</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-sky-400">In Progress</span>
+                <p className="text-2xl font-black font-mono text-sky-400">{bugMetrics.inProgressCount}</p>
+                <p className="text-[10px] text-slate-500">Under developer triage</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-rose-400">Critical Blockers</span>
+                <p className="text-2xl font-black font-mono text-rose-400">{bugMetrics.criticalCount}</p>
+                <p className="text-[10px] text-slate-500">Immediate action needed</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Resolved / Closed</span>
+                <p className="text-2xl font-black font-mono text-emerald-400">{bugMetrics.resolvedCount + bugMetrics.closedCount}</p>
+                <p className="text-[10px] text-emerald-500 font-semibold">Fix completed</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Bar */}
+          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-md">
+              <input
+                type="text"
+                value={bugSearchQuery}
+                onChange={(e) => setBugSearchQuery(e.target.value)}
+                placeholder="Search by ticket #, title, reporter, campus..."
+                className="w-full px-4 py-2 pl-9 rounded-xl bg-slate-950 border border-slate-800 focus:border-rose-500 text-white placeholder-slate-500 text-xs outline-hidden"
+              />
+              <Bug className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+            </div>
+
+            {/* Status Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(["ALL", "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setBugStatusFilter(st)}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer text-xs ${
+                    bugStatusFilter === st
+                      ? "bg-rose-600 text-white shadow-md shadow-rose-950/40"
+                      : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {st.replace("_", " ")}
+                </button>
+              ))}
+            </div>
+
+            {/* Severity Filter */}
+            <select
+              value={bugSeverityFilter}
+              onChange={(e) => setBugSeverityFilter(e.target.value as any)}
+              className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs font-bold outline-hidden cursor-pointer"
+            >
+              <option value="ALL">All Severities</option>
+              <option value="CRITICAL">Critical Only</option>
+              <option value="HIGH">High Severity</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low (Minor)</option>
+            </select>
+          </div>
+
+          {/* Bug List Items */}
+          <div className="space-y-4">
+            {bugs
+              .filter((b) => {
+                if (bugStatusFilter !== "ALL" && b.status !== bugStatusFilter) return false;
+                if (bugSeverityFilter !== "ALL" && b.severity !== bugSeverityFilter) return false;
+                if (bugSearchQuery.trim()) {
+                  const q = bugSearchQuery.toLowerCase();
+                  const match =
+                    b.ticketNumber.toLowerCase().includes(q) ||
+                    b.title.toLowerCase().includes(q) ||
+                    b.description.toLowerCase().includes(q) ||
+                    b.reportedBy.toLowerCase().includes(q) ||
+                    b.campus.toLowerCase().includes(q);
+                  if (!match) return false;
+                }
+                return true;
+              })
+              .map((b) => {
+                const notesValue = editingNotes[b.id] !== undefined ? editingNotes[b.id] : (b.creatorNotes || "");
+                return (
+                  <div
+                    key={b.id}
+                    className="p-5 md:p-6 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-xl hover:border-slate-700 transition-all"
+                  >
+                    {/* Header Row: Ticket #, Status, Severity, Category, Actions */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-sm font-black text-white px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800">
+                          {b.ticketNumber}
+                        </span>
+
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${
+                            b.severity === "CRITICAL"
+                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/50"
+                              : b.severity === "HIGH"
+                              ? "bg-orange-500/20 text-orange-300 border border-orange-500/50"
+                              : b.severity === "MEDIUM"
+                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/50"
+                              : "bg-sky-500/20 text-sky-300 border border-sky-500/50"
+                          }`}
+                        >
+                          {b.severity}
+                        </span>
+
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                          {b.category}
+                        </span>
+
+                        <span className="text-xs text-slate-400 font-mono">
+                          {b.campus} Campus
+                        </span>
+                      </div>
+
+                      {/* Status Selector & Quick Changer */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-400 font-bold">Status:</span>
+                        <select
+                          value={b.status}
+                          onChange={async (e) => {
+                            const newSt = e.target.value as BugStatus;
+                            await updateBugStatus(b.id, newSt);
+                            onTriggerToast(`Updated ${b.ticketNumber} status to ${newSt}!`);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black outline-hidden cursor-pointer ${
+                            b.status === "OPEN"
+                              ? "bg-amber-950 text-amber-300 border border-amber-600"
+                              : b.status === "IN_PROGRESS"
+                              ? "bg-sky-950 text-sky-300 border border-sky-600"
+                              : b.status === "RESOLVED"
+                              ? "bg-emerald-950 text-emerald-300 border border-emerald-600"
+                              : "bg-slate-800 text-slate-400 border border-slate-700"
+                          }`}
+                        >
+                          <option value="OPEN">OPEN</option>
+                          <option value="IN_PROGRESS">IN PROGRESS</option>
+                          <option value="RESOLVED">RESOLVED</option>
+                          <option value="CLOSED">CLOSED</option>
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (confirm(`Delete bug ticket ${b.ticketNumber}?`)) {
+                              await deleteBugReport(b.id);
+                              onTriggerToast(`Deleted ticket ${b.ticketNumber}.`);
+                            }
+                          }}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                          title="Delete Ticket"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Bug Title & Description */}
+                    <div className="space-y-1.5">
+                      <h4 className="text-base font-bold text-white">{b.title}</h4>
+                      <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">{b.description}</p>
+                    </div>
+
+                    {/* Reproduction steps & Expected/Actual details if present */}
+                    {(b.stepsToReproduce || b.expectedBehavior || b.actualBehavior || b.errorStack) && (
+                      <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850 space-y-2 text-xs">
+                        {b.stepsToReproduce && (
+                          <div>
+                            <span className="font-bold text-slate-400">Steps to reproduce: </span>
+                            <span className="text-slate-300">{b.stepsToReproduce}</span>
+                          </div>
+                        )}
+                        {b.expectedBehavior && (
+                          <div>
+                            <span className="font-bold text-slate-400">Expected: </span>
+                            <span className="text-slate-300">{b.expectedBehavior}</span>
+                          </div>
+                        )}
+                        {b.actualBehavior && (
+                          <div>
+                            <span className="font-bold text-slate-400">Actual: </span>
+                            <span className="text-slate-300">{b.actualBehavior}</span>
+                          </div>
+                        )}
+                        {b.errorStack && (
+                          <div className="mt-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 font-mono text-[11px] text-rose-300 overflow-x-auto">
+                            <code>{b.errorStack}</code>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Reporter & Device Telemetry Strip */}
+                    <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-850/80 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
+                      <div>
+                        Reported by: <strong className="text-slate-200 font-mono">{b.reportedBy}</strong> ({b.reportedRole}) •{" "}
+                        <span>{new Date(b.createdAt).toLocaleString("en-IN")}</span>
+                      </div>
+                      <div className="flex items-center gap-3 font-mono text-[10px]">
+                        <span>Platform: <strong className="text-indigo-400">{b.deviceInfo?.platform || "WEB"}</strong></span>
+                        <span>Screen: {b.deviceInfo?.screenResolution || "1920x1080"}</span>
+                      </div>
+                    </div>
+
+                    {/* Developer Resolution Notes & Actions */}
+                    <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-800">
+                      <div className="flex-1 flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={notesValue}
+                          onChange={(e) =>
+                            setEditingNotes((prev) => ({ ...prev, [b.id]: e.target.value }))
+                          }
+                          placeholder="Add Creator developer resolution notes..."
+                          className="flex-1 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 outline-hidden focus:border-indigo-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            await updateBugStatus(b.id, b.status, notesValue);
+                            onTriggerToast(`Saved notes for ${b.ticketNumber}!`);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors cursor-pointer"
+                        >
+                          Save Notes
+                        </button>
+                      </div>
+
+                      {/* Fast State Transitions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {b.status !== "RESOLVED" && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await updateBugStatus(b.id, "RESOLVED", notesValue || "Resolved by Master Creator");
+                              onTriggerToast(`✅ Marked ${b.ticketNumber} as RESOLVED!`);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer"
+                          >
+                            Mark Resolved
+                          </button>
+                        )}
+                        {b.status !== "CLOSED" && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await updateBugStatus(b.id, "CLOSED", notesValue || "Closed");
+                              onTriggerToast(`Closed ticket ${b.ticketNumber}.`);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                          >
+                            Close Ticket
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
       )}

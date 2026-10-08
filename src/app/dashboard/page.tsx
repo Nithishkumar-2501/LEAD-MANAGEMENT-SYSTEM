@@ -38,6 +38,8 @@ import CreatorControlModule from "@/components/CreatorControlModule";
 import CsvLeadsImportModal from "@/components/CsvLeadsImportModal";
 import CreatorLeadsSummaryView from "@/components/CreatorLeadsSummaryView";
 import CreatorTeachersSummaryView from "@/components/CreatorTeachersSummaryView";
+import ReportBugModal from "@/components/ReportBugModal";
+import ReportBugFloatingButton from "@/components/ReportBugFloatingButton";
 import {
   evaluateLeadQuota,
   recordOverageLeadsToAnnualRenewal,
@@ -212,6 +214,7 @@ export default function DashboardPage() {
     leads: (Lead & { application: Application })[];
   } | null>(null);
   const [isProcessingCsvImport, setIsProcessingCsvImport] = useState(false);
+  const [isReportBugModalOpen, setIsReportBugModalOpen] = useState(false);
 
   const handleRequestCsvImport = useCallback((newLeads: (Lead & { application: Application })[], fileName: string = "uploaded_leads.csv") => {
     if (!newLeads || newLeads.length === 0) {
@@ -974,6 +977,7 @@ export default function DashboardPage() {
           applicants={currentUserRole === "TEACHER" ? teacherAssignedLeads : applicants}
           onSelectApplicant={handleSelectApplicant}
           onOpenNoraAi={handleOpenNora}
+          onOpenReportBug={() => setIsReportBugModalOpen(true)}
         />
 
         {/* Main Content Area */}
@@ -1233,6 +1237,22 @@ export default function DashboardPage() {
           isProcessing={isProcessingCsvImport}
         />
       )}
+
+      {/* GLOBAL FLOATING REPORT BUG ACTION (FOR ADMIN & TEACHERS/USERS) */}
+      <ReportBugFloatingButton
+        onOpen={() => setIsReportBugModalOpen(true)}
+        currentUserRole={currentUserRole}
+      />
+
+      {/* REPORT BUG MODAL */}
+      <ReportBugModal
+        isOpen={isReportBugModalOpen}
+        onClose={() => setIsReportBugModalOpen(false)}
+        loggedInUsername={loggedInUsername}
+        currentUserRole={currentUserRole}
+        selectedCampus={selectedCampus}
+        onTriggerToast={triggerToast}
+      />
 
       {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
