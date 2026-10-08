@@ -528,7 +528,7 @@ export default function AdminSettingsModule({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 font-black text-[10px] flex items-center justify-center shrink-0">3</span>
-                  <span>Select <strong>"Add to Home Screen"</strong> for full native app experience.</span>
+                  <span>Select <strong>&quot;Add to Home Screen&quot;</strong> for full native app experience.</span>
                 </div>
               </div>
             </div>

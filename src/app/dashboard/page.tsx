@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic, Lock, AlertTriangle, ShieldAlert, Crown } from "lucide-react";
+import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic, Lock, AlertTriangle, ShieldAlert, Crown, Sparkles, Building2 } from "lucide-react";
 import {
   isCollegeSuspendedForCurrentEnvironment,
   listenToCollegeLicenses,
@@ -1258,15 +1258,15 @@ export default function DashboardPage() {
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
         <button
           type="button"
-          onClick={() => setActiveTab("ADMIN_DASHBOARD")}
+          onClick={() => setActiveTab(currentUserRole === "TEACHER" ? "USER_DASHBOARD" : "ADMIN_DASHBOARD")}
           className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-            activeTab === "ADMIN_DASHBOARD" || activeTab === "ADMISSIONS"
+            (currentUserRole === "TEACHER" ? activeTab === "USER_DASHBOARD" : (activeTab === "ADMIN_DASHBOARD" || activeTab === "ADMISSIONS"))
               ? "text-sky-400 font-extrabold scale-105"
               : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <LayoutDashboard className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">Overview</span>
+          <span className="text-[10px] tracking-tight">{currentUserRole === "TEACHER" ? "Dashboard" : "Overview"}</span>
         </button>
 
         <button
@@ -1321,15 +1321,15 @@ export default function DashboardPage() {
         ) : (
           <button
             type="button"
-            onClick={() => setActiveTab("USER_DASHBOARD")}
+            onClick={() => setActiveTab("AI_INTELLIGENCE")}
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              activeTab === "USER_DASHBOARD"
-                ? "text-sky-400 font-extrabold scale-105"
+              activeTab === "AI_INTELLIGENCE"
+                ? "text-purple-400 font-extrabold scale-105"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <BarChart3 className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Lead Desk</span>
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            <span className="text-[10px] tracking-tight">Nora AI</span>
           </button>
         )}
 
@@ -1359,7 +1359,20 @@ export default function DashboardPage() {
             <BookOpen className="w-5 h-5" />
             <span className="text-[10px] tracking-tight">Faculty</span>
           </button>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            onClick={() => setActiveTab("CAMPUSES")}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+              activeTab === "CAMPUSES"
+                ? "text-sky-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Building2 className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Campuses</span>
+          </button>
+        )}
       </nav>
 
       {/* REAL-TIME LOCKOUT OVERLAY FOR ACTIVE DASHBOARD SESSIONS */}
