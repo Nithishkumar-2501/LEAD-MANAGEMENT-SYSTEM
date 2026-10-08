@@ -1043,6 +1043,8 @@ export default function DashboardPage() {
               applicants={applicants}
               selectedCampus={selectedCampus}
               onNavigateCreatorControl={() => setActiveTab("CREATOR_CONTROL")}
+              onImportLeads={handleRequestCsvImport}
+              onTriggerToast={triggerToast}
             />
           ) : (
             <ContactDirectoryModule

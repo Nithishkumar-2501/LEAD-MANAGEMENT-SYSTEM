@@ -87,7 +87,11 @@ import {
   Upload,
   BookOpen,
   GraduationCap,
+  School,
+  Share2,
+  Compass,
 } from "lucide-react";
+import { calculateAllSourcesTelemetry } from "@/lib/leadSourceAnalytics";
 
 interface CreatorControlModuleProps {
   onTriggerToast: (msg: string) => void;
@@ -247,6 +251,11 @@ export default function CreatorControlModule({
       else counts.admitted++;
     });
     return counts;
+  }, [applicants]);
+
+  // 1.5 ALL LEAD SOURCES TELEMETRY (PROJECT EXPO, CSV, SOCIAL MEDIA ADS, ETC.)
+  const leadSourceTelemetry = useMemo(() => {
+    return calculateAllSourcesTelemetry(applicants);
   }, [applicants]);
 
   // 2. TEACHER COUNT (FACULTY METRICS)
@@ -1042,6 +1051,155 @@ export default function CreatorControlModule({
                   <span className="font-mono font-bold text-emerald-400">₹{totalRevenueCollected.toLocaleString("en-IN")}</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* MULTI-SOURCE INGESTION TELEMETRY (PROJECT EXPO, CSV, SOCIAL MEDIA, ADS) */}
+          <div className="p-6 rounded-3xl border-2 border-indigo-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 shadow-xl shadow-indigo-950/20 space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-indigo-900/40">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center shrink-0">
+                  <Layers className="w-6 h-6 text-sky-400" />
+                </div>
+                <div>
+                  <h4 className="text-base md:text-lg font-black text-white flex items-center gap-2">
+                    <span>Lead Acquisition Sources &amp; Multi-Application Ingestion</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                      All Sources Active
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Total leads calculated dynamically from Project Expo, CSV file uploads, Google Ads, Meta Facebook, WhatsApp, and State Counselling.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono font-bold text-slate-300">
+                  Dominant: <strong className="text-sky-400">{leadSourceTelemetry.dominantSource.shortLabel}</strong> ({leadSourceTelemetry.dominantSource.percentage}%)
+                </span>
+              </div>
+            </div>
+
+            {/* Ingestion Highlights 5-Card Matrix */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {/* Overall Total */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                  <span>Overall Total</span>
+                  <Users className="w-3.5 h-3.5 text-sky-400" />
+                </span>
+                <p className="text-2xl font-black font-mono text-white">
+                  {leadSourceTelemetry.totalLeads.toLocaleString("en-IN")}
+                </p>
+                <p className="text-[10px] text-slate-500">100% of lead database</p>
+              </div>
+
+              {/* Project Expo */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-400 flex items-center justify-between">
+                  <span>Project Expo</span>
+                  <School className="w-3.5 h-3.5" />
+                </span>
+                <p className="text-2xl font-black font-mono text-teal-300">
+                  {leadSourceTelemetry.primaryHighlights.expoCount.toLocaleString("en-IN")}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  {leadSourceTelemetry.totalLeads > 0
+                    ? ((leadSourceTelemetry.primaryHighlights.expoCount / leadSourceTelemetry.totalLeads) * 100).toFixed(1)
+                    : 0}% share
+                </p>
+              </div>
+
+              {/* CSV Uploads */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-lime-400 flex items-center justify-between">
+                  <span>CSV File Uploads</span>
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                </span>
+                <p className="text-2xl font-black font-mono text-lime-300">
+                  {leadSourceTelemetry.primaryHighlights.csvCount.toLocaleString("en-IN")}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  {leadSourceTelemetry.totalLeads > 0
+                    ? ((leadSourceTelemetry.primaryHighlights.csvCount / leadSourceTelemetry.totalLeads) * 100).toFixed(1)
+                    : 0}% share
+                </p>
+              </div>
+
+              {/* Social Media & Ads */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
+                  <span>Social Media &amp; Ads</span>
+                  <Share2 className="w-3.5 h-3.5" />
+                </span>
+                <p className="text-2xl font-black font-mono text-indigo-300">
+                  {leadSourceTelemetry.primaryHighlights.socialCount.toLocaleString("en-IN")}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  {leadSourceTelemetry.totalLeads > 0
+                    ? ((leadSourceTelemetry.primaryHighlights.socialCount / leadSourceTelemetry.totalLeads) * 100).toFixed(1)
+                    : 0}% share
+                </p>
+              </div>
+
+              {/* TNEA Counselling */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 flex items-center justify-between">
+                  <span>TNEA Counselling</span>
+                  <Compass className="w-3.5 h-3.5" />
+                </span>
+                <p className="text-2xl font-black font-mono text-cyan-300">
+                  {leadSourceTelemetry.primaryHighlights.counsellingCount.toLocaleString("en-IN")}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  {leadSourceTelemetry.totalLeads > 0
+                    ? ((leadSourceTelemetry.primaryHighlights.counsellingCount / leadSourceTelemetry.totalLeads) * 100).toFixed(1)
+                    : 0}% share
+                </p>
+              </div>
+            </div>
+
+            {/* Proportion Bar */}
+            {leadSourceTelemetry.totalLeads > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <div className="h-2.5 w-full bg-slate-950 rounded-full overflow-hidden flex border border-slate-800">
+                  {leadSourceTelemetry.channels
+                    .filter((ch) => ch.count > 0)
+                    .map((ch) => {
+                      const pct = (ch.count / leadSourceTelemetry.totalLeads) * 100;
+                      return (
+                        <div
+                          key={ch.key}
+                          style={{ width: `${pct}%`, backgroundColor: ch.colorHex }}
+                          className="h-full"
+                          title={`${ch.shortLabel}: ${ch.count} (${pct.toFixed(1)}%)`}
+                        />
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {/* All Ingestion Channels Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-1 text-xs">
+              {leadSourceTelemetry.channels.map((ch) => (
+                <div
+                  key={ch.key}
+                  className="p-2 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: ch.colorHex }}
+                    />
+                    <span className="font-bold text-slate-300 truncate text-[11px]">{ch.shortLabel}</span>
+                  </div>
+                  <span className="font-mono font-black text-white text-xs shrink-0">
+                    {ch.count}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
