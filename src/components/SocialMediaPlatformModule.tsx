@@ -135,8 +135,6 @@ export default function SocialMediaPlatformModule({
       ? "EMAIL"
       : activeTab === "SOCIAL_SMS"
       ? "SMS"
-      : activeTab === "SOCIAL_CAMPAIGN"
-      ? "CAMPAIGN"
       : activeTab === "SOCIAL_EXPO"
       ? "EXPO"
       : "ALL"
@@ -150,7 +148,6 @@ export default function SocialMediaPlatformModule({
     else if (activeTab === "SOCIAL_WHATSAPP") setSelectedSubTab("WHATSAPP");
     else if (activeTab === "SOCIAL_EMAIL") setSelectedSubTab("EMAIL");
     else if (activeTab === "SOCIAL_SMS") setSelectedSubTab("SMS");
-    else if (activeTab === "SOCIAL_CAMPAIGN") setSelectedSubTab("CAMPAIGN");
     else if (activeTab === "SOCIAL_EXPO") setSelectedSubTab("EXPO");
   }, [activeTab]);
 
@@ -248,7 +245,7 @@ export default function SocialMediaPlatformModule({
     if (src.includes("email") || src.includes("e-mail") || src.includes("mail")) return "EMAIL";
     if (src.includes("sms") || src.includes("message")) return "SMS";
     if (src.includes("expo") || src.includes("fair") || src.includes("walkin")) return "EXPO";
-    if (src.includes("campaign")) return "CAMPAIGN";
+    if (src.includes("campaign")) return "ADS";
     return "OTHER";
   };
 
@@ -262,7 +259,6 @@ export default function SocialMediaPlatformModule({
       WHATSAPP: 0,
       EMAIL: 0,
       SMS: 0,
-      CAMPAIGN: 0,
       EXPO: 0,
     };
 
@@ -321,12 +317,6 @@ export default function SocialMediaPlatformModule({
       count: `${channelCounts.SMS.toLocaleString()} ${channelCounts.SMS === 1 ? "Student" : "Students"}`,
     },
     {
-      id: "CAMPAIGN",
-      label: "Campaign Hub",
-      icon: Sparkles,
-      count: channelCounts.CAMPAIGN > 0 ? `${channelCounts.CAMPAIGN.toLocaleString()} Students` : `${campaigns.length} Campaigns`,
-    },
-    {
       id: "EXPO",
       label: "Project Expo",
       icon: Award,
@@ -370,10 +360,6 @@ export default function SocialMediaPlatformModule({
         platform = "Project Expo";
         icon = Award;
         color = "bg-teal-500/20 text-teal-400 border-teal-500/30";
-      } else if (ch === "CAMPAIGN") {
-        platform = "Campaign";
-        icon = Sparkles;
-        color = "bg-pink-500/20 text-pink-400 border-pink-500/30";
       }
 
       return {
@@ -517,7 +503,7 @@ export default function SocialMediaPlatformModule({
 
           <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Inbound Channels</p>
-            <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">8 Active Portals</h4>
+            <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">7 Active Portals</h4>
             <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold mt-1">Google, Meta, WhatsApp, SMS & Expo</p>
           </div>
 
