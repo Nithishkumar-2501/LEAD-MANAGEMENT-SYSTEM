@@ -105,76 +105,7 @@ const COLLEGE_IMAGE_PRESETS = [
   },
 ];
 
-const INITIAL_CAMPAIGNS: CollegeCampaign[] = [
-  {
-    id: "camp-1",
-    title: "TNEA 2026 Engineering Admissions Open Drive",
-    platform: "Google Ads",
-    department: "All Engineering Branches",
-    targetLeads: 500,
-    currentLeads: 384,
-    status: "ACTIVE",
-    imageUrl: "/login-hero.jpg",
-    imageCaption: "VSB Engineering College Main Academic Campus",
-    budget: "₹35,000",
-    startDate: "2026-08-01",
-    adCopy: "Admissions open for 2026-27 at VSB Engineering College! 100% Placement Record, NAAC A+ Accredited, Top MNC Recruiters. Direct Counseling Assistance available.",
-    campus: "ALL",
-    clicksCount: 3420,
-    impressions: 48900,
-  },
-  {
-    id: "camp-2",
-    title: "B.Tech Artificial Intelligence & Data Science Special Drive",
-    platform: "Facebook",
-    department: "AI & DS / Cyber Security",
-    targetLeads: 300,
-    currentLeads: 215,
-    status: "ACTIVE",
-    imageUrl: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1000&q=80",
-    imageCaption: "AI & Robotics Advanced Innovation Lab",
-    budget: "₹20,000",
-    startDate: "2026-08-15",
-    adCopy: "Study next-gen AI, Machine Learning, Deep Learning & Robotics with industry-partnered centers of excellence at VSB. Apply now with your 12th cutoff!",
-    campus: "KARUR",
-    clicksCount: 2180,
-    impressions: 31200,
-  },
-  {
-    id: "camp-3",
-    title: "National Level School Project Expo & Hackathon 2026",
-    platform: "Project Expo",
-    department: "School Outreach & Innovation",
-    targetLeads: 450,
-    currentLeads: 388,
-    status: "ACTIVE",
-    imageUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1000&q=80",
-    imageCaption: "National Level Student TechFest Arena",
-    budget: "₹50,000",
-    startDate: "2026-09-01",
-    adCopy: "Grand School Project Expo 2026 at VSB Campus! Cash prizes worth ₹2 Lakhs, free bus transportation, campus visit & direct mentoring from senior professors.",
-    campus: "COIMBATORE",
-    clicksCount: 1940,
-    impressions: 26500,
-  },
-  {
-    id: "camp-4",
-    title: "Direct WhatsApp Admission Assistance & Cutoff Verification",
-    platform: "WhatsApp",
-    department: "CSE & Information Technology",
-    targetLeads: 600,
-    currentLeads: 520,
-    status: "ACTIVE",
-    imageUrl: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1000&q=80",
-    imageCaption: "Counseling & Student Orientation Center",
-    budget: "₹15,000",
-    startDate: "2026-08-20",
-    adCopy: "Check your TNEA 2026 cutoff eligibility instantly via WhatsApp and connect directly with senior faculty counselors.",
-    campus: "ALL",
-    clicksCount: 4120,
-    impressions: 59300,
-  },
-];
+const INITIAL_CAMPAIGNS: CollegeCampaign[] = [];
 
 interface SocialMediaPlatformModuleProps {
   activeTab: ActiveTab;
@@ -229,14 +160,18 @@ export default function SocialMediaPlatformModule({
   const [editingCampaign, setEditingCampaign] = useState<CollegeCampaign | null>(null);
   const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
 
-  // Load persisted campaigns from localStorage on client mount
+  // Load persisted campaigns from localStorage on client mount (purging legacy mock 4 campaigns)
   useEffect(() => {
     try {
       const saved = localStorage.getItem("vsb_college_campaigns_v1");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCampaigns(parsed);
+        if (Array.isArray(parsed)) {
+          const userOnly = parsed.filter(
+            (c: any) => !["camp-1", "camp-2", "camp-3", "camp-4"].includes(c?.id)
+          );
+          setCampaigns(userOnly);
+          localStorage.setItem("vsb_college_campaigns_v1", JSON.stringify(userOnly));
         }
       }
     } catch (e) {
@@ -581,9 +516,9 @@ export default function SocialMediaPlatformModule({
           </div>
 
           <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
-            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Ad Campaigns</p>
-            <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{campaigns.filter(c => c.status === "ACTIVE").length} Live Campaigns</h4>
-            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold mt-1">Google, Meta, WhatsApp & Expo</p>
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Inbound Channels</p>
+            <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">8 Active Portals</h4>
+            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold mt-1">Google, Meta, WhatsApp, SMS & Expo</p>
           </div>
 
           <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
@@ -628,199 +563,6 @@ export default function SocialMediaPlatformModule({
         })}
       </div>
 
-      {/* College Marketing Campaigns Showcase with Uploaded Images */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-white/10 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-white/10">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                <Building2 className="w-4 h-4" />
-              </span>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">
-                College Marketing Campaigns & Creative Media Assets
-              </h3>
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700">
-                {campaigns.length} Active / Managed
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Upload custom college posters, campus banners, and manage live promotional campaigns across social networks.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleOpenNewCampaignModal()}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-black text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Launch / Edit College Ad</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Campaign Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-          {campaigns.map((camp) => {
-            const pct = Math.min(100, Math.round((camp.currentLeads / camp.targetLeads) * 100));
-            return (
-              <div
-                key={camp.id}
-                className="bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200 p-4 transition-all duration-200 hover:shadow-md hover:border-indigo-300 flex flex-col justify-between space-y-3.5 group"
-              >
-                {/* Visual Banner Preview with Action Badges */}
-                <div className="relative rounded-xl overflow-hidden border border-slate-300 bg-slate-900 aspect-[16/9] max-h-48 group/img">
-                  {camp.imageUrl ? (
-                    <img
-                      src={camp.imageUrl}
-                      alt={camp.title}
-                      className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
-                      <ImageIcon className="w-8 h-8 text-slate-500" />
-                      <span className="text-xs font-bold">No College Image Selected</span>
-                    </div>
-                  )}
-
-                  {/* Top Status and Platform Badges */}
-                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 pointer-events-none">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-black/75 backdrop-blur-md text-white border border-white/20 shadow-md flex items-center gap-1">
-                      <Globe className="w-3 h-3 text-sky-400" />
-                      {camp.platform}
-                    </span>
-
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-black backdrop-blur-md border shadow-md flex items-center gap-1.5 ${
-                        camp.status === "ACTIVE"
-                          ? "bg-emerald-600/90 text-white border-emerald-400"
-                          : "bg-amber-600/90 text-white border-amber-400"
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          camp.status === "ACTIVE" ? "bg-white animate-pulse" : "bg-white/60"
-                        }`}
-                      />
-                      {camp.status}
-                    </span>
-                  </div>
-
-                  {/* Bottom Image Hover Overlay with View Lightbox */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => setActivePreviewImage(camp.imageUrl)}
-                      className="px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 cursor-pointer transform active:scale-95"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-indigo-600" /> View Image
-                    </button>
-                    <button
-                      onClick={() => handleEditCampaign(camp)}
-                      className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-lg flex items-center gap-1.5 cursor-pointer transform active:scale-95"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" /> Edit / Replace
-                    </button>
-                  </div>
-
-                  {camp.imageCaption && (
-                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 pt-4">
-                      <p className="text-[11px] font-bold text-white truncate drop-shadow-md">
-                        📸 {camp.imageCaption}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Campaign Details Header */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                      {camp.department}
-                    </span>
-                    <span className="text-xs font-mono font-bold text-slate-700">
-                      Budget: <strong className="text-slate-950">{camp.budget}</strong>
-                    </span>
-                  </div>
-
-                  <h4 className="text-sm font-black text-slate-950 line-clamp-1 group-hover:text-indigo-600 transition-colors">
-                    {camp.title}
-                  </h4>
-
-                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                    {camp.adCopy}
-                  </p>
-                </div>
-
-                {/* Performance Progress Bar */}
-                <div className="space-y-1.5 pt-2 border-t border-slate-200">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                    <span className="flex items-center gap-1 text-slate-800">
-                      <Target className="w-3.5 h-3.5 text-sky-600" />
-                      <span>{camp.currentLeads} / {camp.targetLeads} Leads</span>
-                    </span>
-                    <span className="text-indigo-600 font-extrabold">{pct}% Target Met</span>
-                  </div>
-
-                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-sky-500 to-indigo-600 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono pt-1">
-                    <span>{camp.clicksCount.toLocaleString()} Clicks</span>
-                    <span>•</span>
-                    <span>{camp.impressions.toLocaleString()} Impressions</span>
-                    <span>•</span>
-                    <span className="capitalize">{camp.campus} Campus</span>
-                  </div>
-                </div>
-
-                {/* Bottom Action Buttons */}
-                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => handleToggleCampaignStatus(camp.id)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 border transition-all cursor-pointer ${
-                        camp.status === "ACTIVE"
-                          ? "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
-                          : "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                      }`}
-                    >
-                      {camp.status === "ACTIVE" ? (
-                        <>
-                          <Pause className="w-3 h-3" /> Pause
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-3 h-3" /> Activate
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteCampaign(camp.id, camp.title)}
-                      className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors"
-                      title="Delete Campaign"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => handleEditCampaign(camp)}
-                    className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Edit Campaign & Image</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Main Table & Campaign Control Card */}
       <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
