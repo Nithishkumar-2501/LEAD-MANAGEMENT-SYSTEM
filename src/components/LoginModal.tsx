@@ -2,8 +2,22 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { motion, type Variants } from "motion/react";
-import { Eye, EyeOff, AlertCircle, Info, ShieldCheck, ArrowRight, Loader2, Lock } from "lucide-react";
+import { motion, AnimatePresence, type Variants } from "motion/react";
+import {
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Info,
+  ShieldCheck,
+  ArrowRight,
+  Loader2,
+  Lock,
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
+  Sparkles,
+} from "lucide-react";
 import { loginWithRealtimeAuth, type AuthSession } from "@/lib/authService";
 import {
   isCollegeSuspendedForCurrentEnvironment,
@@ -38,11 +52,142 @@ export const FACULTY_ACCOUNTS: Record<string, { pass: string; campus: "KARUR" | 
   "teacher_rajesh@123": { pass: "vsbteacher@123", campus: "KARUR" },
 };
 
+export interface ProductSpecSlide {
+  id: string;
+  specNumber: string;
+  category: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  accentColor: string;
+  accentBorder: string;
+  accentBg: string;
+  accentText: string;
+  specs: {
+    label: string;
+    value: string;
+  }[];
+  imageUrl: string;
+}
+
+export const PRODUCT_SPEC_SLIDES: ProductSpecSlide[] = [
+  {
+    id: "spec-multi-campus",
+    specNumber: "SPEC 01",
+    category: "CAMPUS ARCHITECTURE",
+    title: "Dual-Campus Admission Ecosystem",
+    subtitle: "V.S.B. Karur & Coimbatore Flagship Centers",
+    description: "Multi-tenant institutional infrastructure providing isolated lead pipelines, departmental quota allocation, and centralized executive analytics across both campuses.",
+    accentColor: "#10b981",
+    accentBorder: "rgba(16, 185, 129, 0.4)",
+    accentBg: "rgba(16, 185, 129, 0.15)",
+    accentText: "#34d399",
+    specs: [
+      { label: "Campus Isolation", value: "Karur Main & Coimbatore Technical" },
+      { label: "RBAC Security", value: "4-Tier Hierarchy (Root, Admin, Faculty)" },
+      { label: "Lead Balancing", value: "Automated Departmental Allocation" },
+    ],
+    imageUrl: "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    id: "spec-quota-engine",
+    specNumber: "SPEC 02",
+    category: "LEAD QUOTA & REVENUE ENGINE",
+    title: "1,00,000 Lead Annual Quota",
+    subtitle: "Real-Time Ledger & Dynamic UPI QR Workflow",
+    description: "Strict institutional 1,00,000 lead quota accounting per cycle with dynamic ₹500 UPI QR fee verification, automated overage calculation, and high-volume batch CSV deduplication.",
+    accentColor: "#f59e0b",
+    accentBorder: "rgba(245, 158, 11, 0.4)",
+    accentBg: "rgba(245, 158, 11, 0.15)",
+    accentText: "#fbbf24",
+    specs: [
+      { label: "Annual Lead Cap", value: "1,00,000 Free Leads / Academic Cycle" },
+      { label: "Dynamic UPI QR", value: "₹500 / Lead Direct Payment Ledger" },
+      { label: "Batch CSV Engine", value: "10,000+ Records Ingested / Minute" },
+    ],
+    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    id: "spec-nora-ai",
+    specNumber: "SPEC 03",
+    category: "ADMISSION INTELLIGENCE",
+    title: "NORA AI™ Predictive Suite",
+    subtitle: "TNEA 2026/2027 Forecasting & Marksheet OCR",
+    description: "Proprietary Machine Learning cutoff predictor tailored for Tamil Nadu engineering admissions, instant OCR marksheet scanning, and automated candidate eligibility scoring.",
+    accentColor: "#6366f1",
+    accentBorder: "rgba(99, 102, 241, 0.4)",
+    accentBg: "rgba(99, 102, 241, 0.15)",
+    accentText: "#818cf8",
+    specs: [
+      { label: "Cutoff Predictor", value: "TNEA 2026/2027 ML Eligibility Engine" },
+      { label: "Vision AI OCR", value: "Instant Marksheet & Document Parsing" },
+      { label: "Conversion AI", value: "Automated Candidate Scoring & Propensity" },
+    ],
+    imageUrl: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    id: "spec-omnichannel",
+    specNumber: "SPEC 04",
+    category: "TELEPHONY & FIELD OUTREACH",
+    title: "High-Velocity Omnichannel Telephony",
+    subtitle: "Native Android Dialer & Multi-Channel Broadcast",
+    description: "Micro-delegation telecalling across faculty counselors with single-click native mobile dialing, automated WhatsApp Business templates, SMS alerts, and Project Expo direct lead capture.",
+    accentColor: "#ec4899",
+    accentBorder: "rgba(236, 72, 153, 0.4)",
+    accentBg: "rgba(236, 72, 153, 0.15)",
+    accentText: "#f472b6",
+    specs: [
+      { label: "Faculty Telephony", value: "Single-Click Native Call Dialer" },
+      { label: "Broadcast Hub", value: "WhatsApp Business API & SMS Gateway" },
+      { label: "Field Ingestion", value: "Project Expo On-Spot Applicant Sync" },
+    ],
+    imageUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    id: "spec-killswitch-security",
+    specNumber: "SPEC 05",
+    category: "ROOT SECURITY & FAILOVER",
+    title: "Triple-Redundancy Anti-Tamper Core",
+    subtitle: "3.5s Universal Emergency Kill-Switch",
+    description: "Master Creator root authority (spherexnithish#) with 3.5s reactive heartbeat synchronization across Firestore, RTDB, and REST to enforce instantaneous global Web and Mobile lockouts.",
+    accentColor: "#06b6d4",
+    accentBorder: "rgba(6, 182, 212, 0.4)",
+    accentBg: "rgba(6, 182, 212, 0.15)",
+    accentText: "#22d3ee",
+    specs: [
+      { label: "Heartbeat Sync", value: "3,500ms Reactive License Polling" },
+      { label: "Universal Freeze", value: "Global Web & Mobile Instant Kill-Switch" },
+      { label: "Cross-Platform", value: "Next.js 14 SSR/CSR + Native Capacitor APK" },
+    ],
+    imageUrl: "https://assets.watermelon.sh/auth-11.avif",
+  },
+];
+
 interface LoginModalProps {
   onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => void;
 }
 
 export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isSlidePaused, setIsSlidePaused] = useState(false);
+
+  // Automatic 3-Second (3000ms) Product Specifications Slide Transition
+  useEffect(() => {
+    if (isSlidePaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % PRODUCT_SPEC_SLIDES.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isSlidePaused]);
+
+  const handleNextSlide = () => {
+    setCurrentSlideIndex((prev) => (prev + 1) % PRODUCT_SPEC_SLIDES.length);
+  };
+
+  const handlePrevSlide = () => {
+    setCurrentSlideIndex((prev) => (prev - 1 + PRODUCT_SPEC_SLIDES.length) % PRODUCT_SPEC_SLIDES.length);
+  };
+
   const [username, setUsername] = useState("adminkarur@123");
   const [password, setPassword] = useState("vsbec@123");
   const [showPassword, setShowPassword] = useState(false);
@@ -390,14 +535,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         fontFamily: "'Poppins', sans-serif",
       }}
     >
-      {/* Left Image Panel */}
+      {/* Left Image Panel with Auto-Sliding Product Specifications Carousel (3s Auto-Slide) */}
       <div
-        className="relative hidden w-full flex-col justify-end p-4 lg:flex lg:min-h-screen lg:w-1/2"
+        className="relative hidden w-full flex-col justify-end p-4 lg:flex lg:min-h-screen lg:w-1/2 select-none"
         style={{ boxSizing: "border-box" }}
+        onMouseEnter={() => setIsSlidePaused(true)}
+        onMouseLeave={() => setIsSlidePaused(false)}
       >
         {/* Background Image Wrapper */}
         <div
-          className="relative h-full w-full overflow-hidden shadow-2xl"
+          className="relative h-full w-full overflow-hidden shadow-2xl group"
           style={{
             borderRadius: "28px",
             border: "1px solid rgba(255, 255, 255, 0.12)",
@@ -405,124 +552,281 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             minHeight: "calc(100vh - 32px)",
           }}
         >
-          <img
-            src="https://assets.watermelon.sh/auth-11.avif"
-            alt="Serene landscape with a lone tree"
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
+          {/* Background Images with Smooth Cross-Fade Transitions */}
+          {PRODUCT_SPEC_SLIDES.map((slide, idx) => {
+            const isActive = idx === currentSlideIndex;
+            return (
+              <div
+                key={slide.id}
+                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                  isActive ? "opacity-100 z-0 scale-100" : "opacity-0 -z-10 scale-105 pointer-events-none"
+                }`}
+                style={{
+                  transitionProperty: "opacity, transform",
+                  transitionDuration: "1000ms",
+                }}
+              >
+                <img
+                  src={slide.imageUrl}
+                  alt={slide.title}
+                  className="h-full w-full object-cover"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+            );
+          })}
 
-          {/* Deep Dark Gradient Overlay for Maximum Legibility */}
+          {/* Deep Dark Gradient Overlay for Maximum High-Contrast Readability */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.72) 32%, rgba(0, 0, 0, 0.25) 60%, transparent 100%)",
+                "linear-gradient(to top, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.85) 40%, rgba(0, 0, 0, 0.42) 70%, rgba(0, 0, 0, 0.6) 100%)",
             }}
           />
 
-          {/* Bottom Content within the image */}
-          <div
-            className="absolute right-0 bottom-0 left-0 z-10 flex w-full flex-col items-center justify-center pb-12 text-center px-8"
-            style={{ boxSizing: "border-box" }}
-          >
-            {/* SPHEREX ADMISSION OS Pill */}
+          {/* Top Header Bar inside the Slider: SPHEREX Badge + 3s Auto-Slide Live Status + Controls */}
+          <div className="absolute top-6 inset-x-6 z-20 flex items-center justify-between gap-3">
             <div
-              className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 shadow-lg backdrop-blur-md"
+              className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 shadow-lg backdrop-blur-md"
               style={{
-                backgroundColor: "rgba(0, 0, 0, 0.8)",
-                border: "1px solid rgba(255, 255, 255, 0.22)",
+                backgroundColor: "rgba(0, 0, 0, 0.75)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
               }}
             >
               <span
                 style={{
                   display: "inline-block",
-                  width: "8px",
-                  height: "8px",
+                  width: "7px",
+                  height: "7px",
                   borderRadius: "50%",
-                  backgroundColor: "#34d399",
-                  boxShadow: "0 0 10px #34d399",
+                  backgroundColor: PRODUCT_SPEC_SLIDES[currentSlideIndex].accentColor,
+                  boxShadow: `0 0 10px ${PRODUCT_SPEC_SLIDES[currentSlideIndex].accentColor}`,
                 }}
               />
               <span
                 style={{
                   fontSize: "11px",
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
+                  fontWeight: 800,
+                  letterSpacing: "0.06em",
                   color: "#ffffff",
                   textTransform: "uppercase",
                 }}
               >
-                SPHEREX ADMISSION OS &bull; 2026–2027
+                SPHEREX ADMISSION OS
               </span>
             </div>
 
-            {/* Headline with 100% Guaranteed Bright White Contrast */}
-            <h1
-              style={{
-                color: "#ffffff",
-                fontSize: "clamp(2rem, 3.2vw, 3rem)",
-                fontWeight: 700,
-                lineHeight: 1.15,
-                letterSpacing: "-0.03em",
-                margin: "0 auto",
-                textShadow: "0 3px 20px rgba(0, 0, 0, 0.9)",
-              }}
-            >
-              Move fast. Feel Free
-            </h1>
+            <div className="flex items-center gap-2">
+              {/* Auto Slide Status Pill */}
+              <button
+                type="button"
+                onClick={() => setIsSlidePaused(!isSlidePaused)}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 shadow-md backdrop-blur-md text-[11px] font-bold transition-all cursor-pointer"
+                style={{
+                  backgroundColor: isSlidePaused ? "rgba(239, 68, 68, 0.25)" : "rgba(16, 185, 129, 0.25)",
+                  border: isSlidePaused ? "1px solid rgba(239, 68, 68, 0.5)" : "1px solid rgba(16, 185, 129, 0.5)",
+                  color: isSlidePaused ? "#fca5a5" : "#6ee7b7",
+                }}
+                title={isSlidePaused ? "Click to resume 3s auto-sliding" : "Click to pause auto-sliding"}
+              >
+                {isSlidePaused ? (
+                  <>
+                    <Pause className="w-3 h-3 text-rose-400" />
+                    <span>Paused</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Auto 3s</span>
+                  </>
+                )}
+              </button>
 
-            <p
-              style={{
-                color: "#cbd5e1",
-                fontSize: "0.92rem",
-                lineHeight: 1.6,
-                maxWidth: "440px",
-                margin: "10px auto 0 auto",
-                textShadow: "0 2px 12px rgba(0, 0, 0, 0.9)",
-              }}
-            >
-              High-velocity institutional admission management and dual-campus lead allocation.
-            </p>
+              {/* Slide Counter */}
+              <div
+                className="px-2.5 py-1 rounded-full text-[11px] font-mono font-extrabold text-slate-300 backdrop-blur-md"
+                style={{
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                }}
+              >
+                0{currentSlideIndex + 1} / 0{PRODUCT_SPEC_SLIDES.length}
+              </div>
+            </div>
+          </div>
 
-            {/* Pagination Indicators */}
+          {/* Left / Right Chevron Manual Navigation Arrows */}
+          <button
+            type="button"
+            onClick={handlePrevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.65)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+            }}
+            title="Previous Specification"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleNextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.65)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+            }}
+            title="Next Specification"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* Bottom Content within the image: Technical Product Specifications */}
+          <div
+            className="absolute right-0 bottom-0 left-0 z-10 flex w-full flex-col items-center justify-center pb-8 text-center px-6 sm:px-8"
+            style={{ boxSizing: "border-box" }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={PRODUCT_SPEC_SLIDES[currentSlideIndex].id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.45, ease: "easeOut" }}
+                className="w-full flex flex-col items-center"
+              >
+                {/* Specification Category Badge */}
+                <div
+                  className="mb-3 inline-flex items-center gap-2 rounded-full px-3.5 py-1 shadow-lg backdrop-blur-md"
+                  style={{
+                    backgroundColor: PRODUCT_SPEC_SLIDES[currentSlideIndex].accentBg,
+                    border: `1px solid ${PRODUCT_SPEC_SLIDES[currentSlideIndex].accentBorder}`,
+                  }}
+                >
+                  <Sparkles
+                    className="w-3.5 h-3.5"
+                    style={{ color: PRODUCT_SPEC_SLIDES[currentSlideIndex].accentText }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "10.5px",
+                      fontWeight: 800,
+                      letterSpacing: "0.08em",
+                      color: PRODUCT_SPEC_SLIDES[currentSlideIndex].accentText,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {PRODUCT_SPEC_SLIDES[currentSlideIndex].specNumber} &bull; {PRODUCT_SPEC_SLIDES[currentSlideIndex].category}
+                  </span>
+                </div>
+
+                {/* Main Headline */}
+                <h1
+                  style={{
+                    color: "#ffffff",
+                    fontSize: "clamp(1.75rem, 2.5vw, 2.35rem)",
+                    fontWeight: 800,
+                    lineHeight: 1.15,
+                    letterSpacing: "-0.025em",
+                    margin: "0 auto",
+                    textShadow: "0 3px 20px rgba(0, 0, 0, 0.95)",
+                  }}
+                >
+                  {PRODUCT_SPEC_SLIDES[currentSlideIndex].title}
+                </h1>
+
+                {/* Subtitle with Accent Color */}
+                <p
+                  style={{
+                    fontSize: "0.92rem",
+                    fontWeight: 700,
+                    color: PRODUCT_SPEC_SLIDES[currentSlideIndex].accentText,
+                    margin: "4px auto 0 auto",
+                    textShadow: "0 2px 10px rgba(0, 0, 0, 0.9)",
+                  }}
+                >
+                  {PRODUCT_SPEC_SLIDES[currentSlideIndex].subtitle}
+                </p>
+
+                {/* Description */}
+                <p
+                  style={{
+                    color: "#cbd5e1",
+                    fontSize: "0.85rem",
+                    lineHeight: 1.55,
+                    maxWidth: "460px",
+                    margin: "8px auto 0 auto",
+                    textShadow: "0 2px 12px rgba(0, 0, 0, 0.95)",
+                  }}
+                >
+                  {PRODUCT_SPEC_SLIDES[currentSlideIndex].description}
+                </p>
+
+                {/* Technical Product Specifications Grid (3 Badges) */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-lg mt-4 text-left">
+                  {PRODUCT_SPEC_SLIDES[currentSlideIndex].specs.map((spec, i) => (
+                    <div
+                      key={i}
+                      className="px-3 py-2 rounded-xl backdrop-blur-md transition-all shadow-md"
+                      style={{
+                        backgroundColor: "rgba(0, 0, 0, 0.75)",
+                        border: `1px solid ${PRODUCT_SPEC_SLIDES[currentSlideIndex].accentBorder}`,
+                      }}
+                    >
+                      <p
+                        className="text-[9.5px] uppercase font-bold tracking-wider truncate"
+                        style={{ color: PRODUCT_SPEC_SLIDES[currentSlideIndex].accentText }}
+                      >
+                        {spec.label}
+                      </p>
+                      <p className="text-[11px] font-bold text-white truncate mt-0.5" title={spec.value}>
+                        {spec.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Pagination Indicators with Active 3-Second Progress Bar */}
             <div
-              className="mt-8 flex items-center justify-center gap-2"
+              className="mt-6 flex items-center justify-center gap-2"
               style={{ display: "flex", gap: "8px", alignItems: "center" }}
             >
-              <div
-                style={{
-                  width: "28px",
-                  height: "4px",
-                  borderRadius: "9999px",
-                  backgroundColor: "#ffffff",
-                  boxShadow: "0 0 10px rgba(255, 255, 255, 0.6)",
-                }}
-              />
-              <div
-                style={{
-                  width: "6px",
-                  height: "4px",
-                  borderRadius: "9999px",
-                  backgroundColor: "rgba(255, 255, 255, 0.4)",
-                }}
-              />
-              <div
-                style={{
-                  width: "6px",
-                  height: "4px",
-                  borderRadius: "9999px",
-                  backgroundColor: "rgba(255, 255, 255, 0.4)",
-                }}
-              />
-              <div
-                style={{
-                  width: "6px",
-                  height: "4px",
-                  borderRadius: "9999px",
-                  backgroundColor: "rgba(255, 255, 255, 0.4)",
-                }}
-              />
+              {PRODUCT_SPEC_SLIDES.map((slide, idx) => {
+                const isActive = idx === currentSlideIndex;
+                return (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    onClick={() => setCurrentSlideIndex(idx)}
+                    className="relative overflow-hidden transition-all duration-300 cursor-pointer p-0 border-0 outline-hidden focus:outline-hidden"
+                    style={{
+                      width: isActive ? "36px" : "8px",
+                      height: "5px",
+                      borderRadius: "9999px",
+                      backgroundColor: isActive ? "rgba(255, 255, 255, 0.25)" : "rgba(255, 255, 255, 0.35)",
+                    }}
+                    title={`Specification ${idx + 1}: ${slide.title}`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        key={`${currentSlideIndex}-${isSlidePaused}`}
+                        initial={{ width: "0%" }}
+                        animate={{ width: isSlidePaused ? undefined : "100%" }}
+                        transition={{ duration: 3, ease: "linear" }}
+                        style={{
+                          height: "100%",
+                          backgroundColor: slide.accentColor,
+                          boxShadow: `0 0 10px ${slide.accentColor}`,
+                        }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
