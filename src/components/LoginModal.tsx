@@ -87,7 +87,7 @@ export const PRODUCT_SPEC_SLIDES: ProductSpecSlide[] = [
       { label: "RBAC Security", value: "4-Tier Hierarchy (Root, Admin, Faculty)" },
       { label: "Lead Balancing", value: "Automated Departmental Allocation" },
     ],
-    imageUrl: "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1600&q=85",
+    imageUrl: "/carousel/campus_3d.jpg",
   },
   {
     id: "spec-quota-engine",
@@ -105,7 +105,7 @@ export const PRODUCT_SPEC_SLIDES: ProductSpecSlide[] = [
       { label: "Dynamic UPI QR", value: "₹500 / Lead Direct Payment Ledger" },
       { label: "Batch CSV Engine", value: "10,000+ Records Ingested / Minute" },
     ],
-    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&q=85",
+    imageUrl: "/carousel/ledger_3d.jpg",
   },
   {
     id: "spec-nora-ai",
@@ -123,7 +123,7 @@ export const PRODUCT_SPEC_SLIDES: ProductSpecSlide[] = [
       { label: "Vision AI OCR", value: "Instant Marksheet & Document Parsing" },
       { label: "Conversion AI", value: "Automated Candidate Scoring & Propensity" },
     ],
-    imageUrl: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1600&q=85",
+    imageUrl: "/carousel/nora_ai_3d.jpg",
   },
   {
     id: "spec-omnichannel",
@@ -141,7 +141,7 @@ export const PRODUCT_SPEC_SLIDES: ProductSpecSlide[] = [
       { label: "Broadcast Hub", value: "WhatsApp Business API & SMS Gateway" },
       { label: "Field Ingestion", value: "Project Expo On-Spot Applicant Sync" },
     ],
-    imageUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1600&q=85",
+    imageUrl: "/carousel/telephony_3d.jpg",
   },
   {
     id: "spec-killswitch-security",
@@ -159,7 +159,7 @@ export const PRODUCT_SPEC_SLIDES: ProductSpecSlide[] = [
       { label: "Universal Freeze", value: "Global Web & Mobile Instant Kill-Switch" },
       { label: "Cross-Platform", value: "Next.js 14 SSR/CSR + Native Capacitor APK" },
     ],
-    imageUrl: "https://assets.watermelon.sh/auth-11.avif",
+    imageUrl: "/carousel/security_3d.jpg",
   },
 ];
 
@@ -552,6 +552,14 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             minHeight: "calc(100vh - 32px)",
           }}
         >
+          {/* Dynamic Holographic Cyber Aura Layer matching Active Slide Accent */}
+          <div
+            className="absolute inset-0 pointer-events-none transition-all duration-1000"
+            style={{
+              background: `radial-gradient(circle at 50% 30%, ${PRODUCT_SPEC_SLIDES[currentSlideIndex].accentColor}25 0%, transparent 65%)`,
+            }}
+          />
+
           {/* Background Images with Smooth Cross-Fade Transitions */}
           {PRODUCT_SPEC_SLIDES.map((slide, idx) => {
             const isActive = idx === currentSlideIndex;
@@ -575,6 +583,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               </div>
             );
           })}
+
+          {/* Futuristic Cyber Scanline & Grid Micro-Texture Overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-30 mix-blend-overlay"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+            }}
+          />
 
           {/* Deep Dark Gradient Overlay for Maximum High-Contrast Readability */}
           <div
