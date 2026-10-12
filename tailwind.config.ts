@@ -10,8 +10,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-poppins)", "Poppins", "system-ui", "sans-serif"],
-        poppins: ["var(--font-poppins)", "Poppins", "sans-serif"],
+        sans: ["var(--font-commissioner)", "Commissioner", "system-ui", "sans-serif"],
+        commissioner: ["var(--font-commissioner)", "Commissioner", "sans-serif"],
+        poppins: ["var(--font-commissioner)", "Commissioner", "sans-serif"],
       },
       colors: {
         background: "hsl(var(--background))",

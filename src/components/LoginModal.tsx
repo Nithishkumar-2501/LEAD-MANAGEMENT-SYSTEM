@@ -532,7 +532,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       style={{
         backgroundColor: "#050505",
         color: "#ffffff",
-        fontFamily: "'Poppins', sans-serif",
+        fontFamily: "'Commissioner', sans-serif",
       }}
     >
       {/* Left Image Panel with Auto-Sliding Product Specifications Carousel (3s Auto-Slide) */}

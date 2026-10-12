@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Commissioner:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,7 +16,7 @@
   }
 
   *, ::before, ::after, body, html, table, td, th, span, div, p, h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', var(--font-poppins), system-ui, -apple-system, sans-serif !important;
+    font-family: 'Commissioner', var(--font-commissioner), system-ui, -apple-system, sans-serif !important;
     -webkit-user-select: none !important;
     -moz-user-select: none !important;
     -ms-user-select: none !important;
@@ -48,7 +50,7 @@ body {
                     radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.5) 0px, transparent 50%);
   background-attachment: fixed;
   color: #f1f5f9;
-  font-family: 'Poppins', var(--font-poppins), system-ui, -apple-system, sans-serif !important;
+  font-family: 'Commissioner', var(--font-commissioner), system-ui, -apple-system, sans-serif !important;
   -webkit-font-smoothing: antialiased;
 }
 
