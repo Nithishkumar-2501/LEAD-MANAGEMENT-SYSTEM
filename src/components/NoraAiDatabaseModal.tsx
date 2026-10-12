@@ -94,6 +94,18 @@ export default function NoraAiDatabaseModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialQuery]);
 
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSendMessage = (textToSend?: string) => {
@@ -154,7 +166,11 @@ export default function NoraAiDatabaseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
+    <div
+      id="nora-ai-modal"
+      data-nora-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
+    >
       <div className="bg-slate-50 dark:bg-slate-950 w-full max-w-3xl rounded-2xl border border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[660px] max-h-[90vh] animate-in zoom-in-95 duration-200">
         {/* NORA AI Top Bar */}
         <div className="px-4 py-3 sm:px-5 sm:py-3.5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm shrink-0">
@@ -173,6 +189,9 @@ export default function NoraAiDatabaseModal({
                   <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-pulse" />
                   NORA AI Database Assistant
                 </h2>
+                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-xs" title="Shortcut: Ctrl + A">
+                  Ctrl+A
+                </kbd>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                   Live DB Active
                 </span>
@@ -195,7 +214,7 @@ export default function NoraAiDatabaseModal({
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
-              title="Close Nora AI"
+              title="Close Nora AI (Esc)"
             >
               <X className="w-5 h-5" />
             </button>
@@ -557,7 +576,7 @@ export default function NoraAiDatabaseModal({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Ask Nora: mobile number, district, ads, whatsapp, facebook, X, cutoff, admitted..."
+              placeholder="Ask Nora (Shortcut: Ctrl+A): mobile number, district, ads, whatsapp, cutoff..."
               className="flex-1 px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-inner"
             />
             <button

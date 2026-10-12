@@ -357,7 +357,7 @@ export default function Header({
             type="button"
             onClick={() => onOpenNoraAi?.()}
             className="press-spring flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs transition-all duration-150 cursor-pointer shrink-0"
-            title="Ask Nora AI to analyze the live student database"
+            title="Ask Nora AI to analyze the live student database (Shortcut: Ctrl + A)"
           >
             <img
               src="/nora-logo.png"
@@ -365,6 +365,9 @@ export default function Header({
               className="w-4 h-4 rounded-full object-cover shrink-0"
             />
             <span className="text-xs whitespace-nowrap">Ask Nora AI</span>
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
+              Ctrl+A
+            </kbd>
           </button>
 
           {/* Header Leads Counter: Assigned Contacts for TEACHER, Live DB Quota for ADMIN */}

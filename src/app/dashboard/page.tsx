@@ -198,6 +198,36 @@ export default function DashboardPage() {
   const [isNoraModalOpen, setIsNoraModalOpen] = useState(false);
   const [noraInitialQuery, setNoraInitialQuery] = useState("");
 
+  // Global Keyboard Shortcut: Ctrl + A (or Cmd + A on Mac) to open NORA AI Chatbot
+  useEffect(() => {
+    const handleGlobalShortcuts = (e: KeyboardEvent) => {
+      // Intercept Ctrl+A / Cmd+A
+      if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A" || e.code === "KeyA")) {
+        const activeEl = document.activeElement as HTMLElement | null;
+
+        // If user is currently typing/editing inside Nora AI modal's input or textarea, allow native select-all
+        const isInsideNoraInput = Boolean(
+          activeEl?.closest("#nora-ai-modal") &&
+          (activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA" || activeEl?.getAttribute("contenteditable") === "true")
+        );
+        if (isInsideNoraInput) {
+          return;
+        }
+
+        // Prevent default browser behavior (selecting all text across the entire page)
+        e.preventDefault();
+
+        // Open NORA AI Chatbot
+        setIsNoraModalOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalShortcuts, { capture: true });
+    return () => {
+      window.removeEventListener("keydown", handleGlobalShortcuts, { capture: true });
+    };
+  }, []);
+
   // Lead Quota (1,00,000 limit) Overage Authorization Modal State
   const [quotaOverageModal, setQuotaOverageModal] = useState<{
     isOpen: boolean;
