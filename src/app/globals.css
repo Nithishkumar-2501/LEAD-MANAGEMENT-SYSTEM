@@ -23,12 +23,41 @@
     user-select: none !important;
   }
 
-  input, select, textarea, button, [contenteditable="true"] {
+  /* All Form Inputs, Selects, and Textareas set to 17px */
+  input, select, textarea {
+    font-size: 17px !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+  }
+
+  input[type="checkbox"], input[type="radio"], input[type="range"], input[type="color"] {
+    font-size: inherit !important;
+  }
+
+  button, [contenteditable="true"] {
     font-size: inherit;
     -webkit-user-select: text !important;
     -moz-user-select: text !important;
     -ms-user-select: text !important;
     user-select: text !important;
+  }
+
+  /* Candidate & Header Search Bar Input set to 15px */
+  .search__input,
+  #header-candidate-search,
+  #mobile-candidate-search,
+  input.search__input,
+  input[id*="search" i] {
+    font-size: 15px !important;
+  }
+
+  .search__input::placeholder,
+  .search__input::-webkit-input-placeholder,
+  #header-candidate-search::placeholder,
+  #mobile-candidate-search::placeholder {
+    font-size: 15px !important;
   }
 }
 
@@ -758,13 +787,13 @@ html.dark button[type="submit"] {
 
 .search__input {
   font-family: inherit;
-  font-size: 13px;
+  font-size: 15px !important;
   border: 1px solid #767676;
   color: #334155;
   background-color: #fff;
   padding: 6px 52px 6px 12px;
   border-radius: 4px;
-  height: 32px;
+  height: 36px;
   width: 100%;
   transition: all 0.2s ease-in-out;
 }
@@ -772,13 +801,13 @@ html.dark button[type="submit"] {
 .search__input::-webkit-input-placeholder {
   font-weight: 400;
   color: #767676;
-  font-size: 13px;
+  font-size: 15px !important;
 }
 
 .search__input::placeholder {
   font-weight: 400;
   color: #767676;
-  font-size: 13px;
+  font-size: 15px !important;
 }
 
 .search input:focus,
