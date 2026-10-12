@@ -198,10 +198,12 @@ export default function DashboardPage() {
   const [isNoraModalOpen, setIsNoraModalOpen] = useState(false);
   const [noraInitialQuery, setNoraInitialQuery] = useState("");
 
-  // Global Keyboard Shortcut: Ctrl + A (or Cmd + A on Mac) to open NORA AI Chatbot
+  // Global Keyboard Shortcuts:
+  // 1. Ctrl + A (or Cmd + A on Mac) to open NORA AI Chatbot
+  // 2. Ctrl + Z (or Cmd + Z on Mac) to focus candidate Search Bar
   useEffect(() => {
     const handleGlobalShortcuts = (e: KeyboardEvent) => {
-      // Intercept Ctrl+A / Cmd+A
+      // 1. Intercept Ctrl+A / Cmd+A -> Open NORA AI Chatbot
       if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A" || e.code === "KeyA")) {
         const activeEl = document.activeElement as HTMLElement | null;
 
@@ -219,6 +221,63 @@ export default function DashboardPage() {
 
         // Open NORA AI Chatbot
         setIsNoraModalOpen(true);
+        return;
+      }
+
+      // 2. Intercept Ctrl+Z / Cmd+Z -> Focus candidate Search Bar
+      if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z" || e.code === "KeyZ") && !e.shiftKey) {
+        const activeEl = document.activeElement as HTMLElement | null;
+
+        // If user is ALREADY inside the candidate search bar, preserve native undo
+        if (activeEl?.id === "header-candidate-search" || activeEl?.id === "mobile-candidate-search") {
+          return;
+        }
+
+        // If user is actively typing inside a multi-line textarea or contenteditable element, preserve native undo
+        if (activeEl?.tagName === "TEXTAREA" || activeEl?.getAttribute("contenteditable") === "true") {
+          return;
+        }
+
+        // Prevent default browser undo
+        e.preventDefault();
+
+        // Locate and focus the candidate search bar
+        let searchInput = document.getElementById("header-candidate-search") as HTMLInputElement | null;
+
+        // If desktop search input is hidden (e.g. mobile screen layout), check mobile search bar
+        if (!searchInput || searchInput.offsetParent === null) {
+          const mobileInput = document.getElementById("mobile-candidate-search") as HTMLInputElement | null;
+          if (mobileInput && mobileInput.offsetParent !== null) {
+            searchInput = mobileInput;
+          } else {
+            // Trigger mobile search toggle button if present
+            const mobileSearchToggle = document.querySelector('button[aria-label="Search"]') as HTMLButtonElement | null;
+            if (mobileSearchToggle) {
+              mobileSearchToggle.click();
+              setTimeout(() => {
+                const mInput = document.getElementById("mobile-candidate-search") as HTMLInputElement | null;
+                if (mInput) {
+                  mInput.focus();
+                  mInput.select();
+                }
+              }, 120);
+              return;
+            }
+          }
+        }
+
+        // Fallback: any visible search input
+        if (!searchInput || searchInput.offsetParent === null) {
+          searchInput = (document.querySelector('input#header-candidate-search') ||
+                         document.querySelector('input.search__input') ||
+                         document.querySelector('input[placeholder*="Search" i]')) as HTMLInputElement | null;
+        }
+
+        if (searchInput) {
+          searchInput.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          searchInput.focus();
+          searchInput.select();
+        }
       }
     };
 

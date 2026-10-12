@@ -281,7 +281,7 @@ export default function Header({
               }}
               onFocus={() => setShowSearchResults(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search candidate applications..."
+              placeholder="Search candidate applications... (Ctrl+Z)"
               onClear={() => {
                 onSearchChange("");
                 setShowSearchResults(false);
@@ -431,7 +431,7 @@ export default function Header({
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
             className="press-spring lg:hidden p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex items-center justify-center cursor-pointer"
             aria-label="Search"
-            title="Search Candidate Applications"
+            title="Search Candidate Applications (Shortcut: Ctrl + Z)"
           >
             <Search className="w-4 h-4" />
           </button>
@@ -485,7 +485,7 @@ export default function Header({
             }}
             onFocus={() => setShowSearchResults(true)}
             onKeyDown={handleKeyDown}
-            placeholder="Search candidate applications..."
+            placeholder="Search candidate applications... (Ctrl+Z)"
             autoFocus
             onClear={() => {
               onSearchChange("");

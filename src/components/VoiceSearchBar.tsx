@@ -214,12 +214,21 @@ export default function VoiceSearchBar({
             </button>
           )}
 
+          {!value && !isListening && (
+            <kbd
+              className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 rounded select-none pointer-events-none"
+              title="Shortcut: Ctrl + Z"
+            >
+              Ctrl+Z
+            </kbd>
+          )}
+
           <button
             type="button"
             className="search__button"
             onClick={() => inputRef.current?.focus()}
             aria-label="Search"
-            title="Search"
+            title="Search candidate applications (Shortcut: Ctrl + Z)"
           >
             <svg
               viewBox="0 0 16 16"
