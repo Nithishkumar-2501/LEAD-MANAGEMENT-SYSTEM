@@ -172,9 +172,10 @@ export default function ApplicantDetailModal({
 
   useEffect(() => {
     if (applicant) {
+      setFormData(applicant);
       setCurrentStageKey(getStageKeyForLead(applicant));
     }
-  }, [applicant?.id, applicant?.status, applicant?.application?.stage, applicant?.application?.paymentStatus]);
+  }, [applicant]);
 
   const [editSectionTab, setEditSectionTab] = useState<"PERSONAL" | "ACADEMIC" | "ADMISSION">("PERSONAL");
   const [isSavingFirebase, setIsSavingFirebase] = useState(false);

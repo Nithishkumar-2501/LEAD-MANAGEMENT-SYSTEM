@@ -531,7 +531,7 @@ export default function CreatorControlModule({
 
     const updated = registerNewCollegeClient({
       id: `COLLEGE_${newCollegeData.shortCode.toUpperCase()}`,
-      campus: newCollegeData.campus.toUpperCase() || newCollegeData.shortCode.toUpperCase(),
+      campus: (newCollegeData.campus || newCollegeData.shortCode).toUpperCase(),
       collegeName: newCollegeData.collegeName,
       shortCode: newCollegeData.shortCode.toUpperCase(),
       location: newCollegeData.location || "Tamil Nadu, India",
