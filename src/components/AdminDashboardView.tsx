@@ -252,24 +252,24 @@ export default function AdminDashboardView({
   return (
     <div className="space-y-6 w-full max-w-full min-w-0 animate-fadeIn">
       {/* 1. TOP EXECUTIVE HEADER BANNER */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 shadow-sm backdrop-blur-md transition-all duration-300">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 sm:p-6 shadow-sm backdrop-blur-md transition-all duration-300">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 via-indigo-500 to-purple-500" />
         
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25 ring-2 ring-white/20">
-              <ShieldCheck className="size-6" />
+          <div className="flex items-center gap-4">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25 ring-2 ring-white/20">
+              <ShieldCheck className="size-7" />
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-[28px] sm:text-[30px] font-black tracking-tight text-slate-900 dark:text-white leading-tight">
                   Admin Executive Control Dashboard
                 </h1>
-                <span className="rounded-full bg-emerald-100 dark:bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 uppercase tracking-wider">
+                <span className="rounded-full bg-emerald-100 dark:bg-emerald-500/20 px-3 py-1 text-[12px] font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 uppercase tracking-wider">
                   System Admin
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-[14px] sm:text-[15px] text-slate-600 dark:text-slate-400 mt-1 font-medium">
                 {greeting} &bull; Real-time institutional oversight across Karur & Coimbatore campuses
               </p>
             </div>
@@ -277,8 +277,8 @@ export default function AdminDashboardView({
 
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Active Scope Pill */}
-            <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-amber-300 shadow-xs">
-              <MapPin className="size-3.5 text-pink-500 animate-bounce" />
+            <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-slate-800/80 px-4 py-2.5 text-[13px] sm:text-[14px] font-bold text-slate-800 dark:text-amber-300 shadow-xs">
+              <MapPin className="size-4 text-pink-500 animate-bounce" />
               <span>Scope: {selectedCampus} CAMPUS</span>
             </div>
 
@@ -287,20 +287,20 @@ export default function AdminDashboardView({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shadow-xs"
+                  className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-slate-800/80 px-4 py-2.5 text-[13px] sm:text-[14px] font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shadow-xs"
                 >
-                  <Calendar className="size-3.5 text-sky-500" />
+                  <Calendar className="size-4 text-sky-500" />
                   <span>{timelineLabelMap[timeline]}</span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 p-1">
+              <DropdownMenuContent align="end" className="w-44 p-1.5">
                 {(["7d", "30d", "90d", "1y"] as const).map((t) => (
                   <DropdownMenuItem
                     key={t}
                     onClick={() => setTimeline(t)}
                     className={cn(
-                      "cursor-pointer rounded-lg text-xs font-semibold px-2.5 py-1.5",
-                      timeline === t && "bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300"
+                      "cursor-pointer rounded-lg text-[13px] font-semibold px-3 py-2",
+                      timeline === t && "bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 font-bold"
                     )}
                   >
                     {timelineLabelMap[t]}
@@ -313,17 +313,17 @@ export default function AdminDashboardView({
             <button
               type="button"
               onClick={onOpenCreateModal}
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2.5 text-[14px] font-bold text-white shadow-sm hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
             >
-              <PlusCircle className="size-3.5" />
+              <PlusCircle className="size-4" />
               <span>New Applicant</span>
             </button>
             <button
               type="button"
               onClick={onOpenQuickLeadModal}
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2.5 text-[14px] font-bold text-white shadow-sm hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
             >
-              <Zap className="size-3.5" />
+              <Zap className="size-4" />
               <span>Quick Lead</span>
             </button>
           </div>
@@ -331,17 +331,17 @@ export default function AdminDashboardView({
       </div>
 
       {/* 2. OVERALL ADMISSION VELOCITY & SCORE DONUT */}
-      <section className="flex flex-col sm:flex-row items-center justify-between gap-6 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 shadow-sm backdrop-blur-md">
+      <section className="flex flex-col sm:flex-row items-center justify-between gap-6 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 sm:p-6 shadow-sm backdrop-blur-md">
         <div className="flex flex-col gap-2 max-w-xl">
-          <div className="flex items-center gap-2.5">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+          <div className="flex items-center gap-3">
+            <h2 className="text-[22px] sm:text-[24px] font-bold tracking-tight text-slate-900 dark:text-white">
               Overall Admission Intake Velocity
             </h2>
-            <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[13px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               Optimal Intake Pace
             </span>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-[14px] sm:text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
             Central Admissions is tracking at{" "}
             <span className="font-bold text-slate-900 dark:text-white">
               +18.4% above last year&apos;s intake volume
@@ -350,7 +350,7 @@ export default function AdminDashboardView({
           </p>
         </div>
 
-        <div className="relative size-28 shrink-0 flex items-center justify-center">
+        <div className="relative size-32 shrink-0 flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -387,8 +387,8 @@ export default function AdminDashboardView({
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Target Fill</span>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{admissionVelocityScore}%</span>
+            <span className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Target Fill</span>
+            <span className="text-[26px] sm:text-[28px] font-black tracking-tight text-slate-900 dark:text-white">{admissionVelocityScore}%</span>
           </div>
         </div>
       </section>
@@ -441,32 +441,32 @@ export default function AdminDashboardView({
           return (
             <div
               key={idx}
-              className="relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-4 shadow-sm backdrop-blur-md transition-all hover:shadow-md hover:-translate-y-0.5"
+              className="relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 shadow-sm backdrop-blur-md transition-all hover:shadow-md hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  <p className="text-[13.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     {card.title}
                   </p>
-                  <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  <h3 className="text-[30px] sm:text-[32px] font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                     {card.value}
                   </h3>
                 </div>
-                <div className={cn("size-10 rounded-xl flex items-center justify-center text-white shadow-sm", card.iconBg)}>
-                  <Icon className="size-5" />
+                <div className={cn("size-11 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0", card.iconBg)}>
+                  <Icon className="size-5.5" />
                 </div>
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
-                    <TrendingUp className="size-3" />
+                  <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-[13.5px] font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
+                    <TrendingUp className="size-3.5" />
                     <span>{card.trend}</span>
-                    <span className="text-slate-500 dark:text-slate-400 font-normal">{card.subtitle}</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-medium ml-1">{card.subtitle}</span>
                   </div>
-                  <ArrowUpRight className="size-4 text-sky-500" />
+                  <ArrowUpRight className="size-4.5 text-sky-500" />
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div
                     className={cn("h-full rounded-full bg-gradient-to-r", card.color)}
                     style={{ width: `${card.progress}%` }}
@@ -488,13 +488,13 @@ export default function AdminDashboardView({
                 <BarChart3 className="size-4.5" />
               </span>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-[17px] sm:text-[18px] font-bold text-slate-900 dark:text-white">
                   TNEA Cutoff Distribution Breakdown
                 </h3>
-                <p className="text-[11px] text-slate-500">Applicant qualification and scholarship tier mapping</p>
+                <p className="text-[13px] text-slate-500 font-medium mt-0.5">Applicant qualification and scholarship tier mapping</p>
               </div>
             </div>
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
+            <span className="text-[13px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full">
               {applicants.length} Registered Applicants
             </span>
           </div>
@@ -503,22 +503,22 @@ export default function AdminDashboardView({
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={cutoffBrackets} margin={{ top: 8, right: 8, left: -20, bottom: 8 }} barCategoryGap="20%">
                 <CartesianGrid vertical={false} stroke="rgba(148, 163, 184, 0.15)" strokeDasharray="3 3" />
-                <XAxis dataKey="shortLabel" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={36} />
+                <XAxis dataKey="shortLabel" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={36} />
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
                     const item = payload[0]?.payload;
                     return (
-                      <div className="rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs text-white shadow-lg">
-                        <p className="font-bold text-sky-400">{item.label}</p>
-                        <p className="mt-1 font-extrabold text-white text-sm">{item.count} Candidates</p>
-                        <p className="text-[11px] text-emerald-400 mt-0.5">{item.description}</p>
+                      <div className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-xs text-white shadow-lg">
+                        <p className="font-bold text-sky-400 text-[13px]">{item.label}</p>
+                        <p className="mt-1 font-extrabold text-white text-[15px]">{item.count} Candidates</p>
+                        <p className="text-[12px] text-emerald-400 mt-0.5">{item.description}</p>
                       </div>
                     );
                   }}
                 />
-                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                   {cutoffBrackets.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -527,33 +527,33 @@ export default function AdminDashboardView({
             </ResponsiveContainer>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-slate-100 dark:border-white/5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-slate-100 dark:border-white/5">
             {cutoffBrackets.map((item, idx) => (
-              <div key={idx} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center">
-                <span className="text-[10px] text-slate-500 block truncate">{item.label}</span>
-                <span className="text-sm font-black text-slate-900 dark:text-white">{item.count}</span>
+              <div key={idx} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center">
+                <span className="text-[12px] text-slate-500 font-medium block truncate">{item.label}</span>
+                <span className="text-[16px] font-black text-slate-900 dark:text-white mt-0.5 block">{item.count}</span>
               </div>
             ))}
           </div>
         </article>
 
         {/* Lead Inflow & Counseling Velocity Area Chart */}
-        <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 shadow-sm backdrop-blur-md">
+        <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 sm:p-6 shadow-sm backdrop-blur-md">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-white/5 pb-3">
             <div className="flex items-center gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-xs">
-                <Activity className="size-4.5" />
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-xs">
+                <Activity className="size-5" />
               </span>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-[17px] sm:text-[18px] font-bold text-slate-900 dark:text-white">
                   Lead Inflow & Counseling Activity Trend
                 </h3>
-                <p className="text-[11px] text-slate-500">Daily intake velocity vs. counselor call connects</p>
+                <p className="text-[13px] text-slate-500 font-medium mt-0.5">Daily intake velocity vs. counselor call connects</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-cyan-400" /> TNEA Inflow</span>
-              <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-purple-500" /> Counselor Calls</span>
+            <div className="flex items-center gap-3.5 text-[13px] font-semibold text-slate-600 dark:text-slate-400">
+              <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-cyan-400" /> TNEA Inflow</span>
+              <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-purple-500" /> Counselor Calls</span>
             </div>
           </div>
 
@@ -571,17 +571,17 @@ export default function AdminDashboardView({
                   </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} stroke="rgba(148, 163, 184, 0.15)" strokeDasharray="3 3" />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={36} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={36} />
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
                     const p = payload[0]?.payload;
                     return (
-                      <div className="rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs text-white shadow-lg">
-                        <p className="font-bold text-slate-400">{p.day} Activity</p>
-                        <p className="text-cyan-300 font-bold mt-1">TNEA Leads Inflow: {p.leads}</p>
-                        <p className="text-purple-300 font-bold">Counselor Calls: {p.calls}</p>
+                      <div className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-xs text-white shadow-lg">
+                        <p className="font-bold text-slate-400 text-[13px]">{p.day} Activity</p>
+                        <p className="text-cyan-300 font-bold mt-1 text-[13.5px]">TNEA Leads Inflow: {p.leads}</p>
+                        <p className="text-purple-300 font-bold text-[13.5px]">Counselor Calls: {p.calls}</p>
                       </div>
                     );
                   }}
@@ -592,9 +592,9 @@ export default function AdminDashboardView({
             </ResponsiveContainer>
           </div>
 
-          <div className="flex items-center justify-between text-xs pt-3 border-t border-slate-100 dark:border-white/5 text-slate-500">
+          <div className="flex items-center justify-between text-[13px] pt-3 border-t border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-medium">
             <span>Weekly Outreach Velocity</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400">92.4% Call Completion</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[13.5px]">92.4% Call Completion</span>
           </div>
         </article>
       </section>
@@ -602,131 +602,131 @@ export default function AdminDashboardView({
       {/* 5. 3-COLUMN AI & INSTITUTIONAL INSIGHTS */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Column 1: AI Admission Forecast */}
-        <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-500 text-white shadow-xs">
-                <Sparkles className="size-4" />
+        <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 sm:p-6 shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-500 text-white shadow-xs">
+                <Sparkles className="size-4.5" />
               </span>
-              <h3 className="font-bold text-slate-900 dark:text-white text-xs">AI Admission Prediction</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-[15px] sm:text-[16px]">AI Admission Prediction</h3>
             </div>
-            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
+            <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-full">
               7d Outlook
             </span>
           </div>
 
-          <div className="space-y-2">
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
+          <div className="space-y-2.5">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
               <p className="font-bold text-emerald-600 dark:text-emerald-400">CSE &amp; AI/DS Quota: 94% Filled</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Projected full allotment within 6 days.</p>
+              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">Projected full allotment within 6 days.</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
               <p className="font-bold text-amber-600 dark:text-amber-400">6 Merit Leads (190+) Awaiting Call</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">High probability of enrollment if engaged today.</p>
+              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">High probability of enrollment if engaged today.</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
               <p className="font-bold text-sky-600 dark:text-sky-400">Regional Inflow Up +22%</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Coimbatore and Tirupur inquiries surge.</p>
+              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">Coimbatore and Tirupur inquiries surge.</p>
             </div>
           </div>
         </article>
 
         {/* Column 2: Campus Vitals */}
-        <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-lg bg-rose-500 text-white shadow-xs">
-                <HeartHandshake className="size-4" />
+        <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 sm:p-6 shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-rose-500 text-white shadow-xs">
+                <HeartHandshake className="size-4.5" />
               </span>
-              <h3 className="font-bold text-slate-900 dark:text-white text-xs">Campus Vitals</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-[15px] sm:text-[16px]">Campus Vitals</h3>
             </div>
-            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
+            <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full">
               All Stable
             </span>
           </div>
 
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-slate-600 dark:text-slate-300">Karur Campus Seat Fill</span>
-              <span className="font-bold text-slate-900 dark:text-white">84.2%</span>
+          <div className="space-y-2.5 text-[13.5px]">
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Karur Campus Seat Fill</span>
+              <span className="font-bold text-slate-900 dark:text-white text-[14px]">84.2%</span>
             </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-slate-600 dark:text-slate-300">Coimbatore Campus Seat Fill</span>
-              <span className="font-bold text-slate-900 dark:text-white">78.5%</span>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Coimbatore Campus Seat Fill</span>
+              <span className="font-bold text-slate-900 dark:text-white text-[14px]">78.5%</span>
             </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-slate-600 dark:text-slate-300">Marksheet OCR Audit</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">&lt; 1.2s</span>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Marksheet OCR Audit</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">&lt; 1.2s</span>
             </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-slate-600 dark:text-slate-300">Counselor Connect Ratio</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">92.4%</span>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Counselor Connect Ratio</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">92.4%</span>
             </div>
           </div>
         </article>
 
         {/* Column 3: Recommended Actions */}
-        <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-lg bg-teal-500 text-white shadow-xs">
-                <CheckCircle2 className="size-4" />
+        <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 sm:p-6 shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-teal-500 text-white shadow-xs">
+                <CheckCircle2 className="size-4.5" />
               </span>
-              <h3 className="font-bold text-slate-900 dark:text-white text-xs">Recommended Actions</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-[15px] sm:text-[16px]">Recommended Actions</h3>
             </div>
-            <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-full">
+            <span className="text-[12px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-1 rounded-full">
               3 Pending
             </span>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <button
               type="button"
               onClick={() => onActionTrigger("CALL", "Merit Waiver Candidate")}
-              className="w-full text-left p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors text-xs cursor-pointer border border-transparent hover:border-teal-300 dark:hover:border-teal-700"
+              className="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors text-[13.5px] cursor-pointer border border-transparent hover:border-teal-300 dark:hover:border-teal-700"
             >
               <p className="font-bold text-slate-900 dark:text-white flex items-center justify-between">
                 <span>Telecall 190+ Cutoff Leads</span>
-                <PhoneCall className="size-3 text-teal-500" />
+                <PhoneCall className="size-3.5 text-teal-500" />
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Secure Anna University scholarship confirmation.</p>
+              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">Secure Anna University scholarship confirmation.</p>
             </button>
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
               <p className="font-bold text-slate-900 dark:text-white">Audit 4 Pending Marksheets</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Normalization check ready for review.</p>
+              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">Normalization check ready for review.</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
               <p className="font-bold text-slate-900 dark:text-white">Dispatch Tuition Fee Reminders</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">5 admitted students pending payment lock.</p>
+              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">5 admitted students pending payment lock.</p>
             </div>
           </div>
         </article>
       </section>
 
       {/* 6. VSB TNEA LEAD CONVERSION FUNNEL (Row 3 from Image 2) */}
-      <section className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 shadow-sm backdrop-blur-md space-y-4">
+      <section className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 p-5 sm:p-6 shadow-sm backdrop-blur-md space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/5 pb-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-xs">
-              <Clock className="size-4.5" />
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-xs">
+              <Clock className="size-5" />
             </span>
             <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              <h3 className="text-[22px] sm:text-[24px] font-bold text-slate-900 dark:text-white">
                 VSB TNEA Lead Conversion Funnel
               </h3>
-              <p className="text-[11px] text-slate-500">Filter stage options and view candidates one by one</p>
+              <p className="text-[13px] text-slate-500 font-medium mt-0.5">Filter stage options and view candidates one by one</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => setFunnelViewMode("SINGLE")}
               className={cn(
-                "px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer",
+                "px-3.5 py-2 rounded-xl text-[13px] sm:text-[14px] font-bold transition-colors cursor-pointer",
                 funnelViewMode === "SINGLE"
                   ? "bg-sky-600 text-white"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               )}
             >
               One by One View
@@ -735,15 +735,15 @@ export default function AdminDashboardView({
               type="button"
               onClick={() => setFunnelViewMode("GRID")}
               className={cn(
-                "px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer",
+                "px-3.5 py-2 rounded-xl text-[13px] sm:text-[14px] font-bold transition-colors cursor-pointer",
                 funnelViewMode === "GRID"
                   ? "bg-sky-600 text-white"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               )}
             >
               Show All Grid
             </button>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1.5 rounded-xl">
+            <span className="text-[13px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-3 py-2 rounded-xl">
               Total Pipeline: {totalLeads}
             </span>
           </div>
@@ -755,7 +755,7 @@ export default function AdminDashboardView({
             type="button"
             onClick={() => onSelectStage(null)}
             className={cn(
-              "px-3 py-1 rounded-xl text-xs font-bold border transition-colors cursor-pointer",
+              "px-4 py-2 rounded-xl text-[14px] sm:text-[14.5px] font-bold border transition-colors cursor-pointer",
               selectedStageFilter === null
                 ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-xs"
                 : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300"
@@ -769,13 +769,13 @@ export default function AdminDashboardView({
               type="button"
               onClick={() => onSelectStage(stg.key)}
               className={cn(
-                "px-3 py-1 rounded-xl text-xs font-bold border transition-colors cursor-pointer flex items-center gap-1.5",
+                "px-4 py-2 rounded-xl text-[14px] sm:text-[14.5px] font-bold border transition-colors cursor-pointer flex items-center gap-2",
                 selectedStageFilter === stg.key
                   ? "bg-sky-600 text-white border-sky-600 shadow-xs"
                   : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               )}
             >
-              <span className={cn("size-2 rounded-full", stg.color)} />
+              <span className={cn("size-2.5 rounded-full", stg.color)} />
               <span>{stg.label} ({stg.count})</span>
             </button>
           ))}
@@ -783,7 +783,7 @@ export default function AdminDashboardView({
             <button
               type="button"
               onClick={() => onSelectStage(null)}
-              className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white ml-1 cursor-pointer"
+              className="text-[13px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white ml-1 cursor-pointer"
             >
               &times; Reset Filter
             </button>
@@ -803,41 +803,41 @@ export default function AdminDashboardView({
 
         {/* Detailed Stage View (Single or Grid) */}
         {funnelViewMode === "SINGLE" ? (
-          <div className="p-4 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <div className="p-5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-slate-800/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2.5">
+                <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">
                   STAGE {activeStageIndex + 1} OF {funnelStages.length}
                 </span>
-                <span className={cn("size-2 rounded-full", currentStage.color)} />
-                <h4 className="text-base font-bold text-slate-900 dark:text-white">{currentStage.label}</h4>
+                <span className={cn("size-2.5 rounded-full", currentStage.color)} />
+                <h4 className="text-[18px] sm:text-[19px] font-bold text-slate-900 dark:text-white">{currentStage.label}</h4>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 max-w-lg">{currentStage.desc}</p>
+              <p className="text-[14px] text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed">{currentStage.desc}</p>
             </div>
 
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <p className="text-[10px] text-slate-500 font-semibold uppercase">Total Stage Leads</p>
-                <p className="text-2xl font-black text-slate-900 dark:text-white">{currentStage.count}</p>
+                <p className="text-[12px] text-slate-500 font-bold uppercase tracking-wider">Total Stage Leads</p>
+                <p className="text-[28px] font-black text-slate-900 dark:text-white leading-tight">{currentStage.count}</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-slate-500 font-semibold uppercase">Funnel Share</p>
-                <p className="text-2xl font-black text-sky-600 dark:text-sky-400">{currentStage.share}%</p>
+                <p className="text-[12px] text-slate-500 font-bold uppercase tracking-wider">Funnel Share</p>
+                <p className="text-[28px] font-black text-sky-600 dark:text-sky-400 leading-tight">{currentStage.share}%</p>
               </div>
-              <div className="flex items-center gap-1.5 pl-3 border-l border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => setActiveStageIndex((prev) => (prev > 0 ? prev - 1 : funnelStages.length - 1))}
-                  className="p-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer shadow-xs"
+                  className="p-2.5 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer shadow-xs"
                 >
-                  <ChevronLeft className="size-4" />
+                  <ChevronLeft className="size-4.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveStageIndex((prev) => (prev < funnelStages.length - 1 ? prev + 1 : 0))}
-                  className="p-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer shadow-xs"
+                  className="p-2.5 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer shadow-xs"
                 >
-                  <ChevronRight className="size-4" />
+                  <ChevronRight className="size-4.5" />
                 </button>
               </div>
             </div>
@@ -852,19 +852,19 @@ export default function AdminDashboardView({
                   onSelectStage(stg.key);
                 }}
                 className={cn(
-                  "p-3 rounded-xl border transition-all cursor-pointer",
+                  "p-3.5 rounded-xl border transition-all cursor-pointer",
                   selectedStageFilter === stg.key
                     ? "border-sky-500 bg-sky-50/50 dark:bg-sky-950/40 shadow-sm"
                     : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{stg.label}</span>
-                  <span className={cn("size-2 rounded-full", stg.color)} />
+                  <span className="text-[13.5px] font-bold text-slate-900 dark:text-white truncate">{stg.label}</span>
+                  <span className={cn("size-2.5 rounded-full", stg.color)} />
                 </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="text-lg font-black text-slate-900 dark:text-white">{stg.count}</span>
-                  <span className="text-xs font-semibold text-slate-500">{stg.share}%</span>
+                <div className="mt-2.5 flex items-baseline justify-between">
+                  <span className="text-[20px] font-black text-slate-900 dark:text-white">{stg.count}</span>
+                  <span className="text-[13px] font-semibold text-slate-500">{stg.share}%</span>
                 </div>
               </div>
             ))}

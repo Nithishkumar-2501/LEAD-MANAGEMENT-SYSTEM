@@ -68,22 +68,24 @@ export default function MetricCards({ metrics }: MetricCardsProps) {
 
             <div className="flex items-start justify-between mb-4 relative z-10">
               <div>
-                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                <p className="text-[13.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   {card.title}
                 </p>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-sky-300 transition-colors">{card.value}</h3>
+                <h3 className="text-[30px] sm:text-[32px] font-black text-slate-900 dark:text-white tracking-tight leading-tight group-hover:text-indigo-600 dark:group-hover:text-sky-300 transition-colors">
+                  {card.value}
+                </h3>
               </div>
-              <div className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${card.sphereGlow} flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 ring-2 ring-white/30 backdrop-blur-md transform group-hover:scale-115 group-hover:rotate-6 transition-all duration-300`}>
-                <IconComponent className="w-5 h-5" />
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${card.sphereGlow} flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 ring-2 ring-white/30 backdrop-blur-md transform group-hover:scale-115 group-hover:rotate-6 transition-all duration-300 shrink-0`}>
+                <IconComponent className="w-5.5 h-5.5" />
               </div>
             </div>
 
             {/* Bubble Trend Indicator */}
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 dark:border-white/10 relative z-10">
-              <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shadow-xs">
+              <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-[13.5px] font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shadow-xs">
                 <TrendingUp className="w-3.5 h-3.5 animate-pulse" />
                 <span>{card.trend}</span>
-                <span className="text-slate-600 dark:text-slate-400 font-normal ml-1">{card.subtitle}</span>
+                <span className="text-slate-600 dark:text-slate-400 font-medium ml-1 text-[13px]">{card.subtitle}</span>
               </div>
               <div className="w-7 h-7 rounded-full bg-sky-500/10 dark:bg-sky-400/10 flex items-center justify-center group-hover:bg-sky-500/20 transition-colors">
                 <ArrowUpRight className="w-4 h-4 text-sky-600 dark:text-sky-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />

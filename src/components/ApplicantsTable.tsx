@@ -216,11 +216,11 @@ export default function ApplicantsTable({
         {/* Header Title & Top Quick Action Buttons */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-[18px] sm:text-[20px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
               <span>Recent Applicants</span>
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[13.5px] sm:text-[14px] text-slate-500 dark:text-slate-400 mt-0.5">
               TNEA & Management intake candidates at V.S.B.
             </p>
           </div>
@@ -230,9 +230,9 @@ export default function ApplicantsTable({
               <button
                 type="button"
                 onClick={onOpenQuickLeadModal}
-                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-[13.5px] sm:text-[14px] shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 text-white shrink-0" />
+                <Plus className="w-4 h-4 text-white shrink-0" />
                 <span>Add Quick Lead</span>
               </button>
             )}
@@ -240,9 +240,9 @@ export default function ApplicantsTable({
             <button
               type="button"
               onClick={onOpenCreateModal}
-              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-[13.5px] sm:text-[14px] shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 text-white shrink-0" />
+              <Plus className="w-4 h-4 text-white shrink-0" />
               <span>New Application</span>
             </button>
 
@@ -270,26 +270,26 @@ export default function ApplicantsTable({
             <button
               type="button"
               onClick={() => document.getElementById("csv-dashboard-upload")?.click()}
-              className="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 text-slate-700 dark:text-slate-200 font-bold text-[13.5px] sm:text-[14px] border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
               title="Import Student Leads from .CSV File"
             >
-              <Upload className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+              <Upload className="w-4 h-4 shrink-0 text-slate-500" />
               <span>Import CSV</span>
             </button>
             <button
               type="button"
               onClick={() => downloadSampleLeadsCSV()}
-              className="px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1 transition-all cursor-pointer"
+              className="px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 text-slate-600 dark:text-slate-300 font-bold text-[13px] border border-slate-200 dark:border-slate-700 shadow-xs flex items-center gap-1 transition-all cursor-pointer"
               title="Download Sample Student Leads CSV Template"
             >
-              <Download className="w-3.5 h-3.5 shrink-0 text-slate-500" />
-              <span className="hidden xl:inline text-[11px]">CSV Template</span>
+              <Download className="w-4 h-4 shrink-0 text-slate-500" />
+              <span className="hidden xl:inline text-[12px]">CSV Template</span>
             </button>
           </div>
         </div>
 
         {/* Stage Filter Control Pills matching Image 2 */}
-        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold overflow-x-auto hide-scrollbar max-w-full">
+        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[13px] font-semibold overflow-x-auto hide-scrollbar max-w-full">
           {stagesList.map((st) => (
             <button
               key={st}
@@ -297,7 +297,7 @@ export default function ApplicantsTable({
                 setSelectedStage(st);
                 setPageIndex(0);
               }}
-              className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 text-xs font-bold cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 text-[12.5px] sm:text-[13px] font-bold cursor-pointer ${
                 selectedStage === st
                   ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-sky-400 shadow-sm border border-slate-200/80 dark:border-slate-700"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
@@ -327,11 +327,11 @@ export default function ApplicantsTable({
                 </TableHead>
 
                 {/* Applicant Name */}
-                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
                   <button
                     type="button"
                     onClick={() => toggleSort("name")}
-                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-extrabold"
+                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-bold"
                   >
                     <span>Applicant Name</span>
                     {sortConfig.column === "name" ? (
@@ -341,17 +341,17 @@ export default function ApplicantsTable({
                         <ChevronDownIcon className="size-3.5 text-blue-600 dark:text-sky-400" />
                       )
                     ) : (
-                      <span className="text-[10px] text-slate-400 opacity-60">↑↓</span>
+                      <span className="text-[11px] text-slate-400 opacity-60">↑↓</span>
                     )}
                   </button>
                 </TableHead>
 
                 {/* Applied Program */}
-                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
                   <button
                     type="button"
                     onClick={() => toggleSort("courseInterest")}
-                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-extrabold"
+                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-bold"
                   >
                     <span>Applied Program</span>
                     {sortConfig.column === "courseInterest" ? (
@@ -361,17 +361,17 @@ export default function ApplicantsTable({
                         <ChevronDownIcon className="size-3.5 text-blue-600 dark:text-sky-400" />
                       )
                     ) : (
-                      <span className="text-[10px] text-slate-400 opacity-60">↑↓</span>
+                      <span className="text-[11px] text-slate-400 opacity-60">↑↓</span>
                     )}
                   </button>
                 </TableHead>
 
                 {/* Campus */}
-                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 hidden sm:table-cell">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 hidden sm:table-cell">
                   <button
                     type="button"
                     onClick={() => toggleSort("campus")}
-                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-extrabold"
+                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-bold"
                   >
                     <span>Campus</span>
                     {sortConfig.column === "campus" ? (
@@ -381,22 +381,22 @@ export default function ApplicantsTable({
                         <ChevronDownIcon className="size-3.5 text-blue-600 dark:text-sky-400" />
                       )
                     ) : (
-                      <span className="text-[10px] text-slate-400 opacity-60">↑↓</span>
+                      <span className="text-[11px] text-slate-400 opacity-60">↑↓</span>
                     )}
                   </button>
                 </TableHead>
 
                 {/* State & Stage */}
-                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
                   State & Stage
                 </TableHead>
 
                 {/* TNEA Cutoff & Counselling */}
-                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 hidden md:table-cell">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 hidden md:table-cell">
                   <button
                     type="button"
                     onClick={() => toggleSort("tneaCutoff")}
-                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-extrabold"
+                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-bold"
                   >
                     <span>TNEA Cutoff & Counselling</span>
                     {sortConfig.column === "tneaCutoff" ? (
@@ -406,17 +406,17 @@ export default function ApplicantsTable({
                         <ChevronDownIcon className="size-3.5 text-blue-600 dark:text-sky-400" />
                       )
                     ) : (
-                      <span className="text-[10px] text-slate-400 opacity-60">↑↓</span>
+                      <span className="text-[11px] text-slate-400 opacity-60">↑↓</span>
                     )}
                   </button>
                 </TableHead>
 
                 {/* 12th Marks */}
-                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 hidden sm:table-cell">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 hidden sm:table-cell">
                   <button
                     type="button"
                     onClick={() => toggleSort("marks12th")}
-                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-extrabold"
+                    className="flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-sky-400 transition-colors cursor-pointer select-none font-bold"
                   >
                     <span>12th Marks</span>
                     {sortConfig.column === "marks12th" ? (
@@ -426,13 +426,13 @@ export default function ApplicantsTable({
                         <ChevronDownIcon className="size-3.5 text-blue-600 dark:text-sky-400" />
                       )
                     ) : (
-                      <span className="text-[10px] text-slate-400 opacity-60">↑↓</span>
+                      <span className="text-[11px] text-slate-400 opacity-60">↑↓</span>
                     )}
                   </button>
                 </TableHead>
 
                 {/* Quick Actions */}
-                <TableHead className="h-12 text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center sticky right-0 z-20 min-w-[200px] w-52 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm border-l border-slate-200 dark:border-slate-800 shadow-[-6px_0_12px_rgba(0,0,0,0.06)] dark:shadow-[-6px_0_12px_rgba(0,0,0,0.3)]">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center sticky right-0 z-20 min-w-[200px] w-52 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm border-l border-slate-200 dark:border-slate-800 shadow-[-6px_0_12px_rgba(0,0,0,0.06)] dark:shadow-[-6px_0_12px_rgba(0,0,0,0.3)]">
                   Quick Actions
                 </TableHead>
               </TableRow>
@@ -468,20 +468,20 @@ export default function ApplicantsTable({
                       <TableCell className="py-3 px-3.5">
                         <div className="flex items-center gap-3">
                           {/* Round Avatar Initials with Subtle Color */}
-                          <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-extrabold text-xs flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800/50 shadow-xs">
+                          <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-extrabold text-[13px] flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800/50 shadow-xs">
                             {((item.name || "S").trim().slice(0, 2)).toUpperCase()}
                           </div>
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-xs">
+                              <span className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-[15px] sm:text-[15.5px]">
                                 {item.name}
                               </span>
-                              <span className="px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-[10px] font-mono font-bold">
+                              <span className="px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-[12px] font-mono font-bold">
                                 Lead #{item.id}
                               </span>
                             </div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
+                            <div className="text-[13px] text-slate-500 dark:text-slate-400 truncate max-w-[190px]">
                               {item.email}
                             </div>
                           </div>
@@ -489,13 +489,13 @@ export default function ApplicantsTable({
                       </TableCell>
 
                       {/* Applied Program */}
-                      <TableCell className="py-3 px-3.5 text-slate-800 dark:text-slate-200 font-semibold text-xs">
+                      <TableCell className="py-3 px-3.5 text-slate-800 dark:text-slate-200 font-semibold text-[14px] sm:text-[14.5px]">
                         {item.courseInterest}
                       </TableCell>
 
                       {/* Campus Badge matching Image 2 */}
                       <TableCell className="py-3 px-3.5 hidden sm:table-cell">
-                        <span className="px-2.5 py-1 rounded-lg text-[10.5px] font-bold border uppercase tracking-wider inline-block bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800/60 shadow-2xs">
+                        <span className="px-2.5 py-1 rounded-lg text-[12px] font-bold border uppercase tracking-wider inline-block bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800/60 shadow-2xs">
                           {item.campus || "KARUR"} CAMPUS
                         </span>
                       </TableCell>
@@ -504,24 +504,24 @@ export default function ApplicantsTable({
                       <TableCell className="py-3 px-3.5">
                         <div className="flex flex-col gap-1 items-start">
                           {stateInfo.state === "HOT" && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs">
-                              <Flame className="w-3 h-3 text-rose-500 animate-pulse" />
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs">
+                              <Flame className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
                               <span>HOT (Admitted)</span>
                             </span>
                           )}
                           {stateInfo.state === "WARM" && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 shadow-2xs">
-                              <Zap className="w-3 h-3 text-amber-500" />
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 shadow-2xs">
+                              <Zap className="w-3.5 h-3.5 text-amber-500" />
                               <span>WARM (Ready)</span>
                             </span>
                           )}
                           {stateInfo.state === "COLD" && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800 shadow-2xs">
-                              <Snowflake className="w-3 h-3 text-sky-500" />
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800 shadow-2xs">
+                              <Snowflake className="w-3.5 h-3.5 text-sky-500" />
                               <span>COLD (Not Interested)</span>
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100/70 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-700 uppercase shadow-2xs">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-bold bg-sky-100/70 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-700 uppercase shadow-2xs">
                             {(item.application?.stage || "INQUIRY").replace("_", " ")}
                           </span>
                         </div>
@@ -531,12 +531,12 @@ export default function ApplicantsTable({
                       <TableCell className="py-3 px-3.5 hidden md:table-cell">
                         <div className="space-y-0.5">
                           {item.tneaCutoff ? (
-                            <div className="font-bold text-sky-600 dark:text-sky-400 font-mono text-[11px]">
+                            <div className="font-bold text-sky-600 dark:text-sky-400 font-mono text-[13.5px]">
                               Cutoff: {item.tneaCutoff} / 200
                             </div>
                           ) : null}
                           {item.counsellingAppNo ? (
-                            <span className="inline-block text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
+                            <span className="inline-block text-[12px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
                               ✅ TNEA ({item.counsellingAppNo})
                             </span>
                           ) : null}
@@ -544,7 +544,7 @@ export default function ApplicantsTable({
                       </TableCell>
 
                       {/* 12th Marks */}
-                      <TableCell className="py-3 px-3.5 font-bold text-slate-800 dark:text-slate-100 hidden sm:table-cell text-sm">
+                      <TableCell className="py-3 px-3.5 font-bold text-slate-800 dark:text-slate-100 hidden sm:table-cell text-[14px]">
                         {item.application?.marks12th ? `${item.application.marks12th}%` : "—"}
                       </TableCell>
 
@@ -561,7 +561,7 @@ export default function ApplicantsTable({
                               onClick={() => onSelectApplicant(item)}
                               className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             >
-                              <Eye className="w-3.5 h-3.5" />
+                              <Eye className="w-4 h-4" />
                             </button>
                           </Tooltip>
 
@@ -576,7 +576,7 @@ export default function ApplicantsTable({
                               }}
                               className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             >
-                              <Phone className="w-3.5 h-3.5" />
+                              <Phone className="w-4 h-4" />
                             </a>
                           </Tooltip>
 
@@ -605,7 +605,7 @@ export default function ApplicantsTable({
                               }
                               className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             >
-                              <Mail className="w-3.5 h-3.5" />
+                              <Mail className="w-4 h-4" />
                             </button>
                           </Tooltip>
 
@@ -620,7 +620,7 @@ export default function ApplicantsTable({
                               }}
                               className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             >
-                              <MessageSquare className="w-3.5 h-3.5" />
+                              <MessageSquare className="w-4 h-4" />
                             </button>
                           </Tooltip>
 
@@ -638,7 +638,7 @@ export default function ApplicantsTable({
                               className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all flex items-center justify-center shadow-xs hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                               title={`Delete ${item.name}`}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </Tooltip>
                         </div>
@@ -660,7 +660,7 @@ export default function ApplicantsTable({
 
       {/* Modern Pagination Footer Bar styled after data-table-11 */}
       <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-xs max-sm:flex-col">
-        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm whitespace-nowrap flex-1" aria-live="polite">
+        <p className="text-slate-600 dark:text-slate-400 text-[13.5px] sm:text-[14px] whitespace-nowrap flex-1" aria-live="polite">
           Showing <span className="font-bold text-slate-900 dark:text-white">{sortedApplicants.length > 0 ? pageStart + 1 : 0}</span> -{" "}
           <span className="font-bold text-slate-900 dark:text-white">{pageEnd}</span> of{" "}
           <span className="font-bold text-slate-900 dark:text-white">{sortedApplicants.length}</span> Applicants
@@ -697,7 +697,7 @@ export default function ApplicantsTable({
                       size="icon"
                       variant={isActive ? "default" : "ghost"}
                       className={cn(
-                        "h-8 w-8 rounded-lg font-bold text-xs transition-all shadow-xs",
+                        "h-8 w-8 rounded-lg font-bold text-[13px] transition-all shadow-xs",
                         isActive
                           ? "bg-blue-600 hover:bg-blue-700 text-white font-extrabold ring-2 ring-blue-400/30"
                           : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
@@ -734,18 +734,18 @@ export default function ApplicantsTable({
         </div>
 
         <div className="flex flex-1 justify-end items-center gap-2">
-          <span className="text-xs text-slate-500 font-medium hidden md:inline">Per page:</span>
+          <span className="text-[13px] text-slate-500 font-medium hidden md:inline">Per page:</span>
           <Select value={pageSize.toString()} onValueChange={changePageSize}>
             <SelectTrigger
               id="results-per-page"
-              className="h-8 w-fit text-xs font-semibold whitespace-nowrap border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg px-2.5 shadow-xs"
+              className="h-8 w-fit text-[13px] font-semibold whitespace-nowrap border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg px-2.5 shadow-xs"
               aria-label="Results per page"
             >
               <SelectValue placeholder="Select number of results" />
             </SelectTrigger>
             <SelectContent>
               {[5, 10, 25, 50].map((size) => (
-                <SelectItem key={size} value={size.toString()}>
+                <SelectItem key={size} value={size.toString()} className="text-[13px]">
                   {size} / page
                 </SelectItem>
               ))}

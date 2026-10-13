@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Commissioner:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,6 +8,34 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+
+    /* SPHEREX Centralized Professional Typography Tokens */
+    --font-family-ui: "Inter", "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-body: 15px;
+    --font-label: 14px;
+    --font-control: 15px;
+    --font-table: 14.5px;
+    --font-table-header: 13.5px;
+    --font-section: 24px;
+    --font-page-title: 30px;
+    --font-metric: 32px;
+
+    --font-xs: 12px;
+    --font-sm: 13px;
+    --font-base: 15px;
+    --font-md: 16px;
+    --font-lg: 18px;
+    --font-xl: 22px;
+    --font-2xl: 28px;
+
+    --weight-normal: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --weight-extrabold: 800;
+
+    --line-height-body: 1.5;
+    --line-height-heading: 1.25;
   }
 
   .dark {
@@ -16,20 +44,26 @@
   }
 
   *, ::before, ::after, body, html, table, td, th, span, div, p, h1, h2, h3, h4, h5, h6 {
-    font-family: 'Commissioner', var(--font-commissioner), system-ui, -apple-system, sans-serif !important;
+    font-family: var(--font-inter), 'Inter', 'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     -webkit-user-select: none !important;
     -moz-user-select: none !important;
     -ms-user-select: none !important;
     user-select: none !important;
   }
 
-  /* All Form Inputs, Selects, and Textareas set to 17px */
+  /* Form Inputs, Selects, and Textareas set to 15px (14–16px standard) */
   input, select, textarea {
-    font-size: 17px !important;
+    font-size: 15px !important;
     -webkit-user-select: text !important;
     -moz-user-select: text !important;
     -ms-user-select: text !important;
     user-select: text !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder,
+  select::placeholder {
+    font-size: 14.5px !important;
   }
 
   input[type="checkbox"], input[type="radio"], input[type="range"], input[type="color"] {
@@ -59,6 +93,53 @@
   #mobile-candidate-search::placeholder {
     font-size: 15px !important;
   }
+
+  /* Fluid Responsive Typography Utility Classes */
+  .page-title {
+    font-size: clamp(24px, 1.8vw, 30px);
+    line-height: 1.25;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .section-heading {
+    font-size: clamp(20px, 1.4vw, 24px);
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .campaign-title {
+    font-size: clamp(20px, 1.5vw, 24px);
+    line-height: 1.3;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
+
+  .metric-value {
+    font-size: clamp(26px, 2vw, 32px);
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .metric-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .card-desc {
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+
+  .badge-readable {
+    font-size: 12.5px;
+    font-weight: 600;
+  }
 }
 
 html {
@@ -74,14 +155,32 @@ html, body {
 }
 
 body {
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1.5;
   background-color: #0b0f19;
   background-image: radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.4) 0px, transparent 50%),
                     radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.5) 0px, transparent 50%);
   background-attachment: fixed;
   color: #f1f5f9;
-  font-family: 'Commissioner', var(--font-commissioner), system-ui, -apple-system, sans-serif !important;
+  font-family: var(--font-inter), 'Inter', 'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Classic Professional Enterprise Table Styles */
+table {
+  font-family: var(--font-inter), 'Inter', 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  letter-spacing: normal;
+}
+
+table th {
+  font-size: 13.5px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+table td {
+  font-size: 14.5px;
+  line-height: 1.45;
 }
 
 body.light,
@@ -1095,5 +1194,22 @@ html.dark .neu-card-item:hover {
   border-color: #a78bfa !important;
   box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.4), inset -2px -2px 6px rgba(255, 255, 255, 0.25), 0 6px 18px rgba(124, 58, 237, 0.4) !important;
   transform: scale(1.02);
+}
+
+/* ========================================================================= */
+/* GLOBAL DESKTOP READABILITY SAFEGUARD: STRICTLY ELEVATE SUB-12PX MICROTEXT */
+/* ========================================================================= */
+.text-\[7px\],
+.text-\[7\.5px\],
+.text-\[8px\],
+.text-\[8\.5px\],
+.text-\[9px\],
+.text-\[9\.5px\],
+.text-\[10px\],
+.text-\[10\.5px\],
+.text-\[11px\],
+.text-\[11\.5px\] {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
 }
 

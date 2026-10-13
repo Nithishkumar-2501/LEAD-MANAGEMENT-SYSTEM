@@ -910,26 +910,26 @@ export default function UserDashboardView({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
                   Faculty Lead Dashboard
                 </h2>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                   Assigned Workspace
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Faculty: <strong className="text-slate-700 dark:text-slate-200 font-semibold">{loggedInUsername}</strong> • Showing analytics & tasks exclusively for your assigned student contacts.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2.5 self-end sm:self-auto">
-            <div className="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-right">
-              <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">My Leads</span>
-              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{effectiveApplicants.length} Active</span>
+            <div className="px-3.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-right">
+              <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">My Leads</span>
+              <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">{effectiveApplicants.length} Active</span>
             </div>
-            <div className="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-right">
-              <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Pending Tasks</span>
-              <span className="text-sm font-bold text-amber-600 dark:text-amber-400">{pendingTasks.length} Tasks</span>
+            <div className="px-3.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-right">
+              <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">Pending Tasks</span>
+              <span className="text-base font-bold text-amber-600 dark:text-amber-400">{pendingTasks.length} Tasks</span>
             </div>
           </div>
         </div>
@@ -944,7 +944,7 @@ export default function UserDashboardView({
           <button
             type="button"
             onClick={() => setActiveDashboardTab("MY_DASHBOARD")}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-md text-sm font-bold transition-all cursor-pointer ${
               activeDashboardTab === "MY_DASHBOARD"
                 ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -955,7 +955,7 @@ export default function UserDashboardView({
           <button
             type="button"
             onClick={() => setActiveDashboardTab("PRODUCTIVITY_REPORT")}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-md text-sm font-bold transition-all cursor-pointer ${
               activeDashboardTab === "PRODUCTIVITY_REPORT"
                 ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -968,7 +968,7 @@ export default function UserDashboardView({
         {/* Database Mode Switcher / Teacher Assigned Badge */}
         <div className="flex items-center gap-2">
           {currentUserRole === "TEACHER" ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-sm font-bold text-indigo-700 dark:text-indigo-300">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Assigned Contacts: <strong className="font-mono text-indigo-900 dark:text-indigo-100">{applicants.length.toLocaleString()} Leads</strong></span>
             </div>
@@ -976,24 +976,24 @@ export default function UserDashboardView({
             <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800/60 p-1 border border-slate-200 dark:border-slate-700/60">
               <button
                 onClick={() => setDataSourceMode("DATABASE")}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-md text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   isDbMode
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 Main Database ({applicants.length})
               </button>
               <button
                 onClick={() => setDataSourceMode("INSTITUTIONAL")}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-md text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   !isDbMode
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <Globe className="w-3.5 h-3.5" />
+                <Globe className="w-4 h-4" />
                 Institutional Baseline (235k)
               </button>
             </div>
@@ -1007,7 +1007,7 @@ export default function UserDashboardView({
       <div className="bubble-card card-hover-elevate p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg">
         {/* Header with Title & Legend & Filter Dropdowns */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
             {currentUserRole === "TEACHER" ? "Assigned Lead Allocation & Performance" : "User Wise Lead and Application Count"}
           </h3>
 
@@ -1022,7 +1022,7 @@ export default function UserDashboardView({
                 }`}
               >
                 <span className="w-3.5 h-3.5 rounded-sm bg-blue-600" />
-                <span className="text-slate-700 dark:text-slate-300 text-[11px]">Leads</span>
+                <span className="text-slate-700 dark:text-slate-300 text-xs font-bold">Leads</span>
               </button>
               <button
                 type="button"
@@ -1032,7 +1032,7 @@ export default function UserDashboardView({
                 }`}
               >
                 <span className="w-3.5 h-3.5 rounded-sm bg-amber-500" />
-                <span className="text-slate-700 dark:text-slate-300 text-[11px]">Applications</span>
+                <span className="text-slate-700 dark:text-slate-300 text-xs font-bold">Applications</span>
               </button>
             </div>
 
@@ -1041,10 +1041,10 @@ export default function UserDashboardView({
               <button
                 type="button"
                 onClick={() => setShowLeadsInUserChart(!showLeadsInUserChart)}
-                className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+                className="px-3 py-1.5 rounded-md text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
               >
                 Leads Assigned
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
             </div>
 
@@ -1053,17 +1053,17 @@ export default function UserDashboardView({
               <button
                 type="button"
                 onClick={() => setShowAppsInUserChart(!showAppsInUserChart)}
-                className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+                className="px-3 py-1.5 rounded-md text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
               >
                 Application Assigned
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
             </div>
 
             {/* Filter Dropdown 3: Selected Count badge */}
-            <div className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center gap-1 text-slate-700 dark:text-slate-300">
+            <div className="px-3 py-1.5 rounded-md text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center gap-1 text-slate-700 dark:text-slate-300">
               10 Selected
-              <ChevronDown className="w-3 h-3 text-slate-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </div>
           </div>
         </div>
@@ -1073,7 +1073,7 @@ export default function UserDashboardView({
           <div className="relative pt-2 min-w-[580px] sm:min-w-0">
             <div className="flex items-stretch">
             {/* Y-Axis Label and Values */}
-            <div className="flex flex-col justify-between h-56 text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 pr-3 border-r border-slate-300 dark:border-white/15 select-none shrink-0">
+            <div className="flex flex-col justify-between h-56 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 pr-3 border-r border-slate-300 dark:border-white/15 select-none shrink-0">
               {userChartYTicks.map((tick, i) => (
                 <span key={i}>{tick.toLocaleString()}</span>
               ))}
@@ -1120,7 +1120,7 @@ export default function UserDashboardView({
                       }`}
                     >
                       {/* Numeric Labels on Top of Bars */}
-                      <div className="flex items-center justify-center gap-1.5 mb-1 select-none pointer-events-none text-[9.5px] font-black font-mono">
+                      <div className="flex items-center justify-center gap-1.5 mb-1 select-none pointer-events-none text-xs font-black font-mono">
                         {showLeadsInUserChart && c.leads > 0 && (
                           <span className="text-slate-800 dark:text-slate-200">
                             {c.leads.toLocaleString()}
@@ -1164,27 +1164,27 @@ export default function UserDashboardView({
                     left: `${Math.max(5, Math.min(80, hoveredCounselor.x))}%`,
                     top: "10px",
                   }}
-                  className="absolute z-30 p-2.5 rounded-xl bg-slate-950/95 border border-sky-400 text-white text-[11px] shadow-2xl backdrop-blur-xl pointer-events-none transform -translate-x-1/2 space-y-1 select-none min-w-[210px]"
+                  className="absolute z-30 p-3 rounded-xl bg-slate-950/95 border border-sky-400 text-white text-xs shadow-2xl backdrop-blur-xl pointer-events-none transform -translate-x-1/2 space-y-1.5 select-none min-w-[220px]"
                 >
-                  <p className="font-extrabold text-sky-300 border-b border-white/10 pb-0.5">
+                  <p className="font-extrabold text-sm text-sky-300 border-b border-white/10 pb-1">
                     {hoveredCounselor.profile.fullName}
                   </p>
-                  <div className="text-[10px] text-slate-400">
-                    Dept: <span className="text-slate-200">{hoveredCounselor.profile.department}</span>
+                  <div className="text-xs text-slate-400">
+                    Dept: <span className="text-slate-200 font-semibold">{hoveredCounselor.profile.department}</span>
                   </div>
-                  <div className="flex items-center justify-between gap-3 text-[10px] pt-1">
+                  <div className="flex items-center justify-between gap-3 text-xs pt-1">
                     <span className="text-slate-400 flex items-center gap-1">
-                      <span className="w-2 h-2 rounded bg-blue-500" /> Leads Assigned:
+                      <span className="w-2.5 h-2.5 rounded bg-blue-500" /> Leads Assigned:
                     </span>
                     <strong className="text-white font-mono">{hoveredCounselor.leads.toLocaleString()}</strong>
                   </div>
-                  <div className="flex items-center justify-between gap-3 text-[10px]">
+                  <div className="flex items-center justify-between gap-3 text-xs">
                     <span className="text-slate-400 flex items-center gap-1">
-                      <span className="w-2 h-2 rounded bg-amber-400" /> Applications:
+                      <span className="w-2.5 h-2.5 rounded bg-amber-400" /> Applications:
                     </span>
                     <strong className="text-amber-300 font-mono">{hoveredCounselor.apps.toLocaleString()}</strong>
                   </div>
-                  <p className="text-[9px] text-sky-400 font-semibold pt-1 border-t border-white/10">
+                  <p className="text-xs text-sky-400 font-semibold pt-1 border-t border-white/10">
                     Click to filter segregations below
                   </p>
                 </div>
@@ -1194,7 +1194,7 @@ export default function UserDashboardView({
 
           {/* X-Axis Labels */}
           <div className="pl-14 pt-2">
-            <div className="flex justify-between text-[10px] font-bold text-slate-600 dark:text-slate-400 select-none">
+            <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400 select-none">
               {counselorStats.map((c) => (
                 <div
                   key={c.id}
@@ -1218,19 +1218,21 @@ export default function UserDashboardView({
       {/* ========================================================================= */}
       {/* 2. USER WISE SEGREGATION FILTER BAR (IMAGE 2)                             */}
       {/* ========================================================================= */}
+      {/* 2. USER WISE SEGREGATION HEADER STRIP                                     */}
+      {/* ========================================================================= */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-sm">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-sky-500" />
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+          <Layers className="w-5 h-5 text-sky-500" />
+          <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
             {currentUserRole === "TEACHER" ? "My Assigned Leads Segregation" : "User wise Segregation"}
           </h3>
           {activeCounselorProfile && (
-            <span className="ml-2 px-2.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 text-[10px] font-extrabold border border-sky-300 dark:border-sky-800 flex items-center gap-1">
+            <span className="ml-2 px-3 py-1 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 text-xs font-extrabold border border-sky-300 dark:border-sky-800 flex items-center gap-1.5">
               Active: {activeCounselorProfile.fullName}
               <button
                 type="button"
                 onClick={() => setSelectedCounselorFilter("ALL")}
-                className="hover:text-rose-500 font-black cursor-pointer"
+                className="hover:text-rose-500 font-black cursor-pointer ml-0.5"
                 title="Reset to All Users"
               >
                 ✕
@@ -1241,11 +1243,11 @@ export default function UserDashboardView({
 
         {/* User Dropdown Selector */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 font-medium">Filter by Counselor:</span>
+          <span className="text-sm text-slate-500 font-semibold">Filter by Counselor:</span>
           <select
             value={selectedCounselorFilter}
             onChange={(e) => setSelectedCounselorFilter(e.target.value)}
-            className="text-xs font-extrabold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/15 rounded-xl px-3 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer min-w-[180px]"
+            className="text-sm font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/15 rounded-xl px-3 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer min-w-[190px]"
           >
             <option value="ALL">All Users ({applicants.length} Leads)</option>
             {counselorStats.map((c) => (
@@ -1268,12 +1270,12 @@ export default function UserDashboardView({
           <div>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Allocation Snapshot</h3>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Allocation Snapshot</h3>
                 <span title="Comparison between Total Applications and Total Leads Allocated">
-                  <Info className="w-3.5 h-3.5 text-slate-400 hover:text-sky-500 cursor-pointer" />
+                  <Info className="w-4 h-4 text-slate-400 hover:text-sky-500 cursor-pointer" />
                 </span>
               </div>
-              <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40">
                 {isDbMode ? "Live Database" : "Institutional Baseline"}
               </span>
             </div>
@@ -1281,8 +1283,8 @@ export default function UserDashboardView({
             {/* Horizontal Bars for Applications and Leads */}
             <div className="space-y-6 pt-6 pb-4">
               {/* Row 1: Applications */}
-              <div className="flex items-center text-xs">
-                <span className="w-24 font-bold text-slate-700 dark:text-slate-300 text-right pr-4 shrink-0">
+              <div className="flex items-center text-sm">
+                <span className="w-28 font-bold text-slate-700 dark:text-slate-300 text-right pr-4 shrink-0">
                   Applications
                 </span>
                 <div className="flex-1 flex items-center gap-2">
@@ -1293,15 +1295,15 @@ export default function UserDashboardView({
                     }}
                     className="h-6 bg-blue-600 rounded-r-sm flex items-center px-2 transition-all duration-500"
                   />
-                  <span className="font-extrabold text-xs text-slate-900 dark:text-white font-mono shrink-0">
+                  <span className="font-extrabold text-sm text-slate-900 dark:text-white font-mono shrink-0">
                     — {allocationSnapshotData.applications.toLocaleString()}
                   </span>
                 </div>
               </div>
 
               {/* Row 2: Leads */}
-              <div className="flex items-center text-xs">
-                <span className="w-24 font-bold text-slate-700 dark:text-slate-300 text-right pr-4 shrink-0">
+              <div className="flex items-center text-sm">
+                <span className="w-28 font-bold text-slate-700 dark:text-slate-300 text-right pr-4 shrink-0">
                   Leads
                 </span>
                 <div className="flex-1 flex items-center gap-2">
@@ -1310,7 +1312,7 @@ export default function UserDashboardView({
                     style={{ width: "75%" }}
                     className="h-16 bg-amber-500 rounded-r-sm flex items-center justify-end px-3 transition-all duration-500"
                   >
-                    <span className="font-black text-xs text-slate-950 font-mono">
+                    <span className="font-black text-sm text-slate-950 font-mono">
                       — {allocationSnapshotData.leads.toLocaleString()}
                     </span>
                   </div>
@@ -1319,9 +1321,9 @@ export default function UserDashboardView({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs text-slate-500">
             <span>Overall Conversion Pipeline</span>
-            <strong className="text-sky-600 dark:text-sky-400 font-mono font-black">
+            <strong className="text-sky-600 dark:text-sky-400 font-mono font-black text-xs">
               {allocationSnapshotData.leads > 0
                 ? ((allocationSnapshotData.applications / allocationSnapshotData.leads) * 100).toFixed(1) + "%"
                 : "0%"} Conversion
@@ -1336,12 +1338,12 @@ export default function UserDashboardView({
           <div>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Lead Stage Segregation</h3>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Lead Stage Segregation</h3>
                 <span title="Stage-wise distribution of candidate inquiries">
-                  <Info className="w-3.5 h-3.5 text-slate-400 hover:text-sky-500 cursor-pointer" />
+                  <Info className="w-4 h-4 text-slate-400 hover:text-sky-500 cursor-pointer" />
                 </span>
               </div>
-              <span className="text-[11px] font-black text-slate-500">
+              <span className="text-xs font-bold text-slate-500">
                 Total: <strong className="text-slate-900 dark:text-white font-mono">{leadStageSegregation.total.toLocaleString()}</strong>
               </span>
             </div>
@@ -1352,8 +1354,8 @@ export default function UserDashboardView({
                 const widthPct = Math.max(1, (stage.count / leadStageSegregation.maxCount) * 100);
 
                 return (
-                  <div key={idx} className="flex items-center text-[11px] group hover:bg-slate-50 dark:hover:bg-slate-800/40 py-0.5 rounded px-1 transition-colors">
-                    <span className="w-36 font-semibold text-slate-700 dark:text-slate-300 text-right pr-3 truncate shrink-0" title={stage.label}>
+                  <div key={idx} className="flex items-center text-xs group hover:bg-slate-50 dark:hover:bg-slate-800/40 py-1 rounded px-1 transition-colors">
+                    <span className="w-36 font-semibold text-slate-700 dark:text-slate-300 text-right pr-3 truncate shrink-0 text-xs" title={stage.label}>
                       {stage.label}
                     </span>
                     <div className="flex-1 flex items-center gap-2">
@@ -1365,7 +1367,7 @@ export default function UserDashboardView({
                         }}
                         className="h-3.5 rounded-r-sm transition-all duration-300 shadow-sm"
                       />
-                      <span className="font-mono font-bold text-[10.5px] text-slate-900 dark:text-slate-200 shrink-0">
+                      <span className="font-mono font-bold text-xs text-slate-900 dark:text-slate-200 shrink-0">
                         — {stage.count.toLocaleString()}
                       </span>
                     </div>
@@ -1375,7 +1377,7 @@ export default function UserDashboardView({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs text-slate-500">
             <span>Counseling Stages Breakdown</span>
             <span className="font-bold text-sky-600 dark:text-sky-400">16 Active Stages Tracked</span>
           </div>
@@ -1388,12 +1390,12 @@ export default function UserDashboardView({
           <div>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Lead Sub Stage Segregation</h3>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Lead Sub Stage Segregation</h3>
                 <span title="Granular telecalling dispositions and sub-stage metrics">
-                  <Info className="w-3.5 h-3.5 text-slate-400 hover:text-sky-500 cursor-pointer" />
+                  <Info className="w-4 h-4 text-slate-400 hover:text-sky-500 cursor-pointer" />
                 </span>
               </div>
-              <span className="text-[11px] font-black text-slate-500">
+              <span className="text-xs font-bold text-slate-500">
                 Live Dispositions
               </span>
             </div>
@@ -1404,8 +1406,8 @@ export default function UserDashboardView({
                 const widthPct = Math.max(1, (sub.count / leadSubStageSegregation.maxCount) * 100);
 
                 return (
-                  <div key={idx} className="flex items-center text-[11px] group hover:bg-slate-50 dark:hover:bg-slate-800/40 py-0.5 rounded px-1 transition-colors">
-                    <span className="w-48 font-semibold text-slate-700 dark:text-slate-300 text-right pr-3 truncate shrink-0" title={sub.label}>
+                  <div key={idx} className="flex items-center text-xs group hover:bg-slate-50 dark:hover:bg-slate-800/40 py-1 rounded px-1 transition-colors">
+                    <span className="w-48 font-semibold text-slate-700 dark:text-slate-300 text-right pr-3 truncate shrink-0 text-xs" title={sub.label}>
                       {sub.label}
                     </span>
                     <div className="flex-1 flex items-center gap-2">
@@ -1417,7 +1419,7 @@ export default function UserDashboardView({
                         }}
                         className="h-3.5 rounded-r-sm transition-all duration-300 shadow-sm"
                       />
-                      <span className="font-mono font-bold text-[10.5px] text-slate-900 dark:text-slate-200 shrink-0">
+                      <span className="font-mono font-bold text-xs text-slate-900 dark:text-slate-200 shrink-0">
                         — {sub.count.toLocaleString()}
                       </span>
                     </div>
@@ -1427,7 +1429,7 @@ export default function UserDashboardView({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs text-slate-500">
             <span>Granular Outcome Dispositions</span>
             <span className="font-bold text-emerald-600 dark:text-emerald-400">12 Sub-stages Mapped</span>
           </div>
@@ -1440,9 +1442,9 @@ export default function UserDashboardView({
           <div>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Application Stage Segr..</h3>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Application Stage Segregation</h3>
                 <span title="Application form status by campus and scrutiny stage">
-                  <Info className="w-3.5 h-3.5 text-slate-400 hover:text-sky-500 cursor-pointer" />
+                  <Info className="w-4 h-4 text-slate-400 hover:text-sky-500 cursor-pointer" />
                 </span>
               </div>
 
@@ -1450,7 +1452,7 @@ export default function UserDashboardView({
               <select
                 value={selectedAppForm}
                 onChange={(e) => setSelectedAppForm(e.target.value)}
-                className="text-[11px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/15 rounded-lg px-2.5 py-1 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer"
+                className="text-xs sm:text-sm font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/15 rounded-lg px-3 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer"
               >
                 <option value="Application Form VSB Coimbatore">Application Form VSB Coimbatore</option>
                 <option value="Application Form VSB Karur">Application Form VSB Karur</option>
@@ -1464,8 +1466,8 @@ export default function UserDashboardView({
                 const widthPct = Math.max(4, (item.count / applicationStageSegregation.maxCount) * 100);
 
                 return (
-                  <div key={idx} className="flex items-center text-xs">
-                    <span className="w-24 font-bold text-slate-700 dark:text-slate-300 text-right pr-4 shrink-0">
+                  <div key={idx} className="flex items-center text-sm">
+                    <span className="w-28 font-bold text-slate-700 dark:text-slate-300 text-right pr-4 shrink-0">
                       {item.label}
                     </span>
                     <div className="flex-1 flex items-center gap-2">
@@ -1477,7 +1479,7 @@ export default function UserDashboardView({
                         }}
                         className="h-12 rounded-r-sm flex items-center px-3 transition-all duration-500 shadow-sm"
                       >
-                        <span className="font-mono font-black text-xs text-white">
+                        <span className="font-mono font-black text-sm text-white">
                           — {item.count.toLocaleString()}
                         </span>
                       </div>
@@ -1488,7 +1490,7 @@ export default function UserDashboardView({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs text-slate-500">
             <span>Filtered by: {selectedAppForm}</span>
             <span className="font-bold text-sky-600 dark:text-sky-400">
               Untouched: {applicationStageSegregation.untouchedCount}
@@ -1504,7 +1506,7 @@ export default function UserDashboardView({
         {/* Chart Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Engagement Chart</h3>
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Engagement Chart</h3>
             <span title="Allocation vs Cumulative & Daily Lead Engagement — Filtered by Calendar Date">
               <Info className="w-4 h-4 text-slate-400 hover:text-sky-500 cursor-pointer" />
             </span>
@@ -1512,8 +1514,8 @@ export default function UserDashboardView({
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Filter Date Badge linked to Calendar Selection */}
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/80 border border-sky-300 dark:border-sky-500/40 text-xs font-black text-sky-800 dark:text-sky-300 shadow-sm">
-              <CalendarDays className="w-3.5 h-3.5 text-sky-500" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950/80 border border-sky-300 dark:border-sky-500/40 text-xs font-bold text-sky-800 dark:text-sky-300 shadow-sm">
+              <CalendarDays className="w-4 h-4 text-sky-500" />
               <span>Selected Date: {selectedDateLabel}</span>
             </div>
 
@@ -1522,7 +1524,7 @@ export default function UserDashboardView({
               <button
                 type="button"
                 onClick={() => setEngagementView("DAY")}
-                className={`px-3 py-1 rounded-md text-xs font-extrabold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                   engagementView === "DAY"
                     ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-300 shadow-sm"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
@@ -1533,7 +1535,7 @@ export default function UserDashboardView({
               <button
                 type="button"
                 onClick={() => setEngagementView("WEEK")}
-                className={`px-3 py-1 rounded-md text-xs font-extrabold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                   engagementView === "WEEK"
                     ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-300 shadow-sm"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
@@ -1544,7 +1546,7 @@ export default function UserDashboardView({
               <button
                 type="button"
                 onClick={() => setEngagementView("TIMELINE")}
-                className={`px-3 py-1 rounded-md text-xs font-extrabold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                   engagementView === "TIMELINE"
                     ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-300 shadow-sm"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
@@ -1557,7 +1559,7 @@ export default function UserDashboardView({
         </div>
 
         {/* Legend Centered at Top with Selected Date Metrics */}
-        <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-bold py-1 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-2 border border-slate-200/60 dark:border-white/5">
+        <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-bold py-1 bg-slate-50/50 dark:bg-slate-950/40 rounded-xl p-2.5 border border-slate-200/60 dark:border-white/5">
           <div className="flex items-center gap-2">
             <span className="w-3.5 h-3.5 rounded bg-blue-600 shadow-sm" />
             <span className="text-slate-700 dark:text-slate-300">
@@ -1565,7 +1567,7 @@ export default function UserDashboardView({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-amber-400 shadow-sm border border-amber-500" />
+            <span className="w-3.5 h-3.5 rounded-full bg-amber-400 shadow-sm border border-amber-500" />
             <span className="text-slate-700 dark:text-slate-300">
               Day-wise Engaged ({selectedDateMetrics.dayEngaged.toLocaleString()})
             </span>
@@ -1584,10 +1586,10 @@ export default function UserDashboardView({
             <div className="flex items-stretch">
             {/* Y-Axis Label and Values */}
             <div className="flex items-center pr-2 shrink-0">
-              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 -rotate-90 tracking-wider whitespace-nowrap select-none">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-400 -rotate-90 tracking-wider whitespace-nowrap select-none">
                 Total Allocated
               </span>
-              <div className="flex flex-col justify-between h-56 text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 pr-2 border-r border-slate-300 dark:border-white/15 select-none">
+              <div className="flex flex-col justify-between h-56 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 pr-2 border-r border-slate-300 dark:border-white/15 select-none">
                 {yAxisTicks.map((tick, i) => (
                   <span key={i}>{tick.toLocaleString()}</span>
                 ))}
@@ -1635,7 +1637,7 @@ export default function UserDashboardView({
                       {/* Active Indicator Pin Above Selected Day Bar */}
                       {isHighlighted && (
                         <div className="absolute -top-7 z-20 flex flex-col items-center pointer-events-none">
-                          <span className="px-1.5 py-0.5 rounded-md bg-red-600 text-white font-black text-[9px] shadow-lg animate-pulse whitespace-nowrap border border-white/40">
+                          <span className="px-2 py-0.5 rounded-md bg-red-600 text-white font-black text-xs shadow-lg animate-pulse whitespace-nowrap border border-white/40">
                             {pt.shortDate}
                           </span>
                           <span className="w-1.5 h-1.5 bg-red-600 rotate-45 -mt-1" />
@@ -1735,26 +1737,26 @@ export default function UserDashboardView({
                     left: `${Math.max(5, Math.min(85, hoveredDataPoint.xPercent))}%`,
                     top: "10px",
                   }}
-                  className="absolute z-30 p-2.5 rounded-xl bg-slate-950/95 border border-sky-400 text-white text-[11px] shadow-2xl backdrop-blur-xl pointer-events-none transform -translate-x-1/2 space-y-1"
+                  className="absolute z-30 p-3 rounded-xl bg-slate-950/95 border border-sky-400 text-white text-xs shadow-2xl backdrop-blur-xl pointer-events-none transform -translate-x-1/2 space-y-1.5"
                 >
-                  <p className="font-extrabold text-sky-300 border-b border-white/10 pb-0.5">
+                  <p className="font-extrabold text-sm text-sky-300 border-b border-white/10 pb-1">
                     {hoveredDataPoint.date}
                   </p>
-                  <div className="flex items-center justify-between gap-3 text-[10px]">
+                  <div className="flex items-center justify-between gap-3 text-xs">
                     <span className="text-slate-400 flex items-center gap-1">
-                      <span className="w-2 h-2 rounded bg-blue-500" /> Total Allocated:
+                      <span className="w-2.5 h-2.5 rounded bg-blue-500" /> Total Allocated:
                     </span>
                     <strong className="text-white font-mono">{hoveredDataPoint.allocated.toLocaleString()}</strong>
                   </div>
-                  <div className="flex items-center justify-between gap-3 text-[10px]">
+                  <div className="flex items-center justify-between gap-3 text-xs">
                     <span className="text-slate-400 flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-amber-400" /> Day-wise Engaged:
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Day-wise Engaged:
                     </span>
                     <strong className="text-amber-300 font-mono">{hoveredDataPoint.dayEngaged.toLocaleString()}</strong>
                   </div>
-                  <div className="flex items-center justify-between gap-3 text-[10px]">
+                  <div className="flex items-center justify-between gap-3 text-xs">
                     <span className="text-slate-400 flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-red-500" /> Total Engaged:
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Total Engaged:
                     </span>
                     <strong className="text-red-400 font-mono">{hoveredDataPoint.totalEngaged.toLocaleString()}</strong>
                   </div>
@@ -1765,14 +1767,14 @@ export default function UserDashboardView({
 
           {/* X-Axis Dates & Label */}
           <div className="pl-16 pt-2">
-            <div className="flex justify-between overflow-x-auto text-[9px] font-bold text-slate-500 dark:text-slate-400 select-none pb-1">
+            <div className="flex justify-between overflow-x-auto text-xs font-bold text-slate-500 dark:text-slate-400 select-none pb-1">
               {chartData.map((pt, i) => {
                 const isTarget = pt.isSelectedDay;
                 if (isTarget || i % 2 === 0 || i === chartData.length - 1) {
                   return (
                     <span
                       key={i}
-                      className={`transform -rotate-45 origin-top-left inline-block text-[8.5px] whitespace-nowrap mt-1 cursor-pointer ${
+                      className={`transform -rotate-45 origin-top-left inline-block text-xs whitespace-nowrap mt-1 cursor-pointer ${
                         isTarget ? "text-sky-400 font-black scale-110" : ""
                       }`}
                     >
@@ -1804,17 +1806,17 @@ export default function UserDashboardView({
           <div>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
               <div>
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   Activity Feeds
                 </h3>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Showing logs for <strong className="text-sky-500 font-bold">{selectedDateLabel}</strong>
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAllFeedsModal(true)}
-                className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-xs sm:text-sm font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 View All Activity Feeds
               </button>
@@ -1836,14 +1838,14 @@ export default function UserDashboardView({
                         <PhoneOutgoing className="w-4 h-4 text-sky-400" />
                       )}
                     </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                    <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
                       {item.title}
                     </p>
                   </div>
 
-                  <div className="text-right shrink-0 text-[11px] text-slate-400 font-semibold pt-0.5">
+                  <div className="text-right shrink-0 text-xs text-slate-400 font-semibold pt-0.5">
                     <div>{item.date}</div>
-                    <div className="text-[10px] text-slate-500">{item.time}</div>
+                    <div className="text-xs text-slate-500">{item.time}</div>
                   </div>
                 </div>
               ))}
@@ -1864,7 +1866,7 @@ export default function UserDashboardView({
         <div className="bubble-card p-5 space-y-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-lg flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3 flex-wrap gap-2">
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
                 Follow-up Calendar ({MONTH_NAMES[calendarMonth]}, {calendarYear})
               </h3>
 
@@ -1872,7 +1874,7 @@ export default function UserDashboardView({
                 <button
                   type="button"
                   onClick={() => setIsGCalModalOpen(true)}
-                  className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
                   title="Import and Sync with Google Calendar"
                 >
                   <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
@@ -1891,7 +1893,7 @@ export default function UserDashboardView({
                     type="button"
                     onClick={handlePrevMonth}
                     aria-label="Previous Month"
-                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                    className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -1899,7 +1901,7 @@ export default function UserDashboardView({
                     type="button"
                     onClick={handleNextMonth}
                     aria-label="Next Month"
-                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                    className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -1908,7 +1910,7 @@ export default function UserDashboardView({
             </div>
 
             <div className="pt-2">
-              <div className="grid grid-cols-7 text-center font-bold text-xs py-2 border-b border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 bg-slate-50/80 dark:bg-slate-800/40 rounded-t-lg">
+              <div className="grid grid-cols-7 text-center font-bold text-xs sm:text-sm py-2 border-b border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 bg-slate-50/80 dark:bg-slate-800/40 rounded-t-lg">
                 <span>Sun</span>
                 <span>Mon</span>
                 <span>Tue</span>
@@ -1958,7 +1960,7 @@ export default function UserDashboardView({
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 text-xs flex items-center justify-between flex-wrap gap-2">
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 text-xs sm:text-sm flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-500" />
               <span>
@@ -1969,11 +1971,11 @@ export default function UserDashboardView({
               <button
                 type="button"
                 onClick={() => setIsGCalModalOpen(true)}
-                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] shadow-xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
               >
                 <span>Import / Sync G-Cal</span>
               </button>
-              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-extrabold text-[10px] shadow-sm">
+              <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-bold text-xs shadow-sm">
                 Graph Updated: {selectedDateMetrics.allocated.toLocaleString()} Allocated
               </span>
             </div>
@@ -1993,7 +1995,7 @@ export default function UserDashboardView({
                   <Activity className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
                     All Telecall & Interaction Activity Feeds
                   </h3>
                   <p className="text-xs text-slate-500">Live logs across V.S.B. Admissions Desk</p>
@@ -2015,7 +2017,7 @@ export default function UserDashboardView({
                 value={feedSearchFilter}
                 onChange={(e) => setFeedSearchFilter(e.target.value)}
                 placeholder="Search feeds by professor, student, or phone number..."
-                className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
@@ -2033,15 +2035,15 @@ export default function UserDashboardView({
                       )}
                     </div>
                     <div>
-                      <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+                      <p className="text-sm text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
                         {feed.title}
                       </p>
-                      <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold">
+                      <span className="text-xs text-sky-600 dark:text-sky-400 font-bold">
                         Target Student: {feed.studentName} ({feed.phone})
                       </span>
                     </div>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-400 shrink-0">
+                  <span className="text-xs font-bold text-slate-400 shrink-0">
                     {feed.date}, {feed.time}
                   </span>
                 </div>
@@ -2052,7 +2054,7 @@ export default function UserDashboardView({
               <button
                 type="button"
                 onClick={() => setShowAllFeedsModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-slate-800 hover:bg-slate-700 text-xs font-bold cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-slate-800 hover:bg-slate-700 text-sm font-bold cursor-pointer"
               >
                 Close Feeds
               </button>

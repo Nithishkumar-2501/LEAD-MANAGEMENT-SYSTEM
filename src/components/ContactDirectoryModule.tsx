@@ -879,23 +879,25 @@ export default function ContactDirectoryModule({
   const getColumnWidthClass = (columnName: string) => {
     switch (columnName) {
       case "Registered Name":
-        return "min-w-[270px]";
+        return "min-w-[300px]";
       case "Registered Mobile":
-        return "min-w-[250px]";
+        return "min-w-[270px]";
       case "Registered Email":
-        return "min-w-[220px]";
+        return "min-w-[240px]";
       case "Assigned Counselor":
-        return "min-w-[190px]";
+        return "min-w-[210px]";
       case "Lead Stage":
-        return "min-w-[200px]";
+        return "min-w-[220px]";
       case "City":
-        return "min-w-[140px]";
+        return "min-w-[150px]";
       case "Campus":
-        return "min-w-[130px]";
+        return "min-w-[160px]";
+      case "Course":
+        return "min-w-[200px]";
       case "State":
-        return "min-w-[130px]";
+        return "min-w-[150px]";
       default:
-        return "min-w-[120px]";
+        return "min-w-[140px]";
     }
   };
 
@@ -934,19 +936,19 @@ export default function ContactDirectoryModule({
       const avatarColor = AVATAR_COLORS[charCodeSum % AVATAR_COLORS.length];
 
       return (
-        <div className="flex items-center gap-3 min-w-[260px]">
+        <div className="flex items-center gap-3 min-w-[280px]">
           {/* Student Initials Avatar matching Image 1 */}
           <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 shadow-xs ${avatarColor}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0 shadow-xs ${avatarColor}`}
           >
             {contact.name.slice(0, 2).toUpperCase()}
           </div>
 
-          <div className="min-w-0 flex flex-col justify-center gap-0.5">
+          <div className="min-w-0 flex flex-col justify-center gap-1">
             {/* Row 1: Student Name + Verified Shield Badge + Nora AI Sparkle */}
             <div className="flex items-center gap-2 whitespace-nowrap">
               <span
-                className="font-bold text-slate-900 dark:text-sky-300 hover:text-blue-600 dark:hover:text-sky-200 text-xs hover:underline cursor-pointer truncate max-w-[140px]"
+                className="font-semibold text-slate-900 dark:text-sky-300 hover:text-blue-600 dark:hover:text-sky-200 text-[15.5px] hover:underline cursor-pointer truncate max-w-[165px]"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCandidateClick(contact);
@@ -959,14 +961,14 @@ export default function ContactDirectoryModule({
               {/* Verified Shield Badge */}
               {isVerified ? (
                 <span
-                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 shrink-0 whitespace-nowrap"
+                  className="inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 shrink-0 whitespace-nowrap"
                   title="Mobile & Identity Verified"
                 >
-                  <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Verified
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Verified
                 </span>
               ) : (
                 <span
-                  className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-white/10 shrink-0 whitespace-nowrap"
+                  className="inline-flex items-center text-[12px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-white/10 shrink-0 whitespace-nowrap"
                   title="Verification Pending"
                 >
                   Unverified
@@ -985,22 +987,22 @@ export default function ContactDirectoryModule({
                 className="p-1 rounded-full text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 transition-all cursor-pointer hover:scale-110 shrink-0"
                 title={`Ask Nora AI to analyze ${contact.name}'s database record`}
               >
-                <Sparkles className="w-3 h-3" />
+                <Sparkles className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Row 2: Candidate Reference ID & Campus */}
-            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+            <div className="flex items-center gap-2 text-[13px] text-slate-600 dark:text-slate-400 font-mono whitespace-nowrap">
               <span className="font-semibold text-slate-700 dark:text-slate-300">{candidateId}</span>
               <span className="text-slate-400 dark:text-slate-600">•</span>
-              <span className="text-blue-600 dark:text-sky-400 font-bold uppercase tracking-wider">{contact.campus || "KARUR"}</span>
+              <span className="text-blue-600 dark:text-sky-400 font-bold uppercase tracking-wide text-[12.5px]">{contact.campus || "KARUR"}</span>
             </div>
           </div>
         </div>
       );
     }
     if (col === "Registered Email") {
-      return <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
+      return <span className="font-mono text-[14px] text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
     }
     if (col === "Registered Mobile") {
       const cleanPhone = (contact.phone || "").trim();
@@ -1011,9 +1013,9 @@ export default function ContactDirectoryModule({
         : "+91 ••••• •••••";
 
       return (
-        <div className="flex items-center gap-2.5 whitespace-nowrap min-w-[240px]">
+        <div className="flex items-center gap-2.5 whitespace-nowrap min-w-[260px]">
           {/* Communication Action Buttons Group Capsule matching Image 1 */}
-          <div className="flex items-center gap-1 px-1.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs shrink-0">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs shrink-0">
             <a
               href={getCleanTelUri(contact.phone)}
               onClick={(e) => {
@@ -1024,7 +1026,7 @@ export default function ContactDirectoryModule({
               className="p-1 rounded text-slate-500 hover:text-blue-600 transition-colors"
               title={`Call ${contact.name} via Phone Dial Pad`}
             >
-              <Phone className="w-3.5 h-3.5" />
+              <Phone className="w-4 h-4" />
             </a>
             <button
               type="button"
@@ -1036,7 +1038,7 @@ export default function ContactDirectoryModule({
               className="p-1 rounded text-slate-500 hover:text-emerald-600 transition-colors"
               title={`Direct WhatsApp Chat with ${contact.name}`}
             >
-              <MessageSquare className="w-3.5 h-3.5" />
+              <MessageSquare className="w-4 h-4" />
             </button>
             <button
               type="button"
@@ -1048,7 +1050,7 @@ export default function ContactDirectoryModule({
               className="p-1 rounded text-slate-500 hover:text-purple-600 transition-colors"
               title={`Direct Native SMS with ${contact.name}`}
             >
-              <Smartphone className="w-3.5 h-3.5" />
+              <Smartphone className="w-4 h-4" />
             </button>
           </div>
 
@@ -1060,7 +1062,7 @@ export default function ContactDirectoryModule({
               onActionTrigger("CALL", contact.name);
               redirectToDialPad(contact.phone);
             }}
-            className="text-[13px] font-mono font-bold tracking-tight hover:underline hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap select-all text-slate-800 dark:text-slate-100"
+            className="text-[14.5px] font-mono font-bold tracking-tight hover:underline hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap select-all text-slate-900 dark:text-slate-100"
             title="Click to dial on phone"
           >
             {formattedDisplayPhone}
@@ -1078,26 +1080,26 @@ export default function ContactDirectoryModule({
       const isAssigned = Boolean(counselorUsername);
 
       return (
-        <div className="flex items-center gap-2 whitespace-nowrap">
+        <div className="flex items-center gap-2.5 whitespace-nowrap">
           <span
-            className={`w-2 h-2 rounded-full shrink-0 ${
+            className={`w-2.5 h-2.5 rounded-full shrink-0 ${
               isAssigned ? "bg-emerald-500 shadow-xs shadow-emerald-400" : "bg-amber-400"
             }`}
           />
           <div className="text-left leading-tight">
-            <p className="font-bold text-xs text-slate-800 dark:text-slate-200">{displayName}</p>
-            <p className="text-[10px] font-mono text-slate-400">{profileId}</p>
+            <p className="font-semibold text-[14.5px] text-slate-900 dark:text-slate-200">{displayName}</p>
+            <p className="text-[12.5px] font-mono text-slate-500 dark:text-slate-400 font-medium">{profileId}</p>
           </div>
         </div>
       );
     }
     if (col === "TNEA Cutoff") {
       const cutoff = (contact as any).tneaCutoff ?? (contact as any).cutoff;
-      if (!cutoff) return <span className="text-slate-400 text-xs">-</span>;
+      if (!cutoff) return <span className="text-slate-400 text-[14px]">-</span>;
       const isHigh = cutoff >= 175;
       return (
         <span
-          className={`px-2.5 py-0.5 rounded-full font-mono text-xs font-black border inline-block ${
+          className={`px-3 py-1 rounded-full font-mono text-[13.5px] font-bold border inline-block ${
             isHigh
               ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30"
               : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10"
@@ -1107,25 +1109,25 @@ export default function ContactDirectoryModule({
         </span>
       );
     }
-    if (col === "Registered Country") return <span className="font-semibold text-slate-800 dark:text-slate-200">{(contact as any).country || ""}</span>;
-    if (col === "State") return <span className="font-semibold text-slate-800 dark:text-slate-200">{contact.state || ""}</span>;
-    if (col === "City") return <span className="font-semibold text-slate-800 dark:text-slate-200">{contact.district || ""}</span>;
-    if (col === "Campus") return contact.campus ? <span className="font-bold text-sky-700 dark:text-sky-300">{contact.campus} CAMPUS</span> : <span></span>;
-    if (col === "Course") return <span className="font-bold text-indigo-700 dark:text-indigo-300">{contact.courseInterest || ""}</span>;
-    if (col === "Specialization") return <span className="text-slate-700 dark:text-slate-300">{(contact as any).specialization || ""}</span>;
-    if (col === "Utm Keyword") return <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{(contact as any).utmKeyword || ""}</span>;
-    if (col === "Gender") return <span className="text-slate-800 dark:text-slate-200 font-semibold">{(contact as any).gender || ""}</span>;
-    if (col === "Father's Name") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).fatherName || ""}</span>;
-    if (col === "Mother's Name") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).motherName || ""}</span>;
-    if (col === "Blood Group") return <span className="font-bold text-rose-600 dark:text-rose-400">{(contact as any).bloodGroup || ""}</span>;
-    if (col === "Physically Disabled") return <span className="text-slate-800 dark:text-slate-200">{(contact as any).physicallyDisabled || ""}</span>;
-    if (col === "SSLC Mark") return (contact as any).marks10th ? <span className="font-bold text-emerald-600 dark:text-emerald-400">{(contact as any).marks10th}%</span> : <span></span>;
-    if (col === "School Name with Place") return <span className="text-slate-800 dark:text-slate-200 font-medium">{contact.school || ""}</span>;
-    if (col === "Address For communication") return <span className="text-slate-700 dark:text-slate-300 font-medium">{showAddress ? (contact.address || "") : (contact.address ? "•••••••••••••" : "")}</span>;
-    if (col === "Community") return <span className="font-extrabold text-blue-600 dark:text-sky-400">{(contact as any).community || ""}</span>;
+    if (col === "Registered Country") return <span className="font-semibold text-[14px] text-slate-800 dark:text-slate-200">{(contact as any).country || ""}</span>;
+    if (col === "State") return <span className="font-semibold text-[14.5px] text-slate-800 dark:text-slate-200">{contact.state || ""}</span>;
+    if (col === "City") return <span className="font-semibold text-[14.5px] text-slate-800 dark:text-slate-200">{contact.district || ""}</span>;
+    if (col === "Campus") return contact.campus ? <span className="font-bold text-[14px] text-sky-700 dark:text-sky-300">{contact.campus} CAMPUS</span> : <span></span>;
+    if (col === "Course") return <span className="font-bold text-[14.5px] text-indigo-700 dark:text-indigo-300">{contact.courseInterest || ""}</span>;
+    if (col === "Specialization") return <span className="text-slate-700 dark:text-slate-300 text-[14px] font-medium">{(contact as any).specialization || ""}</span>;
+    if (col === "Utm Keyword") return <span className="font-mono text-[13px] text-slate-500 dark:text-slate-400">{(contact as any).utmKeyword || ""}</span>;
+    if (col === "Gender") return <span className="text-slate-800 dark:text-slate-200 font-semibold text-[14px]">{(contact as any).gender || ""}</span>;
+    if (col === "Father's Name") return <span className="text-slate-800 dark:text-slate-200 text-[14px]">{(contact as any).fatherName || ""}</span>;
+    if (col === "Mother's Name") return <span className="text-slate-800 dark:text-slate-200 text-[14px]">{(contact as any).motherName || ""}</span>;
+    if (col === "Blood Group") return <span className="font-bold text-[14px] text-rose-600 dark:text-rose-400">{(contact as any).bloodGroup || ""}</span>;
+    if (col === "Physically Disabled") return <span className="text-slate-800 dark:text-slate-200 text-[14px]">{(contact as any).physicallyDisabled || ""}</span>;
+    if (col === "SSLC Mark") return (contact as any).marks10th ? <span className="font-bold text-[14.5px] text-emerald-600 dark:text-emerald-400">{(contact as any).marks10th}%</span> : <span></span>;
+    if (col === "School Name with Place") return <span className="text-slate-800 dark:text-slate-200 font-medium text-[14px]">{contact.school || ""}</span>;
+    if (col === "Address For communication") return <span className="text-slate-700 dark:text-slate-300 font-medium text-[14px]">{showAddress ? (contact.address || "") : (contact.address ? "•••••••••••••" : "")}</span>;
+    if (col === "Community") return <span className="font-bold text-[14.5px] text-blue-600 dark:text-sky-400">{(contact as any).community || ""}</span>;
     if (col === "How Known / Source" || col === "Source" || col === "Referral Source") {
       return (
-        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/20 whitespace-nowrap inline-flex items-center gap-1">
+        <span className="px-3 py-1 rounded-full text-[13px] font-semibold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/20 whitespace-nowrap inline-flex items-center gap-1.5">
           <span>📢</span>
           <span>{contact.source || "Direct Entry"}</span>
         </span>
@@ -1135,7 +1137,7 @@ export default function ContactDirectoryModule({
       if (!contact.createdAt) return <span></span>;
       const d = new Date(contact.createdAt);
       const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
-      return <span className="text-slate-800 dark:text-slate-200 font-mono text-[11px] font-medium">{formattedDate}</span>;
+      return <span className="text-slate-800 dark:text-slate-200 font-mono text-[13px] font-medium">{formattedDate}</span>;
     }
     if (col === "Lead Stage") {
       const rawStatus = (contact.status || "").toUpperCase();
@@ -1183,7 +1185,7 @@ export default function ContactDirectoryModule({
               const nextVal = e.target.value as LeadStatus;
               handleLeadStatusChange(contact, nextVal);
             }}
-            className={`appearance-none cursor-pointer pl-2.5 pr-7 py-1 rounded-full text-[11px] font-bold border transition-all duration-200 outline-none focus:ring-2 focus:ring-sky-500/40 shadow-sm ${themeClasses} ${
+            className={`appearance-none cursor-pointer pl-3 pr-8 py-1.5 rounded-full text-[14px] font-bold border transition-all duration-200 outline-none focus:ring-2 focus:ring-sky-500/40 shadow-sm min-h-[34px] ${themeClasses} ${
               isBusy ? "opacity-60 cursor-not-allowed" : ""
             }`}
             title={`Lead Stage: ${currentVal}. Click to update stage.`}
@@ -1201,16 +1203,17 @@ export default function ContactDirectoryModule({
               🚫 Not Interested
             </option>
           </select>
-          <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 flex items-center text-current opacity-70">
+          <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center text-current opacity-70">
             {isBusy ? (
-              <RefreshCw className="w-3 h-3 animate-spin" />
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <ChevronDown className="w-3 h-3" />
+              <ChevronDown className="w-3.5 h-3.5" />
             )}
           </div>
         </div>
       );
     }
+
     return <span></span>;
   };
 
@@ -1892,17 +1895,17 @@ export default function ContactDirectoryModule({
         <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                 Faculty Lead Allocation Portal
               </span>
               <span className="text-xs text-slate-500 font-medium">Assigned by Admin</span>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               Faculty Portal: <span className="text-emerald-700 dark:text-emerald-300 font-bold">{getTeacherDisplayName(loggedInUsername)} ({loggedInUsername})</span>
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-normal">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-normal">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>You have exclusive permission to view, edit & update your assigned contacts. Other faculty contacts are restricted to Admin view.</span>
             </p>
           </div>
@@ -1910,34 +1913,34 @@ export default function ContactDirectoryModule({
           <div className="w-full md:w-64 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-1.5 text-xs">
             <div className="flex justify-between font-medium">
               <span className="text-slate-500 dark:text-slate-400">Assigned Batch Progress</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">14 / 100 (14%)</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">14 / 100 (14%)</span>
             </div>
             <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
               <div className="h-full bg-emerald-500 rounded-full w-[14%]" />
             </div>
-            <p className="text-[10px] text-slate-400 text-right">86 Assigned Leads Remaining</p>
+            <p className="text-xs text-slate-400 text-right">86 Assigned Leads Remaining</p>
           </div>
         </div>
       )}
 
       {/* V.S.B. EDUCATION CRM LEAD MANAGEMENT TOP COMMAND BAR */}
-      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-xs font-sans">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 sm:p-5 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 font-sans">
         {/* Left: Institution Branding & View Selector */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-base">
               🎓
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
                   Lead Management Console
                 </h2>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
+                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
                   {selectedCampus === "ALL" ? "All Campuses" : `${selectedCampus} Campus`}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Purpose-built Education CRM • Karur & Coimbatore Campuses
               </p>
             </div>
@@ -1954,7 +1957,7 @@ export default function ContactDirectoryModule({
                   onTriggerToast(`Applied View: ${newView}`);
                 }
               }}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/15 rounded-xl px-3 py-1.5 font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-xs"
+              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-white/15 rounded-xl px-3 py-1.5 font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm"
             >
               {PRESET_VIEWS.map((pv) => (
                 <option key={pv.id} value={pv.id}>
@@ -1968,11 +1971,11 @@ export default function ContactDirectoryModule({
           <button
             onClick={handleReloadData}
             disabled={isReloading}
-            className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-blue-600 dark:text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60"
+            className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-blue-600 dark:text-sky-400 font-bold text-sm flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60"
             title="Reload latest leads from database"
           >
             <RotateCcw
-              className={`w-3.5 h-3.5 ${
+              className={`w-4 h-4 ${
                 isReloading ? "animate-spin text-sky-500" : "transition-transform hover:-rotate-45"
               }`}
             />
@@ -1983,15 +1986,15 @@ export default function ContactDirectoryModule({
           <button
             onClick={handleNormalizeAllPhones}
             disabled={isNormalizingPhones || isReloading}
-            className="px-3 py-1.5 rounded-xl border border-sky-400/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60 text-xs"
+            className="px-3.5 py-2 rounded-xl border border-sky-400/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60 text-sm"
             title="Scan and standardize all student mobile numbers in Firebase to compulsory +91-"
           >
-            <span className="font-mono text-xs font-black">+91-</span>
+            <span className="font-mono text-sm font-black">+91-</span>
             <span>{isNormalizingPhones ? "Standardizing..." : "Standardize +91-"}</span>
           </button>
 
           {/* Sync Status Badge */}
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10">
             <span
               className={`w-2 h-2 rounded-full ${
                 isReloading ? "bg-amber-400 animate-ping" : "bg-emerald-500"
@@ -2002,17 +2005,17 @@ export default function ContactDirectoryModule({
 
           {/* Live Quota Counter: Assigned Contacts for TEACHER, Firebase DB Quota for ADMIN */}
           {currentUserRole === "TEACHER" ? (
-            <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-blue-500/10 dark:from-indigo-900/30 dark:via-purple-900/30 dark:to-blue-900/30 px-3 py-1.5 rounded-full border border-indigo-500/20 dark:border-indigo-400/20 text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-blue-500/10 dark:from-indigo-900/30 dark:via-purple-900/30 dark:to-blue-900/30 px-3.5 py-1.5 rounded-full border border-indigo-500/20 dark:border-indigo-400/20 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
               <span className="text-slate-500 dark:text-slate-400">Assigned Contacts:</span>
               <span className="font-extrabold text-indigo-600 dark:text-sky-400">{contacts.length.toLocaleString()}</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">Allocated</span>
+              <span className="text-xs px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">Allocated</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-indigo-500/10 dark:from-blue-900/30 dark:via-emerald-900/30 dark:to-indigo-900/30 px-3 py-1.5 rounded-full border border-blue-500/20 dark:border-blue-400/20 text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-indigo-500/10 dark:from-blue-900/30 dark:via-emerald-900/30 dark:to-indigo-900/30 px-3.5 py-1.5 rounded-full border border-blue-500/20 dark:border-blue-400/20 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -2031,7 +2034,7 @@ export default function ContactDirectoryModule({
           <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-300 dark:border-white/10">
             <button
               onClick={() => setDirectoryViewMode("TABLE")}
-              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
                 directoryViewMode === "TABLE"
                   ? "bg-blue-600 text-white shadow"
                   : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
@@ -2041,7 +2044,7 @@ export default function ContactDirectoryModule({
             </button>
             <button
               onClick={() => setDirectoryViewMode("GRID")}
-              className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
                 directoryViewMode === "GRID"
                   ? "bg-blue-600 text-white shadow"
                   : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
@@ -2060,38 +2063,37 @@ export default function ContactDirectoryModule({
           />
           <button
             onClick={() => document.getElementById("csv-file-upload")?.click()}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs sm:text-sm border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
             title="Import Leads from CSV"
           >
-            <Upload className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
+            <Upload className="w-4 h-4 text-blue-600 dark:text-sky-400" />
             <span>Import CSV</span>
           </button>
           <button
             type="button"
             onClick={() => downloadSampleLeadsCSV(selectedCampus)}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-300 dark:border-white/15 flex items-center gap-1 shadow-sm transition-all active:scale-95 cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs sm:text-sm border border-slate-300 dark:border-white/15 flex items-center gap-1 shadow-sm transition-all active:scale-95 cursor-pointer"
             title="Download Sample Student Leads CSV Template"
           >
-            <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline text-[11px]">Template</span>
+            <Download className="w-4 h-4 text-slate-500" />
+            <span className="hidden sm:inline">Template</span>
           </button>
-
 
           {/* Ask Nora AI Intelligence Button */}
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-md shadow-indigo-600/30 border border-indigo-300/30 flex items-center gap-1.5 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-sm shadow-md shadow-indigo-600/30 border border-indigo-300/30 flex items-center gap-1.5 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
             title="Ask Nora AI for intelligence analysis"
           >
-            <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+            <Sparkles className="w-4 h-4 text-yellow-300" />
             <span>Ask Nora AI</span>
           </button>
 
           {/* + Add Lead Primary CTA */}
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md shadow-blue-500/30 border border-blue-300/30 flex items-center gap-1.5 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-md shadow-blue-500/30 border border-blue-300/30 flex items-center gap-1.5 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4 text-white shrink-0" />
             <span>+ Add Lead</span>
@@ -2104,19 +2106,19 @@ export default function ContactDirectoryModule({
         {/* Card 1: Total Enquiries */}
         <div
           onClick={() => setSelectedViewName("All Enquiries")}
-          className="bubble-card p-3.5 border border-blue-500/30 bg-gradient-to-b from-blue-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-blue-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+          className="bubble-card p-4 border border-blue-500/30 bg-gradient-to-b from-blue-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-blue-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Total Enquiries
             </span>
             <span className="text-base">🌟</span>
           </div>
           <div className="mt-2">
-            <h4 className="text-xl font-black text-slate-900 dark:text-white font-mono">
+            <h4 className="text-2xl font-black text-slate-900 dark:text-white font-mono">
               {totalLeadsCount}
             </h4>
-            <p className="text-[10px] text-blue-600 dark:text-sky-400 font-semibold mt-0.5">
+            <p className="text-xs text-blue-600 dark:text-sky-400 font-semibold mt-0.5">
               100% Centralized
             </p>
           </div>
@@ -2125,19 +2127,19 @@ export default function ContactDirectoryModule({
         {/* Card 2: Fresh / Untouched */}
         <div
           onClick={() => setSelectedViewName("Fresh & Untouched")}
-          className="bubble-card p-3.5 border border-sky-500/30 bg-gradient-to-b from-sky-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-sky-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+          className="bubble-card p-4 border border-sky-500/30 bg-gradient-to-b from-sky-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-sky-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Fresh & Untouched
             </span>
             <span className="text-base">🆕</span>
           </div>
           <div className="mt-2">
-            <h4 className="text-xl font-black text-sky-600 dark:text-sky-400 font-mono">
+            <h4 className="text-2xl font-black text-sky-600 dark:text-sky-400 font-mono">
               {freshLeadsCount}
             </h4>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               Ready for Allocation
             </p>
           </div>
@@ -2146,19 +2148,19 @@ export default function ContactDirectoryModule({
         {/* Card 3: Follow-ups Due */}
         <div
           onClick={() => setSelectedViewName("Today's Follow-ups")}
-          className="bubble-card p-3.5 border border-indigo-500/30 bg-gradient-to-b from-indigo-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-indigo-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+          className="bubble-card p-4 border border-indigo-500/30 bg-gradient-to-b from-indigo-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-indigo-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Follow-ups Due
             </span>
             <span className="text-base">📞</span>
           </div>
           <div className="mt-2">
-            <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 font-mono">
+            <h4 className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-mono">
               {followUpsDueCount}
             </h4>
-            <p className="text-[10px] text-indigo-500 font-semibold mt-0.5">
+            <p className="text-xs text-indigo-500 font-semibold mt-0.5">
               Action Required
             </p>
           </div>
@@ -2167,19 +2169,19 @@ export default function ContactDirectoryModule({
         {/* Card 4: Verified Prospects */}
         <div
           onClick={() => setSelectedViewName("All Enquiries")}
-          className="bubble-card p-3.5 border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-emerald-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+          className="bubble-card p-4 border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-emerald-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Verified Contacts
             </span>
             <span className="text-base">🛡️</span>
           </div>
           <div className="mt-2">
-            <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+            <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
               {verifiedLeadsCount}
             </h4>
-            <p className="text-[10px] text-emerald-500 font-semibold mt-0.5">
+            <p className="text-xs text-emerald-500 font-semibold mt-0.5">
               Phone & Intent Checked
             </p>
           </div>
@@ -2188,19 +2190,19 @@ export default function ContactDirectoryModule({
         {/* Card 5: Hot Pipeline */}
         <div
           onClick={() => setSelectedViewName("Hot Prospects")}
-          className="bubble-card p-3.5 border border-rose-500/30 bg-gradient-to-b from-rose-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-rose-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+          className="bubble-card p-4 border border-rose-500/30 bg-gradient-to-b from-rose-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-rose-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Hot Prospects
             </span>
             <span className="text-base">🔥</span>
           </div>
           <div className="mt-2">
-            <h4 className="text-xl font-black text-rose-600 dark:text-rose-400 font-mono">
+            <h4 className="text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">
               {hotLeadsCount}
             </h4>
-            <p className="text-[10px] text-rose-500 font-semibold mt-0.5">
+            <p className="text-xs text-rose-500 font-semibold mt-0.5">
               High Readiness
             </p>
           </div>
@@ -2209,19 +2211,19 @@ export default function ContactDirectoryModule({
         {/* Card 6: Admitted / Enrolled */}
         <div
           onClick={() => setSelectedViewName("Admitted / Enrolled")}
-          className="bubble-card p-3.5 border border-teal-500/30 bg-gradient-to-b from-teal-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-teal-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
+          className="bubble-card p-4 border border-teal-500/30 bg-gradient-to-b from-teal-500/10 via-white dark:via-slate-900 to-transparent flex flex-col justify-between cursor-pointer hover:border-teal-400 transition-all transform hover:-translate-y-0.5 shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Confirmed Admitted
             </span>
             <span className="text-base">🎓</span>
           </div>
           <div className="mt-2">
-            <h4 className="text-xl font-black text-teal-600 dark:text-teal-400 font-mono">
+            <h4 className="text-2xl font-black text-teal-600 dark:text-teal-400 font-mono">
               {admittedLeadsCount}
             </h4>
-            <p className="text-[10px] text-teal-500 font-semibold mt-0.5">
+            <p className="text-xs text-teal-500 font-semibold mt-0.5">
               Fee Paid / Enrolled
             </p>
           </div>
@@ -2393,18 +2395,18 @@ export default function ContactDirectoryModule({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 pt-1">
           <button
             onClick={() => setSelectedStatus("ALL")}
-            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+            className={`p-3.5 sm:p-4 text-[14px] font-bold transition-all flex items-center gap-3 cursor-pointer ${
               selectedStatus === "ALL"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl">🌟</span>
+            <span className="text-2xl">🌟</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs font-black">
+              <span className="block text-[15.5px] font-bold">
                 {currentUserRole === "TEACHER" ? "Assigned Leads" : "All Leads"}
               </span>
-              <span className={`text-[10px] font-bold ${selectedStatus === "ALL" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`text-[13px] font-medium ${selectedStatus === "ALL" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {currentUserRole === "TEACHER"
                   ? `${contacts.length.toLocaleString()} Assigned`
                   : `${contacts.length.toLocaleString()} / ${MAX_FREE_LEAD_LIMIT.toLocaleString()} (Live DB)`}
@@ -2414,18 +2416,18 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("HOT")}
-            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+            className={`p-3.5 sm:p-4 text-[14px] font-bold transition-all flex items-center gap-3 cursor-pointer ${
               selectedStatus === "HOT"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl">🔥</span>
+            <span className="text-2xl">🔥</span>
             <div className="text-left leading-tight">
-              <span className={`block text-xs font-black ${selectedStatus === "HOT" ? "text-white" : "text-rose-600 dark:text-rose-400"}`}>
+              <span className={`block text-[15.5px] font-bold ${selectedStatus === "HOT" ? "text-white" : "text-rose-600 dark:text-rose-400"}`}>
                 HOT (Admitted)
               </span>
-              <span className={`text-[10px] font-bold ${selectedStatus === "HOT" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`text-[13px] font-medium ${selectedStatus === "HOT" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "HOT").length} Admitted
               </span>
             </div>
@@ -2433,18 +2435,18 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("WARM")}
-            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+            className={`p-3.5 sm:p-4 text-[14px] font-bold transition-all flex items-center gap-3 cursor-pointer ${
               selectedStatus === "WARM"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl">⚡</span>
+            <span className="text-2xl">⚡</span>
             <div className="text-left leading-tight">
-              <span className={`block text-xs font-black ${selectedStatus === "WARM" ? "text-white" : "text-amber-600 dark:text-amber-400"}`}>
+              <span className={`block text-[15.5px] font-bold ${selectedStatus === "WARM" ? "text-white" : "text-amber-600 dark:text-amber-400"}`}>
                 WARM (Ready)
               </span>
-              <span className={`text-[10px] font-bold ${selectedStatus === "WARM" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`text-[13px] font-medium ${selectedStatus === "WARM" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "WARM").length} Ready
               </span>
             </div>
@@ -2452,18 +2454,18 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("COLD")}
-            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+            className={`p-3.5 sm:p-4 text-[14px] font-bold transition-all flex items-center gap-3 cursor-pointer ${
               selectedStatus === "COLD"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl">❄️</span>
+            <span className="text-2xl">❄️</span>
             <div className="text-left leading-tight">
-              <span className={`block text-xs font-black ${selectedStatus === "COLD" ? "text-white" : "text-sky-600 dark:text-sky-400"}`}>
+              <span className={`block text-[15.5px] font-bold ${selectedStatus === "COLD" ? "text-white" : "text-sky-600 dark:text-sky-400"}`}>
                 COLD (Not Interested)
               </span>
-              <span className={`text-[10px] font-bold ${selectedStatus === "COLD" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`text-[13px] font-medium ${selectedStatus === "COLD" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "COLD").length} Leads
               </span>
             </div>
@@ -2471,16 +2473,16 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("CONTACTED")}
-            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+            className={`p-3.5 sm:p-4 text-[14px] font-bold transition-all flex items-center gap-3 cursor-pointer ${
               selectedStatus === "CONTACTED"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl">📞</span>
+            <span className="text-2xl">📞</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs font-black">Contacted</span>
-              <span className={`text-[10px] font-bold ${selectedStatus === "CONTACTED" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className="block text-[15.5px] font-bold">Contacted</span>
+              <span className={`text-[13px] font-medium ${selectedStatus === "CONTACTED" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => c.status === "CONTACTED").length} Leads
               </span>
             </div>
@@ -2488,16 +2490,16 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("IN_REVIEW")}
-            className={`p-3.5 text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+            className={`p-3.5 sm:p-4 text-[14px] font-bold transition-all flex items-center gap-3 cursor-pointer ${
               selectedStatus === "IN_REVIEW"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.03]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl">📊</span>
+            <span className="text-2xl">📊</span>
             <div className="text-left leading-tight">
-              <span className="block text-xs font-black">Cutoff Review</span>
-              <span className={`text-[10px] font-bold ${selectedStatus === "IN_REVIEW" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className="block text-[15.5px] font-bold">Cutoff Review</span>
+              <span className={`text-[13px] font-medium ${selectedStatus === "IN_REVIEW" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => c.status === "IN_REVIEW").length} Leads
               </span>
             </div>
@@ -2506,16 +2508,16 @@ export default function ContactDirectoryModule({
       </div>
 
       {/* MERITTO LEAD MANAGER QUICK FILTER PILLS & FIELD SEARCH BAR (MATCHING SCREENSHOT) */}
-      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 rounded-2xl p-3 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs font-sans text-slate-800 dark:text-slate-200">
+      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 rounded-2xl p-3 sm:p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3 text-[14px] font-sans text-slate-800 dark:text-slate-200">
         {/* Left: Quick Filter Pills */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* User Registration Date */}
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hidden xl:inline">User Registration Date:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">User Registration Date:</span>
             <select
               value={regDateFilter}
               onChange={(e) => setRegDateFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-3.5 py-1.5 text-xs text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
             >
               <option value="Select Here">Select Here 📅</option>
               <optgroup label="Quick Filters">
@@ -2532,8 +2534,8 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* Lead Stage */}
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hidden xl:inline">Lead Stage:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">Lead Stage:</span>
             <select
               value={leadStageFilter}
               onChange={(e) => {
@@ -2543,7 +2545,7 @@ export default function ContactDirectoryModule({
                   onTriggerToast(`Filtered leads by Lead Stage: ${val}`);
                 }
               }}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-3.5 py-1.5 text-xs text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
             >
               <option value="Select Here">Select Here ∨</option>
               <optgroup label="Student Lead States">
@@ -2562,12 +2564,12 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* Lead Owner / Teams */}
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hidden xl:inline">Lead Owner / Teams:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">Lead Owner / Teams:</span>
             <select
               value={leadOwnerFilter}
               onChange={(e) => setLeadOwnerFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-3.5 py-1.5 text-xs text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Admin Karur">Admin Karur</option>
@@ -2577,12 +2579,12 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* Campaign Source */}
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hidden xl:inline">Campaign Source:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">Campaign Source:</span>
             <select
               value={campaignSourceFilter}
               onChange={(e) => setCampaignSourceFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-3.5 py-1.5 text-xs text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Organic">Organic Search</option>
@@ -2592,12 +2594,12 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* Traffic Channel */}
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hidden xl:inline">Traffic Channel:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">Traffic Channel:</span>
             <select
               value={trafficChannelFilter}
               onChange={(e) => setTrafficChannelFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-3.5 py-1.5 text-xs text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
             >
               <option value="Select Here">Select Here ∨</option>
               <option value="Direct Intake">Direct Intake</option>
@@ -2605,29 +2607,29 @@ export default function ContactDirectoryModule({
             </select>
           </div>
 
-          <button className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <button className="px-3.5 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-slate-700 dark:text-slate-300 font-semibold text-[13.5px] hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors">
             +2 more
           </button>
         </div>
 
         {/* Right: Quick Search Dropdown & Field Search Input (Matching Meritto Screenshot) */}
-        <div className="flex items-center gap-2 ml-auto shrink-0">
+        <div className="flex items-center gap-2.5 ml-auto shrink-0">
           {/* Combined Field Selector + Search Input Bar */}
-          <div className="relative flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-sky-500 transition-all">
+          <div className="relative flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-sky-500 transition-all min-h-[40px]">
             {/* Field Dropdown Selector Button */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsSearchFieldDropdownOpen(!isSearchFieldDropdownOpen)}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-white border-r border-slate-300 dark:border-white/15 flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-l-lg transition-colors"
+                className="px-3.5 py-2 text-[14px] font-semibold text-slate-800 dark:text-white border-r border-slate-300 dark:border-white/15 flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-l-xl transition-colors min-h-[40px]"
               >
                 <span>{searchField}</span>
-                <span className="text-[10px] text-slate-400">∧</span>
+                <span className="text-[12px] text-slate-400">∧</span>
               </button>
 
               {/* Popover Dropdown for Field Selection (Matching Screenshot) */}
               {isSearchFieldDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl z-50 py-1.5 text-xs font-sans text-slate-800 dark:text-white animate-in fade-in zoom-in-95">
+                <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl z-50 py-1.5 text-[14px] font-sans text-slate-800 dark:text-white animate-in fade-in zoom-in-95">
                   {(["Email", "Mobile", "Name", "User Id", "Lead Id"] as const).map((field) => (
                     <div
                       key={field}
@@ -2635,7 +2637,7 @@ export default function ContactDirectoryModule({
                         setSearchField(field);
                         setIsSearchFieldDropdownOpen(false);
                       }}
-                      className={`px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${searchField === field ? "bg-sky-50 dark:bg-sky-950/80 font-bold text-blue-600 dark:text-sky-400" : "text-slate-700 dark:text-slate-200 font-medium"
+                      className={`px-3.5 py-2 flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${searchField === field ? "bg-sky-50 dark:bg-sky-950/80 font-bold text-blue-600 dark:text-sky-400" : "text-slate-700 dark:text-slate-200 font-medium"
                         }`}
                     >
                       <span>{field}</span>
@@ -2646,25 +2648,25 @@ export default function ContactDirectoryModule({
             </div>
 
             {/* Input Box */}
-            <div className="relative flex items-center w-48 sm:w-60">
+            <div className="relative flex items-center w-52 sm:w-64">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={`Search by ${searchField}`}
-                className="w-full bg-transparent text-xs font-medium text-slate-800 dark:text-white placeholder-slate-400 pl-3 pr-8 py-1.5 focus:outline-none"
+                className="w-full bg-transparent text-[14px] font-medium text-slate-800 dark:text-white placeholder-slate-400 pl-3.5 pr-8 py-2 focus:outline-none min-h-[40px]"
               />
-              <div className="absolute right-2 flex items-center gap-1 text-slate-400">
+              <div className="absolute right-2.5 flex items-center gap-1 text-slate-400">
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="hover:text-slate-600 text-xs font-bold px-1"
+                    className="hover:text-slate-600 text-[13px] font-bold px-1"
                     title="Clear Search"
                   >
                     ✕
                   </button>
                 )}
-                <Search className="w-3.5 h-3.5 text-slate-400" />
+                <Search className="w-4 h-4 text-slate-400" />
               </div>
             </div>
           </div>
@@ -2672,7 +2674,7 @@ export default function ContactDirectoryModule({
           {/* Grid Layout Toggle Icon */}
           <button
             onClick={() => setIsCustomizeColumnDrawerOpen(true)}
-            className="p-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-sm"
+            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-sm min-h-[40px] flex items-center justify-center"
             title="Customize Grid Columns"
           >
             <div className="w-4 h-4 grid grid-cols-2 gap-0.5 items-center justify-center">
@@ -2686,11 +2688,11 @@ export default function ContactDirectoryModule({
           {/* Advanced Filter Funnel Button with Active Count Badge */}
           <button
             onClick={() => setIsFilterDrawerOpen(true)}
-            className="px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+            className="px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold flex items-center gap-2 transition-colors shadow-sm min-h-[40px]"
           >
-            <Filter className="w-3.5 h-3.5 text-blue-600" />
-            <span className="text-xs">Advanced Filter</span>
-            <span className="bg-blue-600 text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
+            <Filter className="w-4 h-4 text-blue-600" />
+            <span className="text-[14px]">Advanced Filter</span>
+            <span className="bg-blue-600 text-white text-[12px] font-extrabold px-2 py-0.5 rounded-full">
               {filterRules.length}
             </span>
           </button>
@@ -2707,19 +2709,19 @@ export default function ContactDirectoryModule({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search name, phone, school, district, address..."
-              className="w-full bg-slate-950/80 border border-white/20 rounded-full pl-10 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-xl"
+              className="w-full bg-slate-950/80 border border-white/20 rounded-xl pl-10 pr-4 py-2.5 text-[14px] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-xl min-h-[42px]"
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <span className="text-xs text-slate-400 font-bold flex items-center gap-1 shrink-0">
-              <Filter className="w-3.5 h-3.5 text-sky-400" /> District:
+          <div className="flex items-center gap-2.5 w-full md:w-auto">
+            <span className="text-[14px] text-slate-400 font-bold flex items-center gap-1.5 shrink-0">
+              <Filter className="w-4 h-4 text-sky-400" /> District:
             </span>
-            <div className="relative w-full md:w-56">
+            <div className="relative w-full md:w-60">
               <select
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-xl cursor-pointer shadow-md appearance-none pr-8 transition-all hover:border-white/30"
+                className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-4 py-2.5 text-[14px] font-bold text-white focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-xl cursor-pointer shadow-md appearance-none pr-8 transition-all hover:border-white/30 min-h-[42px]"
               >
                 <option value="ALL" className="bg-slate-900 text-white font-bold">
                   ALL DISTRICTS ({districts.length - 1})
@@ -2730,14 +2732,14 @@ export default function ContactDirectoryModule({
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sky-400 text-xs font-bold">
+              <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sky-400 text-[13px] font-bold">
                 ▼
               </div>
             </div>
             {selectedDistrict !== "ALL" && (
               <button
                 onClick={() => setSelectedDistrict("ALL")}
-                className="px-2.5 py-2 rounded-xl text-xs font-bold text-rose-300 hover:text-rose-200 bg-rose-950/40 border border-rose-500/30 shrink-0 flex items-center gap-1 transition-all shadow-sm active:scale-95"
+                className="px-3 py-2.5 rounded-xl text-[13.5px] font-bold text-rose-300 hover:text-rose-200 bg-rose-950/40 border border-rose-500/30 shrink-0 flex items-center gap-1 transition-all shadow-sm active:scale-95 min-h-[42px]"
                 title="Reset District Filter"
               >
                 ✕ Reset
@@ -2745,8 +2747,6 @@ export default function ContactDirectoryModule({
             )}
           </div>
         </div>
-
-
       </div>
 
       {/* MAIN CONTENT VIEW: LEAD MANAGER TABLE (Image 2) OR CARDS GRID (Image 1) */}
@@ -2754,11 +2754,11 @@ export default function ContactDirectoryModule({
         /* MERITTO LEAD MANAGER DATA TABLE (Exact Image 2 Implementation) */
         <div className="bg-white dark:bg-slate-900/90 text-slate-800 dark:text-white rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl overflow-hidden font-sans">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-700 dark:text-sky-300 font-bold border-b border-slate-200 dark:border-white/10 uppercase text-[11px] tracking-wider">
+            <table className="w-full text-left border-collapse text-[14.5px]">
+              <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-700 dark:text-sky-300 font-bold border-b border-slate-200 dark:border-white/10 uppercase text-[13.5px] tracking-wider">
                 {/* Row 1: Header Titles with Sort & Interactive Filter Icon Popovers */}
                 <tr className="bg-slate-200/80 dark:bg-slate-950/90 text-slate-800 dark:text-slate-200 font-extrabold border-b border-slate-200 dark:border-white/10">
-                  <th className="p-3 w-10 text-center">
+                  <th className="p-3.5 w-12 text-center">
                     <Checkbox
                       checked={selectedRows.length === sortedAndFilteredContacts.length && sortedAndFilteredContacts.length > 0}
                       aria-checked={selectedRows.length > 0 && selectedRows.length < sortedAndFilteredContacts.length ? "mixed" : selectedRows.length === sortedAndFilteredContacts.length && sortedAndFilteredContacts.length > 0}
@@ -2778,7 +2778,7 @@ export default function ContactDirectoryModule({
                     return (
                       <th
                         key={col}
-                        className={`p-3 font-extrabold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap ${getColumnWidthClass(col)}`}
+                        className={`p-3.5 font-bold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[13.5px] whitespace-nowrap ${getColumnWidthClass(col)}`}
                       >
                         <span
                           onClick={() => {
@@ -2793,38 +2793,38 @@ export default function ContactDirectoryModule({
                               setSortDirection("asc");
                             }
                           }}
-                          className="flex items-center gap-1 cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors select-none"
+                          className="flex items-center gap-1.5 cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors select-none"
                           title={`Click to sort by ${col}`}
                         >
                           <span>{col}</span>
-                          <span className={`text-[10px] ${isSortedThisCol ? "text-blue-600 dark:text-sky-300 font-extrabold" : "text-slate-400"}`}>
+                          <span className={`text-[12px] ${isSortedThisCol ? "text-blue-600 dark:text-sky-300 font-extrabold" : "text-slate-400"}`}>
                             {isSortedThisCol ? (sortDirection === "asc" ? "▲" : "▼") : "↑↓"}
                           </span>
                         </span>
                       </th>
                     );
                   })}
-                  <th className="p-3 font-extrabold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[11px] whitespace-nowrap text-center sticky right-0 z-20 min-w-[200px] w-52 bg-slate-200 dark:bg-slate-950 border-l border-slate-300 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
+                  <th className="p-3.5 font-bold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[13.5px] whitespace-nowrap text-center sticky right-0 z-20 min-w-[210px] w-56 bg-slate-200 dark:bg-slate-950 border-l border-slate-300 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                     Actions
                   </th>
                 </tr>
 
                 {/* Row 2: Sub-Header Filter Bar Row (Direct Inline Filter Options under Column Headers) */}
                 <tr className="bg-slate-50 dark:bg-slate-950/90 border-b border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 font-normal normal-case">
-                  <td className="p-2 text-center text-[10px] font-bold text-blue-600 dark:text-sky-400">
-                    <Filter className="w-3.5 h-3.5 mx-auto text-blue-600 dark:text-sky-400" />
+                  <td className="p-2.5 text-center text-[12px] font-bold text-blue-600 dark:text-sky-400">
+                    <Filter className="w-4 h-4 mx-auto text-blue-600 dark:text-sky-400" />
                   </td>
                   {selectedColumns.map((col) => {
                     const filterVal = columnFilters[col] || "";
                     if (col === "City") {
                       return (
-                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[14px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs min-h-[36px]"
                           >
                             <option value="ALL">All Cities</option>
                             {TAMIL_NADU_DISTRICTS.map((d) => (
@@ -2838,13 +2838,13 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Lead Stage") {
                       return (
-                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[14px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs min-h-[36px]"
                           >
                             <option value="ALL">All Stages</option>
                             <option value="INQUIRY">📋 Inquiry</option>
@@ -2857,13 +2857,13 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Campus") {
                       return (
-                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[14px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs min-h-[36px]"
                           >
                             <option value="ALL">All Campuses</option>
                             <option value="KARUR">KARUR</option>
@@ -2874,13 +2874,13 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "State") {
                       return (
-                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[14px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs min-h-[36px]"
                           >
                             <option value="ALL">All States</option>
                             <option value="Tamil Nadu">Tamil Nadu</option>
@@ -2890,13 +2890,13 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Community") {
                       return (
-                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[14px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs min-h-[36px]"
                           >
                             <option value="ALL">All</option>
                             <option value="OC">OC</option>
@@ -2910,13 +2910,13 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Gender") {
                       return (
-                        <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-2 py-1 text-[11px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[14px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs min-h-[36px]"
                           >
                             <option value="ALL">All</option>
                             <option value="Male">Male</option>
@@ -2926,7 +2926,7 @@ export default function ContactDirectoryModule({
                       );
                     }
                     return (
-                      <td key={`filter_${col}`} className={`p-1.5 ${getColumnWidthClass(col)}`}>
+                      <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
                         <div className="relative flex items-center">
                           <input
                             type="text"
@@ -2935,7 +2935,7 @@ export default function ContactDirectoryModule({
                               setColumnFilters({ ...columnFilters, [col]: e.target.value })
                             }
                             placeholder="Filter..."
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md pl-2 pr-5 py-1 text-[11px] text-slate-800 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-sky-500 focus:outline-none shadow-2xs"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-3 pr-6 py-1.5 text-[14px] text-slate-800 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-sky-500 focus:outline-none shadow-2xs min-h-[36px]"
                           />
                           {filterVal && (
                             <button
@@ -2944,7 +2944,7 @@ export default function ContactDirectoryModule({
                                 delete updated[col];
                                 setColumnFilters(updated);
                               }}
-                              className="absolute right-1 text-slate-400 hover:text-slate-600 text-[10px] font-bold px-1 cursor-pointer"
+                              className="absolute right-1.5 text-slate-400 hover:text-slate-600 text-[12px] font-bold px-1 cursor-pointer"
                               title="Clear Filter"
                             >
                               ✕
@@ -2954,7 +2954,7 @@ export default function ContactDirectoryModule({
                       </td>
                     );
                   })}
-                  <td className="p-1.5 text-center text-[10px] text-slate-400 font-bold sticky right-0 z-20 min-w-[200px] w-52 bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
+                  <td className="p-2 text-center text-[12px] text-slate-400 font-bold sticky right-0 z-20 min-w-[210px] w-56 bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                     -
                   </td>
                 </tr>
@@ -3004,10 +3004,10 @@ export default function ContactDirectoryModule({
                     <tr
                       key={contact.id}
                       onClick={() => handleCandidateClick(contact)}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer animate-in fade-in duration-200"
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer animate-in fade-in duration-200 border-b border-slate-200 dark:border-white/5 min-h-[64px]"
                     >
                     {/* Select Checkbox */}
-                    <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedRows.includes(contact.id)}
                         onCheckedChange={(checked) => {
@@ -3026,7 +3026,7 @@ export default function ContactDirectoryModule({
                     {selectedColumns.map((col) => (
                       <td
                         key={col}
-                        className={`p-3 align-middle ${getColumnWidthClass(col)} ${
+                        className={`p-3.5 align-middle ${getColumnWidthClass(col)} ${
                           col === "Registered Name" ? "font-bold text-blue-600 dark:text-sky-400 hover:underline" : ""
                         }`}
                       >
@@ -3036,10 +3036,10 @@ export default function ContactDirectoryModule({
 
                     {/* Actions Column with Sticky Pinning to Right */}
                     <td
-                      className="p-3 text-center sticky right-0 z-10 min-w-[200px] w-52 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
+                      className="p-3.5 text-center sticky right-0 z-10 min-w-[210px] w-56 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex items-center justify-center gap-1.5 min-w-[185px]">
+                      <div className="flex items-center justify-center gap-2 min-w-[195px]">
                         <Tooltip text={`Send Official Email to ${contact.name}`} position="left">
                           <button
                             onClick={() =>
@@ -3061,10 +3061,10 @@ export default function ContactDirectoryModule({
                                 status: contact.status,
                               })
                             }
-                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Send Email to ${contact.name}`}
                           >
-                            <Mail className="w-3.5 h-3.5" />
+                            <Mail className="w-4 h-4" />
                           </button>
                         </Tooltip>
                         <Tooltip text={`WhatsApp Chat with ${contact.name}`} position="left">
@@ -3073,10 +3073,10 @@ export default function ContactDirectoryModule({
                               onActionTrigger("WHATSAPP", contact.name);
                               redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
                             }}
-                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`WhatsApp Chat with ${contact.name}`}
                           >
-                            <MessageSquare className="w-3.5 h-3.5" />
+                            <MessageSquare className="w-4 h-4" />
                           </button>
                         </Tooltip>
                         <Tooltip text={`Native SMS to ${contact.name}`} position="left">
@@ -3085,28 +3085,28 @@ export default function ContactDirectoryModule({
                               onActionTrigger("SMS", contact.name);
                               redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
                             }}
-                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Send Native SMS to ${contact.name}`}
                           >
-                            <Send className="w-3.5 h-3.5" />
+                            <Send className="w-4 h-4" />
                           </button>
                         </Tooltip>
                         <Tooltip text={`Edit ${contact.name}`} position="left">
                           <button
                             onClick={() => setEditingContact(contact)}
-                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 hover:bg-sky-200 border border-sky-200 dark:border-sky-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 hover:bg-sky-200 border border-sky-200 dark:border-sky-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Edit ${contact.name}`}
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <Edit3 className="w-4 h-4" />
                           </button>
                         </Tooltip>
                         <Tooltip text={`Delete ${contact.name}`} position="left">
                           <button
                             onClick={() => handleDeleteContact(contact.id, contact.name)}
-                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 hover:bg-rose-200 border border-rose-200 dark:border-rose-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 hover:bg-rose-200 border border-rose-200 dark:border-rose-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Delete ${contact.name}`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </Tooltip>
                       </div>
@@ -3119,26 +3119,26 @@ export default function ContactDirectoryModule({
           </div>
 
           {/* TABLE FOOTER CONTROLS BAR WITH FULL PAGINATION matching Image 1 */}
-          <div className="bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200 dark:border-white/10 p-3.5 flex flex-col lg:flex-row items-center justify-between gap-3.5 text-xs text-slate-700 dark:text-slate-300 font-sans shadow-inner">
+          <div className="bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200 dark:border-white/10 p-4 flex flex-col lg:flex-row items-center justify-between gap-4 text-[13.5px] text-slate-700 dark:text-slate-300 font-sans shadow-inner">
             {/* Left: Classic View & Record Range Indicator */}
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <button
                 onClick={() => setDirectoryViewMode("GRID")}
-                className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-white font-bold shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all text-xs"
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-white font-bold shadow-xs flex items-center gap-2 cursor-pointer active:scale-95 transition-all text-[13.5px]"
               >
                 <span>Classic View</span>
               </button>
-              <span className="font-extrabold text-slate-800 dark:text-white bg-slate-200/80 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-white/15 shadow-2xs">
+              <span className="font-extrabold text-slate-800 dark:text-white bg-slate-200/80 dark:bg-slate-900 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-white/15 shadow-2xs text-[13.5px]">
                 Showing {sortedAndFilteredContacts.length > 0 ? dirStartIndex + 1 : 0} - {dirEndIndex} of {sortedAndFilteredContacts.length} Leads
               </span>
             </div>
 
             {/* Center: Full Page Navigation Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 disabled={safeCurrentPage === 1}
                 onClick={() => setCurrentPage(1)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-xs"
+                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-[13px]"
                 title="First Page"
               >
                 ⏮ First
@@ -3147,13 +3147,13 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === 1}
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-xs"
+                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-[13px]"
               >
                 ◀ Prev
               </button>
 
               {/* Page Number Buttons */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 {(() => {
                   const maxVisible = 5;
                   let start = Math.max(1, safeCurrentPage - Math.floor(maxVisible / 2));
@@ -3172,7 +3172,7 @@ export default function ContactDirectoryModule({
                       <button
                         key={pNum}
                         onClick={() => setCurrentPage(pNum)}
-                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-bold text-xs transition-all cursor-pointer shadow-2xs ${
+                        className={`w-8 h-8 rounded-lg font-bold text-[13px] transition-all cursor-pointer shadow-2xs ${
                           isActive
                             ? "bg-sky-500 text-white font-extrabold ring-2 ring-sky-300 scale-105"
                             : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/30 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
@@ -3188,7 +3188,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-xs"
+                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-[13px]"
               >
                 Next ▶
               </button>
@@ -3196,7 +3196,7 @@ export default function ContactDirectoryModule({
               <button
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => setCurrentPage(totalPages)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-xs"
+                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-white/30 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-slate-800 dark:text-white cursor-pointer shadow-2xs text-[13px]"
                 title="Last Page"
               >
                 Last ⏭
@@ -3206,14 +3206,14 @@ export default function ContactDirectoryModule({
             {/* Right: Show Rows Selector */}
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-white">
-                <span className="text-xs text-slate-500 font-medium">Show Rows:</span>
+                <span className="text-[13.5px] text-slate-600 dark:text-slate-400 font-semibold">Show Rows:</span>
                 <select
                   value={rowsPerPage}
                   onChange={(e) => {
                     setRowsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-lg px-2.5 py-1 text-slate-800 dark:text-white font-bold text-xs focus:outline-none cursor-pointer shadow-2xs"
+                  className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-lg px-3 py-1.5 text-slate-800 dark:text-white font-bold text-[13.5px] focus:outline-none cursor-pointer shadow-2xs"
                 >
                   <option value={10}>10 rows</option>
                   <option value={25}>25 rows</option>

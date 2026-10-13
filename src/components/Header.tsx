@@ -170,31 +170,31 @@ export default function Header({
             />
           </div>
           <div className="min-w-0">
-            <h1 className="font-bold text-xs sm:text-sm md:text-base text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 sm:gap-2 truncate">
-              <span className="truncate text-slate-900 dark:text-white font-extrabold hidden sm:inline">V.S.B. ENGINEERING COLLEGE</span>
-              <span className="truncate text-slate-900 dark:text-white font-extrabold sm:hidden">V.S.B. COLLEGE</span>
-              <span className="hidden md:inline-flex items-center text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-2 py-0.5 rounded-md shrink-0">
+            <h1 className="font-black text-[16px] sm:text-[17px] md:text-[18px] text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5 truncate">
+              <span className="truncate text-slate-900 dark:text-white font-black hidden sm:inline">V.S.B. ENGINEERING COLLEGE</span>
+              <span className="truncate text-slate-900 dark:text-white font-black sm:hidden">V.S.B. COLLEGE</span>
+              <span className="hidden md:inline-flex items-center text-[12.5px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-2.5 py-0.5 rounded-md shrink-0">
                 SPHEREX CRM
               </span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 font-medium truncate">
-              <MapPin className="w-3 h-3 text-rose-500 shrink-0" />
+            <p className="text-[13px] sm:text-[13.5px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium truncate mt-0.5">
+              <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
               <span className="truncate">Karur & Coimbatore</span>
             </p>
           </div>
         </div>
 
         {/* Right: Controls (Campus Selector, Ask Nora AI, Search, Logout) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Master Creator Badge */}
           {currentUserRole === "CREATOR" && isMasterCreator && !isCapacitorNative() && (
             <Tooltip text={`Master Creator Account Active (${loggedInUsername || "spherexnithish#"})`}>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border border-amber-400 text-amber-300 font-bold text-xs shadow-md shadow-amber-500/10 shrink-0">
-                <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="font-mono text-[11px] sm:text-xs font-black truncate max-w-[180px]">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border border-amber-400 text-amber-300 font-bold text-[13px] shadow-md shadow-amber-500/10 shrink-0">
+                <Crown className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="font-mono text-[12px] sm:text-[13px] font-black truncate max-w-[180px]">
                   {loggedInUsername || "spherexnithish#"}
                 </span>
-                <span className="px-1.5 py-0.2 rounded bg-amber-500/30 text-amber-300 text-[9px] font-black uppercase">
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-300 text-[10px] font-black uppercase">
                   Creator
                 </span>
               </div>
@@ -204,17 +204,17 @@ export default function Header({
           {/* Teacher Profile ID Badge (Prominently displayed for logged in faculty) */}
           {currentUserRole === "TEACHER" && (
             <Tooltip text={`Faculty Account Active: Profile ID ${loggedInUsername || "Staff"}`}>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-semibold text-xs shadow-xs shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-semibold text-[13px] shadow-xs shrink-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 hidden xs:inline">
+                  <span className="text-[11px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 hidden xs:inline">
                     ID:
                   </span>
-                  <span className="font-mono text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-[190px]">
+                  <span className="font-mono text-[12px] sm:text-[13px] font-bold text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-[190px]">
                     {loggedInUsername}
                   </span>
                 </div>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white uppercase tracking-wider hidden sm:inline">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white uppercase tracking-wider hidden sm:inline">
                   Active
                 </span>
               </div>
@@ -222,22 +222,22 @@ export default function Header({
           )}
 
           {/* Clean Segmented Campus Selector */}
-          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-xs shrink-0">
+          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[14px] sm:text-[14.5px] shrink-0">
             {/* Karur Campus */}
             {loggedInCampus === "KARUR" ? (
               <Tooltip text="Active Session: V.S.B. Karur Campus">
                 <button
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-600 text-white font-semibold shadow-xs transition-all cursor-default"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[14px] sm:text-[14.5px]"
                   disabled
                 >
-                  <Building2 className="w-3.5 h-3.5" />
+                  <Building2 className="w-4 h-4" />
                   <span>Karur Campus</span>
                 </button>
               </Tooltip>
             ) : (
               <Tooltip text="Access restricted to Karur Admin">
                 <button
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
                   disabled
                 >
                   <Lock className="w-3.5 h-3.5" />
@@ -250,17 +250,17 @@ export default function Header({
             {loggedInCampus === "COIMBATORE" ? (
               <Tooltip text="Active Session: V.S.B. Coimbatore Campus">
                 <button
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-600 text-white font-semibold shadow-xs transition-all cursor-default"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[14px] sm:text-[14.5px]"
                   disabled
                 >
-                  <GraduationCap className="w-3.5 h-3.5" />
+                  <GraduationCap className="w-4 h-4" />
                   <span>Coimbatore Campus</span>
                 </button>
               </Tooltip>
             ) : (
               <Tooltip text="Access restricted to Coimbatore Admin">
                 <button
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
                   disabled
                 >
                   <Lock className="w-3.5 h-3.5" />
@@ -294,16 +294,16 @@ export default function Header({
 
             {/* Dropdown Search Results Overlay */}
             {trimmedQuery.length > 0 && showSearchResults && (
-              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-950/95 border border-slate-200 dark:border-sky-500/40 p-3 shadow-2xl z-50 backdrop-blur-2xl text-xs space-y-2 animate-in fade-in duration-150">
-                <div className="flex items-center justify-between px-2 pb-1.5 border-b border-slate-200 dark:border-slate-800">
-                  <span className="text-[11px] font-extrabold text-sky-600 dark:text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" /> Search Applications ({searchResults.length})
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-950/95 border border-slate-200 dark:border-sky-500/40 p-3.5 shadow-2xl z-50 backdrop-blur-2xl text-xs space-y-2.5 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between px-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-[12.5px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-sky-500 dark:text-sky-400" /> Search Applications ({searchResults.length})
                   </span>
                   <button
                     onClick={() => setShowSearchResults(false)}
                     className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -313,17 +313,17 @@ export default function Header({
                       <div
                         key={applicant.id}
                         onClick={() => handleResultClick(applicant)}
-                        className="p-2.5 rounded-xl bg-slate-50 hover:bg-sky-50/80 dark:bg-slate-900/90 dark:hover:bg-sky-950/70 border border-slate-200 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-500/40 transition-all cursor-pointer flex items-center justify-between group shadow-xs"
+                        className="p-3 rounded-xl bg-slate-50 hover:bg-sky-50/80 dark:bg-slate-900/90 dark:hover:bg-sky-950/70 border border-slate-200 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-500/40 transition-all cursor-pointer flex items-center justify-between group shadow-xs"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shrink-0 shadow-md">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white font-extrabold text-[13px] shrink-0 shadow-md">
                             {applicant.name.slice(0, 1).toUpperCase()}
                           </div>
                           <div className="min-w-0 space-y-0.5">
-                            <div className="font-black text-slate-950 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors truncate">
+                            <div className="font-bold text-[15px] sm:text-[15.5px] text-slate-950 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors truncate">
                               {applicant.name}
                             </div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5">
+                            <div className="text-[13px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5">
                               <span>{applicant.phone}</span>
                               <span>•</span>
                               <span className="text-sky-600 dark:text-sky-400 font-semibold">{applicant.campus}</span>
@@ -332,10 +332,10 @@ export default function Header({
                         </div>
 
                         <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800">
+                          <span className="px-2.5 py-0.5 rounded-md text-[12.5px] font-bold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800">
                             {applicant.application?.stage || applicant.status || "INQUIRY"}
                           </span>
-                          <span className="text-[10px] text-sky-600 dark:text-sky-400 group-hover:underline font-bold flex items-center gap-0.5">
+                          <span className="text-[12px] text-sky-600 dark:text-sky-400 group-hover:underline font-bold flex items-center gap-0.5">
                             Open App →
                           </span>
                         </div>
@@ -344,8 +344,8 @@ export default function Header({
                   </div>
                 ) : (
                   <div className="text-center py-6 text-slate-500 dark:text-slate-400 space-y-1">
-                    <p className="font-semibold">No candidates found</p>
-                    <p className="text-[10px]">Try searching by student name, phone, school, or course.</p>
+                    <p className="font-bold text-[14px]">No candidates found</p>
+                    <p className="text-[12px]">Try searching by student name, phone, school, or course.</p>
                   </div>
                 )}
               </div>
@@ -356,16 +356,16 @@ export default function Header({
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="press-spring flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs transition-all duration-150 cursor-pointer shrink-0"
+            className="press-spring flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[14px] sm:text-[14.5px] shadow-xs transition-all duration-150 cursor-pointer shrink-0"
             title="Ask Nora AI to analyze the live student database (Shortcut: Ctrl + A)"
           >
             <img
               src="/nora-logo.png"
               alt="NORA AI Logo"
-              className="w-4 h-4 rounded-full object-cover shrink-0"
+              className="w-4.5 h-4.5 rounded-full object-cover shrink-0"
             />
-            <span className="text-xs whitespace-nowrap">Ask Nora AI</span>
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
+            <span className="text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[12px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
               Ctrl+A
             </kbd>
           </button>
@@ -375,22 +375,22 @@ export default function Header({
             <button
               type="button"
               onClick={() => onTabChange("CONTACTS")}
-              className="press-spring flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
+              className="press-spring flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
               title={`My Assigned Contacts: ${visibleApplicants.length.toLocaleString("en-IN")} leads allocated by Admissions Admin. Click to view Lead Directory.`}
             >
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-indigo-400" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
               </span>
-              <div className="flex items-center gap-1.5 text-xs font-black">
-                <span className="text-[11px] text-indigo-600 dark:text-indigo-400 hidden xl:inline">
+              <div className="flex items-center gap-1.5 text-[13.5px] font-black">
+                <span className="text-[13px] text-indigo-600 dark:text-indigo-400 hidden xl:inline font-semibold">
                   📌 Assigned:
                 </span>
-                <span className="font-mono text-indigo-600 dark:text-indigo-300 font-extrabold">
+                <span className="font-mono text-indigo-600 dark:text-indigo-300 font-black text-[14.5px]">
                   {visibleApplicants.length.toLocaleString("en-IN")}
                 </span>
               </div>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-200/70 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold hidden sm:inline">
+              <span className="text-[12px] px-2 py-0.5 rounded-md bg-indigo-200/70 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold hidden sm:inline">
                 Leads
               </span>
             </button>
@@ -398,7 +398,7 @@ export default function Header({
             <button
               type="button"
               onClick={() => onTabChange("CONTACTS")}
-              className={`press-spring flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border transition-all cursor-pointer shadow-xs shrink-0 ${
+              className={`press-spring flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-xs shrink-0 ${
                 isLimitReached
                   ? "bg-rose-500/10 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300"
                   : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:border-indigo-400"
@@ -409,18 +409,18 @@ export default function Header({
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLimitReached ? "bg-rose-400" : "bg-emerald-400"}`} />
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${isLimitReached ? "bg-rose-500" : "bg-emerald-500"}`} />
               </span>
-              <div className="flex items-center gap-1.5 text-xs font-black">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden xl:inline">
+              <div className="flex items-center gap-1.5 text-[13.5px] font-black">
+                <span className="text-[13px] text-slate-500 dark:text-slate-400 hidden xl:inline font-semibold">
                   🔥 Live DB:
                 </span>
-                <span className={`font-mono ${isLimitReached ? "text-rose-600 dark:text-rose-400 font-black" : "text-emerald-600 dark:text-emerald-400 font-extrabold"}`}>
+                <span className={`font-mono ${isLimitReached ? "text-rose-600 dark:text-rose-400 font-black text-[14.5px]" : "text-emerald-600 dark:text-emerald-400 font-black text-[14.5px]"}`}>
                   {liveLeadCount.toLocaleString("en-IN")}
                 </span>
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                <span className="text-[12px] text-slate-400 dark:text-slate-500 font-normal">
                   / {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}
                 </span>
               </div>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hidden sm:inline">
+              <span className="text-[12px] px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hidden sm:inline">
                 Leads
               </span>
             </button>

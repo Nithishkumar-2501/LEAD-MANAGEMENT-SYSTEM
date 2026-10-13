@@ -536,24 +536,24 @@ export default function Sidebar({
           isLight
             ? "bg-white text-slate-900 border-slate-200 shadow-slate-200/50"
             : "bg-slate-950/95 text-white border-white/10 shadow-black/50"
-        } ${isCollapsed ? "w-20" : "w-64"} ${
+        } ${isCollapsed ? "w-20" : "w-72"} ${
           isOpenMobile ? "flex translate-x-0" : "hidden lg:flex lg:translate-x-0"
         }`}
       >
         {/* Sidebar Header / Brand Emblem (V.S.B. Engineering College) */}
         <div
-          className={`p-3.5 border-b flex items-center justify-between gap-2.5 ${
+          className={`p-4 border-b flex items-center justify-between gap-3 ${
             isLight ? "border-slate-200 bg-slate-50/80" : "border-white/10 bg-slate-950"
           }`}
         >
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             {/* Official V.S.B. Logo Badge */}
-            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
               <Image
                 src="/vsb-logo.png"
                 alt="V.S.B. Engineering College Logo"
-                width={36}
-                height={36}
+                width={40}
+                height={40}
                 className="w-full h-full object-contain rounded-full"
               />
             </div>
@@ -561,18 +561,18 @@ export default function Sidebar({
             {!isCollapsed && (
               <div className="min-w-0">
                 <h2
-                  className={`font-black text-xs sm:text-sm tracking-tight truncate uppercase leading-tight ${
+                  className={`font-black text-[16px] sm:text-[17px] tracking-tight truncate uppercase leading-snug ${
                     isLight ? "text-slate-900" : "text-white"
                   }`}
                 >
                   V.S.B. ENGINEERING COLLEGE
                 </h2>
                 <p
-                  className={`text-[9.5px] font-extrabold truncate flex items-center gap-1 mt-0.5 ${
+                  className={`text-[13px] font-bold truncate flex items-center gap-1.5 mt-0.5 ${
                     isLight ? "text-slate-600" : "text-slate-300"
                   }`}
                 >
-                  <MapPin className="w-3 h-3 text-pink-500 shrink-0" />
+                  <MapPin className="w-3.5 h-3.5 text-pink-500 shrink-0" />
                   <span>KARUR & COIMBATORE CAMPUSES</span>
                 </p>
               </div>
@@ -589,7 +589,7 @@ export default function Sidebar({
             }`}
             title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
 
           {/* Mobile Close Button */}
@@ -606,7 +606,7 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Items Section */}
-        <div className="flex-1 px-3 py-3 space-y-3 overflow-y-auto hide-scrollbar">
+        <div className="flex-1 px-3.5 py-3.5 space-y-3.5 overflow-y-auto hide-scrollbar">
           {/* Search For Menu & Applications Input Bar */}
           {!isCollapsed && (
             <div className="space-y-2">
@@ -628,14 +628,14 @@ export default function Sidebar({
               {/* CANDIDATE APPLICATIONS SEARCH RESULTS */}
               {trimmedQuery.length > 0 && (
                 <div
-                  className={`space-y-1.5 p-2 rounded-xl border shadow-xl animate-in fade-in duration-150 ${
+                  className={`space-y-1.5 p-2.5 rounded-xl border shadow-xl animate-in fade-in duration-150 ${
                     isLight
                       ? "bg-white border-sky-400/60 shadow-sky-100/50"
                       : "bg-white dark:bg-slate-900/95 border-sky-400/60 dark:border-sky-500/40 shadow-sky-100/50 dark:shadow-xl"
                   }`}
                 >
                   <div
-                    className={`text-[10px] font-black uppercase tracking-wider flex items-center justify-between px-1 ${
+                    className={`text-[13px] font-bold uppercase tracking-wider flex items-center justify-between px-1 ${
                       isLight ? "text-sky-600" : "text-sky-600 dark:text-sky-400"
                     }`}
                   >
@@ -647,7 +647,7 @@ export default function Sidebar({
                         <div
                           key={app.id}
                           onClick={() => handleSelectApplication(app)}
-                          className={`p-2 rounded-lg cursor-pointer transition-all flex items-center justify-between group border ${
+                          className={`p-2.5 rounded-lg cursor-pointer transition-all flex items-center justify-between group border ${
                             isLight
                               ? "bg-white hover:bg-sky-50 border-slate-200 hover:border-sky-300 shadow-xs"
                               : "bg-white hover:bg-sky-50 border-slate-200 hover:border-sky-300 shadow-xs dark:bg-slate-800/90 dark:hover:bg-sky-950/80 dark:border-slate-700 dark:hover:border-sky-500/50"
@@ -655,7 +655,7 @@ export default function Sidebar({
                         >
                           <div className="min-w-0 pr-1">
                             <div
-                              className={`font-black text-xs truncate ${
+                              className={`font-bold text-[15px] truncate ${
                                 isLight
                                   ? "text-black group-hover:text-sky-600"
                                   : "text-black dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-300"
@@ -664,7 +664,7 @@ export default function Sidebar({
                               {app.name}
                             </div>
                             <div
-                              className={`text-[10px] truncate font-mono font-medium ${
+                              className={`text-[13px] truncate font-mono font-medium ${
                                 isLight
                                   ? "text-slate-600 group-hover:text-slate-800"
                                   : "text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-300"
@@ -674,7 +674,7 @@ export default function Sidebar({
                             </div>
                           </div>
                           <span
-                            className={`text-[9px] font-black px-1.5 py-0.5 rounded border shrink-0 transition-colors ${
+                            className={`text-[12px] sm:text-[13px] font-bold px-2 py-0.5 rounded border shrink-0 transition-colors ${
                               isLight
                                 ? "bg-sky-50 text-sky-600 border-sky-200 group-hover:bg-sky-600 group-hover:text-white"
                                 : "bg-sky-50 text-sky-600 border-sky-200 group-hover:bg-sky-600 group-hover:text-white dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800 dark:group-hover:bg-sky-900"
@@ -687,7 +687,7 @@ export default function Sidebar({
                     </div>
                   ) : (
                     <div
-                      className={`text-[11px] py-1 text-center font-medium ${
+                      className={`text-[13px] py-1 text-center font-medium ${
                         isLight ? "text-slate-500" : "text-slate-500 dark:text-slate-400"
                       }`}
                     >
@@ -701,11 +701,11 @@ export default function Sidebar({
 
           {/* SECTION HEADLINE */}
           <div
-            className={`px-2 text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
+            className={`px-2 text-[13px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
               isCollapsed ? "justify-center text-center" : ""
             } ${isLight ? "text-slate-400" : "text-sky-400/80"}`}
           >
-            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
             <span>{isCollapsed ? "SYS" : "SYSTEM MENU"}</span>
           </div>
 
@@ -754,11 +754,11 @@ export default function Sidebar({
                     <LayoutDashboard className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate text-slate-950 dark:text-white">
+                    <span className="font-bold text-[16px] tracking-tight truncate text-slate-950 dark:text-white">
                       Dashboard
                     </span>
                     <span
-                      className={`text-[10px] font-semibold truncate ${
+                      className={`text-[13.5px] font-medium truncate ${
                         isLight ? "text-slate-600 font-bold" : "text-slate-400"
                       }`}
                     >
@@ -769,7 +769,7 @@ export default function Sidebar({
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                    className={`text-[13px] font-bold px-2 py-0.5 rounded-full ${
                       isLight
                         ? "bg-sky-100 text-sky-700 border border-sky-200"
                         : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
@@ -802,7 +802,7 @@ export default function Sidebar({
                       key={item.id}
                       id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group border cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-[15px] font-semibold transition-all duration-200 group border cursor-pointer ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
                           : isLight
@@ -823,7 +823,7 @@ export default function Sidebar({
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-black text-xs tracking-tight truncate w-full ${
+                          className={`font-bold text-[15.5px] tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
@@ -834,7 +834,7 @@ export default function Sidebar({
                           {item.label}
                         </span>
                         <span
-                          className={`text-[10px] font-medium truncate w-full ${
+                          className={`text-[13px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -865,10 +865,10 @@ export default function Sidebar({
                 }`}
               >
                 <div className="px-2 py-1 border-b border-white/10 flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-400 flex items-center gap-1">
-                    <LayoutDashboard className="w-3 h-3" /> Dashboard Views
+                  <span className="text-[13px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1">
+                    <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard Views
                   </span>
-                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">
+                  <span className="text-[12px] font-semibold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300">
                     {dashboardSubItems.length} Options
                   </span>
                 </div>
@@ -883,7 +883,7 @@ export default function Sidebar({
                         handleNavClick(item.id);
                         setIsDashboardOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
                           : isLight
@@ -904,7 +904,7 @@ export default function Sidebar({
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                          className={`font-bold text-[14.5px] tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
@@ -915,7 +915,7 @@ export default function Sidebar({
                           {item.label}
                         </span>
                         <span
-                          className={`text-[9px] font-medium truncate w-full ${
+                          className={`text-[12.5px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -984,11 +984,11 @@ export default function Sidebar({
                     <GraduationCap className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate text-slate-950 dark:text-white">
+                    <span className="font-bold text-[16px] tracking-tight truncate text-slate-950 dark:text-white">
                       Admission CRM
                     </span>
                     <span
-                      className={`text-[10px] font-semibold truncate ${
+                      className={`text-[13.5px] font-medium truncate ${
                         isLight ? "text-slate-600 font-bold" : "text-slate-400"
                       }`}
                     >
@@ -999,7 +999,7 @@ export default function Sidebar({
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                    className={`text-[13px] font-bold px-2 py-0.5 rounded-full ${
                       isLight
                         ? "bg-sky-100 text-sky-700 border border-sky-200"
                         : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
@@ -1031,7 +1031,7 @@ export default function Sidebar({
                     <button
                       key={item.id}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group border cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-[15px] font-semibold transition-all duration-200 group border cursor-pointer ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
                           : isLight
@@ -1052,7 +1052,7 @@ export default function Sidebar({
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-black text-xs tracking-tight truncate w-full ${
+                          className={`font-bold text-[15.5px] tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
@@ -1063,7 +1063,7 @@ export default function Sidebar({
                           {item.label}
                         </span>
                         <span
-                          className={`text-[10px] font-medium truncate w-full ${
+                          className={`text-[13px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -1094,10 +1094,10 @@ export default function Sidebar({
                 }`}
               >
                 <div className="px-2 py-1 border-b border-white/10 flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-400 flex items-center gap-1">
-                    <GraduationCap className="w-3 h-3" /> Admission CRM
+                  <span className="text-[13px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1">
+                    <GraduationCap className="w-3.5 h-3.5" /> Admission CRM
                   </span>
-                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">
+                  <span className="text-[12px] font-semibold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300">
                     {filteredSubItems.length} Modules
                   </span>
                 </div>
@@ -1111,7 +1111,7 @@ export default function Sidebar({
                         handleNavClick(item.id);
                         setIsAdmissionCrmOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
                           : isLight
@@ -1132,7 +1132,7 @@ export default function Sidebar({
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                          className={`font-bold text-[14.5px] tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
@@ -1143,7 +1143,7 @@ export default function Sidebar({
                           {item.label}
                         </span>
                         <span
-                          className={`text-[9px] font-medium truncate w-full ${
+                          className={`text-[12.5px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -1212,11 +1212,11 @@ export default function Sidebar({
                       <FileCheck className="w-5 h-5 text-sky-500" />
                     </div>
                     <div className="flex flex-col text-left truncate">
-                      <span className="font-extrabold text-xs tracking-tight truncate text-slate-950 dark:text-white">
+                      <span className="font-bold text-[15px] tracking-tight truncate text-slate-950 dark:text-white">
                         Application Manager
                       </span>
                       <span
-                        className={`text-[10px] font-semibold truncate ${
+                        className={`text-[12.5px] font-medium truncate ${
                           isLight ? "text-slate-600 font-bold" : "text-slate-400"
                         }`}
                       >
@@ -1227,7 +1227,7 @@ export default function Sidebar({
 
                   <div className="flex items-center gap-2 shrink-0">
                     <span
-                      className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                      className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
                         isLight
                           ? "bg-sky-100 text-sky-700 border border-sky-200"
                           : "bg-sky-500/20 text-sky-300 border border-sky-400/30"
@@ -1260,7 +1260,7 @@ export default function Sidebar({
                         key={item.id}
                         id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
                         onClick={() => handleNavClick(item.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative cursor-pointer ${
+                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-[15px] font-semibold transition-all duration-200 group relative cursor-pointer ${
                           isActive
                             ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
                             : isLight
@@ -1281,7 +1281,7 @@ export default function Sidebar({
                         </div>
                         <div className="flex flex-col items-start min-w-0 text-left">
                           <span
-                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            className={`font-bold text-[14px] tracking-tight truncate w-full ${
                               isActive
                                 ? "text-white"
                                 : isLight
@@ -1292,7 +1292,7 @@ export default function Sidebar({
                             {item.label}
                           </span>
                           <span
-                            className={`text-[9px] font-medium truncate w-full ${
+                            className={`text-[12px] font-medium truncate w-full ${
                               isActive
                                 ? "text-white/80"
                                 : isLight
@@ -1323,10 +1323,10 @@ export default function Sidebar({
                   }`}
                 >
                   <div className="px-2 py-1 border-b border-white/10 flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-sky-400 flex items-center gap-1">
-                      <FileCheck className="w-3 h-3" /> Application Manager
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1">
+                      <FileCheck className="w-3.5 h-3.5" /> Application Manager
                     </span>
-                    <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300">
                       Admin Only
                     </span>
                   </div>
@@ -1341,7 +1341,7 @@ export default function Sidebar({
                           handleNavClick(item.id);
                           setIsAppManagerOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 group relative ${
                           isActive
                             ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
                             : isLight
@@ -1355,14 +1355,14 @@ export default function Sidebar({
                               ? "bg-white/20 text-white"
                               : isLight
                               ? "bg-slate-200 text-slate-600"
-                              : "bg-slate-800/90 text-slate-300"
+                            : "bg-slate-800/90 text-slate-300"
                           }`}
                         >
                           <Icon className="w-3.5 h-3.5" />
                         </div>
                         <div className="flex flex-col items-start min-w-0 text-left">
                           <span
-                            className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                            className={`font-bold text-[13px] tracking-tight truncate w-full ${
                               isActive
                                 ? "text-white"
                                 : isLight
@@ -1373,7 +1373,7 @@ export default function Sidebar({
                             {item.label}
                           </span>
                           <span
-                            className={`text-[9px] font-medium truncate w-full ${
+                            className={`text-[11px] font-medium truncate w-full ${
                               isActive
                                 ? "text-white/80"
                                 : isLight
@@ -1443,11 +1443,11 @@ export default function Sidebar({
                     <Share2 className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col text-left truncate">
-                    <span className="font-extrabold text-xs tracking-tight truncate text-slate-950 dark:text-white">
+                    <span className="font-bold text-[15px] tracking-tight truncate text-slate-950 dark:text-white">
                       Contact Platform
                     </span>
                     <span
-                      className={`text-[10px] font-semibold truncate ${
+                      className={`text-[12.5px] font-medium truncate ${
                         isLight ? "text-slate-600 font-bold" : "text-slate-400"
                       }`}
                     >
@@ -1458,7 +1458,7 @@ export default function Sidebar({
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                    className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
                       isLight
                         ? "bg-purple-100 text-purple-700 border border-purple-200"
                         : "bg-purple-500/20 text-purple-300 border border-purple-400/30"
@@ -1490,7 +1490,7 @@ export default function Sidebar({
                     <button
                       key={item.id}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group border cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-[14px] font-semibold transition-all duration-200 group border cursor-pointer ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.01]`
                           : isLight
@@ -1511,7 +1511,7 @@ export default function Sidebar({
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-black text-xs tracking-tight truncate w-full ${
+                          className={`font-bold text-[14px] tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
@@ -1522,7 +1522,7 @@ export default function Sidebar({
                           {item.label}
                         </span>
                         <span
-                          className={`text-[10px] font-medium truncate w-full ${
+                          className={`text-[12px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -1553,10 +1553,10 @@ export default function Sidebar({
                 }`}
               >
                 <div className="px-2 py-1 border-b border-white/10 flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 flex items-center gap-1">
-                    <Share2 className="w-3 h-3" /> Contact Channels
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1">
+                    <Share2 className="w-3.5 h-3.5" /> Contact Channels
                   </span>
-                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">
                     {socialPlatformSubItems.length} Channels
                   </span>
                 </div>
@@ -1570,7 +1570,7 @@ export default function Sidebar({
                         handleNavClick(item.id);
                         setIsSocialPlatformOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 group relative ${
                         isActive
                           ? `bg-gradient-to-r ${item.color} text-white shadow-lg ${item.activeGlow} border ${item.activeBorder} scale-[1.02]`
                           : isLight
@@ -1591,7 +1591,7 @@ export default function Sidebar({
                       </div>
                       <div className="flex flex-col items-start min-w-0 text-left">
                         <span
-                          className={`font-extrabold text-[11px] tracking-tight truncate w-full ${
+                          className={`font-bold text-[13px] tracking-tight truncate w-full ${
                             isActive
                               ? "text-white"
                               : isLight
@@ -1602,7 +1602,7 @@ export default function Sidebar({
                           {item.label}
                         </span>
                         <span
-                          className={`text-[9px] font-medium truncate w-full ${
+                          className={`text-[11px] font-medium truncate w-full ${
                             isActive
                               ? "text-white/80"
                               : isLight
@@ -1672,7 +1672,7 @@ export default function Sidebar({
                       handleNavClick("SETTINGS");
                       setIsSettingsMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all group cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-[14px] font-bold transition-all group cursor-pointer ${
                       activeTab === "SETTINGS"
                         ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white border-rose-400 shadow-lg shadow-rose-500/30"
                         : isLight
@@ -1691,11 +1691,11 @@ export default function Sidebar({
                         <Settings className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col text-left truncate">
-                        <span className="font-extrabold text-xs">Admin Settings</span>
-                        <span className="text-[10px] text-slate-400 font-medium">System Configuration</span>
+                        <span className="font-bold text-[14px]">Admin Settings</span>
+                        <span className="text-[12px] text-slate-400 font-medium">System Configuration</span>
                       </div>
                     </div>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30">
                       Console
                     </span>
                   </button>
@@ -1704,7 +1704,7 @@ export default function Sidebar({
                 {/* Theme Toggle Button */}
                 {onThemeChange && (
                   <div
-                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs ${
+                    className={`flex items-center justify-between p-2.5 rounded-xl border text-[14px] ${
                       isLight
                         ? "bg-slate-100 border-slate-200"
                         : "bg-slate-950/80 border-white/5"
@@ -1725,10 +1725,10 @@ export default function Sidebar({
                         )}
                       </div>
                       <div className="flex flex-col text-left">
-                        <span className="font-bold text-xs">
+                        <span className="font-bold text-[14px]">
                           {theme === "DARK" ? "Dark Mode" : "Light Mode"}
                         </span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[12px] text-slate-400">
                           {theme === "DARK" ? "Dark theme active" : "Light theme active"}
                         </span>
                       </div>
@@ -1737,7 +1737,7 @@ export default function Sidebar({
                       onClick={() => {
                         onThemeChange(theme === "DARK" ? "LIGHT" : "DARK");
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[10px] transition-all shadow-md cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[12px] transition-all shadow-md cursor-pointer"
                     >
                       Switch
                     </button>
@@ -1758,7 +1758,7 @@ export default function Sidebar({
                     handleNavClick("SETTINGS");
                     setIsSettingsMenuOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold transition-all group cursor-pointer ${
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-[14px] font-semibold transition-all group cursor-pointer ${
                     isLight
                       ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"
                       : "bg-slate-950/80 hover:bg-slate-800/80 text-slate-300 hover:text-white border-white/5"
@@ -1769,20 +1769,20 @@ export default function Sidebar({
                       <Download className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col text-left">
-                      <span className="font-bold text-xs">Download App</span>
-                      <span className="text-[10px] text-slate-400">Android & iOS APK</span>
+                      <span className="font-bold text-[14px]">Download App</span>
+                      <span className="text-[12px] text-slate-400">Android & iOS APK</span>
                     </div>
                   </div>
-                  <span className="text-[10px] text-sky-400 font-bold group-hover:translate-x-0.5 transition-transform">
+                  <span className="text-[12px] text-sky-400 font-bold group-hover:translate-x-0.5 transition-transform">
                     APK ↓
                   </span>
                 </button>
               </div>
 
               {/* Account Quick Info */}
-              <div className="mt-2.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+              <div className="mt-2.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-[12.5px] text-slate-400">
                 <span className="truncate">{loggedInUsername}</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold text-[9px] border border-indigo-500/30">
+                <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold text-[11px] border border-indigo-500/30">
                   {currentUserRole === "ADMIN" ? "Admin" : currentUserRole === "CREATOR" ? "Creator" : "Teacher"}
                 </span>
               </div>
@@ -1853,17 +1853,17 @@ export default function Sidebar({
                   type="button"
                   onClick={() => onOpenNoraAi?.()}
                   title="Open NORA AI Engine (Shortcut: Ctrl + A)"
-                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-white font-extrabold text-[11px] shadow-xs hover:brightness-105 active:scale-98 transition-all cursor-pointer"
+                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold text-[14px] shadow-xs hover:brightness-105 active:scale-98 transition-all cursor-pointer"
                 >
                   <span className="flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
                     <span>NORA AI Engine</span>
                   </span>
                   <div className="flex items-center gap-1">
-                    <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                    <kbd className="text-[12px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                       Ctrl+A
                     </kbd>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    <span className="text-[12px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                       Live
                     </span>
                   </div>
@@ -1882,7 +1882,7 @@ export default function Sidebar({
                   }`}
                   title={`My Assigned Contacts: ${visibleApplicants.length.toLocaleString("en-IN")} student leads allocated by Admissions Admin.`}
                 >
-                  <div className="flex items-center justify-between text-[11px] font-extrabold mb-1">
+                  <div className="flex items-center justify-between text-[14px] font-bold mb-1">
                     <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-indigo-400" />
@@ -1894,7 +1894,7 @@ export default function Sidebar({
                       {visibleApplicants.length.toLocaleString("en-IN")}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                  <div className="flex items-center justify-between text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                     <span>Admin Allocated</span>
                     <span className="text-indigo-500 dark:text-indigo-400 font-bold">Active Portfolio</span>
                   </div>
@@ -1910,7 +1910,7 @@ export default function Sidebar({
                   }`}
                   title="Live Firebase Lead Quota: 1,00,000 Capacity. Click to view All Leads."
                 >
-                  <div className="flex items-center justify-between text-[11px] font-extrabold mb-1">
+                  <div className="flex items-center justify-between text-[14px] font-bold mb-1">
                     <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
                       <span className="relative flex h-2 w-2">
                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${liveLeadCount >= MAX_FREE_LEAD_LIMIT ? "bg-rose-400" : "bg-emerald-400"}`} />
@@ -1931,7 +1931,7 @@ export default function Sidebar({
                     />
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                  <div className="flex items-center justify-between text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                     <span>Cap: {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}</span>
                     <span>{Math.max(0, MAX_FREE_LEAD_LIMIT - liveLeadCount).toLocaleString("en-IN")} Left</span>
                   </div>
@@ -1952,13 +1952,13 @@ export default function Sidebar({
                 </div>
                 <div className="min-w-0">
                   <p
-                    className={`text-xs font-black truncate ${
+                    className={`text-[14px] font-bold truncate ${
                       isLight ? "text-slate-900" : "text-white"
                     }`}
                   >
                     {loggedInUsername}
                   </p>
-                  <p className="text-[10px] font-extrabold truncate text-indigo-400 flex items-center gap-1">
+                  <p className="text-[13px] font-medium truncate text-indigo-400 flex items-center gap-1">
                     {currentUserRole === "ADMIN" ? (
                       "System Admin"
                     ) : (

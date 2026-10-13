@@ -833,20 +833,20 @@ export default function CreatorControlModule({
               </div>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
-                  <Key className="w-3 h-3" />
+                <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5">
+                  <Key className="w-3.5 h-3.5" />
                   <span>SPHEREX ROOT MASTER CREATOR</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   Full Authority Active
                 </span>
                 {/* LIVE SYSTEM BUGS INDICATOR */}
                 <button
                   type="button"
                   onClick={() => setActiveTab("BUGS")}
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md ${bugMetrics.hasCriticalOpen
+                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md ${bugMetrics.hasCriticalOpen
                     ? "bg-rose-500/20 text-rose-300 border border-rose-500/60 ring-2 ring-rose-500/50 animate-pulse hover:bg-rose-500/30"
                     : bugMetrics.openCount > 0
                       ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30"
@@ -854,7 +854,7 @@ export default function CreatorControlModule({
                     }`}
                   title="Live Bugs reported by Admin & Faculty. Click to triage."
                 >
-                  <Bug className="w-3 h-3 text-rose-400" />
+                  <Bug className="w-3.5 h-3.5 text-rose-400" />
                   <span>
                     {bugMetrics.openCount === 0
                       ? "0 Active Bugs"
@@ -867,9 +867,9 @@ export default function CreatorControlModule({
               <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-2">
                 <span>Creator & Multi-College Control Center</span>
               </h1>
-              <p className="text-xs md:text-sm text-slate-300 font-medium">
+              <p className="text-sm text-slate-300 font-medium">
                 System Architect: <strong className="text-amber-400">Nithish Kumar</strong> • Master ID:{" "}
-                <code className="text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded font-mono font-bold">spherexnithish#</code>
+                <code className="text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded font-mono font-bold text-xs">spherexnithish#</code>
               </p>
             </div>
           </div>
@@ -880,7 +880,7 @@ export default function CreatorControlModule({
             <button
               type="button"
               onClick={() => setActiveTab("BUGS")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-1.5 cursor-pointer ${bugMetrics.hasCriticalOpen
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer ${bugMetrics.hasCriticalOpen
                 ? "bg-rose-600 hover:bg-rose-500 text-white ring-2 ring-rose-400 animate-pulse"
                 : bugMetrics.openCount > 0
                   ? "bg-amber-600 hover:bg-amber-500 text-white"
@@ -895,7 +895,7 @@ export default function CreatorControlModule({
             <button
               type="button"
               onClick={() => setIsAddCollegeModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add College</span>
@@ -904,7 +904,7 @@ export default function CreatorControlModule({
             <button
               type="button"
               onClick={handleExportDatabaseSnapshot}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
               <span>Export JSON</span>
@@ -914,7 +914,7 @@ export default function CreatorControlModule({
               <button
                 type="button"
                 onClick={onLogout}
-                className="px-3.5 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-800/80 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-800/80 text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Exit Creator</span>
@@ -924,7 +924,7 @@ export default function CreatorControlModule({
         </div>
 
         {/* Root Security Isolation Disclaimer */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
+        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
           <div className="flex items-center gap-2 text-amber-300/90 font-mono">
             <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
             <span>Strict Privacy Active: College Admin & Teacher logins cannot view this portal or credentials.</span>
@@ -939,7 +939,7 @@ export default function CreatorControlModule({
       {/* ============================================================== */}
       {/* 2. CREATOR NAVIGATION TABS                                     */}
       {/* ============================================================== */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-bold">
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs sm:text-sm font-bold">
         {[
           { id: "COLLEGES", label: "🏛️ Overview & Colleges", icon: Building },
           { id: "BUGS", label: `🐞 Bug Tracker (${bugMetrics.openCount})`, icon: Bug },
@@ -978,22 +978,22 @@ export default function CreatorControlModule({
             {/* PILLAR 1: TOTAL STUDENT COUNT (COUNT ONLY) */}
             <div className="p-5 rounded-3xl border-2 border-indigo-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 shadow-xl shadow-indigo-950/20 space-y-3 relative overflow-hidden group hover:border-indigo-500/50 transition-all">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-indigo-400" />
                   <span>Total Student Count</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
                   <span>Privacy Protected</span>
                 </span>
               </div>
               <div>
-                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
                   {totalStudentsCount.toLocaleString("en-IN")}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Overall student leads across all campuses</p>
+                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Overall student leads across all campuses</p>
               </div>
-              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs sm:text-sm">
                 <div className="flex justify-between items-center text-slate-300">
                   <span className="text-slate-400">Karur Campus:</span>
                   <span className="font-mono font-bold text-amber-300">{karurStudentsCount} students</span>
@@ -1002,7 +1002,7 @@ export default function CreatorControlModule({
                   <span className="text-slate-400">Coimbatore Campus:</span>
                   <span className="font-mono font-bold text-sky-300">{covaiStudentsCount} students</span>
                 </div>
-                <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800/40">
                   <span>Capacity ({percentQuotaUsed}%):</span>
                   <span className="font-mono font-bold text-emerald-400">{remainingFreeQuota.toLocaleString("en-IN")} Free</span>
                 </div>
@@ -1012,22 +1012,22 @@ export default function CreatorControlModule({
             {/* PILLAR 2: TEACHER COUNT */}
             <div className="p-5 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950/40 shadow-xl shadow-purple-950/20 space-y-3 relative overflow-hidden group hover:border-purple-500/50 transition-all">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-purple-400" />
                   <span>Teacher Count</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                   <span>Live Faculty</span>
                 </span>
               </div>
               <div>
-                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
                   {totalTeachersCount}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Active faculty using SPHEREX CRM</p>
+                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Active faculty using SPHEREX CRM</p>
               </div>
-              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs sm:text-sm">
                 <div className="flex justify-between items-center text-slate-300">
                   <span className="text-slate-400">Karur Faculty:</span>
                   <span className="font-mono font-bold text-amber-300">{karurTeachersCount} teachers</span>
@@ -1036,7 +1036,7 @@ export default function CreatorControlModule({
                   <span className="text-slate-400">Coimbatore Faculty:</span>
                   <span className="font-mono font-bold text-sky-300">{covaiTeachersCount} teachers</span>
                 </div>
-                <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800/40">
                   <span>Active Now:</span>
                   <span className="font-mono font-bold text-emerald-400">{activeTeachersCount} Online</span>
                 </div>
@@ -1046,21 +1046,21 @@ export default function CreatorControlModule({
             {/* PILLAR 3: COURSES */}
             <div className="p-5 rounded-3xl border-2 border-sky-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/40 shadow-xl shadow-sky-950/20 space-y-3 relative overflow-hidden group hover:border-sky-500/50 transition-all">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-sky-300 flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-sky-300 flex items-center gap-1.5">
                   <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
                   <span>Academic Courses</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1">
                   <span>AICTE / NBA</span>
                 </span>
               </div>
               <div>
-                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
                   {totalCoursesCount}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Accredited degree programs offered</p>
+                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Accredited degree programs offered</p>
               </div>
-              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs sm:text-sm">
                 <div className="flex justify-between items-center text-slate-300">
                   <span className="text-slate-400">Top Program:</span>
                   <span className="font-bold text-white truncate max-w-[130px]">B.E. Computer Science</span>
@@ -1071,7 +1071,7 @@ export default function CreatorControlModule({
                     {(totalKarurSeats + totalCoimbatoreSeats).toLocaleString("en-IN")} seats
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800/40">
                   <span>Programs Scope:</span>
                   <span className="font-mono font-bold text-sky-400">B.E. & B.Tech Tech</span>
                 </div>
@@ -1081,21 +1081,21 @@ export default function CreatorControlModule({
             {/* PILLAR 4: COLLEGES USING MY PRODUCT */}
             <div className="p-5 rounded-3xl border-2 border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 shadow-xl shadow-amber-950/20 space-y-3 relative overflow-hidden group hover:border-amber-500/50 transition-all">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
                   <Building className="w-3.5 h-3.5 text-amber-400" />
                   <span>Colleges Using Product</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                   <span>Active Clients</span>
                 </span>
               </div>
               <div>
-                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
                   {colleges.length}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Institutions running SPHEREX OS</p>
+                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">Institutions running SPHEREX OS</p>
               </div>
-              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs">
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5 text-xs sm:text-sm">
                 <div className="flex justify-between items-center text-slate-300">
                   <span className="text-slate-400">Web CRM Status:</span>
                   <span className={totalWebStoppedCount === 0 ? "font-bold text-emerald-400" : "font-bold text-rose-400"}>
@@ -1108,7 +1108,7 @@ export default function CreatorControlModule({
                     {totalMobileStoppedCount === 0 ? "🟢 All Active" : `🛑 ${totalMobileStoppedCount} Stopped`}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/40">
+                <div className="flex justify-between items-center text-xs text-slate-400 pt-1 border-t border-slate-800/40">
                   <span>Annual Cleared:</span>
                   <span className="font-mono font-bold text-emerald-400">₹{totalRevenueCollected.toLocaleString("en-IN")}</span>
                 </div>
@@ -1124,20 +1124,20 @@ export default function CreatorControlModule({
                   <Layers className="w-6 h-6 text-sky-400" />
                 </div>
                 <div>
-                  <h4 className="text-base md:text-lg font-black text-white flex items-center gap-2">
+                  <h4 className="text-lg md:text-xl font-black text-white flex items-center gap-2">
                     <span>Lead Acquisition Sources &amp; Multi-Application Ingestion</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-sky-500/20 text-sky-300 border border-sky-500/40">
                       All Sources Active
                     </span>
                   </h4>
-                  <p className="text-xs text-slate-300 mt-0.5">
+                  <p className="text-sm text-slate-300 mt-0.5">
                     Total leads calculated dynamically from Project Expo, CSV file uploads, Google Ads, Meta Facebook, WhatsApp, and State Counselling.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono font-bold text-slate-300">
+                <span className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm font-mono font-bold text-slate-300">
                   Dominant: <strong className="text-sky-400">{leadSourceTelemetry.dominantSource.shortLabel}</strong> ({leadSourceTelemetry.dominantSource.percentage}%)
                 </span>
               </div>
@@ -1147,26 +1147,26 @@ export default function CreatorControlModule({
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {/* Overall Total */}
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
                   <span>Overall Total</span>
                   <Users className="w-3.5 h-3.5 text-sky-400" />
                 </span>
-                <p className="text-2xl font-black font-mono text-white">
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-white">
                   {leadSourceTelemetry.totalLeads.toLocaleString("en-IN")}
                 </p>
-                <p className="text-[10px] text-slate-500">100% of lead database</p>
+                <p className="text-xs text-slate-400">100% of lead database</p>
               </div>
 
               {/* Project Expo */}
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-400 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-teal-400 flex items-center justify-between">
                   <span>Project Expo</span>
                   <School className="w-3.5 h-3.5" />
                 </span>
-                <p className="text-2xl font-black font-mono text-teal-300">
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-teal-300">
                   {leadSourceTelemetry.primaryHighlights.expoCount.toLocaleString("en-IN")}
                 </p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-xs text-slate-400">
                   {leadSourceTelemetry.totalLeads > 0
                     ? ((leadSourceTelemetry.primaryHighlights.expoCount / leadSourceTelemetry.totalLeads) * 100).toFixed(1)
                     : 0}% share
@@ -1175,14 +1175,14 @@ export default function CreatorControlModule({
 
               {/* CSV Uploads */}
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-lime-400 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-lime-400 flex items-center justify-between">
                   <span>CSV File Uploads</span>
                   <FileSpreadsheet className="w-3.5 h-3.5" />
                 </span>
-                <p className="text-2xl font-black font-mono text-lime-300">
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-lime-300">
                   {leadSourceTelemetry.primaryHighlights.csvCount.toLocaleString("en-IN")}
                 </p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-xs text-slate-400">
                   {leadSourceTelemetry.totalLeads > 0
                     ? ((leadSourceTelemetry.primaryHighlights.csvCount / leadSourceTelemetry.totalLeads) * 100).toFixed(1)
                     : 0}% share
@@ -1191,14 +1191,14 @@ export default function CreatorControlModule({
 
               {/* Social Media & Ads */}
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
                   <span>Social Media &amp; Ads</span>
                   <Share2 className="w-3.5 h-3.5" />
                 </span>
-                <p className="text-2xl font-black font-mono text-indigo-300">
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-indigo-300">
                   {leadSourceTelemetry.primaryHighlights.socialCount.toLocaleString("en-IN")}
                 </p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-xs text-slate-400">
                   {leadSourceTelemetry.totalLeads > 0
                     ? ((leadSourceTelemetry.primaryHighlights.socialCount / leadSourceTelemetry.totalLeads) * 100).toFixed(1)
                     : 0}% share
@@ -1207,14 +1207,14 @@ export default function CreatorControlModule({
 
               {/* TNEA Counselling */}
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center justify-between">
                   <span>TNEA Counselling</span>
                   <Compass className="w-3.5 h-3.5" />
                 </span>
-                <p className="text-2xl font-black font-mono text-cyan-300">
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-cyan-300">
                   {leadSourceTelemetry.primaryHighlights.counsellingCount.toLocaleString("en-IN")}
                 </p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-xs text-slate-400">
                   {leadSourceTelemetry.totalLeads > 0
                     ? ((leadSourceTelemetry.primaryHighlights.counsellingCount / leadSourceTelemetry.totalLeads) * 100).toFixed(1)
                     : 0}% share
@@ -1244,20 +1244,20 @@ export default function CreatorControlModule({
             )}
 
             {/* All Ingestion Channels Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-1 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 pt-1 text-xs sm:text-sm">
               {leadSourceTelemetry.channels.map((ch) => (
                 <div
                   key={ch.key}
-                  className="p-2 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between gap-2"
+                  className="p-2.5 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between gap-2"
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span
                       className="w-2 h-2 rounded-full shrink-0"
                       style={{ backgroundColor: ch.colorHex }}
                     />
-                    <span className="font-bold text-slate-300 truncate text-[11px]">{ch.shortLabel}</span>
+                    <span className="font-bold text-slate-300 truncate text-xs">{ch.shortLabel}</span>
                   </div>
-                  <span className="font-mono font-black text-white text-xs shrink-0">
+                  <span className="font-mono font-black text-white text-xs sm:text-sm shrink-0">
                     {ch.count}
                   </span>
                 </div>
@@ -1276,16 +1276,16 @@ export default function CreatorControlModule({
                   <Bug className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-base md:text-lg font-black text-white flex items-center gap-2">
+                  <h4 className="text-lg md:text-xl font-black text-white flex items-center gap-2">
                     <span>Live Bug Ingestion &amp; Incident Triage</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${bugMetrics.hasCriticalOpen
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${bugMetrics.hasCriticalOpen
                       ? "bg-rose-500/20 text-rose-300 border-rose-500/50 animate-pulse"
                       : "bg-amber-500/20 text-amber-300 border-amber-500/40"
                       }`}>
                       {bugMetrics.openCount} Unresolved
                     </span>
                   </h4>
-                  <p className="text-xs text-slate-300 mt-0.5">
+                  <p className="text-sm text-slate-300 mt-0.5">
                     Real-time tickets filed by College Admins and Teachers across Karur and Coimbatore campuses.
                   </p>
                 </div>
@@ -1306,7 +1306,7 @@ export default function CreatorControlModule({
                     });
                     onTriggerToast("🐞 Test bug simulation created!");
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-bold transition-all cursor-pointer"
                 >
                   + Simulate Test Bug
                 </button>
@@ -1314,7 +1314,7 @@ export default function CreatorControlModule({
                 <button
                   type="button"
                   onClick={() => setActiveTab("BUGS")}
-                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white text-xs font-black shadow-md flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white text-xs sm:text-sm font-black shadow-md flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
                 >
                   <span>Open Bug Tracker</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -1325,27 +1325,27 @@ export default function CreatorControlModule({
             {/* 4 Mini Bug KPI Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Reported</span>
-                <p className="text-2xl font-black font-mono text-white">{bugMetrics.total}</p>
-                <p className="text-[10px] text-slate-500">Historical tickets filed</p>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Reported</span>
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-white">{bugMetrics.total}</p>
+                <p className="text-xs text-slate-400">Historical tickets filed</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400">Open Tickets</span>
-                <p className="text-2xl font-black font-mono text-amber-400">{bugMetrics.openCount}</p>
-                <p className="text-[10px] text-slate-500">Awaiting creator action</p>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Open Tickets</span>
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-amber-400">{bugMetrics.openCount}</p>
+                <p className="text-xs text-slate-400">Awaiting creator action</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400">Critical Blockers</span>
-                <p className="text-2xl font-black font-mono text-rose-400">{bugMetrics.criticalCount}</p>
-                <p className="text-[10px] text-slate-500">Urgent attention needed</p>
+                <span className="text-xs font-bold uppercase tracking-wider text-rose-400">Critical Blockers</span>
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-rose-400">{bugMetrics.criticalCount}</p>
+                <p className="text-xs text-slate-400">Urgent attention needed</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">Resolved / Closed</span>
-                <p className="text-2xl font-black font-mono text-emerald-400">{bugMetrics.resolvedCount + bugMetrics.closedCount}</p>
-                <p className="text-[10px] text-emerald-500 font-semibold">Fix verified</p>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Resolved / Closed</span>
+                <p className="text-2xl sm:text-[26px] font-black font-mono text-emerald-400">{bugMetrics.resolvedCount + bugMetrics.closedCount}</p>
+                <p className="text-xs text-emerald-400 font-semibold">Fix verified</p>
               </div>
             </div>
 
@@ -1431,20 +1431,20 @@ export default function CreatorControlModule({
                   <Power className="w-6 h-6 animate-pulse" />
                 </div>
                 <div>
-                  <h4 className="text-base md:text-lg font-black text-white flex flex-wrap items-center gap-2">
+                  <h4 className="text-lg md:text-xl font-black text-white flex flex-wrap items-center gap-2">
                     <span>Emergency Master Kill-Switch (All Systems Worldwide)</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40">
                       Live Cloud Lockout
                     </span>
                   </h4>
-                  <p className="text-xs text-slate-300 mt-0.5">
+                  <p className="text-sm text-slate-300 mt-0.5">
                     Instantly stops or re-opens the Web & Mobile application for <strong>ALL colleges</strong> across every computer, laptop, tablet, and mobile device worldwide.
                   </p>
                 </div>
               </div>
 
               {/* Live Cloud Status Indicators */}
-              <div className="flex flex-wrap items-center gap-2.5 text-xs">
+              <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
                 <div className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-2 font-bold shadow-sm ${globalLockout.isGlobalWebStopped
                   ? "bg-rose-950 border-rose-600 text-rose-300 animate-pulse"
                   : "bg-emerald-950/60 border-emerald-700 text-emerald-300"
@@ -1469,7 +1469,7 @@ export default function CreatorControlModule({
               <button
                 type="button"
                 onClick={handleToggleGlobalWeb}
-                className={`py-3.5 px-4 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${globalLockout.isGlobalWebStopped
+                className={`py-3.5 px-4 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${globalLockout.isGlobalWebStopped
                   ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30 ring-2 ring-emerald-400"
                   : "bg-slate-900 hover:bg-rose-950 border border-slate-700 hover:border-rose-600 text-slate-200 hover:text-rose-200"
                   }`}
@@ -1482,7 +1482,7 @@ export default function CreatorControlModule({
               <button
                 type="button"
                 onClick={handleToggleGlobalMobile}
-                className={`py-3.5 px-4 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${globalLockout.isGlobalMobileStopped
+                className={`py-3.5 px-4 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${globalLockout.isGlobalMobileStopped
                   ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30 ring-2 ring-emerald-400"
                   : "bg-slate-900 hover:bg-rose-950 border border-slate-700 hover:border-rose-600 text-slate-200 hover:text-rose-200"
                   }`}
@@ -1495,7 +1495,7 @@ export default function CreatorControlModule({
               <button
                 type="button"
                 onClick={handleEmergencyFreezeAll}
-                className="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-700 to-red-800 hover:from-rose-600 hover:to-red-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xl shadow-rose-950/60 cursor-pointer active:scale-95 transition-all"
+                className="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-700 to-red-800 hover:from-rose-600 hover:to-red-700 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xl shadow-rose-950/60 cursor-pointer active:scale-95 transition-all"
               >
                 <Lock className="w-4 h-4" />
                 <span>🚨 EMERGENCY FREEZE ALL</span>
@@ -1505,7 +1505,7 @@ export default function CreatorControlModule({
               <button
                 type="button"
                 onClick={handleRestoreAllSystems}
-                className="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/60 cursor-pointer active:scale-95 transition-all"
+                className="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/60 cursor-pointer active:scale-95 transition-all"
               >
                 <Unlock className="w-4 h-4" />
                 <span>✨ RESTORE ALL (OPEN ALL)</span>
@@ -1514,7 +1514,7 @@ export default function CreatorControlModule({
           </div>
 
           {/* Explanation Banner */}
-          <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-950/20 text-xs text-amber-200 flex items-start gap-3">
+          <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-950/20 text-xs sm:text-sm text-amber-200 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p className="font-bold text-amber-300">
@@ -1555,13 +1555,13 @@ export default function CreatorControlModule({
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg md:text-xl font-black text-white">{college.collegeName}</h3>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300">
+                          <h3 className="text-xl md:text-2xl font-black text-white">{college.collegeName}</h3>
+                          <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300">
                             {college.shortCode}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {college.location} • Admin ID: <code className="text-amber-300 font-mono font-bold">{college.adminUsername}</code>
+                        <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                          {college.location} • Admin ID: <code className="text-amber-300 font-mono font-bold text-xs">{college.adminUsername}</code>
                         </p>
                       </div>
                     </div>
@@ -1569,22 +1569,22 @@ export default function CreatorControlModule({
                     {/* Overall Status Badge */}
                     <div className="flex flex-wrap items-center gap-2">
                       {isEntirelyStopped ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-rose-950 text-rose-300 border border-rose-700 flex items-center gap-1.5 animate-pulse">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-black uppercase bg-rose-950 text-rose-300 border border-rose-700 flex items-center gap-1.5 animate-pulse">
                           <Lock className="w-3.5 h-3.5" />
                           <span>Institution Frozen (Web & Mobile Stopped)</span>
                         </span>
                       ) : isWebStopped ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-950 text-amber-300 border border-amber-700 flex items-center gap-1.5">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase bg-amber-950 text-amber-300 border border-amber-700 flex items-center gap-1.5">
                           <Globe className="w-3.5 h-3.5" />
                           <span>Web App Stopped</span>
                         </span>
                       ) : isMobileStopped ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-950 text-amber-300 border border-amber-700 flex items-center gap-1.5">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase bg-amber-950 text-amber-300 border border-amber-700 flex items-center gap-1.5">
                           <Smartphone className="w-3.5 h-3.5" />
                           <span>Mobile App Stopped</span>
                         </span>
                       ) : (
-                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-950 text-emerald-300 border border-emerald-700 flex items-center gap-1.5">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase bg-emerald-950 text-emerald-300 border border-emerald-700 flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>All Systems Active</span>
                         </span>
@@ -1597,12 +1597,12 @@ export default function CreatorControlModule({
                     {/* Left: Financial Statement */}
                     <div className="lg:col-span-2 space-y-4">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                           <DollarSign className="w-4 h-4 text-emerald-400" />
                           <span>Institutional Subscription & Payment Breakdown</span>
                         </h4>
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${isFullyPaid
+                          className={`px-2.5 py-0.5 rounded text-xs font-black uppercase ${isFullyPaid
                             ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
                             : college.paymentStatus === "OVERDUE"
                               ? "bg-rose-950 text-rose-300 border border-rose-800"
@@ -1613,37 +1613,37 @@ export default function CreatorControlModule({
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm">
                         <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 space-y-1">
-                          <p className="text-[10px] text-slate-400 font-semibold">Base Annual Fee</p>
-                          <p className="font-mono font-bold text-white text-sm">
+                          <p className="text-xs text-slate-400 font-semibold">Base Annual Fee</p>
+                          <p className="font-mono font-bold text-white text-base sm:text-lg">
                             ₹{college.baseAnnualFee.toLocaleString("en-IN")}
                           </p>
-                          <p className="text-[9px] text-slate-500">Includes 1,00,000 leads</p>
+                          <p className="text-xs text-slate-500">Includes 1,00,000 leads</p>
                         </div>
 
                         <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 space-y-1">
-                          <p className="text-[10px] text-slate-400 font-semibold">Lead Surcharges</p>
-                          <p className="font-mono font-bold text-amber-400 text-sm">
+                          <p className="text-xs text-slate-400 font-semibold">Lead Surcharges</p>
+                          <p className="font-mono font-bold text-amber-400 text-base sm:text-lg">
                             +₹{college.overageSurcharge.toLocaleString("en-IN")}
                           </p>
-                          <p className="text-[9px] text-slate-500">{college.extraLeadsCount} extra leads</p>
+                          <p className="text-xs text-slate-500">{college.extraLeadsCount} extra leads</p>
                         </div>
 
                         <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 space-y-1">
-                          <p className="text-[10px] text-slate-400 font-semibold">Total Payable</p>
-                          <p className="font-mono font-bold text-white text-sm">
+                          <p className="text-xs text-slate-400 font-semibold">Total Payable</p>
+                          <p className="font-mono font-bold text-white text-base sm:text-lg">
                             ₹{college.totalPayableAmount.toLocaleString("en-IN")}
                           </p>
-                          <p className="text-[9px] text-slate-500">Due: {college.paymentDueDate}</p>
+                          <p className="text-xs text-slate-500">Due: {college.paymentDueDate}</p>
                         </div>
 
                         <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 space-y-1">
-                          <p className="text-[10px] text-slate-400 font-semibold">Amount Paid</p>
-                          <p className="font-mono font-bold text-emerald-400 text-sm">
+                          <p className="text-xs text-slate-400 font-semibold">Amount Paid</p>
+                          <p className="font-mono font-bold text-emerald-400 text-base sm:text-lg">
                             ₹{college.amountPaid.toLocaleString("en-IN")}
                           </p>
-                          <p className="text-[9px] text-emerald-500 font-semibold">
+                          <p className="text-xs text-emerald-400 font-semibold">
                             {isFullyPaid ? "Cleared in Full" : `Due: ₹${college.outstandingBalance.toLocaleString("en-IN")}`}
                           </p>
                         </div>
@@ -1651,7 +1651,7 @@ export default function CreatorControlModule({
 
                       {/* Outstanding Alert Bar */}
                       {!isFullyPaid && (
-                        <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-xs text-rose-200 flex items-center justify-between gap-3">
+                        <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-800 text-xs sm:text-sm text-rose-200 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                             <span>
@@ -1663,28 +1663,28 @@ export default function CreatorControlModule({
                           <button
                             type="button"
                             onClick={() => handleOpenPaymentModal(college)}
-                            className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shrink-0 transition-colors cursor-pointer"
+                            className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 transition-colors cursor-pointer"
                           >
                             Clear Payment & Open App
                           </button>
                         </div>
                       )}
 
-                      <div className="text-[11px] text-slate-400 flex flex-wrap items-center gap-4">
+                      <div className="text-xs text-slate-400 flex flex-wrap items-center gap-4">
                         <span>Last Payment: <strong className="text-slate-200 font-mono">{college.lastPaymentDate || "Initial Onboarding"}</strong></span>
-                        <span>Reference: <code className="text-indigo-300 font-mono">{college.paymentReference || "N/A"}</code></span>
+                        <span>Reference: <code className="text-indigo-300 font-mono text-xs">{college.paymentReference || "N/A"}</code></span>
                         <span>Contact: <strong className="text-slate-200">{college.contactPhone}</strong></span>
                       </div>
                     </div>
 
                     {/* Right: Platform Coverage & Database Link */}
                     <div className="p-4 rounded-2xl bg-slate-950 border border-slate-850 space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                         <Server className="w-4 h-4 text-indigo-400" />
                         <span>Platform & Tenant Telemetry</span>
                       </h4>
 
-                      <div className="space-y-2 text-xs">
+                      <div className="space-y-2 text-xs sm:text-sm">
                         <div className="flex justify-between items-center">
                           <span className="text-slate-400 flex items-center gap-1.5">
                             <Users className="w-3.5 h-3.5 text-indigo-400" />
@@ -1734,7 +1734,7 @@ export default function CreatorControlModule({
                               onSwitchCampus(college.campus as CampusLocation);
                               onTriggerToast(`🏛️ Switched creator view to ${college.collegeName}.`);
                             }}
-                            className="w-full py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                            className="w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold transition-colors cursor-pointer"
                           >
                             Inspect Campus Database
                           </button>
@@ -1743,7 +1743,7 @@ export default function CreatorControlModule({
                         <button
                           type="button"
                           onClick={() => handlePrintCollegeInvoice(college)}
-                          className="w-full py-1.5 rounded-lg bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          className="w-full py-2 rounded-lg bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-800 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Printer className="w-3.5 h-3.5" />
                           <span>Generate Tax Invoice (PDF)</span>
@@ -1757,20 +1757,20 @@ export default function CreatorControlModule({
                     <div className="flex items-center justify-between gap-3 min-w-max flex-nowrap whitespace-nowrap">
                       {/* Left: Access State Badges */}
                       <div className="flex items-center gap-2 shrink-0 flex-nowrap whitespace-nowrap">
-                        <span className="text-xs font-bold text-slate-400 shrink-0">Current Access State:</span>
-                        <div className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isWebStopped
+                        <span className="text-xs sm:text-sm font-bold text-slate-400 shrink-0">Current Access State:</span>
+                        <div className={`px-2.5 py-1 rounded-lg text-xs font-bold border flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isWebStopped
                           ? "bg-rose-950/80 border-rose-600 text-rose-300 animate-pulse"
                           : "bg-emerald-950/40 border-emerald-700 text-emerald-300"
                           }`}>
-                          <Globe className="w-3 h-3 shrink-0" />
+                          <Globe className="w-3.5 h-3.5 shrink-0" />
                           <span>Web: {isWebStopped ? "🛑 STOPPED (Blocked)" : "🟢 ACTIVE"}</span>
                         </div>
 
-                        <div className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isMobileStopped
+                        <div className={`px-2.5 py-1 rounded-lg text-xs font-bold border flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isMobileStopped
                           ? "bg-rose-950/80 border-rose-600 text-rose-300 animate-pulse"
                           : "bg-emerald-950/40 border-emerald-700 text-emerald-300"
                           }`}>
-                          <Smartphone className="w-3 h-3 shrink-0" />
+                          <Smartphone className="w-3.5 h-3.5 shrink-0" />
                           <span>Mobile: {isMobileStopped ? "🛑 STOPPED (Blocked)" : "🟢 ACTIVE"}</span>
                         </div>
                       </div>
@@ -1781,7 +1781,7 @@ export default function CreatorControlModule({
                         <button
                           type="button"
                           onClick={() => handleToggleWebApp(college)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isWebStopped
+                          className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isWebStopped
                             ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400"
                             : "bg-slate-800 hover:bg-rose-950 text-slate-200 hover:text-rose-200 border border-slate-700 hover:border-rose-600"
                             }`}
@@ -1794,7 +1794,7 @@ export default function CreatorControlModule({
                         <button
                           type="button"
                           onClick={() => handleToggleMobileApp(college)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isMobileStopped
+                          className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isMobileStopped
                             ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400"
                             : "bg-slate-800 hover:bg-rose-950 text-slate-200 hover:text-rose-200 border border-slate-700 hover:border-rose-600"
                             }`}
@@ -1807,7 +1807,7 @@ export default function CreatorControlModule({
                         <button
                           type="button"
                           onClick={() => handleToggleEntireInstitution(college)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isEntirelyStopped
+                          className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap ${isEntirelyStopped
                             ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 ring-2 ring-emerald-400"
                             : "bg-rose-950 hover:bg-rose-900 text-rose-200 hover:text-white border border-rose-700 shadow-md shadow-rose-950/40"
                             }`}
@@ -1820,7 +1820,7 @@ export default function CreatorControlModule({
                         <button
                           type="button"
                           onClick={() => handleOpenPaymentModal(college)}
-                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs font-black transition-all shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                          className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs sm:text-sm font-black transition-all shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
                         >
                           <CreditCard className="w-3.5 h-3.5 shrink-0" />
                           <span>Record Payment & Open</span>

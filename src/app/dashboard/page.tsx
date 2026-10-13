@@ -1045,7 +1045,7 @@ export default function DashboardPage() {
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}
-      <div className="flex-1 flex flex-col min-w-0 w-full max-w-full lg:pl-64 transition-all duration-300 overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0 w-full max-w-full lg:pl-72 transition-all duration-300 overflow-x-hidden">
         {/* Main Header */}
         <Header
           user={MOCK_ADMIN_USER}

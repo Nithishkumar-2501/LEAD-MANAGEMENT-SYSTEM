@@ -10,9 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-commissioner)", "Commissioner", "system-ui", "sans-serif"],
-        commissioner: ["var(--font-commissioner)", "Commissioner", "sans-serif"],
-        poppins: ["var(--font-commissioner)", "Commissioner", "sans-serif"],
+        sans: ["var(--font-inter)", "Inter", "Source Sans 3", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        inter: ["var(--font-inter)", "Inter", "sans-serif"],
       },
       colors: {
         background: "hsl(var(--background))",

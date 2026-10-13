@@ -300,29 +300,29 @@ export default function AdminSettingsModule({
       <div className="bubble-card p-4 sm:p-6 border border-white/20">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">
                 System Management
               </span>
-              <span className="text-xs text-slate-400">Settings & Credentials</span>
+              <span className="text-xs sm:text-sm text-slate-400">Settings & Credentials</span>
             </div>
-            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-2xl sm:text-[26px] font-black text-white tracking-tight flex items-center gap-2.5">
               <ShieldCheck className="w-6 h-6 text-indigo-400" />
               Admin Settings Console
             </h2>
-            <p className="text-xs text-slate-300 font-medium">
+            <p className="text-sm text-slate-300 font-medium mt-1">
               Manage portal configuration, view all login IDs & passwords, track active admin sessions, and manage access.
             </p>
           </div>
 
           {/* Active Campus Status Badge */}
-          <div className="flex items-center gap-2.5 bg-slate-900/80 border border-white/20 px-4 py-2 rounded-2xl backdrop-blur-xl">
-            <span className="relative flex h-2 w-2">
+          <div className="flex items-center gap-2.5 bg-slate-900/80 border border-white/20 px-4 py-2.5 rounded-2xl backdrop-blur-xl">
+            <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            <div className="text-xs">
-              <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">Session Profile</span>
+            <div className="text-xs sm:text-sm">
+              <span className="text-slate-400 block text-xs uppercase font-bold tracking-wider">Session Profile</span>
               <span className="font-extrabold text-sky-300">{loggedInCampus} CAMPUS ADMIN</span>
             </div>
           </div>
@@ -334,16 +334,16 @@ export default function AdminSettingsModule({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 gap-2">
           <div className="flex items-center gap-2">
             <Palette className="w-5 h-5 text-sky-500 dark:text-sky-400" />
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">
               System Appearance & Theme Mode
             </h3>
           </div>
-          <span className="text-xs text-sky-700 dark:text-sky-300 font-bold bg-sky-100 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-300 dark:border-sky-500/30">
+          <span className="text-xs sm:text-sm text-sky-700 dark:text-sky-300 font-bold bg-sky-100 dark:bg-sky-950/60 px-3.5 py-1 rounded-full border border-sky-300 dark:border-sky-500/30">
             Current Active: {theme === "LIGHT" ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </span>
         </div>
 
-        <p className="text-xs text-slate-600 dark:text-slate-300">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           Switch the application visual mode between Light Theme and Dark Theme. Selecting a theme instantly updates all headers, dashboards, lead tables, navigation tabs, cards, and modal dialogs across the CRM.
         </p>
 
@@ -411,19 +411,19 @@ export default function AdminSettingsModule({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 gap-2">
           <div className="flex items-center gap-2">
             <Smartphone className="w-5 h-5 text-sky-500 dark:text-sky-400" />
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">
               Download Meritto Mobile App (Android & iOS)
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-sky-700 dark:text-sky-300 font-bold bg-sky-100 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-300 dark:border-sky-500/30 flex items-center gap-1.5">
+            <span className="text-xs sm:text-sm text-sky-700 dark:text-sky-300 font-bold bg-sky-100 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-300 dark:border-sky-500/30 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               v1.2.0 Production • APK Ready (142 MB)
             </span>
           </div>
         </div>
 
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           Install the official Meritto Admission CRM mobile application directly on your Android mobile device or tablet. Access real-time Firebase lead sync, quick calling, offline marksheets, and lead status notifications on the move.
         </p>
 
@@ -558,18 +558,18 @@ export default function AdminSettingsModule({
           <div>
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
                 All Application Login IDs & Passwords Management
               </h3>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium mt-0.5">
               Inspect user credentials, monitor active logged-in admins, reveal passwords, and delete accounts.
             </p>
           </div>
 
           <button
             onClick={() => setIsAddAccountModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 transition-all transform hover:scale-105 cursor-pointer shrink-0"
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 transition-all transform hover:scale-105 cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" /> Add System Account
           </button>
@@ -580,8 +580,8 @@ export default function AdminSettingsModule({
           {/* Active Admins Count Badge */}
           <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-black text-black dark:text-emerald-400 uppercase tracking-wider block">Logged-In Admins</span>
-              <span className="text-xl font-black text-black dark:text-white flex items-center gap-1.5">
+              <span className="text-xs font-bold text-black dark:text-emerald-400 uppercase tracking-wider block">Logged-In Admins</span>
+              <span className="text-2xl font-black text-black dark:text-white flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping inline-block"></span>
                 {loggedInAdminsCount} Active Admins
               </span>

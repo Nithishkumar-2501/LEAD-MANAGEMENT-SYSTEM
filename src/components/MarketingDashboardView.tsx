@@ -143,22 +143,22 @@ export default function MarketingDashboardView({
   return (
     <div className="space-y-6 animate-in fade-in duration-300 font-sans">
       {/* Header Banner */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-xs shrink-0">
-            <Megaphone className="w-5 h-5" />
+      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-xs shrink-0">
+            <Megaphone className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white">
+            <h2 className="text-[26px] sm:text-[28px] lg:text-[30px] font-black tracking-tight text-slate-900 dark:text-white leading-tight">
               Omnichannel Marketing Campaign Dashboard
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <p className="text-[14px] sm:text-[15px] text-slate-600 dark:text-slate-400 font-medium mt-1">
               Real-time candidate lead acquisition across 8 digital & field campaign channels
             </p>
           </div>
         </div>
 
-        <div className="px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-xs font-black text-blue-700 dark:text-blue-300 shadow-2xs self-start sm:self-auto">
+        <div className="px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-[13px] sm:text-[14px] font-bold text-blue-700 dark:text-blue-300 shadow-2xs self-start sm:self-auto shrink-0">
           Total Inquiries: 2,440 Candidates
         </div>
       </div>
@@ -166,54 +166,62 @@ export default function MarketingDashboardView({
       {/* 4 Summary Performance Stats matching Image 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Campaign Spend */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
           <div>
-            <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Total Campaign Spend
             </p>
-            <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-1">₹2,45,000</h4>
+            <h4 className="text-[28px] sm:text-[30px] lg:text-[32px] font-black text-slate-900 dark:text-white mt-1 leading-tight">
+              ₹2,45,000
+            </h4>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold shrink-0">
-            <DollarSign className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold shrink-0">
+            <DollarSign className="w-6 h-6 text-slate-700 dark:text-slate-300" />
           </div>
         </div>
 
         {/* Average Cost-per-Lead */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
           <div>
-            <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Average Cost-per-Lead
             </p>
-            <h4 className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">₹100 / Lead</h4>
+            <h4 className="text-[28px] sm:text-[30px] lg:text-[32px] font-black text-sky-600 dark:text-sky-400 mt-1 leading-tight">
+              ₹100 / Lead
+            </h4>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 flex items-center justify-center font-bold shrink-0">
-            <Target className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+          <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 flex items-center justify-center font-bold shrink-0">
+            <Target className="w-6 h-6 text-sky-600 dark:text-sky-400" />
           </div>
         </div>
 
         {/* Conversion ROI */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
           <div>
-            <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Conversion ROI
             </p>
-            <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">+315%</h4>
+            <h4 className="text-[28px] sm:text-[30px] lg:text-[32px] font-black text-emerald-600 dark:text-emerald-400 mt-1 leading-tight">
+              +315%
+            </h4>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center font-bold shrink-0">
-            <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center font-bold shrink-0">
+            <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           </div>
         </div>
 
         {/* Confirmed Admissions */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
           <div>
-            <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Confirmed Admissions
             </p>
-            <h4 className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">185 Students</h4>
+            <h4 className="text-[28px] sm:text-[30px] lg:text-[32px] font-black text-amber-600 dark:text-amber-400 mt-1 leading-tight">
+              185 Students
+            </h4>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center justify-center font-bold shrink-0">
-            <Award className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center justify-center font-bold shrink-0">
+            <Award className="w-6 h-6 text-amber-600 dark:text-amber-400" />
           </div>
         </div>
       </div>
@@ -230,7 +238,7 @@ export default function MarketingDashboardView({
               key={index}
               onClick={() => onNavigateTab && onNavigateTab(ch.tab)}
               className={cn(
-                "group relative flex min-h-[340px] flex-col justify-between rounded-4xl p-6 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 cursor-pointer",
+                "group relative flex min-h-[350px] flex-col justify-between rounded-4xl p-6 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 cursor-pointer",
                 colorClass
               )}
             >
@@ -238,10 +246,10 @@ export default function MarketingDashboardView({
                 {/* Top Meta: Inquiries, ROI Pill, and Bookmark */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-black/15 dark:bg-white/15 text-slate-950 dark:text-white backdrop-blur-sm border border-black/10 dark:border-white/10">
+                    <span className="text-[12.5px] sm:text-[13px] font-bold px-3 py-1 rounded-lg bg-black/15 dark:bg-white/15 text-slate-950 dark:text-white backdrop-blur-sm border border-black/10 dark:border-white/10">
                       {ch.meta}
                     </span>
-                    <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-950 dark:text-emerald-100 border border-emerald-600/30">
+                    <span className="text-[12px] sm:text-[12.5px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-950 dark:text-emerald-100 border border-emerald-600/30">
                       {ch.roi}
                     </span>
                   </div>
@@ -267,18 +275,18 @@ export default function MarketingDashboardView({
                 {/* Middle: Channel Title, Arrow & CPL details */}
                 <div className="flex flex-1 flex-col justify-center py-4">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-slate-950 dark:text-white text-2xl font-black leading-tight tracking-tight line-clamp-2">
+                    <h3 className="text-slate-950 dark:text-white text-[21px] sm:text-[22px] lg:text-[24px] font-black leading-snug tracking-tight line-clamp-2">
                       {ch.title}
                     </h3>
                     <ArrowRight
-                      className="text-slate-900 dark:text-white group-hover:text-slate-950 dark:group-hover:text-white mt-1 size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-1.5"
+                      className="text-slate-900 dark:text-white group-hover:text-slate-950 dark:group-hover:text-white mt-1 size-5.5 shrink-0 transition-transform duration-300 group-hover:translate-x-1.5"
                       strokeWidth={2.5}
                     />
                   </div>
 
-                  <div className="mt-4 p-3 rounded-2xl bg-white/50 dark:bg-slate-950/40 border border-white/40 dark:border-white/10 backdrop-blur-xs flex items-center justify-between text-xs">
-                    <span className="text-slate-700 dark:text-slate-300 font-bold">Acquisition CPL</span>
-                    <span className="text-slate-950 dark:text-white font-black text-sm">{ch.cpl}</span>
+                  <div className="mt-4 p-3 rounded-2xl bg-white/50 dark:bg-slate-950/40 border border-white/40 dark:border-white/10 backdrop-blur-xs flex items-center justify-between">
+                    <span className="text-slate-800 dark:text-slate-200 font-bold text-[13px] sm:text-[13.5px]">Acquisition CPL</span>
+                    <span className="text-slate-950 dark:text-white font-black text-[14px] sm:text-[15px]">{ch.cpl}</span>
                   </div>
                 </div>
 
@@ -289,16 +297,16 @@ export default function MarketingDashboardView({
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 leading-tight">
-                      <span className="block text-slate-950 dark:text-white text-xs font-bold truncate">
+                      <span className="block text-slate-950 dark:text-white text-[13px] sm:text-[14px] font-bold truncate">
                         {ch.manager}
                       </span>
-                      <span className="block text-slate-700/80 dark:text-slate-300/80 text-[10.5px] font-medium truncate">
+                      <span className="block text-slate-800/90 dark:text-slate-300/90 text-[12px] sm:text-[12.5px] font-medium truncate">
                         {ch.role}
                       </span>
                     </div>
                   </div>
 
-                  <div className="ml-auto flex items-center justify-center rounded-xl border border-white/40 dark:border-white/20 bg-white/40 dark:bg-black/30 backdrop-blur-md px-3.5 py-1.5 text-xs font-black text-slate-950 dark:text-white shadow-2xs group-hover:scale-105 active:scale-95 transition-transform shrink-0">
+                  <div className="ml-auto flex items-center justify-center rounded-xl border border-white/40 dark:border-white/20 bg-white/40 dark:bg-black/30 backdrop-blur-md px-4 py-2 text-[14px] font-bold text-slate-950 dark:text-white shadow-2xs group-hover:scale-105 active:scale-95 transition-transform shrink-0">
                     Open
                   </div>
                 </div>

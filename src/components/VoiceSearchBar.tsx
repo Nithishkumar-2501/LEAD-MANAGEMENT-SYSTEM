@@ -216,7 +216,7 @@ export default function VoiceSearchBar({
 
           {!value && !isListening && (
             <kbd
-              className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 rounded select-none pointer-events-none"
+              className="hidden sm:inline-flex items-center px-2 py-0.5 text-[11px] sm:text-[12px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 rounded select-none pointer-events-none"
               title="Shortcut: Ctrl + Z"
             >
               Ctrl+Z
@@ -270,7 +270,7 @@ export default function VoiceSearchBar({
 
       {/* Floating feedback tooltip for listening status or alerts */}
       {feedbackMessage && (
-        <div className="absolute left-0 top-full mt-1.5 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 text-white dark:bg-slate-800 dark:text-slate-100 text-[11px] font-semibold shadow-xl border border-orange-500/30 backdrop-blur-md animate-in fade-in slide-in-from-top-1 duration-150 whitespace-nowrap">
+        <div className="absolute left-0 top-full mt-1.5 z-50 flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900/95 text-white dark:bg-slate-800 dark:text-slate-100 text-[13px] font-semibold shadow-xl border border-orange-500/30 backdrop-blur-md animate-in fade-in slide-in-from-top-1 duration-150 whitespace-nowrap">
           {isListening && (
             <span className="inline-block w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
           )}
