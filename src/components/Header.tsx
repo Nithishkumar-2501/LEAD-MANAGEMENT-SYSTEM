@@ -362,7 +362,10 @@ export default function Header({
             <img
               src="/nora-logo.png"
               alt="NORA AI Logo"
-              className="w-4.5 h-4.5 rounded-full object-cover shrink-0"
+              width={20}
+              height={20}
+              className="w-5 h-5 rounded-full object-cover shrink-0"
+              style={{ width: "20px", height: "20px" }}
             />
             <span className="text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
             <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[12px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
