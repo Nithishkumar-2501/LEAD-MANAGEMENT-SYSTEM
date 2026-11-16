@@ -558,67 +558,109 @@ export default function Sidebar({
       >
         {/* Sidebar Header / Brand Emblem (V.S.B. Engineering College) */}
         <div
-          className={`p-4 border-b flex items-center justify-between gap-3 ${
+          className={`border-b transition-all duration-200 ${
+            isCollapsed
+              ? "py-3 px-2 flex flex-col items-center justify-center gap-2"
+              : "p-4 flex items-center justify-between gap-3"
+          } ${
             isLight ? "border-slate-200 bg-slate-50/80" : "border-white/10 bg-slate-950"
           }`}
         >
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Official V.S.B. Logo Badge */}
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
-              <Image
-                src="/vsb-logo.png"
-                alt="V.S.B. Engineering College Logo"
-                width={40}
-                height={40}
-                className="w-full h-full object-contain rounded-full"
-              />
-            </div>
+          {isCollapsed ? (
+            <>
+              {/* Clickable Logo in collapsed mode */}
+              <button
+                type="button"
+                onClick={toggleCollapse}
+                className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+                title="Expand Sidebar"
+              >
+                <Image
+                  src="/vsb-logo.png"
+                  alt="V.S.B. Engineering College Logo"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-contain rounded-full"
+                />
+              </button>
 
-            {!isCollapsed && (
-              <div className="min-w-0">
-                <h2
-                  className={`font-black text-[16px] sm:text-[17px] tracking-tight truncate uppercase leading-snug ${
-                    isLight ? "text-slate-900" : "text-white"
+              {/* Desktop Expand Toggle Button clearly positioned beneath logo */}
+              <Tooltip text="Expand Sidebar" position="right">
+                <button
+                  type="button"
+                  onClick={toggleCollapse}
+                  className={`press-spring hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-200 shadow-sm shrink-0 cursor-pointer ${
+                    isLight
+                      ? "bg-slate-100 hover:bg-blue-50 border-slate-300 text-slate-700 hover:text-blue-600 hover:border-blue-300"
+                      : "bg-slate-900 border-white/10 hover:border-sky-400/50 text-slate-300 hover:text-white"
                   }`}
+                  title="Expand Sidebar"
                 >
-                  V.S.B. ENGINEERING COLLEGE
-                </h2>
-                <p
-                  className={`text-[13px] font-bold truncate flex items-center gap-1.5 mt-0.5 ${
-                    isLight ? "text-slate-600" : "text-slate-300"
-                  }`}
-                >
-                  <MapPin className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-                  <span>KARUR & COIMBATORE CAMPUSES</span>
-                </p>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </Tooltip>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Official V.S.B. Logo Badge */}
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0 flex items-center justify-center p-0.5 transform hover:scale-105 transition-transform">
+                  <Image
+                    src="/vsb-logo.png"
+                    alt="V.S.B. Engineering College Logo"
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-contain rounded-full"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <h2
+                    className={`font-black text-[16px] sm:text-[17px] tracking-tight truncate uppercase leading-snug ${
+                      isLight ? "text-slate-900" : "text-white"
+                    }`}
+                  >
+                    V.S.B. ENGINEERING COLLEGE
+                  </h2>
+                  <p
+                    className={`text-[13px] font-bold truncate flex items-center gap-1.5 mt-0.5 ${
+                      isLight ? "text-slate-600" : "text-slate-300"
+                    }`}
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                    <span>KARUR & COIMBATORE CAMPUSES</span>
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Desktop Collapse Toggle Button */}
-          <button
-            onClick={toggleCollapse}
-            className={`press-spring hidden lg:flex p-1.5 rounded-lg border transition-all duration-200 shadow-sm shrink-0 cursor-pointer ${
-              isLight
-                ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
-                : "bg-slate-900 border-white/10 hover:border-sky-400/50 text-slate-300 hover:text-white"
-            }`}
-            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
+              {/* Desktop Collapse Toggle Button */}
+              <button
+                type="button"
+                onClick={toggleCollapse}
+                className={`press-spring hidden lg:flex p-1.5 rounded-lg border transition-all duration-200 shadow-sm shrink-0 cursor-pointer ${
+                  isLight
+                    ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700 hover:text-blue-600"
+                    : "bg-slate-900 border-white/10 hover:border-sky-400/50 text-slate-300 hover:text-white"
+                }`}
+                title="Collapse Sidebar"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
 
-          {/* Mobile Close Button */}
-          <button
-            onClick={onCloseMobile}
-            className={`press-spring lg:hidden p-1.5 rounded-lg border cursor-pointer ${
-              isLight
-                ? "bg-slate-100 border-slate-300 text-slate-700"
-                : "bg-slate-900 border-white/10 text-slate-300 hover:text-white"
-            }`}
-          >
-            <X className="w-4 h-4" />
-          </button>
+              {/* Mobile Close Button */}
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                className={`press-spring lg:hidden p-1.5 rounded-lg border cursor-pointer ${
+                  isLight
+                    ? "bg-slate-100 border-slate-300 text-slate-700"
+                    : "bg-slate-900 border-white/10 text-slate-300 hover:text-white"
+                }`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Navigation Items Section */}
