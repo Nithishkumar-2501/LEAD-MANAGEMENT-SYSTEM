@@ -96,6 +96,7 @@ export default function DashboardPage() {
   // Karur Admin can access both campuses; Coimbatore Admin is restricted to their own campus only
   const [isKarurAdmin, setIsKarurAdmin] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Sub-modules role: Creator has full administrative privileges across all CRM screens
   const effectiveSubRole: "ADMIN" | "TEACHER" = currentUserRole === "TEACHER" ? "TEACHER" : "ADMIN";
@@ -1092,10 +1093,12 @@ export default function DashboardPage() {
         applicants={currentUserRole === "TEACHER" ? teacherAssignedLeads : applicants}
         onSelectApplicant={handleSelectApplicant}
         onOpenNoraAi={() => handleOpenNora()}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
       />
 
       {/* Main Container Pushed Right by Sidebar on Desktop */}
-      <div className="flex-1 flex flex-col min-w-0 w-full max-w-full lg:pl-72 transition-all duration-300 overflow-x-hidden">
+      <div className={`flex-1 flex flex-col min-w-0 w-full max-w-full ${isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"} transition-all duration-300 overflow-x-hidden`}>
         {/* Main Header */}
         <Header
           user={MOCK_ADMIN_USER}

@@ -65,6 +65,8 @@ interface SidebarProps {
   applicants?: (Lead & { application: Application })[];
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
   onOpenNoraAi?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export default function Sidebar({
@@ -84,8 +86,21 @@ export default function Sidebar({
   applicants = [],
   onSelectApplicant,
   onOpenNoraAi,
+  isCollapsed: externalCollapsed,
+  onToggleCollapse,
 }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const isCollapsed = externalCollapsed ?? internalCollapsed;
+  const [activeFlyout, setActiveFlyout] = useState<"DASHBOARD" | "ADMISSION" | "SOCIAL" | "APP_MANAGER" | null>(null);
+
+  const toggleCollapse = () => {
+    setActiveFlyout(null);
+    if (onToggleCollapse) {
+      onToggleCollapse();
+    } else {
+      setInternalCollapsed((prev) => !prev);
+    }
+  };
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
@@ -103,23 +118,24 @@ export default function Sidebar({
         setIsSettingsMenuOpen(false);
       }
 
-      if (!target.closest("#nav-category-dashboard") && !target.closest("#flyout-dashboard") && !target.closest("#dropdown-dashboard")) {
-        if (isCollapsed) setIsDashboardOpen(false);
-      }
-      if (!target.closest("#nav-category-admission") && !target.closest("#flyout-admission") && !target.closest("#dropdown-admission")) {
-        if (isCollapsed) setIsAdmissionCrmOpen(false);
-      }
-      if (!target.closest("#nav-category-social") && !target.closest("#flyout-social") && !target.closest("#dropdown-social")) {
-        if (isCollapsed) setIsSocialPlatformOpen(false);
-      }
-      if (!target.closest("#nav-category-appmanager") && !target.closest("#flyout-appmanager") && !target.closest("#dropdown-appmanager")) {
-        if (isCollapsed) setIsAppManagerOpen(false);
+      if (
+        !target.closest("#flyout-dashboard") &&
+        !target.closest("#flyout-admission") &&
+        !target.closest("#flyout-social") &&
+        !target.closest("#flyout-appmanager") &&
+        !target.closest("#btn-collapsed-dashboard") &&
+        !target.closest("#btn-collapsed-admission") &&
+        !target.closest("#btn-collapsed-social") &&
+        !target.closest("#btn-collapsed-appmanager")
+      ) {
+        setActiveFlyout(null);
       }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsSettingsMenuOpen(false);
+        setActiveFlyout(null);
         setIsDashboardOpen(false);
         setIsAdmissionCrmOpen(false);
         setIsSocialPlatformOpen(false);
@@ -581,7 +597,7 @@ export default function Sidebar({
 
           {/* Desktop Collapse Toggle Button */}
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={toggleCollapse}
             className={`press-spring hidden lg:flex p-1.5 rounded-lg border transition-all duration-200 shadow-sm shrink-0 cursor-pointer ${
               isLight
                 ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
@@ -715,7 +731,9 @@ export default function Sidebar({
             {isCollapsed ? (
               <Tooltip text="Dashboard" position="right">
                 <button
-                  onClick={toggleDashboardMenu}
+                  id="btn-collapsed-dashboard"
+                  type="button"
+                  onClick={() => setActiveFlyout((prev) => (prev === "DASHBOARD" ? null : "DASHBOARD"))}
                   className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative press-spring ${
                     dashboardSubItems.some((item) => item.id === activeTab)
                       ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
@@ -855,7 +873,7 @@ export default function Sidebar({
             )}
 
             {/* COLLAPSED STATE RIGHT SIDE FLYOUT POPOVER FOR DASHBOARD */}
-            {isCollapsed && isDashboardOpen && (
+            {isCollapsed && activeFlyout === "DASHBOARD" && (
               <div
                 id="flyout-dashboard"
                 className={`fixed left-20 top-20 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
@@ -881,7 +899,7 @@ export default function Sidebar({
                       id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
                       onClick={() => {
                         handleNavClick(item.id);
-                        setIsDashboardOpen(false);
+                        setActiveFlyout(null);
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-all duration-200 group relative ${
                         isActive
@@ -942,7 +960,9 @@ export default function Sidebar({
             {isCollapsed ? (
               <Tooltip text="Admission CRM" position="right">
                 <button
-                  onClick={toggleAdmissionMenu}
+                  id="btn-collapsed-admission"
+                  type="button"
+                  onClick={() => setActiveFlyout((prev) => (prev === "ADMISSION" ? null : "ADMISSION"))}
                   className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative press-spring ${
                     isAnySubItemActive
                       ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
@@ -1084,7 +1104,7 @@ export default function Sidebar({
             )}
 
             {/* COLLAPSED STATE RIGHT SIDE FLYOUT POPOVER FOR ADMISSION CRM */}
-            {isCollapsed && isAdmissionCrmOpen && (
+            {isCollapsed && activeFlyout === "ADMISSION" && (
               <div
                 id="flyout-admission"
                 className={`fixed left-20 top-36 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
@@ -1109,7 +1129,7 @@ export default function Sidebar({
                       key={item.id}
                       onClick={() => {
                         handleNavClick(item.id);
-                        setIsAdmissionCrmOpen(false);
+                        setActiveFlyout(null);
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-semibold transition-all duration-200 group relative ${
                         isActive
@@ -1170,7 +1190,9 @@ export default function Sidebar({
               {isCollapsed ? (
                 <Tooltip text="Application Manager" position="right">
                   <button
-                    onClick={toggleAppManagerMenu}
+                    id="btn-collapsed-appmanager"
+                    type="button"
+                    onClick={() => setActiveFlyout((prev) => (prev === "APP_MANAGER" ? null : "APP_MANAGER"))}
                     className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative press-spring ${
                       isAppManagerActive
                         ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-xl shadow-sky-500/30 border border-sky-400 scale-105"
@@ -1313,13 +1335,13 @@ export default function Sidebar({
               )}
 
               {/* COLLAPSED STATE RIGHT SIDE FLYOUT POPOVER FOR APPLICATION MANAGER */}
-              {isCollapsed && isAppManagerOpen && (
+              {isCollapsed && activeFlyout === "APP_MANAGER" && (
                 <div
                   id="flyout-appmanager"
                   className={`fixed left-20 top-60 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 ${
                     isLight
                       ? "bg-white/95 text-slate-900 border-slate-200 shadow-slate-300/50"
-                      : "bg-slate-950/95 text-white border-white/15 shadow-black/80"
+                    : "bg-slate-950/95 text-white border-white/15 shadow-black/80"
                   }`}
                 >
                   <div className="px-2 py-1 border-b border-white/10 flex items-center justify-between mb-1">
@@ -1339,7 +1361,7 @@ export default function Sidebar({
                         id={`nav-${item.id.toLowerCase().replace(/_/g, "-")}`}
                         onClick={() => {
                           handleNavClick(item.id);
-                          setIsAppManagerOpen(false);
+                          setActiveFlyout(null);
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 group relative ${
                           isActive
@@ -1401,7 +1423,9 @@ export default function Sidebar({
             {isCollapsed ? (
               <Tooltip text="Contact & Social Media Platform" position="right">
                 <button
-                  onClick={toggleSocialPlatformMenu}
+                  id="btn-collapsed-social"
+                  type="button"
+                  onClick={() => setActiveFlyout((prev) => (prev === "SOCIAL" ? null : "SOCIAL"))}
                   className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-300 relative press-spring ${
                     isAnySocialSubItemActive
                       ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl shadow-purple-500/30 border border-purple-400 scale-105"
@@ -1543,7 +1567,7 @@ export default function Sidebar({
             )}
 
             {/* COLLAPSED STATE RIGHT SIDE FLYOUT POPOVER FOR SOCIAL PLATFORM */}
-            {isCollapsed && isSocialPlatformOpen && (
+            {isCollapsed && activeFlyout === "SOCIAL" && (
               <div
                 id="flyout-social"
                 className={`fixed left-20 top-52 z-50 w-64 p-2.5 rounded-2xl border shadow-2xl space-y-1.5 backdrop-blur-2xl animate-in fade-in slide-in-from-left-2 duration-150 max-h-[80vh] overflow-y-auto hide-scrollbar ${
@@ -1568,7 +1592,7 @@ export default function Sidebar({
                       key={item.id}
                       onClick={() => {
                         handleNavClick(item.id);
-                        setIsSocialPlatformOpen(false);
+                        setActiveFlyout(null);
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 group relative ${
                         isActive
@@ -2030,6 +2054,14 @@ export default function Sidebar({
           )}
         </div>
       </aside>
+
+      {/* Dimmed backdrop when a flyout popover is open in collapsed mode */}
+      {isCollapsed && activeFlyout !== null && (
+        <div
+          className="fixed inset-0 z-40 bg-black/20 dark:bg-black/40 backdrop-blur-[1px]"
+          onClick={() => setActiveFlyout(null)}
+        />
+      )}
     </>
   );
 }
