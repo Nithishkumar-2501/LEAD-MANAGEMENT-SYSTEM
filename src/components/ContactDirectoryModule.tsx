@@ -118,6 +118,8 @@ interface ContactDirectoryModuleProps {
   selectedCampus: CampusLocation;
   currentUserRole?: "ADMIN" | "TEACHER";
   loggedInUsername?: string;
+  loggedInCampus?: "KARUR" | "COIMBATORE";
+  isKarurAdmin?: boolean;
   onActionTrigger: (type: "CALL" | "EMAIL" | "WHATSAPP" | "SMS", name: string) => void;
   onTriggerToast?: (msg: string) => void;
   onSelectApplicant?: (applicant: Lead & { application: Application }) => void;
@@ -133,6 +135,8 @@ export default function ContactDirectoryModule({
   selectedCampus,
   currentUserRole = "ADMIN",
   loggedInUsername = "adminkarur@123",
+  loggedInCampus,
+  isKarurAdmin = false,
   onActionTrigger,
   onTriggerToast,
   onSelectApplicant,
@@ -362,12 +366,30 @@ export default function ContactDirectoryModule({
     }
   };
 
-  // Bulk Re-assign Counselor Handler
+  // Bulk Re-assign Counselor Handler (Campus-Scoped: Karur contacts → Karur teachers; Coimbatore contacts → Coimbatore teachers)
   const handleBulkReassignCounselor = async (counselorId: string) => {
     if (selectedRows.length === 0) return;
     const faculty = FACULTY_MEMBERS.find((f) => f.id === counselorId || f.name === counselorId);
     const counselorName = faculty ? faculty.name : counselorId;
-    
+    const facultyCampus = faculty?.campus;
+
+    // Campus isolation check: ensure teacher's campus matches selected contacts' campus
+    const selectedLeads = contacts.filter((c) => selectedRows.includes(c.id));
+    if (facultyCampus) {
+      const mismatchedLeads = selectedLeads.filter(
+        (c) => c.campus && c.campus !== facultyCampus
+      );
+      if (mismatchedLeads.length > 0) {
+        if (onTriggerToast) {
+          onTriggerToast(
+            `🚫 Campus Mismatch: Cannot assign ${facultyCampus === "KARUR" ? "Karur" : "Coimbatore"} teacher to ${mismatchedLeads.length} contact(s) from the other campus. Please assign contacts to their own campus teacher.`
+          );
+        }
+        setIsBulkAssignDropdownOpen(false);
+        return;
+      }
+    }
+
     // Optimistic UI update
     const updated = contacts.map((c) => {
       if (selectedRows.includes(c.id)) {
@@ -378,7 +400,6 @@ export default function ContactDirectoryModule({
     setContacts(updated);
 
     // Save to Firebase in background
-    const selectedLeads = contacts.filter((c) => selectedRows.includes(c.id));
     Promise.allSettled(
       selectedLeads.map((c) => saveStudentToFirebase({ ...c, assignedTo: counselorId }))
     ).catch((err) => console.warn("Bulk assign sync notice:", err));
@@ -537,6 +558,12 @@ export default function ContactDirectoryModule({
     { id: "prakash.cse@vsbec.in", name: "Dr. M. Prakash", department: "Computer Science & Engineering", campus: "COIMBATORE" },
   ];
 
+  // Campus-scoped faculty list: when viewing a specific campus, only show that campus's teachers in dropdowns
+  // This prevents Karur contacts being assigned to Coimbatore teachers and vice versa
+  const campusScopedFacultyMembers = selectedCampus === "ALL"
+    ? FACULTY_MEMBERS
+    : FACULTY_MEMBERS.filter((f) => f.campus === selectedCampus);
+
   const handlePerformLeadSplit = () => {
     const startIndex = Math.max(0, splitStartNumber - 1);
     const count = Math.max(1, splitQuantity);
@@ -545,6 +572,23 @@ export default function ContactDirectoryModule({
     const facultyObj = FACULTY_MEMBERS.find((f) => f.id === splitTargetTeacher || f.name === splitTargetTeacher);
     const facultyName = facultyObj ? facultyObj.name : splitTargetTeacher;
     const facultyId = facultyObj ? facultyObj.id : splitTargetTeacher;
+    const facultyCampus = facultyObj?.campus;
+
+    // Campus isolation: contacts in the split range must match teacher's campus
+    const batchContacts = contacts.slice(startIndex, endIndex);
+    if (facultyCampus) {
+      const mismatchedContacts = batchContacts.filter(
+        (c) => c.campus && c.campus !== facultyCampus
+      );
+      if (mismatchedContacts.length > 0) {
+        if (onTriggerToast) {
+          onTriggerToast(
+            `🚫 Campus Mismatch: ${mismatchedContacts.length} contact(s) in this batch belong to the ${facultyCampus === "KARUR" ? "Coimbatore" : "Karur"} campus and cannot be assigned to a ${facultyCampus === "KARUR" ? "Karur" : "Coimbatore"} teacher. Please select contacts from the same campus as the teacher.`
+          );
+        }
+        return;
+      }
+    }
 
     const updated = contacts.map((c, idx) => {
       if (idx >= startIndex && idx < endIndex) {

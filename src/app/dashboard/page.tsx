@@ -93,6 +93,8 @@ export default function DashboardPage() {
   const [loggedInCampus, setLoggedInCampus] = useState<"KARUR" | "COIMBATORE">("KARUR");
   const [currentUserRole, setCurrentUserRole] = useState<"ADMIN" | "TEACHER" | "CREATOR">("ADMIN");
   const [loggedInUsername, setLoggedInUsername] = useState<string>("");
+  // Karur Admin can access both campuses; Coimbatore Admin is restricted to their own campus only
+  const [isKarurAdmin, setIsKarurAdmin] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Sub-modules role: Creator has full administrative privileges across all CRM screens
@@ -711,6 +713,10 @@ export default function DashboardPage() {
     setSelectedCampus(campus);
     setIsAuthenticated(true);
 
+    // Karur Admin has cross-campus access (can view both Karur + Coimbatore pages)
+    // Coimbatore Admin is restricted to Coimbatore campus only
+    setIsKarurAdmin(role === "ADMIN" && campus === "KARUR");
+
     if (role === "CREATOR") {
       setActiveTab("CREATOR_CONTROL");
       setInstitutionSuspension({ isSuspended: false, platform: "WEB" });
@@ -730,6 +736,18 @@ export default function DashboardPage() {
     } else {
       triggerToast(`👋 Welcome Admin (${campus} Campus)!`);
     }
+  };
+
+  // Campus switching guard: Karur Admin can access ALL & both campuses; Coimbatore Admin is locked to COIMBATORE only
+  const handleCampusChange = (campus: CampusLocation) => {
+    if (currentUserRole === "ADMIN" && !isKarurAdmin && loggedInCampus === "COIMBATORE") {
+      // Coimbatore Admin cannot switch to Karur campus
+      if (campus === "KARUR" || campus === "ALL") {
+        triggerToast("🔒 Access Restricted: Coimbatore Admin can only view Coimbatore Campus data.");
+        return;
+      }
+    }
+    setSelectedCampus(campus);
   };
 
   const handleLogout = async () => {
@@ -1030,7 +1048,7 @@ export default function DashboardPage() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         selectedCampus={selectedCampus}
-        onCampusChange={setSelectedCampus}
+        onCampusChange={handleCampusChange}
         onLogout={handleLogout}
         loggedInCampus={loggedInCampus}
         currentUserRole={currentUserRole}
@@ -1054,7 +1072,7 @@ export default function DashboardPage() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           selectedCampus={selectedCampus}
-          onCampusChange={setSelectedCampus}
+          onCampusChange={handleCampusChange}
           onLogout={handleLogout}
           loggedInCampus={loggedInCampus}
           currentUserRole={currentUserRole}
@@ -1145,6 +1163,8 @@ export default function DashboardPage() {
               selectedCampus={selectedCampus}
               currentUserRole={effectiveSubRole}
               loggedInUsername={loggedInUsername}
+              loggedInCampus={loggedInCampus}
+              isKarurAdmin={isKarurAdmin}
               onActionTrigger={handleActionTrigger}
               onTriggerToast={triggerToast}
               onSelectApplicant={handleSelectApplicant}
