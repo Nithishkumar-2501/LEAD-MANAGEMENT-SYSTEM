@@ -425,6 +425,13 @@ export default function DashboardPage() {
     }
   }, [currentUserRole, activeTab, loggedInUsername]);
 
+  // Ensure teacher's selectedCampus is always strictly pinned to their own campus on Web & Mobile
+  useEffect(() => {
+    if (currentUserRole === "TEACHER" && selectedCampus !== loggedInCampus) {
+      setSelectedCampus(loggedInCampus);
+    }
+  }, [currentUserRole, loggedInCampus, selectedCampus]);
+
   // Reusable Firebase and Database sync helper
   const applyFirebaseLeads = useCallback((fbLeads: StudentRecord[]) => {
     if (!fbLeads || fbLeads.length === 0) return;
@@ -738,16 +745,29 @@ export default function DashboardPage() {
     }
   };
 
-  // Campus switching guard: Karur Admin can access ALL & both campuses; Coimbatore Admin is locked to COIMBATORE only
+  // Campus switching guard:
+  // Admin can access BOTH Karur and Coimbatore pages freely.
+  // Teachers are strictly restricted to their own campus on both Web and Mobile app.
   const handleCampusChange = (campus: CampusLocation) => {
-    if (currentUserRole === "ADMIN" && !isKarurAdmin && loggedInCampus === "COIMBATORE") {
-      // Coimbatore Admin cannot switch to Karur campus
-      if (campus === "KARUR" || campus === "ALL") {
-        triggerToast("🔒 Access Restricted: Coimbatore Admin can only view Coimbatore Campus data.");
+    if (currentUserRole === "TEACHER") {
+      if (loggedInCampus === "KARUR" && campus !== "KARUR") {
+        triggerToast("🔒 Access Restricted: Karur Faculty cannot access Coimbatore campus data.");
+        return;
+      }
+      if (loggedInCampus === "COIMBATORE" && campus !== "COIMBATORE") {
+        triggerToast("🔒 Access Restricted: Coimbatore Faculty cannot access Karur campus data.");
         return;
       }
     }
+    // Admin (or Creator) can freely switch between KARUR, COIMBATORE, and ALL
     setSelectedCampus(campus);
+    triggerToast(
+      campus === "KARUR"
+        ? "🏛️ Switched to V.S.B. Karur Campus"
+        : campus === "COIMBATORE"
+        ? "🎓 Switched to V.S.B. Coimbatore Campus"
+        : "🌐 Showing All Campuses"
+    );
   };
 
   const handleLogout = async () => {
@@ -787,17 +807,29 @@ export default function DashboardPage() {
   };
 
   const handleSelectApplicant = (applicant: Lead & { application: Application }) => {
-    if (currentUserRole === "TEACHER" && !isLeadAssignedToTeacher(applicant, loggedInUsername, loggedInCampus)) {
-      triggerToast("🔒 Access Restricted: You can only view and edit leads assigned to your profile.");
-      return;
+    if (currentUserRole === "TEACHER") {
+      if (applicant.campus && applicant.campus !== loggedInCampus) {
+        triggerToast(`🔒 Access Restricted: You cannot view ${applicant.campus} campus records.`);
+        return;
+      }
+      if (!isLeadAssignedToTeacher(applicant, loggedInUsername, loggedInCampus)) {
+        triggerToast("🔒 Access Restricted: You can only view and edit leads assigned to your profile.");
+        return;
+      }
     }
     setSelectedApplicant(applicant);
   };
 
   const handleUpdateApplicant = async (updated: Lead & { application: Application }) => {
-    if (currentUserRole === "TEACHER" && !isLeadAssignedToTeacher(updated, loggedInUsername, loggedInCampus)) {
-      triggerToast("🔒 Access Restricted: You can only edit leads assigned to your profile.");
-      return;
+    if (currentUserRole === "TEACHER") {
+      if (updated.campus && updated.campus !== loggedInCampus) {
+        triggerToast(`🔒 Access Restricted: You cannot edit ${updated.campus} campus records.`);
+        return;
+      }
+      if (!isLeadAssignedToTeacher(updated, loggedInUsername, loggedInCampus)) {
+        triggerToast("🔒 Access Restricted: You can only edit leads assigned to your profile.");
+        return;
+      }
     }
     await saveStudentToFirebase(updated);
     setApplicants((prev) => {

@@ -223,50 +223,91 @@ export default function Header({
 
           {/* Clean Segmented Campus Selector */}
           <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[14px] sm:text-[14.5px] shrink-0">
-            {/* Karur Campus */}
-            {loggedInCampus === "KARUR" ? (
-              <Tooltip text="Active Session: V.S.B. Karur Campus">
-                <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[14px] sm:text-[14.5px]"
-                  disabled
-                >
-                  <Building2 className="w-4 h-4" />
-                  <span>Karur Campus</span>
-                </button>
-              </Tooltip>
-            ) : (
-              <Tooltip text="Access restricted to Karur Admin">
-                <button
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
-                  disabled
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Karur</span>
-                </button>
-              </Tooltip>
-            )}
+            {currentUserRole === "TEACHER" ? (
+              <>
+                {/* Karur Campus for Teacher */}
+                {loggedInCampus === "KARUR" ? (
+                  <Tooltip text="Active Session: V.S.B. Karur Campus (Faculty Profile)">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[14px] sm:text-[14.5px]"
+                    >
+                      <Building2 className="w-4 h-4" />
+                      <span>Karur Campus</span>
+                    </button>
+                  </Tooltip>
+                ) : (
+                  <Tooltip text="Access restricted: Coimbatore faculty cannot access Karur campus">
+                    <button
+                      type="button"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
+                      disabled
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Karur</span>
+                    </button>
+                  </Tooltip>
+                )}
 
-            {/* Coimbatore Campus */}
-            {loggedInCampus === "COIMBATORE" ? (
-              <Tooltip text="Active Session: V.S.B. Coimbatore Campus">
-                <button
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[14px] sm:text-[14.5px]"
-                  disabled
-                >
-                  <GraduationCap className="w-4 h-4" />
-                  <span>Coimbatore Campus</span>
-                </button>
-              </Tooltip>
+                {/* Coimbatore Campus for Teacher */}
+                {loggedInCampus === "COIMBATORE" ? (
+                  <Tooltip text="Active Session: V.S.B. Coimbatore Campus (Faculty Profile)">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[14px] sm:text-[14.5px]"
+                    >
+                      <GraduationCap className="w-4 h-4" />
+                      <span>Coimbatore Campus</span>
+                    </button>
+                  </Tooltip>
+                ) : (
+                  <Tooltip text="Access restricted: Karur faculty cannot access Coimbatore campus">
+                    <button
+                      type="button"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
+                      disabled
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Coimbatore</span>
+                    </button>
+                  </Tooltip>
+                )}
+              </>
             ) : (
-              <Tooltip text="Access restricted to Coimbatore Admin">
-                <button
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
-                  disabled
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Coimbatore</span>
-                </button>
-              </Tooltip>
+              <>
+                {/* Admin Access: Full access to both Karur and Coimbatore pages */}
+                {/* Karur Campus Tab */}
+                <Tooltip text="View Karur Campus Admissions & Management">
+                  <button
+                    type="button"
+                    onClick={() => onCampusChange("KARUR")}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[14px] sm:text-[14.5px] transition-all cursor-pointer ${
+                      selectedCampus === "KARUR"
+                        ? "bg-blue-600 text-white font-bold shadow-xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60 font-semibold"
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>Karur Campus</span>
+                  </button>
+                </Tooltip>
+
+                {/* Coimbatore Campus Tab */}
+                <Tooltip text="View Coimbatore Campus Admissions & Management">
+                  <button
+                    type="button"
+                    onClick={() => onCampusChange("COIMBATORE")}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[14px] sm:text-[14.5px] transition-all cursor-pointer ${
+                      selectedCampus === "COIMBATORE"
+                        ? "bg-blue-600 text-white font-bold shadow-xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60 font-semibold"
+                    }`}
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                    <span>Coimbatore Campus</span>
+                  </button>
+                </Tooltip>
+              </>
             )}
           </div>
 
@@ -563,42 +604,77 @@ export default function Header({
       {/* Mobile Campus Selector — shown below top bar on small screens */}
       <div className="md:hidden overflow-x-auto hide-scrollbar -mx-1">
         <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/20 text-[11px] font-semibold backdrop-blur-2xl w-max">
-          {/* Karur Campus */}
-          {loggedInCampus === "KARUR" ? (
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md whitespace-nowrap"
-              disabled
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Karur Campus</span>
-            </button>
-          ) : (
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
-              disabled
-            >
-              <Lock className="w-3 h-3" />
-              <span>Karur Campus</span>
-            </button>
-          )}
+          {currentUserRole === "TEACHER" ? (
+            <>
+              {/* Karur Campus for Teacher */}
+              {loggedInCampus === "KARUR" ? (
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-400 to-indigo-500 text-white font-bold shadow-md whitespace-nowrap cursor-default"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Karur Campus</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
+                  disabled
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Karur Campus</span>
+                </button>
+              )}
 
-          {/* Coimbatore Campus */}
-          {loggedInCampus === "COIMBATORE" ? (
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-md whitespace-nowrap"
-              disabled
-            >
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>Coimbatore Campus</span>
-            </button>
+              {/* Coimbatore Campus for Teacher */}
+              {loggedInCampus === "COIMBATORE" ? (
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-md whitespace-nowrap cursor-default"
+                >
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>Coimbatore Campus</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
+                  disabled
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Coimbatore Campus</span>
+                </button>
+              )}
+            </>
           ) : (
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 opacity-40 cursor-not-allowed whitespace-nowrap"
-              disabled
-            >
-              <Lock className="w-3 h-3" />
-              <span>Coimbatore Campus</span>
-            </button>
+            <>
+              {/* Admin Access: Both Karur and Coimbatore are active & switchable */}
+              <button
+                type="button"
+                onClick={() => onCampusChange("KARUR")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap font-bold transition-all cursor-pointer ${
+                  selectedCampus === "KARUR"
+                    ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-md"
+                    : "text-slate-300 hover:text-white bg-slate-800/80"
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Karur Campus</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onCampusChange("COIMBATORE")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap font-bold transition-all cursor-pointer ${
+                  selectedCampus === "COIMBATORE"
+                    ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md"
+                    : "text-slate-300 hover:text-white bg-slate-800/80"
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Coimbatore Campus</span>
+              </button>
+            </>
           )}
         </div>
       </div>

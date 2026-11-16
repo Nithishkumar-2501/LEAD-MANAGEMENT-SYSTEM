@@ -787,13 +787,35 @@ export default function ContactDirectoryModule({
     onActionTrigger(type === "MESSAGE" ? "WHATSAPP" : type, activeCommContact?.name || "Candidate");
   };
 
-  // Teacher Assignment Handler (Admin action)
+  // Teacher Assignment Handler (Admin action with strict campus matching)
   const handleAssignTeacher = (contactId: string, teacherUsername: string) => {
+    if (!teacherUsername) return;
+    const targetContact = contacts.find((c) => c.id === contactId);
+    const faculty = FACULTY_MEMBERS.find((f) => f.id === teacherUsername || f.name === teacherUsername);
+    const facultyCampus = faculty?.campus;
+
+    // Strict campus isolation: Karur contact cannot be assigned to Coimbatore teacher, and vice versa
+    if (targetContact && facultyCampus && targetContact.campus && targetContact.campus !== facultyCampus) {
+      if (onTriggerToast) {
+        onTriggerToast(
+          `🚫 Campus Mismatch: ${targetContact.campus} contact cannot be assigned to a ${facultyCampus} teacher (${faculty?.name || teacherUsername}). Please assign to a teacher from the same campus.`
+        );
+      }
+      return;
+    }
+
     setContacts((prev) =>
       prev.map((c) => (c.id === contactId ? { ...c, assignedTo: teacherUsername } : c))
     );
+
+    if (targetContact) {
+      saveStudentToFirebase({ ...targetContact, assignedTo: teacherUsername }).catch((e) =>
+        console.warn("Firebase assign sync notice:", e)
+      );
+    }
+
     if (onTriggerToast) {
-      onTriggerToast(`Contact assigned to teacher (${teacherUsername})!`);
+      onTriggerToast(`Contact assigned to ${faculty ? faculty.name : teacherUsername}!`);
     }
   };
 
@@ -2305,7 +2327,7 @@ export default function ContactDirectoryModule({
                     <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-2 py-1">
                       Select Faculty Member:
                     </p>
-                    {FACULTY_MEMBERS.map((f) => (
+                    {(selectedCampus === "ALL" ? FACULTY_MEMBERS : campusScopedFacultyMembers).map((f) => (
                       <button
                         key={f.id}
                         onClick={() => handleBulkReassignCounselor(f.id)}
@@ -3434,14 +3456,16 @@ export default function ContactDirectoryModule({
                           🧑‍🏫 Assign Faculty:
                         </span>
                         <select
-                          value={contact.assignedTo || (contact.campus === "COIMBATORE" ? "teachercovai@123" : "teacherkarur@123")}
+                          value={contact.assignedTo || ""}
                           onChange={(e) => handleAssignTeacher(contact.id, e.target.value)}
                           className="bg-slate-900 border border-white/20 text-sky-300 font-bold px-2 py-0.5 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
                         >
-                          <option value="teacherkarur@123">Dr. K. Arulmurugan (Karur)</option>
-                          <option value="teachercovai@123">Dr. S. Meenakshi (Coimbatore)</option>
-                          <option value="teacher_general">Prof. P. Rajesh (Mechanical)</option>
-                          <option value="teacher_it">Dr. N. Gayathri (IT)</option>
+                          <option value="">-- Select Faculty ({contact.campus || "Same Campus"}) --</option>
+                          {FACULTY_MEMBERS.filter((f) => !contact.campus || f.campus === contact.campus).map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {f.name} ({f.campus})
+                            </option>
+                          ))}
                         </select>
                       </div>
                     )}
@@ -5064,7 +5088,7 @@ export default function ContactDirectoryModule({
                   onChange={(e) => setSplitTargetTeacher(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-black dark:text-white font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
                 >
-                  {FACULTY_MEMBERS.map((f) => (
+                  {(selectedCampus === "ALL" ? FACULTY_MEMBERS : campusScopedFacultyMembers).map((f) => (
                     <option key={f.id} value={f.id} className="text-black bg-white dark:bg-slate-900 dark:text-white font-black">
                       {f.name} ({f.department} - {f.campus})
                     </option>
