@@ -70,14 +70,14 @@ export default function LeadLimitOverageModal({
                 Quota Reached
               </span>
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                1,00,000 Leads Cap
+                50,000 Leads Cap
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5">
-              Lead Limit Exceeded (1,00,000 Leads)
+              Lead Limit Exceeded (50,000 Leads)
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-              The institutional quota of 1,00,000 free student leads has been exhausted.
+              The institutional quota of 50,000 free student leads has been exhausted.
             </p>
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function LeadLimitOverageModal({
             <div className="h-full bg-gradient-to-r from-amber-500 to-rose-500 w-full rounded-full transition-all duration-300" />
           </div>
           <p className="text-[11px] text-amber-700 dark:text-amber-300/90 leading-relaxed">
-            Admin cannot add any new leads for free once the <strong>1,00,000 limit</strong> is reached. Extra leads require an approved overage surcharge.
+            Admin cannot add any new leads for free once the <strong>50,000 limit</strong> is reached. Extra leads require an approved overage surcharge.
           </p>
         </div>
 

@@ -1000,13 +1000,13 @@ export default function AdminSettingsModule({
         </div>
       </div>
 
-      {/* Enterprise Platform License, 1,00,000 Lead Quota & Annual Renewal Section */}
+      {/* Enterprise Platform License, 50,000 Lead Quota & Annual Renewal Section */}
       <div className="glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3.5">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
               <Receipt className="w-4 h-4 text-emerald-400" />
-              <span>Enterprise Platform License & Lead Quota (1,00,000 Leads Cap)</span>
+              <span>Enterprise Platform License & Lead Quota (50,000 Leads Cap)</span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
               Dual deployment coverage: Web Application Portal + Native Android & iOS Mobile Applications
@@ -1021,14 +1021,14 @@ export default function AdminSettingsModule({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
           <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Included Free Quota</span>
-            <p className="font-mono font-bold text-white text-base">1,00,000 Leads</p>
+            <p className="font-mono font-bold text-white text-base">50,000 Leads</p>
             <p className="text-[10px] text-slate-400">Standard institutional capacity</p>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Overage Surcharge Policy</span>
             <p className="font-mono font-bold text-amber-400 text-base">₹500 / extra lead</p>
-            <p className="text-[10px] text-slate-400">Triggered after 1,00,000 leads reached</p>
+            <p className="text-[10px] text-slate-400">Triggered after 50,000 leads reached</p>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">

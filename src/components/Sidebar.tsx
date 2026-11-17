@@ -254,7 +254,7 @@ export default function Sidebar({
     {
       id: "CONTACTS" as ActiveTab,
       label: "Lead Manager",
-      sublabel: currentUserRole === "TEACHER" ? "Assigned Contacts" : "1,00,000 Lead Capacity Tier",
+      sublabel: currentUserRole === "TEACHER" ? "Assigned Contacts" : "50,000 Lead Capacity Tier",
       icon: UserCheck,
       color: "from-indigo-500 to-purple-600",
       activeBorder: "border-indigo-400",
@@ -1974,7 +1974,7 @@ export default function Sidebar({
                       ? "bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
                       : "bg-slate-900/90 hover:bg-slate-800/80 border-white/10"
                   }`}
-                  title="Live Firebase Lead Quota: 1,00,000 Capacity. Click to view All Leads."
+                  title="Live Firebase Lead Quota: 50,000 Capacity. Click to view All Leads."
                 >
                   <div className="flex items-center justify-between text-[14px] font-bold mb-1">
                     <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200">

@@ -2,15 +2,15 @@
  * Lead Quota & Annual Platform Renewal Billing Service
  *
  * Business Rules:
- * - Free Lead Limit: 1,00,000 leads included in standard enterprise license.
- * - When limit (1,00,000) is reached, admin cannot add any leads directly.
- * - To add any lead beyond 1,00,000, each lead costs ₹500 INR.
+ * - Free Lead Limit: 50,000 leads included in standard enterprise license.
+ * - When limit (50,000) is reached, admin cannot add any leads directly.
+ * - To add any lead beyond 50,000, each lead costs ₹500 INR.
  * - The ₹500 per extra lead is automatically accumulated and added to the
  *   Annual Payment Renewal of the application (Web CRM + Native Mobile App).
  */
 
-export const MAX_FREE_LEAD_LIMIT = 100000; // 1,00,000 Leads
-export const PRICE_PER_EXTRA_LEAD = 500; // ₹500 per lead beyond 1,00,000
+export const MAX_FREE_LEAD_LIMIT = 50000; // 50,000 Leads
+export const PRICE_PER_EXTRA_LEAD = 500; // ₹500 per lead beyond 50,000
 export const BASE_ANNUAL_RENEWAL_FEE = 150000; // ₹1,50,000 Base SaaS renewal (Web + Mobile App)
 
 export interface OverageLedgerItem {
@@ -39,8 +39,8 @@ export interface AnnualRenewalBillingRecord {
   renewalDueDate: string;
   licenseStatus: "ACTIVE" | "PENDING_RENEWAL" | "OVERAGE_ACCUMULATED";
   lastUpdated: string;
-  simulatedLimitEnabled: boolean; // For testing the 1,00,000 threshold directly in UI
-  simulatedLeadCount: number; // e.g. 100,000 for instant testing
+  simulatedLimitEnabled: boolean; // For testing the 50,000 threshold directly in UI
+  simulatedLeadCount: number; // e.g. 50,000 for instant testing
   overageLedger: OverageLedgerItem[];
 }
 
@@ -60,7 +60,7 @@ export const DEFAULT_ANNUAL_RENEWAL: AnnualRenewalBillingRecord = {
   licenseStatus: "ACTIVE",
   lastUpdated: new Date().toISOString(),
   simulatedLimitEnabled: false,
-  simulatedLeadCount: 100000,
+  simulatedLeadCount: 50000,
   overageLedger: [],
 };
 
@@ -81,6 +81,7 @@ export function getAnnualRenewalData(): AnnualRenewalBillingRecord {
     return {
       ...DEFAULT_ANNUAL_RENEWAL,
       ...parsed,
+      maxFreeLeads: MAX_FREE_LEAD_LIMIT,
       totalRenewalFee: (parsed.baseRenewalFee || BASE_ANNUAL_RENEWAL_FEE) + (parsed.extraLeadsCost || 0),
     };
   } catch (err) {
@@ -218,9 +219,9 @@ export function recordOverageLeadsToAnnualRenewal(params: {
 }
 
 /**
- * Toggles or updates the test simulation mode for easily testing the 1,00,000 threshold
+ * Toggles or updates the test simulation mode for easily testing the 50,000 threshold
  */
-export function setSimulatedQuotaMode(enabled: boolean, simulatedCount: number = 100000): AnnualRenewalBillingRecord {
+export function setSimulatedQuotaMode(enabled: boolean, simulatedCount: number = 50000): AnnualRenewalBillingRecord {
   const current = getAnnualRenewalData();
   const updated: AnnualRenewalBillingRecord = {
     ...current,

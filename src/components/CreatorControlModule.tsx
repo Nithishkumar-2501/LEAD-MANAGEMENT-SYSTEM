@@ -564,8 +564,8 @@ export default function CreatorControlModule({
     setSimulatedQuotaMode(nextState);
     setAnnualBilling(getAnnualRenewalData());
     if (nextState) {
-      onTriggerToast("⚡ Simulated 1,00,000 lead quota limit triggered for testing!");
-      addLog("Creator triggered 1,00,000 quota limit test simulation.", "warn");
+      onTriggerToast("⚡ Simulated 50,000 lead quota limit triggered for testing!");
+      addLog("Creator triggered 50,000 quota limit test simulation.", "warn");
     } else {
       onTriggerToast("✅ Returned to real database lead count.");
       addLog("Creator deactivated test simulation. Real database count restored.", "success");
@@ -620,8 +620,8 @@ export default function CreatorControlModule({
       onTriggerToast("🔓 Quota Bypass ACTIVE: Admins can add leads without overage surcharge!");
       addLog("Creator enabled Admin Quota Bypass.", "warn");
     } else {
-      onTriggerToast("🔒 Quota Bypass DISABLED: Strict 1,00,000 cap enforced!");
-      addLog("Creator re-enforced strict 1,00,000 quota limit.", "info");
+      onTriggerToast("🔒 Quota Bypass DISABLED: Strict 50,000 cap enforced!");
+      addLog("Creator re-enforced strict 50,000 quota limit.", "info");
     }
   };
 
@@ -685,7 +685,7 @@ export default function CreatorControlModule({
               <strong style="color: #0f172a;">Dual-Platform Enterprise License</strong><br />
               <span>• Web Application (Desktop & Tablet CRM)</span><br />
               <span>• Native Android & iOS Mobile Apps (Capacitor)</span><br />
-              <span>• Up to 1,00,000 Included Free Leads</span>
+              <span>• Up to 50,000 Included Free Leads</span>
             </td>
           </tr>
         </table>
@@ -712,7 +712,7 @@ export default function CreatorControlModule({
             <tr>
               <td>
                 <strong>Lead Quota Overage Surcharges</strong><br />
-                <span style="font-size: 12px; color: #64748b;">${college.extraLeadsCount} student leads added beyond 1,00,000 included threshold @ ₹${PRICE_PER_EXTRA_LEAD}/lead</span>
+                <span style="font-size: 12px; color: #64748b;">${college.extraLeadsCount} student leads added beyond 50,000 included threshold @ ₹${PRICE_PER_EXTRA_LEAD}/lead</span>
               </td>
               <td>Cloud Database</td>
               <td>₹${PRICE_PER_EXTRA_LEAD} / extra lead</td>
@@ -945,7 +945,7 @@ export default function CreatorControlModule({
           { id: "BUGS", label: `🐞 Bug Tracker (${bugMetrics.openCount})`, icon: Bug },
           { id: "COURSES", label: "📚 Academic Courses Catalog", icon: GraduationCap },
           { id: "QR_PAYMENTS", label: "💳 QR Code & Lead Pricing", icon: QrCode },
-          { id: "QUOTA", label: "📊 1,00,000 Quota Engine", icon: Sliders },
+          { id: "QUOTA", label: "📊 50,000 Quota Engine", icon: Sliders },
           { id: "LICENSING", label: "📄 Dual-Platform Software Licensing", icon: DollarSign },
           { id: "DATABASE", label: "⚡ Firebase Health & Diagnostics", icon: Database },
           { id: "SECURITY", label: "🛡️ Emergency Overrides & Logs", icon: ShieldAlert },
@@ -1619,7 +1619,7 @@ export default function CreatorControlModule({
                           <p className="font-mono font-bold text-white text-base sm:text-lg">
                             ₹{college.baseAnnualFee.toLocaleString("en-IN")}
                           </p>
-                          <p className="text-xs text-slate-500">Includes 1,00,000 leads</p>
+                          <p className="text-xs text-slate-500">Includes 50,000 leads</p>
                         </div>
 
                         <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 space-y-1">
@@ -2378,7 +2378,7 @@ export default function CreatorControlModule({
 
 
       {/* ============================================================== */}
-      {/* TAB 2: 1,00,000 LEAD QUOTA & OVERAGE ENGINE                     */}
+      {/* TAB 2: 50,000 LEAD QUOTA & OVERAGE ENGINE                     */}
       {/* ============================================================== */}
       {activeTab === "QUOTA" && (
         <div className="space-y-6 animate-in fade-in duration-150">
@@ -2455,7 +2455,7 @@ export default function CreatorControlModule({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-300">
-                  Free Lead Limit Threshold (Default: 1,00,000)
+                  Free Lead Limit Threshold (Default: 50,000)
                 </label>
                 <input
                   type="number"
@@ -2513,7 +2513,7 @@ export default function CreatorControlModule({
                   }`}
               >
                 <Flame className="w-4 h-4 text-orange-400" />
-                <span>{isSimulating ? "Deactivate Quota Simulation" : "Simulate 1,00,000 Limit Reached"}</span>
+                <span>{isSimulating ? "Deactivate Quota Simulation" : "Simulate 50,000 Limit Reached"}</span>
               </button>
 
               <button
@@ -2704,7 +2704,7 @@ export default function CreatorControlModule({
                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
                   <div>
                     <p className="text-xs font-bold text-white">Admin Quota Bypass</p>
-                    <p className="text-[10px] text-slate-400">Allow admin to bypass 1,00,000 lead cap</p>
+                    <p className="text-[10px] text-slate-400">Allow admin to bypass 50,000 lead cap</p>
                   </div>
                   <button
                     type="button"

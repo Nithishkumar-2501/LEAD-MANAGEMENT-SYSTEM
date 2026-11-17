@@ -100,7 +100,7 @@ export default function CsvLeadsImportModal({
                 CSV Lead Importer
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                1,00,000 Quota System
+                50,000 Quota System
               </span>
             </div>
             <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -108,7 +108,7 @@ export default function CsvLeadsImportModal({
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               File: <strong className="text-slate-700 dark:text-slate-200">{fileName}</strong> —{" "}
-              Found <span className="font-extrabold text-blue-600 dark:text-sky-400">{fileLeadCount}</span> student leads to count into overall 1,00,000 capacity.
+              Found <span className="font-extrabold text-blue-600 dark:text-sky-400">{fileLeadCount}</span> student leads to count into overall 50,000 capacity.
             </p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function CsvLeadsImportModal({
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-sky-500" />
-              Overall 1,00,000 Database Lead Count Calculation
+              Overall 50,000 Database Lead Count Calculation
             </span>
             <span className="text-[11px] font-bold text-slate-500">
               Capacity Cap: {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")} Leads
@@ -135,7 +135,7 @@ export default function CsvLeadsImportModal({
                 {currentTotalLeads.toLocaleString("en-IN")}
               </p>
               <p className="text-[10px] text-slate-400">
-                {((currentTotalLeads / MAX_FREE_LEAD_LIMIT) * 100).toFixed(1)}% of 1,00,000 used
+                {((currentTotalLeads / MAX_FREE_LEAD_LIMIT) * 100).toFixed(1)}% of 50,000 used
               </p>
             </div>
 
@@ -181,7 +181,7 @@ export default function CsvLeadsImportModal({
                   ? "text-amber-700 dark:text-amber-300"
                   : "text-emerald-700 dark:text-emerald-300"
               }`}>
-                out of 1,00,000 ({remainingFreeQuota.toLocaleString("en-IN")} remaining)
+                out of 50,000 ({remainingFreeQuota.toLocaleString("en-IN")} remaining)
               </p>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function CsvLeadsImportModal({
                 <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-1 text-xs text-amber-800 dark:text-amber-200">
                   <p className="font-bold text-sm text-amber-900 dark:text-amber-100">
-                    ⚠️ 1,00,000 Free Lead Limit Reached by this CSV Import
+                    ⚠️ 50,000 Free Lead Limit Reached by this CSV Import
                   </p>
                   <p className="leading-relaxed">
                     This file contains <strong>{fileLeadCount}</strong> leads.{" "}
@@ -228,7 +228,7 @@ export default function CsvLeadsImportModal({
                         <strong>{quotaEvaluation.freeLeadsAllowedInBatch}</strong> leads fit into the remaining free quota.{" "}
                       </>
                     ) : null}
-                    <strong>{quotaEvaluation.overageLeadsCount}</strong> lead(s) exceed the 1,00,000 threshold and incur the mandatory surcharge:
+                    <strong>{quotaEvaluation.overageLeadsCount}</strong> lead(s) exceed the 50,000 threshold and incur the mandatory surcharge:
                   </p>
                   <div className="p-2.5 rounded-lg bg-amber-100/70 dark:bg-amber-900/40 font-mono text-xs flex flex-wrap items-center justify-between gap-2 border border-amber-300/50">
                     <span>
@@ -248,7 +248,7 @@ export default function CsvLeadsImportModal({
             <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-200">
               <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>
-                ✅ All <strong>{fileLeadCount}</strong> leads from this file fit within your <strong>1,00,000 free quota tier</strong>.{" "}
+                ✅ All <strong>{fileLeadCount}</strong> leads from this file fit within your <strong>50,000 free quota tier</strong>.{" "}
                 <strong>{remainingFreeQuota.toLocaleString("en-IN")}</strong> free leads will remain available after import.
               </span>
             </div>
@@ -352,7 +352,7 @@ export default function CsvLeadsImportModal({
               <span>
                 {isProcessing
                   ? "Saving to Database..."
-                  : `Confirm & Add ${fileLeadCount} Leads (${newTotalLeads.toLocaleString("en-IN")} / 1,00,000)`}
+                  : `Confirm & Add ${fileLeadCount} Leads (${newTotalLeads.toLocaleString("en-IN")} / 50,000)`}
               </span>
             </button>
           </div>

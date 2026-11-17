@@ -169,7 +169,7 @@ export default function CreateApplicationModal({
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>1,00,000 Free Lead Quota reached. Creating this lead will incur ₹500 overage surcharge (billed to Annual Renewal).</span>
+                <span>50,000 Free Lead Quota reached. Creating this lead will incur ₹500 overage surcharge (billed to Annual Renewal).</span>
               </div>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 shrink-0">
                 ₹500 / lead
