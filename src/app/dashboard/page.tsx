@@ -39,7 +39,6 @@ import CsvLeadsImportModal from "@/components/CsvLeadsImportModal";
 import CreatorLeadsSummaryView from "@/components/CreatorLeadsSummaryView";
 import CreatorTeachersSummaryView from "@/components/CreatorTeachersSummaryView";
 import ReportBugModal from "@/components/ReportBugModal";
-import ReportBugFloatingButton from "@/components/ReportBugFloatingButton";
 import {
   evaluateLeadQuota,
   recordOverageLeadsToAnnualRenewal,
@@ -1381,12 +1380,6 @@ export default function DashboardPage() {
           isProcessing={isProcessingCsvImport}
         />
       )}
-
-      {/* GLOBAL FLOATING REPORT BUG ACTION (FOR ADMIN & TEACHERS/USERS) */}
-      <ReportBugFloatingButton
-        onOpen={() => setIsReportBugModalOpen(true)}
-        currentUserRole={currentUserRole}
-      />
 
       {/* REPORT BUG MODAL */}
       <ReportBugModal
