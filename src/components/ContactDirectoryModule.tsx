@@ -1175,22 +1175,22 @@ export default function ContactDirectoryModule({
         </span>
       );
     }
-    if (col === "Registered Country") return <span className="font-semibold text-[14px] text-slate-800 dark:text-slate-200">{(contact as any).country || ""}</span>;
-    if (col === "State") return <span className="font-semibold text-[14.5px] text-slate-800 dark:text-slate-200">{contact.state || ""}</span>;
-    if (col === "City") return <span className="font-semibold text-[14.5px] text-slate-800 dark:text-slate-200">{contact.district || ""}</span>;
-    if (col === "Campus") return contact.campus ? <span className="font-bold text-[14px] text-sky-700 dark:text-sky-300">{contact.campus} CAMPUS</span> : <span></span>;
-    if (col === "Course") return <span className="font-bold text-[14.5px] text-indigo-700 dark:text-indigo-300">{contact.courseInterest || ""}</span>;
-    if (col === "Specialization") return <span className="text-slate-700 dark:text-slate-300 text-[14px] font-medium">{(contact as any).specialization || ""}</span>;
-    if (col === "Utm Keyword") return <span className="font-mono text-[13px] text-slate-500 dark:text-slate-400">{(contact as any).utmKeyword || ""}</span>;
-    if (col === "Gender") return <span className="text-slate-800 dark:text-slate-200 font-semibold text-[14px]">{(contact as any).gender || ""}</span>;
-    if (col === "Father's Name") return <span className="text-slate-800 dark:text-slate-200 text-[14px]">{(contact as any).fatherName || ""}</span>;
-    if (col === "Mother's Name") return <span className="text-slate-800 dark:text-slate-200 text-[14px]">{(contact as any).motherName || ""}</span>;
-    if (col === "Blood Group") return <span className="font-bold text-[14px] text-rose-600 dark:text-rose-400">{(contact as any).bloodGroup || ""}</span>;
-    if (col === "Physically Disabled") return <span className="text-slate-800 dark:text-slate-200 text-[14px]">{(contact as any).physicallyDisabled || ""}</span>;
-    if (col === "SSLC Mark") return (contact as any).marks10th ? <span className="font-bold text-[14.5px] text-emerald-600 dark:text-emerald-400">{(contact as any).marks10th}%</span> : <span></span>;
-    if (col === "School Name with Place") return <span className="text-slate-800 dark:text-slate-200 font-medium text-[14px]">{contact.school || ""}</span>;
-    if (col === "Address For communication") return <span className="text-slate-700 dark:text-slate-300 font-medium text-[14px]">{showAddress ? (contact.address || "") : (contact.address ? "•••••••••••••" : "")}</span>;
-    if (col === "Community") return <span className="font-bold text-[14.5px] text-blue-600 dark:text-sky-400">{(contact as any).community || ""}</span>;
+    if (col === "Registered Country") return <span className="font-semibold text-[14px] text-slate-800 dark:text-slate-200 whitespace-nowrap">{(contact as any).country || ""}</span>;
+    if (col === "State") return <span className="font-semibold text-[14.5px] text-slate-800 dark:text-slate-200 whitespace-nowrap">{contact.state || ""}</span>;
+    if (col === "City") return <span className="font-semibold text-[14.5px] text-slate-800 dark:text-slate-200 whitespace-nowrap">{contact.district || ""}</span>;
+    if (col === "Campus") return contact.campus ? <span className="font-bold text-[14px] text-sky-700 dark:text-sky-300 whitespace-nowrap">{contact.campus} CAMPUS</span> : <span></span>;
+    if (col === "Course") return <span className="font-bold text-[14.5px] text-indigo-700 dark:text-indigo-300 whitespace-nowrap">{contact.courseInterest || ""}</span>;
+    if (col === "Specialization") return <span className="text-slate-700 dark:text-slate-300 text-[14px] font-medium whitespace-nowrap">{(contact as any).specialization || ""}</span>;
+    if (col === "Utm Keyword") return <span className="font-mono text-[13px] text-slate-500 dark:text-slate-400 whitespace-nowrap">{(contact as any).utmKeyword || ""}</span>;
+    if (col === "Gender") return <span className="text-slate-800 dark:text-slate-200 font-semibold text-[14px] whitespace-nowrap">{(contact as any).gender || ""}</span>;
+    if (col === "Father's Name") return <span className="text-slate-800 dark:text-slate-200 text-[14px] whitespace-nowrap">{(contact as any).fatherName || ""}</span>;
+    if (col === "Mother's Name") return <span className="text-slate-800 dark:text-slate-200 text-[14px] whitespace-nowrap">{(contact as any).motherName || ""}</span>;
+    if (col === "Blood Group") return <span className="font-bold text-[14px] text-rose-600 dark:text-rose-400 whitespace-nowrap">{(contact as any).bloodGroup || ""}</span>;
+    if (col === "Physically Disabled") return <span className="text-slate-800 dark:text-slate-200 text-[14px] whitespace-nowrap">{(contact as any).physicallyDisabled || ""}</span>;
+    if (col === "SSLC Mark") return (contact as any).marks10th ? <span className="font-bold text-[14.5px] text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{(contact as any).marks10th}%</span> : <span></span>;
+    if (col === "School Name with Place") return <span className="text-slate-800 dark:text-slate-200 font-medium text-[14px] whitespace-nowrap">{contact.school || ""}</span>;
+    if (col === "Address For communication") return <span className="text-slate-700 dark:text-slate-300 font-medium text-[14px] whitespace-nowrap">{showAddress ? (contact.address || "") : (contact.address ? "•••••••••••••" : "")}</span>;
+    if (col === "Community") return <span className="font-bold text-[14.5px] text-blue-600 dark:text-sky-400 whitespace-nowrap">{(contact as any).community || ""}</span>;
     if (col === "How Known / Source" || col === "Source" || col === "Referral Source") {
       return (
         <span className="px-3 py-1 rounded-full text-[13px] font-semibold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/20 whitespace-nowrap inline-flex items-center gap-1.5">
@@ -1203,7 +1203,7 @@ export default function ContactDirectoryModule({
       if (!contact.createdAt) return <span></span>;
       const d = new Date(contact.createdAt);
       const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
-      return <span className="text-slate-800 dark:text-slate-200 font-mono text-[13px] font-medium">{formattedDate}</span>;
+      return <span className="text-slate-800 dark:text-slate-200 font-mono text-[13px] font-medium whitespace-nowrap">{formattedDate}</span>;
     }
     if (col === "Lead Stage") {
       const rawStatus = (contact.status || "").toUpperCase();
@@ -1239,7 +1239,7 @@ export default function ContactDirectoryModule({
 
       return (
         <div
-          className="relative inline-flex items-center"
+          className="relative inline-flex items-center shrink-0 min-w-[170px]"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
@@ -1251,7 +1251,7 @@ export default function ContactDirectoryModule({
               const nextVal = e.target.value as LeadStatus;
               handleLeadStatusChange(contact, nextVal);
             }}
-            className={`appearance-none cursor-pointer pl-3 pr-8 py-1.5 rounded-full text-[14px] font-bold border transition-all duration-200 outline-none focus:ring-2 focus:ring-sky-500/40 shadow-sm min-h-[34px] ${themeClasses} ${
+            className={`appearance-none cursor-pointer pl-3 pr-8 py-1.5 rounded-full text-[14px] font-bold border transition-all duration-200 outline-none focus:ring-2 focus:ring-sky-500/40 shadow-sm min-h-[34px] whitespace-nowrap min-w-[160px] ${themeClasses} ${
               isBusy ? "opacity-60 cursor-not-allowed" : ""
             }`}
             title={`Lead Stage: ${currentVal}. Click to update stage.`}
@@ -2820,11 +2820,11 @@ export default function ContactDirectoryModule({
         /* MERITTO LEAD MANAGER DATA TABLE (Exact Image 2 Implementation) */
         <div className="bg-white dark:bg-slate-900/90 text-slate-800 dark:text-white rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl overflow-hidden font-sans">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-[14.5px]">
+            <table className="min-w-full w-max text-left border-separate border-spacing-0 text-[14.5px]">
               <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-700 dark:text-sky-300 font-bold border-b border-slate-200 dark:border-white/10 uppercase text-[13.5px] tracking-wider">
                 {/* Row 1: Header Titles with Sort & Interactive Filter Icon Popovers */}
                 <tr className="bg-slate-200/80 dark:bg-slate-950/90 text-slate-800 dark:text-slate-200 font-extrabold border-b border-slate-200 dark:border-white/10">
-                  <th className="p-3.5 w-12 text-center">
+                  <th className="p-3.5 w-12 text-center border-b border-slate-200 dark:border-white/10">
                     <Checkbox
                       checked={selectedRows.length === sortedAndFilteredContacts.length && sortedAndFilteredContacts.length > 0}
                       aria-checked={selectedRows.length > 0 && selectedRows.length < sortedAndFilteredContacts.length ? "mixed" : selectedRows.length === sortedAndFilteredContacts.length && sortedAndFilteredContacts.length > 0}
@@ -2844,7 +2844,7 @@ export default function ContactDirectoryModule({
                     return (
                       <th
                         key={col}
-                        className={`p-3.5 font-bold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[13.5px] whitespace-nowrap ${getColumnWidthClass(col)}`}
+                        className={`p-3.5 font-bold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[13.5px] whitespace-nowrap border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}
                       >
                         <span
                           onClick={() => {
@@ -2870,21 +2870,21 @@ export default function ContactDirectoryModule({
                       </th>
                     );
                   })}
-                  <th className="p-3.5 font-bold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[13.5px] whitespace-nowrap text-center sticky right-0 z-20 min-w-[210px] w-56 bg-slate-200 dark:bg-slate-950 border-l border-slate-300 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
+                  <th className="p-3.5 font-bold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[13.5px] whitespace-nowrap text-center sticky right-0 z-20 min-w-[210px] w-56 bg-slate-200 dark:bg-slate-950 border-l border-b border-slate-300 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                     Actions
                   </th>
                 </tr>
 
                 {/* Row 2: Sub-Header Filter Bar Row (Direct Inline Filter Options under Column Headers) */}
                 <tr className="bg-slate-50 dark:bg-slate-950/90 border-b border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 font-normal normal-case">
-                  <td className="p-2.5 text-center text-[12px] font-bold text-blue-600 dark:text-sky-400">
+                  <td className="p-2.5 text-center text-[12px] font-bold text-blue-600 dark:text-sky-400 border-b border-slate-200 dark:border-white/10">
                     <Filter className="w-4 h-4 mx-auto text-blue-600 dark:text-sky-400" />
                   </td>
                   {selectedColumns.map((col) => {
                     const filterVal = columnFilters[col] || "";
                     if (col === "City") {
                       return (
-                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2904,7 +2904,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Lead Stage") {
                       return (
-                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2923,7 +2923,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Campus") {
                       return (
-                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2940,7 +2940,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "State") {
                       return (
-                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2956,7 +2956,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Community") {
                       return (
-                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2976,7 +2976,7 @@ export default function ContactDirectoryModule({
                     }
                     if (col === "Gender") {
                       return (
-                        <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
+                        <td key={`filter_${col}`} className={`p-2 border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}>
                           <select
                             value={filterVal || "ALL"}
                             onChange={(e) =>
@@ -2992,7 +2992,7 @@ export default function ContactDirectoryModule({
                       );
                     }
                     return (
-                      <td key={`filter_${col}`} className={`p-2 ${getColumnWidthClass(col)}`}>
+                      <td key={`filter_${col}`} className={`p-2 border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}>
                         <div className="relative flex items-center">
                           <input
                             type="text"
@@ -3020,7 +3020,7 @@ export default function ContactDirectoryModule({
                       </td>
                     );
                   })}
-                  <td className="p-2 text-center text-[12px] text-slate-400 font-bold sticky right-0 z-20 min-w-[210px] w-56 bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
+                  <td className="p-2 text-center text-[12px] text-slate-400 font-bold sticky right-0 z-20 min-w-[210px] w-56 bg-slate-50 dark:bg-slate-950 border-l border-b border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                     -
                   </td>
                 </tr>
@@ -3034,7 +3034,7 @@ export default function ContactDirectoryModule({
                       key={`skeleton-row-${sIdx}`}
                       className="border-b border-slate-200 dark:border-white/5 animate-pulse bg-slate-50/40 dark:bg-slate-900/30"
                     >
-                      <td className="p-3 text-center">
+                      <td className="p-3 text-center border-b border-slate-200 dark:border-white/5">
                         <div className="w-4 h-4 rounded bg-slate-200 dark:bg-slate-800 mx-auto animate-pulse" />
                       </td>
                       {selectedColumns.map((col, cIdx) => (
@@ -3054,7 +3054,7 @@ export default function ContactDirectoryModule({
                           />
                         </td>
                       ))}
-                      <td className="p-3 text-center sticky right-0 z-10 min-w-[200px] w-52 bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
+                      <td className="p-3 text-center sticky right-0 z-10 min-w-[200px] w-52 bg-white dark:bg-slate-950 border-l border-b border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                         <div className="flex items-center justify-center gap-1.5 opacity-60">
                           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
                           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
@@ -3073,7 +3073,7 @@ export default function ContactDirectoryModule({
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer animate-in fade-in duration-200 border-b border-slate-200 dark:border-white/5 min-h-[64px]"
                     >
                     {/* Select Checkbox */}
-                    <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="p-3.5 text-center border-b border-slate-200 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedRows.includes(contact.id)}
                         onCheckedChange={(checked) => {
@@ -3092,7 +3092,7 @@ export default function ContactDirectoryModule({
                     {selectedColumns.map((col) => (
                       <td
                         key={col}
-                        className={`p-3.5 align-middle ${getColumnWidthClass(col)} ${
+                        className={`p-3.5 align-middle whitespace-nowrap border-b border-slate-200 dark:border-white/5 ${getColumnWidthClass(col)} ${
                           col === "Registered Name" ? "font-bold text-blue-600 dark:text-sky-400 hover:underline" : ""
                         }`}
                       >
@@ -3102,7 +3102,7 @@ export default function ContactDirectoryModule({
 
                     {/* Actions Column with Sticky Pinning to Right */}
                     <td
-                      className="p-3.5 text-center sticky right-0 z-10 min-w-[210px] w-56 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
+                      className="p-3.5 text-center sticky right-0 z-10 min-w-[210px] w-56 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-b border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center justify-center gap-2 min-w-[195px]">
