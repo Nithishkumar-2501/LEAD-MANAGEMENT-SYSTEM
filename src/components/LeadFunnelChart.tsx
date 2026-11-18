@@ -61,7 +61,7 @@ export default function LeadFunnelChart({
     statusCounts.CONTACTED +
     statusCounts.IN_REVIEW +
     statusCounts.ADMITTED +
-    statusCounts.REJECTED || 1;
+    statusCounts.REJECTED;
 
   const stages = [
     {
@@ -257,13 +257,13 @@ export default function LeadFunnelChart({
       {/* Multi-segment Liquid Capsule Bar */}
       <div className="w-full h-3 bg-slate-200 dark:bg-slate-950/80 rounded-full overflow-hidden flex gap-0.5 p-0.5 border border-slate-300 dark:border-white/20 mb-5 shadow-inner">
         {stages.map((stage) => {
-          const pct = ((stage.count / total) * 100).toFixed(1);
+          const pct = total > 0 ? ((stage.count / total) * 100).toFixed(1) : "0.0";
           const isSelected = activeStageKey === stage.key;
           return (
             <div
               key={stage.key}
               onClick={() => handleStageSelect(isSelected ? null : stage.key)}
-              style={{ width: `${Math.max(Number(pct), 4)}%` }}
+              style={{ width: total > 0 && stage.count > 0 ? `${Math.max(Number(pct), 4)}%` : "0%" }}
               className={`h-full bg-gradient-to-r ${stage.bar} rounded-full transition-all duration-300 cursor-pointer shadow-sm ${
                 isSelected ? "ring-2 ring-sky-500 dark:ring-white scale-y-125 z-10 opacity-100" : "opacity-75 hover:opacity-100"
               }`}
@@ -344,7 +344,7 @@ export default function LeadFunnelChart({
                 </div>
                 <div className="pt-1">
                   <span className={`inline-block text-xs font-black px-3 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 ${currentStage.text} shadow-2xs`}>
-                    {Math.round((currentStage.count / total) * 100)}% of pipeline
+                    {total > 0 ? Math.round((currentStage.count / total) * 100) : 0}% of pipeline
                   </span>
                 </div>
               </div>
@@ -355,12 +355,12 @@ export default function LeadFunnelChart({
                   <div className="flex items-center justify-between text-xs text-slate-800 dark:text-white font-bold mb-1.5">
                     <span>Funnel Share</span>
                     <span className={currentStage.text}>
-                      {((currentStage.count / total) * 100).toFixed(1)}%
+                      {total > 0 ? ((currentStage.count / total) * 100).toFixed(1) : "0.0"}%
                     </span>
                   </div>
                   <div className="w-full h-3 bg-slate-200 dark:bg-slate-950/90 rounded-full overflow-hidden p-0.5 border border-slate-300 dark:border-white/15">
                     <div
-                      style={{ width: `${((currentStage.count / total) * 100).toFixed(1)}%` }}
+                      style={{ width: `${total > 0 ? ((currentStage.count / total) * 100).toFixed(1) : "0.0"}%` }}
                       className={`h-full bg-gradient-to-r ${currentStage.bar} rounded-full transition-all duration-500`}
                     />
                   </div>
@@ -397,7 +397,7 @@ export default function LeadFunnelChart({
       {viewMode === "ALL" && (
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
           {stages.map((stage) => {
-            const pct = Math.round((stage.count / total) * 100);
+            const pct = total > 0 ? Math.round((stage.count / total) * 100) : 0;
             const isSelected = activeStageKey === stage.key;
             return (
               <div

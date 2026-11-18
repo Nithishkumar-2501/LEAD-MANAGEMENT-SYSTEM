@@ -177,14 +177,14 @@ export default function AdminDashboardView({
     statusCounts.CONTACTED +
     statusCounts.IN_REVIEW +
     statusCounts.ADMITTED +
-    statusCounts.REJECTED || 1;
+    statusCounts.REJECTED;
 
   const funnelStages = useMemo(() => [
     {
       key: "NEW",
       label: "New Inquiry",
       count: statusCounts.NEW,
-      share: ((statusCounts.NEW / totalLeads) * 100).toFixed(1),
+      share: totalLeads > 0 ? ((statusCounts.NEW / totalLeads) * 100).toFixed(1) : "0.0",
       desc: "Initial student leads received via TNEA portals, walk-ins, and online inquiries.",
       color: "bg-sky-400",
       textColor: "text-sky-500 dark:text-sky-300",
@@ -194,7 +194,7 @@ export default function AdminDashboardView({
       key: "CONTACTED",
       label: "Contacted",
       count: statusCounts.CONTACTED,
-      share: ((statusCounts.CONTACTED / totalLeads) * 100).toFixed(1),
+      share: totalLeads > 0 ? ((statusCounts.CONTACTED / totalLeads) * 100).toFixed(1) : "0.0",
       desc: "Candidates actively engaged by admission counselors via telecall or parent counseling.",
       color: "bg-indigo-500",
       textColor: "text-indigo-500 dark:text-indigo-300",
@@ -204,7 +204,7 @@ export default function AdminDashboardView({
       key: "IN_REVIEW",
       label: "Cutoff Review",
       count: statusCounts.IN_REVIEW,
-      share: ((statusCounts.IN_REVIEW / totalLeads) * 100).toFixed(1),
+      share: totalLeads > 0 ? ((statusCounts.IN_REVIEW / totalLeads) * 100).toFixed(1) : "0.0",
       desc: "Academic verification of 10th & 12th marks and Anna University normalization check.",
       color: "bg-amber-500",
       textColor: "text-amber-500 dark:text-amber-300",
@@ -214,7 +214,7 @@ export default function AdminDashboardView({
       key: "ADMITTED",
       label: "Admitted",
       count: statusCounts.ADMITTED,
-      share: ((statusCounts.ADMITTED / totalLeads) * 100).toFixed(1),
+      share: totalLeads > 0 ? ((statusCounts.ADMITTED / totalLeads) * 100).toFixed(1) : "0.0",
       desc: "Confirmed seat allotment with initial admission fee payment and document verification.",
       color: "bg-emerald-500",
       textColor: "text-emerald-500 dark:text-emerald-300",
@@ -224,7 +224,7 @@ export default function AdminDashboardView({
       key: "REJECTED",
       label: "Rejected / Withdrawn",
       count: statusCounts.REJECTED,
-      share: ((statusCounts.REJECTED / totalLeads) * 100).toFixed(1),
+      share: totalLeads > 0 ? ((statusCounts.REJECTED / totalLeads) * 100).toFixed(1) : "0.0",
       desc: "Candidates who opted for medical/NEET or withdrew their admission interest.",
       color: "bg-rose-500",
       textColor: "text-rose-500 dark:text-rose-300",
@@ -796,7 +796,7 @@ export default function AdminDashboardView({
             <div
               key={stg.key}
               className={cn("h-full transition-all duration-500", stg.color)}
-              style={{ width: `${Math.max(2, (stg.count / totalLeads) * 100)}%` }}
+              style={{ width: totalLeads > 0 && stg.count > 0 ? `${Math.max(2, (stg.count / totalLeads) * 100)}%` : "0%" }}
             />
           ))}
         </div>
