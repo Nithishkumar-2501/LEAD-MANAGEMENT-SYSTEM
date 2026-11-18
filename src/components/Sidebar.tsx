@@ -1712,18 +1712,38 @@ export default function Sidebar({
               }`}
             >
               {/* Popover Header */}
-              <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-white/10">
+              <div
+                className={`flex items-center justify-between pb-2.5 mb-2 border-b ${
+                  isLight ? "border-slate-200" : "border-white/10"
+                }`}
+              >
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                  <div
+                    className={`p-1.5 rounded-lg border ${
+                      isLight
+                        ? "bg-rose-50 text-rose-600 border-rose-200"
+                        : "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                    }`}
+                  >
                     <Settings className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                  <span
+                    className={`text-xs font-black uppercase tracking-wider ${
+                      isLight ? "text-slate-950 font-black" : "text-white"
+                    }`}
+                  >
                     Preferences & Tools
                   </span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setIsSettingsMenuOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                    isLight
+                      ? "text-slate-600 hover:text-slate-950 hover:bg-slate-100"
+                      : "text-slate-400 hover:text-white hover:bg-white/10"
+                  }`}
+                  aria-label="Close preferences"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
