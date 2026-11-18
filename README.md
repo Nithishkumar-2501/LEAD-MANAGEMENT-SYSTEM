@@ -27,34 +27,44 @@
 
 ```mermaid
 graph TD
-    subgraph Client Application Layer
-        Web[Web Browser - Next.js 14 App Router]
-        Mobile[Android Native App - Capacitor APK]
+    subgraph ClientLayer["Client Application Layer"]
+        Web["Web Browser (Next.js 14 App Router)"]
+        Mobile["Android Native App (Capacitor APK)"]
     end
 
-    subgraph API & Backend Layer
-        API_Email[/api/email/send - Resend API Route]
-        API_Contacts[/api/contacts - Student Database]
-        API_Teachers[/api/teachers - Faculty Management]
-        API_AI[/api/ai/* - Nora AI Marksheet OCR]
-        WebRTC[WebRTC Voice Signaling Server :5000]
+    subgraph APILayer["API & Backend Layer"]
+        API_Email["/api/email/send (Resend API Route)"]
+        API_Contacts["/api/contacts (Student Database)"]
+        API_Teachers["/api/teachers (Faculty Management)"]
+        API_AI["/api/ai/* (Nora AI Marksheet OCR)"]
+        WebRTC["WebRTC Voice Signaling Server (:5000)"]
     end
 
-    subgraph Dual-Persistence & Cloud Synchronization Layer
-        Prisma[Prisma ORM 5.22]
-        SQLite[(Local SQLite Database: dev.db)]
-        FirebaseSync[Firebase Live Sync Engine]
-        Firestore[(Google Cloud Firestore)]
-        RTDB[(Firebase Realtime Database)]
+    subgraph SyncLayer["Dual-Persistence & Cloud Synchronization Layer"]
+        Prisma["Prisma ORM 5.22"]
+        SQLite[("Local SQLite Database (dev.db)")]
+        FirebaseSync["Firebase Live Sync Engine"]
+        Firestore[("Google Cloud Firestore")]
+        RTDB[("Firebase Realtime Database")]
     end
 
-    Web --> API_Email & API_Contacts & API_Teachers & API_AI
-    Mobile --> API_Email & API_Contacts & API_Teachers & API_AI
-    API_Contacts & API_Teachers --> Prisma
+    Web --> API_Email
+    Web --> API_Contacts
+    Web --> API_Teachers
+    Web --> API_AI
+    Mobile --> API_Email
+    Mobile --> API_Contacts
+    Mobile --> API_Teachers
+    Mobile --> API_AI
+    API_Contacts --> Prisma
+    API_Teachers --> Prisma
     Prisma --> SQLite
-    Web & Mobile --> FirebaseSync
-    FirebaseSync --> Firestore & RTDB
-    Web & Mobile --> WebRTC
+    Web --> FirebaseSync
+    Mobile --> FirebaseSync
+    FirebaseSync --> Firestore
+    FirebaseSync --> RTDB
+    Web --> WebRTC
+    Mobile --> WebRTC
 ```
 
 ---
