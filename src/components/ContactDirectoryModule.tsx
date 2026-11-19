@@ -1365,6 +1365,8 @@ export default function ContactDirectoryModule({
       const name = (c.name || "").toLowerCase();
       const email = (c.email || "").toLowerCase();
       const phone = (c.phone || "").toLowerCase();
+      const cleanPhone = phone.replace(/\D/g, "");
+      const cleanQ = q.replace(/\D/g, "");
       const course = (c.courseInterest || "").toLowerCase();
       const school = (c.school || "").toLowerCase();
       const district = (c.district || "").toLowerCase();
@@ -1372,6 +1374,25 @@ export default function ContactDirectoryModule({
       const appNo = (c.counsellingAppNo || "").toLowerCase();
       const leadId = String(c.id || "").toLowerCase();
 
+      // Field-specific search matching the selected dropdown criteria
+      if (searchField === "Email") {
+        return email.includes(q);
+      }
+      if (searchField === "Mobile") {
+        return phone.includes(q) || (cleanQ.length > 0 && cleanPhone.includes(cleanQ));
+      }
+      if (searchField === "Name") {
+        return name.includes(q);
+      }
+      if (searchField === "User Id" || searchField === "Lead Id") {
+        return (
+          (numQuery && leadId === numQuery) ||
+          leadId.includes(numQuery || q) ||
+          appNo.includes(q)
+        );
+      }
+
+      // Default: "All Fields" search
       return (
         (numQuery && leadId === numQuery) ||
         leadId.includes(numQuery || q) ||
@@ -1379,6 +1400,7 @@ export default function ContactDirectoryModule({
         name.includes(q) ||
         email.includes(q) ||
         phone.includes(q) ||
+        (cleanQ.length > 0 && cleanPhone.includes(cleanQ)) ||
         course.includes(q) ||
         school.includes(q) ||
         district.includes(q) ||
@@ -2732,7 +2754,7 @@ export default function ContactDirectoryModule({
               {/* Popover Dropdown for Field Selection (Matching Screenshot) */}
               {isSearchFieldDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl z-50 py-1.5 text-[14px] font-sans text-slate-800 dark:text-white animate-in fade-in zoom-in-95">
-                  {(["Email", "Mobile", "Name", "User Id", "Lead Id"] as const).map((field) => (
+                  {(["Email", "Mobile", "Name", "User Id", "Lead Id", "All Fields"] as const).map((field) => (
                     <div
                       key={field}
                       onClick={() => {
@@ -2809,7 +2831,10 @@ export default function ContactDirectoryModule({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSearchField("All Fields");
+              }}
               placeholder="Search name, phone, school, district, address..."
               className="w-full bg-slate-950/80 border border-white/20 rounded-xl pl-10 pr-4 py-2.5 text-[14px] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-xl min-h-[42px]"
             />
