@@ -20,7 +20,7 @@ import {
   resolveTeacherByUsername,
 } from "@/lib/firebaseSync";
 import { formatPhoneWith91 } from "@/lib/phoneValidation";
-import { getTeacherCallStats } from "@/lib/teacherAssignment";
+import { getTeacherCallStats, isFacultyBatchAllocated } from "@/lib/teacherAssignment";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -55,6 +55,9 @@ function mergeWithMockTeachers(incomingList: Teacher[]): Teacher[] {
   if (Array.isArray(incomingList)) {
     incomingList.forEach((t) => {
       const key = (t.id || t.email).toLowerCase().trim();
+      // Purge any stale phantom meenakshi.cse duplicate from prior sessions
+      if (key === "meenakshi.cse@vsbec.in") return;
+
       const existing = map.get(key);
       map.set(key, existing ? { ...existing, ...t } : t);
     });
@@ -1161,9 +1164,10 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {paginatedTeachers.map((tch, index) => {
             const isSelf = checkIsSelfTeacher(tch, loggedInUsername);
-            const rangeDisplay =
-              tch.assignedRangeText ||
-              `Contacts #${((index % 10) * 100) + 1} to #${((index % 10) + 1) * 100}`;
+            const isAllocated = isFacultyBatchAllocated(tch);
+            const rangeDisplay = isAllocated
+              ? tch.assignedRangeText!
+              : "Unassigned (General Pool)";
 
             return (
               <div
@@ -1287,16 +1291,22 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                     </span>
                     <div className="text-right">
                       <span className="text-sky-800 dark:text-sky-300 font-black block">
-                        {tch.assignedQuota?.toLocaleString() || "100"} Contacts
+                        {isAllocated ? `${tch.assignedQuota?.toLocaleString() || "100"} Contacts` : "0 Contacts"}
                       </span>
-                      <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-400/40 px-2 py-0.5 rounded-full inline-block mt-0.5 shadow-xs">
-                        🎯 {rangeDisplay}
-                      </span>
+                      {isAllocated ? (
+                        <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-400/40 px-2 py-0.5 rounded-full inline-block mt-0.5 shadow-xs">
+                          🎯 {rangeDisplay}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-amber-800 dark:text-amber-300 font-black bg-amber-100 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-400/40 px-2 py-0.5 rounded-full inline-block mt-0.5 shadow-xs">
+                          ⏳ Unassigned (General Pool)
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Interactive Calling Audit Badge (Talked vs Not Talked) without black background */}
+                {/* Interactive Calling Audit Badge (Talked vs Not Talked) */}
                 {(() => {
                   const stats = getTeacherCallStats(tch);
                   return (
@@ -1306,7 +1316,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                         setSelectedTeacherForAudit(tch);
                       }}
                       className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500/70 hover:bg-slate-100/80 dark:hover:bg-slate-900 transition-all cursor-pointer space-y-2 shadow-xs group/audit"
-                      title={`Click to view students for ${tch.name}`}
+                      title={isAllocated ? `Click to view students for ${tch.name}` : `View general pool status for ${tch.name}`}
                     >
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1.5 font-extrabold text-slate-900 dark:text-white">
@@ -1314,7 +1324,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                           <span>Calling Audit:</span>
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-400/30 group-hover/audit:bg-indigo-600 group-hover/audit:text-white transition-all flex items-center gap-1">
-                          <span>View Students</span>
+                          <span>{isAllocated ? "View Students" : "View Pool"}</span>
                           <span>➔</span>
                         </span>
                       </div>
@@ -1332,11 +1342,11 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
                       <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex border border-slate-300/60 dark:border-white/5">
                         <div
-                          style={{ width: `${Math.round((stats.talked / stats.total) * 100)}%` }}
+                          style={{ width: stats.total > 0 ? `${Math.round((stats.talked / stats.total) * 100)}%` : "0%" }}
                           className="bg-emerald-500 transition-all duration-300"
                         />
                         <div
-                          style={{ width: `${100 - Math.round((stats.talked / stats.total) * 100)}%` }}
+                          style={{ width: stats.total > 0 ? `${100 - Math.round((stats.talked / stats.total) * 100)}%` : "0%" }}
                           className="bg-amber-500 transition-all duration-300"
                         />
                       </div>

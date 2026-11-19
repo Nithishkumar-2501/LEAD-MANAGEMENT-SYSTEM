@@ -5,7 +5,7 @@ import { Teacher, Lead, Application } from "@/types/crm";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { uploadTeacherProfilePhotoToFirebase, redirectStudentLeadInFirebase } from "@/lib/firebaseSync";
 import { MOCK_TEACHERS } from "@/lib/mockData";
-import { getTeacherStartIdx, isTeacherLeadTalked } from "@/lib/teacherAssignment";
+import { getTeacherStartIdx, isTeacherLeadTalked, isFacultyBatchAllocated } from "@/lib/teacherAssignment";
 import {
   X,
   Phone,
@@ -325,6 +325,11 @@ export default function TeacherStudentAuditModal({
 
     // If no saved records, generate deterministic assigned batch
     if (!loaded || loaded.length === 0) {
+      if (!isFacultyBatchAllocated(teacher)) {
+        setStudentRecords([]);
+        return;
+      }
+
       const quota = teacher.assignedQuota || 100;
       const startIdx = getTeacherStartIdx(teacher.assignedRangeText, teacher.email);
 
@@ -605,8 +610,10 @@ export default function TeacherStudentAuditModal({
                 </p>
                 <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
                   <span>🎯 Allocated Batch:</span>
-                  <strong className="text-emerald-400 font-mono font-bold">
-                    {teacher.assignedRangeText || `Contacts #1 to #${teacher.assignedQuota || 100}`}
+                  <strong className={`font-mono font-bold ${isFacultyBatchAllocated(teacher) ? "text-emerald-400" : "text-amber-400"}`}>
+                    {isFacultyBatchAllocated(teacher)
+                      ? (teacher.assignedRangeText || `Contacts #1 to #${teacher.assignedQuota || 100}`)
+                      : "Unassigned (General Pool)"}
                   </strong>
                   <span>({totalCount} Total Assigned Students)</span>
                 </p>
@@ -806,7 +813,17 @@ export default function TeacherStudentAuditModal({
         {/* STUDENT AUDIT LIST                                                */}
         {/* ================================================================= */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
-          {filteredStudents.length === 0 ? (
+          {!isFacultyBatchAllocated(teacher) ? (
+            <div className="py-16 text-center text-slate-400 bg-slate-950/40 rounded-2xl border border-slate-800 space-y-3 px-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto">
+                <Clock className="w-6 h-6" />
+              </div>
+              <p className="text-base font-black text-white">No Leads Allocated to {teacher.name}</p>
+              <p className="text-xs text-slate-400 max-w-md mx-auto">
+                This faculty member is in the general pool awaiting lead allocation. System Administrators can allocate a 100-lead batch from the 600 unassigned leads using the <strong>⚡ Split Contacts to Teacher</strong> tool in the Admin Controls.
+              </p>
+            </div>
+          ) : filteredStudents.length === 0 ? (
             <div className="py-16 text-center text-slate-400 bg-slate-950/40 rounded-2xl border border-slate-800 space-y-2">
               <p className="text-base font-bold text-slate-300">No students found matching current filter</p>
               <p className="text-xs text-slate-500">Try clearing your search query or selecting a different status tab.</p>

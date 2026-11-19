@@ -203,6 +203,24 @@ export function isTeacherLeadTalked(contactNo: number): boolean {
 }
 
 /**
+ * Helper to determine if a faculty member has an active allocated student lead batch.
+ */
+export function isFacultyBatchAllocated(tch?: {
+  assignedQuota?: number;
+  assignedRangeText?: string;
+}): boolean {
+  if (!tch) return false;
+  const quota = tch.assignedQuota;
+  if (!quota || quota <= 0) return false;
+  if (!tch.assignedRangeText) return false;
+  const lower = tch.assignedRangeText.toLowerCase();
+  if (lower.includes("unassigned") || lower.includes("awaiting") || lower.includes("pool")) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Calculates teacher calling audit statistics (talked vs not talked vs total).
  * Reads persistent localStorage records if present, or falls back to the exact
  * deterministic generation rule used by TeacherStudentAuditModal so card and modal counts
@@ -228,6 +246,10 @@ export function getTeacherCallStats(tch: {
       }
     }
   } catch (e) {}
+
+  if (!isFacultyBatchAllocated(tch)) {
+    return { talked: 0, notTalked: 0, total: 0 };
+  }
 
   const quota = tch.assignedQuota || 100;
   const startIdx = getTeacherStartIdx(tch.assignedRangeText, tch.email);
