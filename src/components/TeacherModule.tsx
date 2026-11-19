@@ -719,7 +719,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [rowsPerPage, setRowsPerPage] = useState(6);
 
   const avgExperience = useMemo(() => {
-    if (filteredTeachers.length === 0) return "12.0";
+    if (filteredTeachers.length === 0) return "0.0";
     const sum = filteredTeachers.reduce((acc, t) => acc + (Number(t.experienceYears) || 0), 0);
     return (sum / filteredTeachers.length).toFixed(1);
   }, [filteredTeachers]);
@@ -791,7 +791,9 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               <Award className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xs text-amber-300 font-medium mt-3">Senior Academic Leadership</p>
+          <p className="text-xs text-amber-300 font-medium mt-3">
+            {filteredTeachers.length === 0 ? "No Matching Faculty" : "Senior Academic Leadership"}
+          </p>
         </div>
       </div>
 
