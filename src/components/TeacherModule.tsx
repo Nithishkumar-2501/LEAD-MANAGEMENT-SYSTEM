@@ -20,6 +20,7 @@ import {
   resolveTeacherByUsername,
 } from "@/lib/firebaseSync";
 import { formatPhoneWith91 } from "@/lib/phoneValidation";
+import { getTeacherCallStats } from "@/lib/teacherAssignment";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -227,26 +228,19 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [selectedTeacherForAudit, setSelectedTeacherForAudit] = useState<Teacher | null>(null);
+  const [auditRevision, setAuditRevision] = useState(0);
 
-  // Dynamic Call Audit Metrics for Each Teacher
-  const getTeacherCallStats = (tch: Teacher, index: number) => {
-    try {
-      const key = `vsb_teacher_call_records_${tch.id || tch.email}`;
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const talked = parsed.filter((p: any) => p.isTalked).length;
-          const total = parsed.length;
-          return { talked, notTalked: total - talked, total };
-        }
-      }
-    } catch (e) {}
-
-    const total = tch.assignedQuota || 100;
-    const talked = Math.round(total * (0.46 + ((index * 9) % 24) / 100));
-    return { talked, notTalked: total - talked, total };
-  };
+  useEffect(() => {
+    const handleSync = () => {
+      setAuditRevision((r) => r + 1);
+    };
+    window.addEventListener("vsb_teacher_call_records_updated", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("vsb_teacher_call_records_updated", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, []);
 
   // Admin Lead Allocation Control Panel State
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
@@ -1250,7 +1244,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
                 {/* Interactive Calling Audit Badge (Talked vs Not Talked) without black background */}
                 {(() => {
-                  const stats = getTeacherCallStats(tch, index);
+                  const stats = getTeacherCallStats(tch);
                   return (
                     <div
                       onClick={(e) => {
@@ -2307,7 +2301,10 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
       <TeacherStudentAuditModal
         teacher={selectedTeacherForAudit}
         isOpen={Boolean(selectedTeacherForAudit)}
-        onClose={() => setSelectedTeacherForAudit(null)}
+        onClose={() => {
+          setSelectedTeacherForAudit(null);
+          setAuditRevision((r) => r + 1);
+        }}
         currentUserRole={currentUserRole}
         onTriggerToast={onTriggerToast}
         allLeads={applicants}

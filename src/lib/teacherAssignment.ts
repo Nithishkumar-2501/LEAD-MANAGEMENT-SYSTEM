@@ -175,3 +175,69 @@ export function isLeadAssignedToTeacher(
 
   return false;
 }
+
+/**
+ * Deterministically computes the starting lead/contact number for a faculty member.
+ */
+export function getTeacherStartIdx(assignedRangeText?: string, email?: string): number {
+  if (assignedRangeText) {
+    const match = assignedRangeText.match(/#(\d+)/);
+    if (match && match[1]) {
+      return parseInt(match[1], 10);
+    }
+  }
+
+  let hash = 0;
+  const cleanEmail = email || "";
+  for (let i = 0; i < cleanEmail.length; i++) {
+    hash = (hash * 31 + cleanEmail.charCodeAt(i)) % 900;
+  }
+  return Math.max(1, hash);
+}
+
+/**
+ * Deterministic status rule for whether a contact in the initial batch was talked to.
+ */
+export function isTeacherLeadTalked(contactNo: number): boolean {
+  return (contactNo % 3 === 0) || (contactNo % 5 === 1) || (contactNo % 7 === 2);
+}
+
+/**
+ * Calculates teacher calling audit statistics (talked vs not talked vs total).
+ * Reads persistent localStorage records if present, or falls back to the exact
+ * deterministic generation rule used by TeacherStudentAuditModal so card and modal counts
+ * always match 100%.
+ */
+export function getTeacherCallStats(tch: {
+  id?: string;
+  email?: string;
+  assignedQuota?: number;
+  assignedRangeText?: string;
+}): { talked: number; notTalked: number; total: number } {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const key = `vsb_teacher_call_records_${tch.id || tch.email}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const talked = parsed.filter((p: any) => p.isTalked).length;
+          const total = parsed.length;
+          return { talked, notTalked: Math.max(0, total - talked), total };
+        }
+      }
+    }
+  } catch (e) {}
+
+  const quota = tch.assignedQuota || 100;
+  const startIdx = getTeacherStartIdx(tch.assignedRangeText, tch.email);
+
+  let talked = 0;
+  for (let i = 0; i < quota; i++) {
+    const contactNo = startIdx + i;
+    if (isTeacherLeadTalked(contactNo)) {
+      talked++;
+    }
+  }
+  return { talked, notTalked: Math.max(0, quota - talked), total: quota };
+}

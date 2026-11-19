@@ -5,6 +5,7 @@ import { Teacher, Lead, Application } from "@/types/crm";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { uploadTeacherProfilePhotoToFirebase, redirectStudentLeadInFirebase } from "@/lib/firebaseSync";
 import { MOCK_TEACHERS } from "@/lib/mockData";
+import { getTeacherStartIdx, isTeacherLeadTalked } from "@/lib/teacherAssignment";
 import {
   X,
   Phone,
@@ -286,6 +287,9 @@ export default function TeacherStudentAuditModal({
         targetList = [transferredRecord, ...targetList];
       }
       localStorage.setItem(targetStorageKey, JSON.stringify(targetList));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("vsb_teacher_call_records_updated"));
+      }
     } catch (e) {
       console.warn("Target queue update error:", e);
     }
@@ -322,22 +326,7 @@ export default function TeacherStudentAuditModal({
     // If no saved records, generate deterministic assigned batch
     if (!loaded || loaded.length === 0) {
       const quota = teacher.assignedQuota || 100;
-      
-      // Determine starting contact index from teacher range or email hash
-      let startIdx = 1;
-      if (teacher.assignedRangeText) {
-        const match = teacher.assignedRangeText.match(/#(\d+)/);
-        if (match && match[1]) {
-          startIdx = parseInt(match[1], 10);
-        }
-      } else {
-        // Deterministic hash based on teacher name/email
-        let hash = 0;
-        for (let i = 0; i < teacher.email.length; i++) {
-          hash = (hash * 31 + teacher.email.charCodeAt(i)) % 900;
-        }
-        startIdx = Math.max(1, hash);
-      }
+      const startIdx = getTeacherStartIdx(teacher.assignedRangeText, teacher.email);
 
       const generated: StudentCallRecord[] = [];
       const primaryCourse = teacher.coursesAssigned[0] || teacher.department;
@@ -350,8 +339,8 @@ export default function TeacherStudentAuditModal({
         const school = TN_SCHOOLS[(contactNo + i * 2) % TN_SCHOOLS.length];
         const cutoff = Number((165 + ((contactNo * 13) % 34) + ((contactNo % 5) * 0.25)).toFixed(2));
         
-        // Realistic initial talked ratio: roughly 45% - 65% talked
-        const isTalked = (contactNo % 3 === 0) || (contactNo % 5 === 1) || (contactNo % 7 === 2);
+        // Deterministic initial talked ratio matching getTeacherCallStats
+        const isTalked = isTeacherLeadTalked(contactNo);
         
         let talkedAt: string | undefined;
         let durationText: string | undefined;
@@ -409,6 +398,9 @@ export default function TeacherStudentAuditModal({
       loaded = generated;
       try {
         localStorage.setItem(storageKey, JSON.stringify(loaded));
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("vsb_teacher_call_records_updated"));
+        }
       } catch (e) {}
     }
 
@@ -421,6 +413,9 @@ export default function TeacherStudentAuditModal({
     setStudentRecords(updated);
     try {
       localStorage.setItem(`vsb_teacher_call_records_${teacher.id || teacher.email}`, JSON.stringify(updated));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("vsb_teacher_call_records_updated"));
+      }
     } catch (e) {}
   };
 
