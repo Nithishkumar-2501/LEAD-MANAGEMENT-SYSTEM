@@ -446,12 +446,48 @@ export default function TeacherStudentAuditModal({
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchesName = (s.studentName || "").toLowerCase().includes(q);
-        const matchesPhone = (s.phone || "").toLowerCase().includes(q);
+        const cleanPhone = (s.phone || "").replace(/\D/g, "");
+        const cleanQ = q.replace(/\D/g, "");
+        const matchesPhone =
+          (s.phone || "").toLowerCase().includes(q) ||
+          (cleanQ.length >= 4 && cleanPhone.includes(cleanQ));
+        const matchesEmail = (s.email || "").toLowerCase().includes(q);
         const matchesDistrict = (s.district || "").toLowerCase().includes(q);
         const matchesSchool = (s.school || "").toLowerCase().includes(q);
-        const matchesNumber = (s.leadNumber ? s.leadNumber.toString() : "").includes(q);
+        const matchesNumber =
+          (s.leadNumber ? s.leadNumber.toString() : "").includes(q) ||
+          (s.leadNumber ? `#${s.leadNumber}`.toLowerCase().includes(q) : false);
         const matchesCourse = (s.courseInterest || "").toLowerCase().includes(q);
-        return matchesName || matchesPhone || matchesDistrict || matchesSchool || matchesNumber || matchesCourse;
+
+        // Cutoff matching (exact/partial cutoff value, 'cutoff: <val>' prefix, or comparison operators > / >= / < / <=)
+        const cutoffStr = typeof s.cutoffMarks === "number" ? s.cutoffMarks.toString() : "";
+        const cleanCutoffQuery = q.replace(/^cutoff\s*:?\s*/i, "").trim();
+        let matchesCutoff =
+          (cutoffStr.length > 0 && cutoffStr.includes(q)) ||
+          (cleanCutoffQuery.length > 0 && cutoffStr.length > 0 && cutoffStr.includes(cleanCutoffQuery));
+
+        const opMatch = q.match(/^(?:cutoff\s*)?([><]=?)\s*(\d+(?:\.\d+)?)$/i);
+        if (opMatch && typeof s.cutoffMarks === "number") {
+          const op = opMatch[1];
+          const targetVal = parseFloat(opMatch[2]);
+          if (!isNaN(targetVal)) {
+            if (op === ">") matchesCutoff = s.cutoffMarks > targetVal;
+            else if (op === ">=") matchesCutoff = s.cutoffMarks >= targetVal;
+            else if (op === "<") matchesCutoff = s.cutoffMarks < targetVal;
+            else if (op === "<=") matchesCutoff = s.cutoffMarks <= targetVal;
+          }
+        }
+
+        return (
+          matchesName ||
+          matchesPhone ||
+          matchesEmail ||
+          matchesDistrict ||
+          matchesSchool ||
+          matchesNumber ||
+          matchesCourse ||
+          matchesCutoff
+        );
       }
 
       return true;
