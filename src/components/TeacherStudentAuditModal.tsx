@@ -323,6 +323,26 @@ export default function TeacherStudentAuditModal({
       }
     } catch (e) {}
 
+    // Ensure legacy records in localStorage have cutoffMarks populated
+    if (loaded && loaded.length > 0) {
+      let needsSave = false;
+      const startIdx = getTeacherStartIdx(teacher.assignedRangeText, teacher.email);
+      loaded = loaded.map((s, idx) => {
+        if (s.cutoffMarks === undefined || s.cutoffMarks === null || isNaN(s.cutoffMarks)) {
+          const contactNo = s.leadNumber || (startIdx + idx);
+          const computedCutoff = Number((165 + ((contactNo * 13) % 34) + ((contactNo % 5) * 0.25)).toFixed(2));
+          needsSave = true;
+          return { ...s, cutoffMarks: computedCutoff };
+        }
+        return s;
+      });
+      if (needsSave) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(loaded));
+        } catch (e) {}
+      }
+    }
+
     // If no saved records, generate deterministic assigned batch
     if (!loaded || loaded.length === 0) {
       if (!isFacultyBatchAllocated(teacher)) {
@@ -461,12 +481,12 @@ export default function TeacherStudentAuditModal({
 
         // Cutoff matching (exact/partial cutoff value, 'cutoff: <val>' prefix, or comparison operators > / >= / < / <=)
         const cutoffStr = typeof s.cutoffMarks === "number" ? s.cutoffMarks.toString() : "";
-        const cleanCutoffQuery = q.replace(/^cutoff\s*:?\s*/i, "").trim();
+        const cleanCutoffQuery = q.replace(/^cutoff\s*[:=]?\s*/i, "").trim();
         let matchesCutoff =
           (cutoffStr.length > 0 && cutoffStr.includes(q)) ||
           (cleanCutoffQuery.length > 0 && cutoffStr.length > 0 && cutoffStr.includes(cleanCutoffQuery));
 
-        const opMatch = q.match(/^(?:cutoff\s*)?([><]=?)\s*(\d+(?:\.\d+)?)$/i);
+        const opMatch = q.match(/^(?:cutoff\s*[:=]?\s*)?([><]=?)\s*(\d+(?:\.\d+)?)$/i);
         if (opMatch && typeof s.cutoffMarks === "number") {
           const op = opMatch[1];
           const targetVal = parseFloat(opMatch[2]);
@@ -478,6 +498,30 @@ export default function TeacherStudentAuditModal({
           }
         }
 
+        // Multi-term support (e.g. "Swetha 186.25" or "Swetha Mech")
+        const tokens = q.split(/\s+/).filter(Boolean);
+        let matchesAllTokens = false;
+        if (tokens.length > 1) {
+          matchesAllTokens = tokens.every((token) => {
+            const tokenClean = token.replace(/^cutoff\s*[:=]?\s*/i, "").trim();
+            const tokenCutoff =
+              (cutoffStr.length > 0 && cutoffStr.includes(token)) ||
+              (tokenClean.length > 0 && cutoffStr.length > 0 && cutoffStr.includes(tokenClean));
+
+            return (
+              (s.studentName || "").toLowerCase().includes(token) ||
+              (s.phone || "").toLowerCase().includes(token) ||
+              (s.email || "").toLowerCase().includes(token) ||
+              (s.district || "").toLowerCase().includes(token) ||
+              (s.school || "").toLowerCase().includes(token) ||
+              (s.leadNumber ? s.leadNumber.toString() : "").includes(token) ||
+              (s.leadNumber ? `#${s.leadNumber}`.toLowerCase().includes(token) : false) ||
+              (s.courseInterest || "").toLowerCase().includes(token) ||
+              tokenCutoff
+            );
+          });
+        }
+
         return (
           matchesName ||
           matchesPhone ||
@@ -486,7 +530,8 @@ export default function TeacherStudentAuditModal({
           matchesSchool ||
           matchesNumber ||
           matchesCourse ||
-          matchesCutoff
+          matchesCutoff ||
+          matchesAllTokens
         );
       }
 
