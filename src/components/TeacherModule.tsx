@@ -1162,7 +1162,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               <>
                 {/* Teachers Grid in Department */}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  {paginatedTeachers.map((tch, index) => {
+                  {paginatedTeachers.map((tch) => {
             const isSelf = checkIsSelfTeacher(tch, loggedInUsername);
             const isAllocated = isFacultyBatchAllocated(tch);
             const rangeDisplay = isAllocated
