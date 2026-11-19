@@ -312,7 +312,7 @@ export default function ApplicantsTable({
       {/* Modern Data Table styled after data-table-11 and Image 2 */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
         <div className="overflow-x-auto">
-          <Table className="w-full text-left text-xs">
+          <Table className="w-full min-w-[760px] text-left text-xs">
             <TableHeader className="bg-slate-50/80 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800">
               <TableRow className="hover:bg-transparent">
                 {/* Select All Checkbox */}
@@ -327,7 +327,7 @@ export default function ApplicantsTable({
                 </TableHead>
 
                 {/* Applicant Name */}
-                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 min-w-[240px] sm:min-w-[260px]">
                   <button
                     type="button"
                     onClick={() => toggleSort("name")}
@@ -347,7 +347,7 @@ export default function ApplicantsTable({
                 </TableHead>
 
                 {/* Applied Program */}
-                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 min-w-[180px]">
                   <button
                     type="button"
                     onClick={() => toggleSort("courseInterest")}
@@ -387,7 +387,7 @@ export default function ApplicantsTable({
                 </TableHead>
 
                 {/* State & Stage */}
-                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 min-w-[150px]">
                   State & Stage
                 </TableHead>
 
@@ -432,7 +432,7 @@ export default function ApplicantsTable({
                 </TableHead>
 
                 {/* Quick Actions */}
-                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center sticky right-0 z-20 min-w-[200px] w-52 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm border-l border-slate-200 dark:border-slate-800 shadow-[-6px_0_12px_rgba(0,0,0,0.06)] dark:shadow-[-6px_0_12px_rgba(0,0,0,0.3)]">
+                <TableHead className="h-12 text-[13.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center md:sticky md:right-0 z-20 min-w-[200px] w-52 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm border-l border-slate-200 dark:border-slate-800 md:shadow-[-6px_0_12px_rgba(0,0,0,0.06)] dark:md:shadow-[-6px_0_12px_rgba(0,0,0,0.3)]">
                   Quick Actions
                 </TableHead>
               </TableRow>
@@ -465,7 +465,7 @@ export default function ApplicantsTable({
                       </TableCell>
 
                       {/* Applicant Name & Email & Lead ID */}
-                      <TableCell className="py-3 px-3.5">
+                      <TableCell className="py-3 px-3.5 min-w-[240px] sm:min-w-[260px]">
                         <div className="flex items-center gap-3">
                           {/* Round Avatar Initials with Subtle Color */}
                           <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-extrabold text-[13px] flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800/50 shadow-xs">
@@ -481,7 +481,7 @@ export default function ApplicantsTable({
                                 Lead #{item.id}
                               </span>
                             </div>
-                            <div className="text-[13px] text-slate-500 dark:text-slate-400 truncate max-w-[190px]">
+                            <div className="text-[13px] text-slate-500 dark:text-slate-400 truncate max-w-[220px]">
                               {item.email}
                             </div>
                           </div>
@@ -489,7 +489,7 @@ export default function ApplicantsTable({
                       </TableCell>
 
                       {/* Applied Program */}
-                      <TableCell className="py-3 px-3.5 text-slate-800 dark:text-slate-200 font-semibold text-[14px] sm:text-[14.5px]">
+                      <TableCell className="py-3 px-3.5 text-slate-800 dark:text-slate-200 font-semibold text-[14px] sm:text-[14.5px] min-w-[180px]">
                         {item.courseInterest}
                       </TableCell>
 
@@ -501,7 +501,7 @@ export default function ApplicantsTable({
                       </TableCell>
 
                       {/* State & Stage Status Pills matching Image 2 */}
-                      <TableCell className="py-3 px-3.5">
+                      <TableCell className="py-3 px-3.5 min-w-[150px]">
                         <div className="flex flex-col gap-1 items-start">
                           {stateInfo.state === "HOT" && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs">
@@ -550,7 +550,7 @@ export default function ApplicantsTable({
 
                       {/* Quick Actions Circular Buttons matching Image 2 */}
                       <TableCell
-                        className="py-3 px-3.5 text-center sticky right-0 z-10 min-w-[200px] w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-slate-50/95 dark:group-hover:bg-slate-800/95 transition-colors border-l border-slate-200 dark:border-slate-800 shadow-[-6px_0_12px_rgba(0,0,0,0.06)] dark:shadow-[-6px_0_12px_rgba(0,0,0,0.3)] whitespace-nowrap"
+                        className="py-3 px-3.5 text-center md:sticky md:right-0 z-10 min-w-[200px] w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-slate-50/95 dark:group-hover:bg-slate-800/95 transition-colors border-l border-slate-200 dark:border-slate-800 md:shadow-[-6px_0_12px_rgba(0,0,0,0.06)] dark:md:shadow-[-6px_0_12px_rgba(0,0,0,0.3)] whitespace-nowrap"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-center gap-1.5 min-w-[185px]">
