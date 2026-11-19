@@ -123,11 +123,17 @@ export default function PaymentBillingModule({
           p.studentName.toLowerCase() === name.toLowerCase()
       );
 
+      const hasPartialPayment =
+        matchingPayment?.status === "PARTIAL" ||
+        (app.application as any)?.paymentStatus === "PARTIAL" ||
+        (matchingPayment && matchingPayment.amount < 85000);
+
       const isCompleted =
-        matchingPayment?.status === "COMPLETED" ||
-        app.application?.paymentStatus === "COMPLETED" ||
-        app.status === "ADMITTED" ||
-        (app.application?.stage as string) === "FEE_PAID";
+        !hasPartialPayment &&
+        (matchingPayment?.status === "COMPLETED" ||
+          app.application?.paymentStatus === "COMPLETED" ||
+          app.status === "ADMITTED" ||
+          (app.application?.stage as string) === "FEE_PAID");
 
       const totalFee = 85000;
       const amountPaid = matchingPayment
@@ -138,7 +144,7 @@ export default function PaymentBillingModule({
       const balanceDue = Math.max(0, totalFee - amountPaid);
 
       const status: "COMPLETED" | "PENDING" | "PARTIAL" =
-        balanceDue === 0 && amountPaid >= totalFee
+        balanceDue === 0 && amountPaid >= totalFee && !hasPartialPayment
           ? "COMPLETED"
           : amountPaid > 0
           ? "PARTIAL"
@@ -172,7 +178,7 @@ export default function PaymentBillingModule({
         const amountPaid = p.amount;
         const balanceDue = Math.max(0, totalFee - amountPaid);
         const status: "COMPLETED" | "PENDING" | "PARTIAL" =
-          balanceDue === 0 && amountPaid >= totalFee
+          balanceDue === 0 && amountPaid >= totalFee && p.status !== "PARTIAL"
             ? "COMPLETED"
             : amountPaid > 0
             ? "PARTIAL"
@@ -202,17 +208,24 @@ export default function PaymentBillingModule({
     return list;
   }, [applicants, payments, loggedInCampus]);
 
-  // Overall Headcount Metrics (HOW MANY STUDENTS HAVE PAID THEIR FEES)
-  const totalStudentsCount = allStudentFeeRecords.length;
-  const paidStudentsCount = allStudentFeeRecords.filter((s) => s.status === "COMPLETED").length;
-  const pendingStudentsCount = allStudentFeeRecords.filter((s) => s.status === "PENDING").length;
-  const partialStudentsCount = allStudentFeeRecords.filter((s) => s.status === "PARTIAL").length;
+  // Campus-Scoped Student Fee Records for Headcount Metrics & Tabs
+  const campusScopedFeeRecords = useMemo(() => {
+    return allStudentFeeRecords.filter(
+      (s) => campusFilter === "ALL" || s.campus === campusFilter
+    );
+  }, [allStudentFeeRecords, campusFilter]);
+
+  // Overall Headcount Metrics (Strictly scoped to active campus filter)
+  const totalStudentsCount = campusScopedFeeRecords.length;
+  const paidStudentsCount = campusScopedFeeRecords.filter((s) => s.status === "COMPLETED").length;
+  const pendingStudentsCount = campusScopedFeeRecords.filter((s) => s.status === "PENDING").length;
+  const partialStudentsCount = campusScopedFeeRecords.filter((s) => s.status === "PARTIAL").length;
   const paidPercentage = totalStudentsCount > 0 ? Math.round((paidStudentsCount / totalStudentsCount) * 100) : 0;
-  const totalAmountCollected = allStudentFeeRecords.reduce((sum, s) => sum + s.amountPaid, 0);
+  const totalAmountCollected = campusScopedFeeRecords.reduce((sum, s) => sum + s.amountPaid, 0);
 
   // Filtered Student Fee List
   const filteredStudents = useMemo(() => {
-    return allStudentFeeRecords.filter((s) => {
+    return campusScopedFeeRecords.filter((s) => {
       const q = search.toLowerCase();
       const matchesSearch =
         s.studentName.toLowerCase().includes(q) ||
@@ -223,11 +236,10 @@ export default function PaymentBillingModule({
 
       const matchesStatus = statusFilter === "ALL" || s.status === statusFilter;
       const matchesCategory = categoryFilter === "ALL" || s.feeCategory === categoryFilter;
-      const matchesCampus = campusFilter === "ALL" || s.campus === campusFilter;
 
-      return matchesSearch && matchesStatus && matchesCategory && matchesCampus;
+      return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [allStudentFeeRecords, search, statusFilter, categoryFilter, campusFilter]);
+  }, [campusScopedFeeRecords, search, statusFilter, categoryFilter]);
 
   // Record Student Fee in Firebase
   const handleRecordPayment = async (e: React.FormEvent) => {

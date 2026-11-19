@@ -1729,8 +1729,9 @@ export default function Sidebar({
                   </div>
                   <span
                     className={`text-xs font-black uppercase tracking-wider ${
-                      isLight ? "text-black" : "text-white"
+                      isLight ? "!text-black text-black" : "text-white"
                     }`}
+                    style={{ color: isLight ? "#000000" : "#ffffff" }}
                   >
                     Preferences & Tools
                   </span>
@@ -1740,7 +1741,7 @@ export default function Sidebar({
                   onClick={() => setIsSettingsMenuOpen(false)}
                   className={`p-1 rounded-lg transition-colors cursor-pointer ${
                     isLight
-                      ? "text-slate-600 hover:text-slate-950 hover:bg-slate-100"
+                      ? "text-slate-700 hover:text-black hover:bg-slate-100"
                       : "text-slate-400 hover:text-white hover:bg-white/10"
                   }`}
                   aria-label="Close preferences"
