@@ -1321,6 +1321,22 @@ export const DEFAULT_COURSES: CourseProgram[] = [
     syllabus: ["Power Systems & Smart Grids", "Power Electronics & Inverters", "Electric Vehicle Drives", "Control Systems Engineering", "Renewable Energy Technology"],
     careerRoles: ["Power Systems Engineer", "EV Battery Specialist", "Automation & PLC Engineer", "Solar/Wind Energy Consultant"],
   },
+  {
+    code: "IT-107",
+    name: "B.Tech Information Technology",
+    dept: "Information Tech",
+    hod: "Dr. N. Saravanan",
+    karurSeats: 120,
+    coimbatoreSeats: 120,
+    tuitionFee: "₹85,000 / Year",
+    nbaAccredited: true,
+    meta: "4 Years • Full-Time Degree",
+    iconName: "Layers",
+    description: "Applied software engineering, web and mobile application development, enterprise database management, and cloud application architecture.",
+    eligibility: "10+2 with Physics, Chemistry & Mathematics (Min. 50% for OC, 45% for BC/MBC, 40% for SC/ST).",
+    syllabus: ["Object-Oriented Programming", "Web Technologies & Frameworks", "Mobile Application Development", "Database Engineering", "Distributed Cloud Architecture"],
+    careerRoles: ["Full-Stack Developer", "Software Engineer", "DevOps Engineer", "IT Solutions Architect"],
+  },
 ];
 
 export async function fetchCoursesFromFirebase(): Promise<CourseProgram[]> {

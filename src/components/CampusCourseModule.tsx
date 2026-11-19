@@ -66,6 +66,10 @@ export default function CampusCourseModule({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Dynamic campus total intake based on active programs
+  const karurTotalIntake = courses.reduce((sum, c) => sum + (Number(c.karurSeats) || 0), 0);
+  const coimbatoreTotalIntake = courses.reduce((sum, c) => sum + (Number(c.coimbatoreSeats) || 0), 0);
+
   // Form state for adding program
   const [newProgram, setNewProgram] = useState<CourseProgram>({
     code: "",
@@ -223,7 +227,7 @@ export default function CampusCourseModule({
             <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
               <div>
                 <p className="text-slate-500 dark:text-slate-400 font-medium">Total Intake</p>
-                <p className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base mt-0.5">720 Seats</p>
+                <p className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base mt-0.5">{karurTotalIntake} Seats</p>
               </div>
               <div>
                 <p className="text-slate-500 dark:text-slate-400 font-medium">NAAC Grade</p>
@@ -264,7 +268,7 @@ export default function CampusCourseModule({
             <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
               <div>
                 <p className="text-slate-500 dark:text-slate-400 font-medium">Total Intake</p>
-                <p className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base mt-0.5">840 Seats</p>
+                <p className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base mt-0.5">{coimbatoreTotalIntake} Seats</p>
               </div>
               <div>
                 <p className="text-slate-500 dark:text-slate-400 font-medium">NAAC Grade</p>
