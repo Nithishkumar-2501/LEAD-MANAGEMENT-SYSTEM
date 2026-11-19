@@ -205,21 +205,30 @@ export default function DashboardPage() {
   // 2. Ctrl + Z (or Cmd + Z on Mac) to focus candidate Search Bar
   useEffect(() => {
     const handleGlobalShortcuts = (e: KeyboardEvent) => {
-      // 1. Intercept Ctrl+A / Cmd+A -> Open NORA AI Chatbot (when not typing in an input/editable field)
-      if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A" || e.code === "KeyA")) {
-        const activeEl = document.activeElement as HTMLElement | null;
+      const isInputNode = (el: HTMLElement | EventTarget | null): boolean => {
+        if (!el || !(el instanceof HTMLElement)) return false;
+        const tag = el.tagName ? el.tagName.toUpperCase() : "";
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+        if (el.isContentEditable || el.getAttribute("contenteditable") === "true") return true;
+        if (el.closest && el.closest("input, textarea, select, [contenteditable='true']")) return true;
+        return false;
+      };
 
-        // If user is currently typing/editing inside any input, textarea, or contenteditable element, allow native select-all
-        const isEditable = Boolean(
-          activeEl && (
-            activeEl.tagName === "INPUT" ||
-            activeEl.tagName === "TEXTAREA" ||
-            activeEl.isContentEditable ||
-            activeEl.getAttribute("contenteditable") === "true" ||
-            activeEl.closest("input, textarea, [contenteditable='true']")
-          )
-        );
-        if (isEditable) {
+      const isTargetEditable = (): boolean => {
+        if (isInputNode(e.target)) return true;
+        if (isInputNode(document.activeElement)) return true;
+        if (typeof e.composedPath === "function") {
+          for (const node of e.composedPath()) {
+            if (isInputNode(node)) return true;
+          }
+        }
+        return false;
+      };
+
+      // 1. Intercept Ctrl+A / Cmd+A -> Open NORA AI Chatbot (strictly when not typing in any input/editable field)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A" || e.code === "KeyA")) {
+        // If user is currently typing/editing inside any input, textarea, or contenteditable element, preserve native select-all
+        if (isTargetEditable()) {
           return;
         }
 
@@ -233,19 +242,8 @@ export default function DashboardPage() {
 
       // 2. Intercept Ctrl+Z / Cmd+Z -> Focus candidate Search Bar (when not typing in an input/editable field)
       if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z" || e.code === "KeyZ") && !e.shiftKey) {
-        const activeEl = document.activeElement as HTMLElement | null;
-
         // If user is actively typing inside any input, textarea, or contenteditable element, preserve native undo
-        const isEditable = Boolean(
-          activeEl && (
-            activeEl.tagName === "INPUT" ||
-            activeEl.tagName === "TEXTAREA" ||
-            activeEl.isContentEditable ||
-            activeEl.getAttribute("contenteditable") === "true" ||
-            activeEl.closest("input, textarea, [contenteditable='true']")
-          )
-        );
-        if (isEditable) {
+        if (isTargetEditable()) {
           return;
         }
 
