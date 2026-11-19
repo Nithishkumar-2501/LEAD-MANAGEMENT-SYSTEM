@@ -2870,7 +2870,7 @@ export default function ContactDirectoryModule({
                       </th>
                     );
                   })}
-                  <th className="p-3.5 font-bold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[13.5px] whitespace-nowrap text-center sticky right-0 z-20 min-w-[210px] w-56 bg-slate-200 dark:bg-slate-950 border-l border-b border-slate-300 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
+                  <th className="p-3.5 font-bold text-slate-700 dark:text-sky-300 uppercase tracking-wider text-[13.5px] whitespace-nowrap text-center md:sticky md:right-0 z-20 min-w-[210px] w-56 bg-slate-200 dark:bg-slate-950 border-l border-b border-slate-300 dark:border-white/10 md:shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:md:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                     Actions
                   </th>
                 </tr>
@@ -3020,7 +3020,7 @@ export default function ContactDirectoryModule({
                       </td>
                     );
                   })}
-                  <td className="p-2 text-center text-[12px] text-slate-400 font-bold sticky right-0 z-20 min-w-[210px] w-56 bg-slate-50 dark:bg-slate-950 border-l border-b border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
+                  <td className="p-2 text-center text-[12px] text-slate-400 font-bold md:sticky md:right-0 z-20 min-w-[210px] w-56 bg-slate-50 dark:bg-slate-950 border-l border-b border-slate-200 dark:border-white/10 md:shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:md:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                     -
                   </td>
                 </tr>
@@ -3054,7 +3054,7 @@ export default function ContactDirectoryModule({
                           />
                         </td>
                       ))}
-                      <td className="p-3 text-center sticky right-0 z-10 min-w-[200px] w-52 bg-white dark:bg-slate-950 border-l border-b border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
+                      <td className="p-3 text-center md:sticky md:right-0 z-10 min-w-[200px] w-52 bg-white dark:bg-slate-950 border-l border-b border-slate-200 dark:border-white/10 md:shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:md:shadow-[-8px_0_16px_rgba(0,0,0,0.4)]">
                         <div className="flex items-center justify-center gap-1.5 opacity-60">
                           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
                           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
@@ -3102,7 +3102,7 @@ export default function ContactDirectoryModule({
 
                     {/* Actions Column with Sticky Pinning to Right */}
                     <td
-                      className="p-3.5 text-center sticky right-0 z-10 min-w-[210px] w-56 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-b border-slate-200 dark:border-white/10 shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
+                      className="p-3.5 text-center md:sticky md:right-0 z-10 min-w-[210px] w-56 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-b border-slate-200 dark:border-white/10 md:shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:md:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center justify-center gap-2 min-w-[195px]">
