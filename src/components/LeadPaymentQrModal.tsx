@@ -22,7 +22,6 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import SpecularButton from "./SpecularButton";
 
 interface LeadPaymentQrModalProps {
   isOpen: boolean;

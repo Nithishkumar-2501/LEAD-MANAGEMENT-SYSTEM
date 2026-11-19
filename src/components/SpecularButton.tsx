@@ -133,6 +133,14 @@ export default function SpecularButton({
     let raf = 0;
 
     try {
+      if (typeof window === "undefined") return;
+      const testCanvas = document.createElement("canvas");
+      const isWebGL2 = !!(window.WebGL2RenderingContext && testCanvas.getContext("webgl2"));
+      if (!isWebGL2) {
+        console.warn("SpecularButton: WebGL2 not supported in current environment, falling back to CSS.");
+        return;
+      }
+
       const dpr = window.devicePixelRatio || 1;
       renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr });
       gl = renderer.gl;
@@ -171,15 +179,20 @@ export default function SpecularButton({
 
       const sizeRef = { w: 1, h: 1 };
       const resize = () => {
-        if (!btn || !renderer || !program?.uniforms) return;
-        const rect = btn.getBoundingClientRect();
-        const w = rect.width;
-        const h = rect.height;
-        sizeRef.w = w;
-        sizeRef.h = h;
-        renderer.setSize(w + PAD * 2, h + PAD * 2);
-        program.uniforms.uCenter.value = [(PAD + w / 2) * dpr, (PAD + h / 2) * dpr];
-        program.uniforms.uHalfSize.value = [(w / 2) * dpr, (h / 2) * dpr];
+        try {
+          if (!btn || !renderer || !program?.uniforms) return;
+          const rect = btn.getBoundingClientRect();
+          const w = rect.width;
+          const h = rect.height;
+          if (w <= 0 || h <= 0) return;
+          sizeRef.w = w;
+          sizeRef.h = h;
+          renderer.setSize(w + PAD * 2, h + PAD * 2);
+          program.uniforms.uCenter.value = [(PAD + w / 2) * dpr, (PAD + h / 2) * dpr];
+          program.uniforms.uHalfSize.value = [(w / 2) * dpr, (h / 2) * dpr];
+        } catch (e) {
+          console.warn("SpecularButton resize notice:", e);
+        }
       };
       ro = new ResizeObserver(resize);
       ro.observe(btn);
@@ -216,31 +229,36 @@ export default function SpecularButton({
       const baseC = new Color();
 
       const update = (now: number) => {
-        raf = requestAnimationFrame(update);
-        const dt = Math.min((now - last) / 1000, 0.05);
-        last = now;
-        const p = propsRef.current;
+        try {
+          raf = requestAnimationFrame(update);
+          const dt = Math.min((now - last) / 1000, 0.05);
+          last = now;
+          const p = propsRef.current;
 
-        idleAngle += p.speed * dt;
-        const steer = p.followMouse && pointerAngle != null && (!p.autoAnimate || proximityT > 0);
-        const target = (steer && pointerAngle != null) ? pointerAngle : idleAngle;
-        const diff = ((target - angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-        angle += diff * (1 - Math.exp(-dt * 7));
+          idleAngle += p.speed * dt;
+          const steer = p.followMouse && pointerAngle != null && (!p.autoAnimate || proximityT > 0);
+          const target = (steer && pointerAngle != null) ? pointerAngle : idleAngle;
+          const diff = ((target - angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+          angle += diff * (1 - Math.exp(-dt * 7));
 
-        const brightTarget = p.autoAnimate ? 1 : proximityT;
-        bright += (brightTarget - bright) * (1 - Math.exp(-dt * 8));
+          const brightTarget = p.autoAnimate ? 1 : proximityT;
+          bright += (brightTarget - bright) * (1 - Math.exp(-dt * 8));
 
-        lineC.set(p.lineColor);
-        baseC.set(p.baseColor);
-        program.uniforms.uAngle.value = angle;
-        program.uniforms.uRadius.value = Math.min(p.radius, Math.min(sizeRef.w, sizeRef.h) / 2) * dpr;
-        program.uniforms.uLineColor.value = [lineC.r, lineC.g, lineC.b];
-        program.uniforms.uBaseColor.value = [baseC.r, baseC.g, baseC.b];
-        program.uniforms.uIntensity.value = p.intensity * bright;
-        program.uniforms.uShineSize.value = (p.shineSize * Math.PI) / 180;
-        program.uniforms.uShineFade.value = (p.shineFade * Math.PI) / 180;
-        program.uniforms.uThickness.value = p.thickness * dpr;
-        renderer.render({ scene: mesh });
+          lineC.set(p.lineColor);
+          baseC.set(p.baseColor);
+          program.uniforms.uAngle.value = angle;
+          program.uniforms.uRadius.value = Math.min(p.radius, Math.min(sizeRef.w, sizeRef.h) / 2) * dpr;
+          program.uniforms.uLineColor.value = [lineC.r, lineC.g, lineC.b];
+          program.uniforms.uBaseColor.value = [baseC.r, baseC.g, baseC.b];
+          program.uniforms.uIntensity.value = p.intensity * bright;
+          program.uniforms.uShineSize.value = (p.shineSize * Math.PI) / 180;
+          program.uniforms.uShineFade.value = (p.shineFade * Math.PI) / 180;
+          program.uniforms.uThickness.value = p.thickness * dpr;
+          renderer.render({ scene: mesh });
+        } catch (e) {
+          if (raf) cancelAnimationFrame(raf);
+          console.warn("SpecularButton animation notice:", e);
+        }
       };
       raf = requestAnimationFrame(update);
     } catch (err) {

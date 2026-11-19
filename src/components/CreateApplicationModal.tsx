@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { X, UserPlus, Send, AlertTriangle } from "lucide-react";
 import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
-import SpecularButton from "@/components/SpecularButton";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
@@ -432,18 +431,14 @@ export default function CreateApplicationModal({
             >
               Cancel
             </button>
-            <SpecularButton
+            <button
               type="submit"
-              size="sm"
-              tint="#38bdf8"
-              tintOpacity={0.25}
-              lineColor="#38bdf8"
-              baseColor="#0284c7"
               disabled={loading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 shadow-md shadow-sky-500/25 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-3.5 h-3.5" />
               <span>{loading ? "Creating..." : "Submit VSB Application"}</span>
-            </SpecularButton>
+            </button>
           </div>
         </form>
       </div>

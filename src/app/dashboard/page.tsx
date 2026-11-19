@@ -39,6 +39,7 @@ import CsvLeadsImportModal from "@/components/CsvLeadsImportModal";
 import CreatorLeadsSummaryView from "@/components/CreatorLeadsSummaryView";
 import CreatorTeachersSummaryView from "@/components/CreatorTeachersSummaryView";
 import ReportBugModal from "@/components/ReportBugModal";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   evaluateLeadQuota,
   recordOverageLeadsToAnnualRenewal,
@@ -1313,13 +1314,15 @@ export default function DashboardPage() {
       </main>
 
       {/* MODALS */}
-      <CreateApplicationModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onApplicationCreated={handleCreateApplication}
-        existingLeads={applicants}
-        loggedInUsername={loggedInUsername}
-      />
+      <ErrorBoundary fallbackTitle="New Applicant Form Encountered an Issue" onReset={() => setIsCreateModalOpen(false)}>
+        <CreateApplicationModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onApplicationCreated={handleCreateApplication}
+          existingLeads={applicants}
+          loggedInUsername={loggedInUsername}
+        />
+      </ErrorBoundary>
 
       <AddQuickLeadModal
         isOpen={isQuickLeadModalOpen}
