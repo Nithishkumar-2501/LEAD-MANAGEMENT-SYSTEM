@@ -3510,7 +3510,7 @@ export default function ContactDirectoryModule({
                     )}
 
                     {/* TNEA Counselling Details Box */}
-                    {(contact.counsellingAppNo || contact.tneaCutoff) && (
+                    {(contact.counsellingAppNo || contact.tneaCutoff || contact.application?.marks12th) && (
                       <div className="pt-2 border-t border-white/10 space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
@@ -3527,10 +3527,18 @@ export default function ContactDirectoryModule({
                           )}
                         </div>
 
-                        {contact.tneaCutoff && (
+                        {(contact.tneaCutoff || contact.application?.marks12th) && (
                           <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
                             <span className="text-slate-300">
-                              Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff} / 200</strong>
+                              Cutoff:{" "}
+                              <strong className="text-sky-300 font-mono font-bold">
+                                {contact.tneaCutoff ?? (contact.application?.marks12th ? Number((contact.application.marks12th * 2).toFixed(1)) : 160)} / 200
+                              </strong>
+                              {!contact.tneaCutoff && contact.application?.marks12th ? (
+                                <span className="text-[9px] text-sky-400 font-normal ml-1">
+                                  (from 12th)
+                                </span>
+                              ) : null}
                             </span>
                             <span className="text-indigo-300 text-[10px]">
                               {contact.counsellingCategory || ""}

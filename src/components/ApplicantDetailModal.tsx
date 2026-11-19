@@ -157,6 +157,19 @@ const getStageKeyForLead = (lead: (Lead & { application?: Application | null }) 
   return "VERIFIED";
 };
 
+export function getEffectiveCutoff(
+  leadCutoff?: number,
+  marks12th?: number
+): number | undefined {
+  if (leadCutoff !== undefined && leadCutoff !== null && leadCutoff > 0) {
+    return leadCutoff;
+  }
+  if (marks12th && marks12th > 0) {
+    return Number((marks12th * 2).toFixed(2));
+  }
+  return undefined;
+}
+
 export default function ApplicantDetailModal({
   applicant,
   currentUserRole,
@@ -167,8 +180,24 @@ export default function ApplicantDetailModal({
   existingLeads = [],
 }: ApplicantDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(applicant);
+
+  const getInitialFormData = (appLead: (Lead & { application: Application }) | null) => {
+    if (!appLead) return null;
+    const effective = getEffectiveCutoff(appLead.tneaCutoff, appLead.application?.marks12th);
+    if ((appLead.tneaCutoff === undefined || appLead.tneaCutoff === null || appLead.tneaCutoff === 0) && effective !== undefined) {
+      return { ...appLead, tneaCutoff: effective };
+    }
+    return appLead;
+  };
+
+  const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(() =>
+    getInitialFormData(applicant)
+  );
   const [currentStageKey, setCurrentStageKey] = useState<string>(() => getStageKeyForLead(applicant));
+
+  const effectiveCutoff = useMemo(() => {
+    return getEffectiveCutoff(formData?.tneaCutoff, formData?.application?.marks12th);
+  }, [formData?.tneaCutoff, formData?.application?.marks12th]);
 
   // Dynamic course options and active selection for degree course interest
   const detailCourseOptions = useMemo(() => {
@@ -207,7 +236,7 @@ export default function ApplicantDetailModal({
 
   useEffect(() => {
     if (applicant) {
-      setFormData(applicant);
+      setFormData(getInitialFormData(applicant));
       setCurrentStageKey(getStageKeyForLead(applicant));
     }
   }, [applicant]);
@@ -741,7 +770,7 @@ export default function ApplicantDetailModal({
   const aiPrediction = useMemo(() => {
     if (!formData) return null;
     return predictStudentConversion({
-      tneaCutoff: formData.tneaCutoff || (formData.application ? formData.application.marks12th * 2 : 165),
+      tneaCutoff: effectiveCutoff || 165,
       community: formData.community || "BC",
       district: formData.district || "Karur",
       source: formData.source || "TNEA Counselling",
@@ -750,7 +779,7 @@ export default function ApplicantDetailModal({
       status: formData.status,
       stage: formData.application?.stage,
     });
-  }, [formData]);
+  }, [formData, effectiveCutoff]);
 
   const handleScanMarksheet = () => {
     setIsOcrScanning(true);
@@ -1122,7 +1151,7 @@ export default function ApplicantDetailModal({
                       </span>
                     )}
                     <span className="text-[11px] font-black text-indigo-800 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md">
-                      Cutoff: {aiPrediction?.tneaCutoff || formData.tneaCutoff || 165}/200
+                      Cutoff: {effectiveCutoff || 165}/200
                     </span>
                   </div>
                   <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 font-medium line-clamp-1">
@@ -1923,7 +1952,10 @@ export default function ApplicantDetailModal({
                         </div>
                         <div className="grid grid-cols-12 border-b border-slate-200 dark:border-white/10 py-2.5 items-center">
                           <span className="col-span-5 font-black text-slate-700 dark:text-slate-300">TNEA Cutoff</span>
-                          <span className="col-span-7 font-black text-indigo-700 dark:text-indigo-400 font-mono">: {formData.tneaCutoff ? `${formData.tneaCutoff}/200` : "178.5/200"}</span>
+                          <span className="col-span-7 font-black text-indigo-700 dark:text-indigo-400 font-mono">
+                            : {effectiveCutoff ? `${effectiveCutoff}/200` : "N/A"}
+                            {!applicant?.tneaCutoff && formData.application?.marks12th ? " (Auto-calculated from 12th Marks)" : ""}
+                          </span>
                         </div>
                         <div className="grid grid-cols-12 border-b border-slate-200 dark:border-white/10 py-2.5 items-center">
                           <span className="col-span-5 font-black text-slate-700 dark:text-slate-300">Previous School Name</span>
@@ -2769,30 +2801,43 @@ export default function ApplicantDetailModal({
                           max="100"
                           min="0"
                           value={formData.application?.marks12th || 0}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const new12th = parseFloat(e.target.value) || 0;
+                            const autoCutoff = Number((new12th * 2).toFixed(2));
                             setFormData({
                               ...formData,
+                              tneaCutoff: autoCutoff,
                               application: {
                                 ...(formData.application || app),
-                                marks12th: parseFloat(e.target.value) || 0,
+                                marks12th: new12th,
                               },
-                            })
-                          }
+                            });
+                          }}
                           className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
-                          TNEA Cutoff (Out of 200)
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block font-black text-slate-800 dark:text-slate-200">
+                            TNEA Cutoff (Out of 200)
+                          </label>
+                          {!applicant?.tneaCutoff && formData.application?.marks12th ? (
+                            <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400">
+                              (Derived from 12th Marks: {formData.application.marks12th}%)
+                            </span>
+                          ) : null}
+                        </div>
                         <input
                           type="number"
                           step="0.25"
                           max="200"
                           min="0"
-                          value={formData.tneaCutoff || 0}
-                          onChange={(e) => setFormData({ ...formData, tneaCutoff: parseFloat(e.target.value) || 0 })}
+                          value={formData.tneaCutoff !== undefined && formData.tneaCutoff !== null ? formData.tneaCutoff : (effectiveCutoff ?? 0)}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setFormData({ ...formData, tneaCutoff: isNaN(val) ? 0 : val });
+                          }}
                           className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                         />
                       </div>

@@ -440,6 +440,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     district: "Karur",
     status: "NEW",
     createdAt: "2026-08-12T11:40:00Z",
+    tneaCutoff: 180.0,
     application: {
       id: "app_revathy",
       leadId: "lead_revathy",
@@ -461,6 +462,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     district: "Karur",
     status: "NEW",
     createdAt: "2026-08-12T11:40:00Z",
+    tneaCutoff: 168.0,
     application: {
       id: "app_gunal",
       leadId: "lead_gunal",
@@ -482,6 +484,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     district: "Karur",
     status: "NEW",
     createdAt: "2026-08-12T11:40:00Z",
+    tneaCutoff: 166.0,
     application: {
       id: "app_manivel",
       leadId: "lead_manivel",
@@ -503,6 +506,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     district: "Karur",
     status: "NEW",
     createdAt: "2026-08-12T11:40:00Z",
+    tneaCutoff: 182.0,
     application: {
       id: "app_rajpriyan",
       leadId: "lead_rajpriyan",
@@ -592,6 +596,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     district: "Coimbatore",
     status: "NEW",
     createdAt: "2026-08-11T11:40:00Z",
+    tneaCutoff: 174.0,
     application: {
       id: "app_wilsonrani",
       leadId: "lead_wilsonrani",
@@ -613,6 +618,7 @@ export const MOCK_LEADS: (Lead & { application: Application })[] = [
     district: "Coimbatore",
     status: "NEW",
     createdAt: "2026-08-11T11:40:00Z",
+    tneaCutoff: 184.0,
     application: {
       id: "app_sankari",
       leadId: "lead_sankari",
