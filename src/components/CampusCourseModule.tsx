@@ -40,15 +40,27 @@ import {
 
 interface CampusCourseModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
+  selectedCampus?: CampusLocation;
+  onCampusChange?: (campus: CampusLocation) => void;
   onTriggerToast: (msg: string) => void;
   onApplyCourse?: (courseName: string, campus: "KARUR" | "COIMBATORE") => void;
 }
 
 export default function CampusCourseModule({
   loggedInCampus,
+  selectedCampus,
+  onCampusChange,
   onTriggerToast,
   onApplyCourse,
 }: CampusCourseModuleProps) {
+  // Effective campus takes selectedCampus (if set to KARUR or COIMBATORE), otherwise falls back to loggedInCampus
+  const effectiveCampus: "KARUR" | "COIMBATORE" =
+    selectedCampus === "COIMBATORE"
+      ? "COIMBATORE"
+      : selectedCampus === "KARUR"
+      ? "KARUR"
+      : loggedInCampus;
+
   const [courses, setCourses] = useState<CourseProgram[]>(DEFAULT_COURSES);
   const [isLoading, setIsLoading] = useState(true);
   const [bookmarkedCourses, setBookmarkedCourses] = useState<string[]>(() => {
@@ -201,7 +213,7 @@ export default function CampusCourseModule({
       {/* Campuses Summary Banner */}
       <div className="grid grid-cols-1 gap-5">
         {/* Karur Campus Card */}
-        {loggedInCampus === "KARUR" && (
+        {effectiveCampus === "KARUR" && (
           <div className="rounded-3xl p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 relative overflow-hidden shadow-xs">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500" />
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -242,7 +254,7 @@ export default function CampusCourseModule({
         )}
 
         {/* Coimbatore Campus Card */}
-        {loggedInCampus === "COIMBATORE" && (
+        {effectiveCampus === "COIMBATORE" && (
           <div className="rounded-3xl p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 relative overflow-hidden shadow-xs">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-500" />
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -298,6 +310,33 @@ export default function CampusCourseModule({
         </div>
 
         <div className="flex items-center gap-2 self-stretch sm:self-auto">
+          {onCampusChange && (
+            <div className="inline-flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => onCampusChange("KARUR")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  effectiveCampus === "KARUR"
+                    ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-sky-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                Karur Campus
+              </button>
+              <button
+                type="button"
+                onClick={() => onCampusChange("COIMBATORE")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  effectiveCampus === "COIMBATORE"
+                    ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                Coimbatore Campus
+              </button>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
@@ -401,10 +440,10 @@ export default function CampusCourseModule({
                     <div className="mt-4 grid grid-cols-2 gap-2.5">
                       <div className="p-3 rounded-2xl bg-white/50 dark:bg-slate-950/40 border border-white/40 dark:border-white/10 backdrop-blur-xs">
                         <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
-                          {loggedInCampus === "KARUR" ? "Karur Campus Seats" : "Coimbatore Seats"}
+                          {effectiveCampus === "KARUR" ? "Karur Campus Seats" : "Coimbatore Seats"}
                         </p>
                         <p className="text-sm font-black text-slate-950 dark:text-white mt-0.5">
-                          {loggedInCampus === "KARUR" ? `${c.karurSeats} Intake` : `${c.coimbatoreSeats} Intake`}
+                          {effectiveCampus === "KARUR" ? `${c.karurSeats} Intake` : `${c.coimbatoreSeats} Intake`}
                         </p>
                       </div>
 
@@ -438,7 +477,7 @@ export default function CampusCourseModule({
                       onClick={(e) => {
                         e.stopPropagation();
                         if (onApplyCourse) {
-                          onApplyCourse(c.name, loggedInCampus);
+                          onApplyCourse(c.name, effectiveCampus);
                         } else {
                           onTriggerToast(`📝 Selected ${c.name} for admission application!`);
                           setSelectedCourseDetail(c);
@@ -772,7 +811,7 @@ export default function CampusCourseModule({
                     const cName = selectedCourseDetail.name;
                     setSelectedCourseDetail(null);
                     if (onApplyCourse) {
-                      onApplyCourse(cName, loggedInCampus);
+                      onApplyCourse(cName, effectiveCampus);
                     } else {
                       onTriggerToast(`📝 Selected ${cName} for registration!`);
                     }

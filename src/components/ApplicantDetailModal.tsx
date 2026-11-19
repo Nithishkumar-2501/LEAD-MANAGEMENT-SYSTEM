@@ -170,6 +170,41 @@ export default function ApplicantDetailModal({
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(applicant);
   const [currentStageKey, setCurrentStageKey] = useState<string>(() => getStageKeyForLead(applicant));
 
+  // Dynamic course options and active selection for degree course interest
+  const detailCourseOptions = useMemo(() => {
+    const options = [...VSB_DEPARTMENTS_COURSES] as string[];
+    const currentCourse = formData?.courseInterest;
+    if (currentCourse) {
+      const exactIndex = options.indexOf(currentCourse);
+      if (exactIndex === -1) {
+        const normCurrent = currentCourse.replace(/\./g, "").trim().toLowerCase();
+        const normIndex = options.findIndex(
+          (c) => c.replace(/\./g, "").trim().toLowerCase() === normCurrent
+        );
+        if (normIndex !== -1) {
+          options[normIndex] = currentCourse;
+        } else {
+          options.unshift(currentCourse);
+        }
+      }
+    }
+    return options;
+  }, [formData?.courseInterest]);
+
+  const selectedDetailCourse = useMemo(() => {
+    if (!formData?.courseInterest) return detailCourseOptions[0] || VSB_DEPARTMENTS_COURSES[0];
+    const currentCourse = formData.courseInterest;
+    if (detailCourseOptions.includes(currentCourse)) {
+      return currentCourse;
+    }
+    const normCurrent = currentCourse.replace(/\./g, "").trim().toLowerCase();
+    const matched = detailCourseOptions.find(
+      (c) => c.replace(/\./g, "").trim().toLowerCase() === normCurrent
+    );
+    if (matched) return matched;
+    return currentCourse;
+  }, [formData?.courseInterest, detailCourseOptions]);
+
   useEffect(() => {
     if (applicant) {
       setFormData(applicant);
@@ -2815,15 +2850,20 @@ export default function ApplicantDetailModal({
                           Degree Course Interest <span className="text-rose-500">*</span>
                         </label>
                         <select
-                          value={formData.courseInterest || VSB_DEPARTMENTS_COURSES[0]}
+                          value={selectedDetailCourse}
                           onChange={(e) => setFormData({ ...formData, courseInterest: e.target.value })}
                           className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
                         >
-                          {VSB_DEPARTMENTS_COURSES.map((course) => (
-                            <option key={course} value={course}>
-                              {course}
-                            </option>
-                          ))}
+                          {detailCourseOptions.map((course) => {
+                            const isUnsupported = !VSB_DEPARTMENTS_COURSES.some(
+                              (c) => c.replace(/\./g, "").trim().toLowerCase() === course.replace(/\./g, "").trim().toLowerCase()
+                            );
+                            return (
+                              <option key={course} value={course}>
+                                {course}{isUnsupported ? " (Unsupported Saved Course)" : ""}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                     </div>

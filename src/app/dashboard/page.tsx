@@ -1252,7 +1252,12 @@ export default function DashboardPage() {
 
         {/* CAMPUS & COURSES MODULE */}
         {activeTab === "CAMPUSES" && (
-          <CampusCourseModule loggedInCampus={loggedInCampus} onTriggerToast={triggerToast} />
+          <CampusCourseModule
+            loggedInCampus={loggedInCampus}
+            selectedCampus={selectedCampus}
+            onCampusChange={handleCampusChange}
+            onTriggerToast={triggerToast}
+          />
         )}
 
         {/* STUDENT FEE PAYMENTS MODULE (ADMIN ONLY) */}

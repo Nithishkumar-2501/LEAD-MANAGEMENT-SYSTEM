@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads, downloadSampleLeadsCSV } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
@@ -770,6 +770,42 @@ export default function ContactDirectoryModule({
 
   // Edit Contact Modal State
   const [editingContact, setEditingContact] = useState<(Lead & { application?: Application | null }) | null>(null);
+
+  // Dynamic course options and active selection for Edit Contact Record modal
+  const editCourseOptions = useMemo(() => {
+    const options = [...VSB_DEPARTMENTS_COURSES] as string[];
+    const currentCourse = editingContact?.courseInterest;
+    if (currentCourse) {
+      const exactIndex = options.indexOf(currentCourse);
+      if (exactIndex === -1) {
+        const normCurrent = currentCourse.replace(/\./g, "").trim().toLowerCase();
+        const normIndex = options.findIndex(
+          (c) => c.replace(/\./g, "").trim().toLowerCase() === normCurrent
+        );
+        if (normIndex !== -1) {
+          options[normIndex] = currentCourse;
+        } else {
+          // If unsupported/custom saved value, explicitly include it
+          options.unshift(currentCourse);
+        }
+      }
+    }
+    return options;
+  }, [editingContact?.courseInterest]);
+
+  const selectedEditCourse = useMemo(() => {
+    if (!editingContact?.courseInterest) return editCourseOptions[0] || VSB_DEPARTMENTS_COURSES[0];
+    const currentCourse = editingContact.courseInterest;
+    if (editCourseOptions.includes(currentCourse)) {
+      return currentCourse;
+    }
+    const normCurrent = currentCourse.replace(/\./g, "").trim().toLowerCase();
+    const matched = editCourseOptions.find(
+      (c: string) => c.replace(/\./g, "").trim().toLowerCase() === normCurrent
+    );
+    if (matched) return matched;
+    return currentCourse;
+  }, [editingContact?.courseInterest, editCourseOptions]);
 
   // In-Portal Communication Modal State
   const [activeCommModal, setActiveCommModal] = useState<"CALL" | "MESSAGE" | "EMAIL" | null>(null);
@@ -4354,15 +4390,20 @@ export default function ContactDirectoryModule({
                 <div>
                   <label className="block text-xs font-bold text-slate-300 mb-1">Course Interest</label>
                   <select
-                    value={editingContact.courseInterest}
+                    value={selectedEditCourse}
                     onChange={(e) => setEditingContact({ ...editingContact, courseInterest: e.target.value })}
                     className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                   >
-                    {VSB_DEPARTMENTS_COURSES.map((course) => (
-                      <option key={course} value={course} className="bg-slate-900">
-                        {course}
-                      </option>
-                    ))}
+                    {editCourseOptions.map((course: string) => {
+                      const isUnsupported = !VSB_DEPARTMENTS_COURSES.some(
+                        (c: string) => c.replace(/\./g, "").trim().toLowerCase() === course.replace(/\./g, "").trim().toLowerCase()
+                      );
+                      return (
+                        <option key={course} value={course} className="bg-slate-900">
+                          {course}{isUnsupported ? " (Unsupported Saved Course)" : ""}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>
