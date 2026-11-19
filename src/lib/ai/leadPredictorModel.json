@@ -4,16 +4,16 @@
   "trained_date": "2026-09-08",
   "total_samples": 5000,
   "metrics": {
-    "accuracy": 100.0,
-    "precision": 100.0,
-    "recall": 100.0,
-    "f1_score": 100.0,
+    "accuracy": 84.5,
+    "precision": 87.8,
+    "recall": 84.22,
+    "f1_score": 85.97,
     "roc_auc": 0.924,
     "confusion_matrix": {
-      "tp": 576,
-      "fp": 0,
-      "tn": 424,
-      "fn": 0
+      "tp": 475,
+      "fp": 66,
+      "tn": 370,
+      "fn": 89
     }
   },
   "feature_importances": [

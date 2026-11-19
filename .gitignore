@@ -39,3 +39,8 @@ android/app/build/
 android/build/
 *.apk
 /public/*.apk
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class

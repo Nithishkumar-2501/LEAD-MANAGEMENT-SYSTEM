@@ -206,7 +206,7 @@ export function predictStudentConversion(input: StudentPredictionInput): Predict
     tneaCutoff: cutoff,
     conversionProbability: probabilityPercentage,
     priorityTier,
-    confidenceScore: 92.4, // ROC-AUC derived confidence
+    confidenceScore: Number(((modelData.metrics.roc_auc || 0.924) * 100).toFixed(1)), // ROC-AUC derived confidence
     recommendedBranches,
     riskFactors,
     keyStrengths,

@@ -265,7 +265,9 @@ export default function AiIntelligenceModule({
               <div className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                 Model ROC-AUC
               </div>
-              <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">0.924 (92.4%)</div>
+              <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                {modelData.metrics.roc_auc} ({(modelData.metrics.roc_auc * 100).toFixed(1)}%)
+              </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">NORA Ensemble v2.1</div>
             </div>
           </div>
@@ -801,7 +803,7 @@ export default function AiIntelligenceModule({
                     {simulatorPrediction.conversionProbability}%
                   </div>
                   <div className="text-[11px] text-indigo-200 mt-1">
-                    Model Confidence: 92.4% ROC-AUC
+                    Model Confidence: {simulatorPrediction.confidenceScore}% ROC-AUC
                   </div>
                 </div>
               </div>
