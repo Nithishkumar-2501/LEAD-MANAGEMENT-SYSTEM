@@ -8,6 +8,41 @@ import { Lead, Application, CampusLocation, ActiveTab } from "@/types/crm";
 import { predictStudentConversion } from "./leadScoringEngine";
 import { askVirtualCounselor } from "./counselorKnowledge";
 
+export const TN_DISTRICTS = [
+  "salem", "karur", "coimbatore", "covai", "tirupur", "tiruppur", "erode", "namakkal", "dindigul",
+  "trichy", "tiruchirappalli", "madurai", "chennai", "theni", "thanjavur", "pudukkottai",
+  "ariyalur", "chengalpattu", "cuddalore", "dharmapuri", "kallakurichi", "kancheepuram",
+  "kanniyakumari", "krishnagiri", "mayiladuthurai", "nagapattinam", "nilgiris", "perambalur",
+  "ramanathapuram", "ranipet", "sivaganga", "tenkasi", "thoothukudi", "tirunelveli",
+  "tirupathur", "tiruvallur", "tiruvannamalai", "tiruvarur", "vellore", "viluppuram", "virudhunagar"
+];
+
+export const CRM_COURSES = [
+  { key: "cse", name: "Computer Science and Engineering" },
+  { key: "aids", name: "Artificial Intelligence and Data Science" },
+  { key: "aiml", name: "Artificial Intelligence and Machine Learning" },
+  { key: "ai", name: "Artificial Intelligence and Data Science" },
+  { key: "it", name: "Information Technology" },
+  { key: "ece", name: "Electronics and Communication Engineering" },
+  { key: "eee", name: "Electrical and Electronics Engineering" },
+  { key: "mech", name: "Mechanical Engineering" },
+  { key: "bio", name: "BioMedical / Bio Technology" },
+  { key: "civil", name: "Civil Engineering" },
+];
+
+export const CRM_SOURCE_KEYWORDS = [
+  { key: "ads", label: "Google & Social Ads", match: ["ads", "google ads", "social ads", "ad campaign", "newspaper ad"] },
+  { key: "whatsapp", label: "WhatsApp Direct", match: ["whatsapp", "wa", "whatsapp messenger", "whatsapp campaign"] },
+  { key: "facebook", label: "Facebook / Meta", match: ["facebook", "fasebook", "fb", "meta", "messenger"] },
+  { key: "x", label: "X (Twitter)", match: ["x", "twitter", "tweet", "broadcasts"] },
+  { key: "email", label: "E-mail", match: ["email", "e-mail", "mail", "portal", "automated email"] },
+  { key: "sms", label: "SMS", match: ["sms", "sms gateway", "text message", "alerts"] },
+  { key: "campaign", label: "Marketing Campaign", match: ["campaign", "omnichannel", "marketing campaign"] },
+  { key: "expo", label: "Project Expo", match: ["project expo", "expo", "college expo", "event leads", "fair"] },
+  { key: "tnea", label: "TNEA Counselling", match: ["tnea", "counselling", "general counselling", "quota", "merit quota"] },
+  { key: "walkin", label: "Direct Walk-in", match: ["walkin", "walk-in", "walk in", "direct visit", "in-person", "campus visit"] },
+];
+
 export interface NoraChatMessage {
   id: string;
   sender: "USER" | "NORA";
@@ -130,7 +165,8 @@ export function processNoraChatQuery(
     if (queryClean.length >= 3 && (nameLower.includes(queryClean) || queryClean.includes(nameLower))) return true;
     if (q.includes(nameLower)) return true;
     const nameParts = nameLower.split(/\s+/);
-    if (nameParts.some((part) => part.length >= 3 && q.includes(part))) return true;
+    const COMMON_NAME_EXCLUSIONS = new Set(["student", "students", "candidate", "candidates", "lead", "leads", "test", "demo", "sample"]);
+    if (nameParts.some((part) => part.length >= 3 && !COMMON_NAME_EXCLUSIONS.has(part) && q.includes(part))) return true;
 
     // Email match
     if (a.email && q.includes(a.email.toLowerCase())) return true;
@@ -207,10 +243,457 @@ export function processNoraChatQuery(
   }
 
   // -------------------------------------------------------------
-  // 2C. GENERAL STUDENT NAME & CANDIDATE DETAILS DIRECTORY
+  // MULTI-CRITERIA COMBINED SEARCH (e.g. District + Cutoff, District + Course, etc.)
+  // -------------------------------------------------------------
+  const matchedDistrictName = TN_DISTRICTS.find((d) => q.includes(d));
+  let districtKey: string | null = null;
+  let districtDisplayName: string | null = null;
+  if (matchedDistrictName) {
+    districtKey = matchedDistrictName === "covai" ? "coimbatore" : matchedDistrictName === "trichy" ? "tiruchirappalli" : matchedDistrictName;
+    districtDisplayName = districtKey.charAt(0).toUpperCase() + districtKey.slice(1);
+  }
+
+  interface CutoffCriterion {
+    type: "BELOW" | "ABOVE" | "RANGE";
+    threshold?: number;
+    low?: number;
+    high?: number;
+    symbol: string;
+    isStrict?: boolean;
+    description: string;
+  }
+
+  let cutoffCrit: CutoffCriterion | null = null;
+
+  // Range match (e.g. between 150 and 175, 150 to 175)
+  const rangeMatch = q.match(/(?:cutoff|cut off|marks?)?\s*(?:between\s*(\d{2,3}(?:\.\d+)?)\s*(?:and|to|-)\s*(\d{2,3}(?:\.\d+)?)|(\d{2,3}(?:\.\d+)?)\s*(?:to|-)\s*(\d{2,3}(?:\.\d+)?))\s*(?:cutoff|cut off|marks?)?/i);
+  if (rangeMatch) {
+    const r1 = parseFloat(rangeMatch[1] || rangeMatch[3]);
+    const r2 = parseFloat(rangeMatch[2] || rangeMatch[4]);
+    if (!isNaN(r1) && !isNaN(r2)) {
+      const low = Math.min(r1, r2);
+      const high = Math.max(r1, r2);
+      cutoffCrit = {
+        type: "RANGE",
+        low,
+        high,
+        symbol: "between",
+        description: `between ${low} and ${high}/200`,
+      };
+    }
+  }
+
+  // Below match (e.g. cutoff below 150, cutoff < 150)
+  if (!cutoffCrit) {
+    const belowMatch =
+      q.match(/(?:cutoff|cut off|marks?)\s*(?:<|<=|below|under|less than|lesser than|lower than)\s*(\d{2,3}(?:\.\d+)?)/i) ||
+      q.match(/(?:<|<=|below|under|less than|lesser than|lower than)\s*(\d{2,3}(?:\.\d+)?)\s*(?:cutoff|cut off|marks?)?/i) ||
+      q.match(/(\d{2,3}(?:\.\d+)?)\s*(?:and below|or below|and under|or less)/i);
+    if (belowMatch) {
+      const val = parseFloat(belowMatch[1]);
+      const isOrEqual = q.includes("<=") || q.includes("or below") || q.includes("and below") || q.includes("or less");
+      cutoffCrit = {
+        type: "BELOW",
+        threshold: val,
+        isStrict: !isOrEqual,
+        symbol: isOrEqual ? "≤" : "<",
+        description: `${isOrEqual ? "≤" : "<"} ${val}/200`,
+      };
+    }
+  }
+
+  // Above match (e.g. cutoff > 175, cutoff above 180, cutoff 180+)
+  if (!cutoffCrit) {
+    const aboveMatch =
+      q.match(/(?:cutoff|cut off|marks?)\s*(?:>|>=|above|greater than|more than|higher than|exceeding)\s*(\d{2,3}(?:\.\d+)?)/i) ||
+      q.match(/(?:>|>=|above|greater than|more than|higher than|exceeding)\s*(\d{2,3}(?:\.\d+)?)\s*(?:cutoff|cut off|marks?)?/i) ||
+      q.match(/(\d{2,3}(?:\.\d+)?)\s*(?:\+|and above|or above|and more|or more)/i) ||
+      ((q.includes("cutoff") || q.includes("cut off")) && q.match(/(\d{2,3}(?:\.\d+)?)/i));
+    if (aboveMatch) {
+      const val = parseFloat(aboveMatch[1]);
+      const isStrict = (q.includes(">") && !q.includes(">=")) || q.includes("more than") || q.includes("greater than") || q.includes("exceeding") || q.includes("above");
+      cutoffCrit = {
+        type: "ABOVE",
+        threshold: val,
+        isStrict,
+        symbol: isStrict ? ">" : "≥",
+        description: `${isStrict ? ">" : "≥"} ${val}/200`,
+      };
+    }
+  }
+
+  const matchedCourse = CRM_COURSES.find((c) => {
+    const keyRegex = new RegExp(`\\b${c.key}\\b`, "i");
+    return keyRegex.test(q) || q.includes(c.name.toLowerCase());
+  });
+
+  const matchedSource = CRM_SOURCE_KEYWORDS.find((src) =>
+    src.match.some((m) => {
+      const regex = new RegExp(`\\b${m}\\b`, "i");
+      return regex.test(q);
+    })
+  );
+
+  let statusCrit: { key: string; label: string; filter: (a: any) => boolean } | null = null;
+  if (q.includes("admitted") || q.includes("admission confirmed")) {
+    statusCrit = { key: "ADMITTED", label: "officially admitted", filter: (a) => a.status === "ADMITTED" || a.application?.stage === "FEE_PAID" };
+  } else if (q.includes("fee paid") || (q.includes("paid") && !q.includes("dialpad"))) {
+    statusCrit = { key: "PAID", label: "fee paid", filter: (a) => a.application?.stage === "FEE_PAID" || a.application?.paymentStatus === "PAID" || a.application?.paymentStatus === "COMPLETED" };
+  } else if (q.includes("untouched") || q.includes("new inquiry") || q.includes("new leads")) {
+    statusCrit = { key: "NEW", label: "untouched new inquiries", filter: (a) => a.status === "NEW" || a.subStage === "Untouched" };
+  } else if (q.includes("hot")) {
+    statusCrit = { key: "HOT", label: "HOT priority (≥72%)", filter: (a) => a.priorityTier === "HOT" };
+  } else if (q.includes("warm")) {
+    statusCrit = { key: "WARM", label: "WARM priority (45-71%)", filter: (a) => a.priorityTier === "WARM" };
+  } else if (q.includes("cold")) {
+    statusCrit = { key: "COLD", label: "COLD priority (<45%)", filter: (a) => a.priorityTier === "COLD" };
+  }
+
+  const criteriaCount =
+    (districtKey ? 1 : 0) +
+    (cutoffCrit ? 1 : 0) +
+    (matchedCourse ? 1 : 0) +
+    (matchedSource ? 1 : 0) +
+    (statusCrit ? 1 : 0);
+
+  // If 2 or more criteria specified together, apply composite multi-criteria filtering
+  if (criteriaCount >= 2) {
+    let matched = enrichedApplicants;
+
+    if (districtKey) {
+      matched = matched.filter((a) => (a.district || "").toLowerCase().includes(districtKey!));
+    }
+
+    if (cutoffCrit) {
+      matched = matched.filter((a) => {
+        const c = a.computedCutoff || a.tneaCutoff || (a.application ? a.application.marks12th * 2 : 0);
+        if (cutoffCrit!.type === "BELOW") {
+          return cutoffCrit!.isStrict ? c < cutoffCrit!.threshold! : c <= cutoffCrit!.threshold!;
+        } else if (cutoffCrit!.type === "ABOVE") {
+          return cutoffCrit!.isStrict ? c > cutoffCrit!.threshold! : c >= cutoffCrit!.threshold!;
+        } else if (cutoffCrit!.type === "RANGE") {
+          return c >= cutoffCrit!.low! && c <= cutoffCrit!.high!;
+        }
+        return true;
+      });
+    }
+
+    if (matchedCourse) {
+      matched = matched.filter((a) =>
+        (a.courseInterest || "").toLowerCase().includes(matchedCourse.key) ||
+        (a.courseInterest || "").toLowerCase().includes(matchedCourse.name.toLowerCase())
+      );
+    }
+
+    if (matchedSource) {
+      matched = matched.filter((a) => {
+        const leadSrc = (a.source || "").toLowerCase();
+        return matchedSource.match.some((m) => leadSrc.includes(m)) ||
+          (matchedSource.key === "tnea" && a.appliedCounselling);
+      });
+    }
+
+    if (statusCrit) {
+      matched = matched.filter(statusCrit.filter);
+    }
+
+    const criteriaPhrases: string[] = [];
+    if (districtDisplayName) criteriaPhrases.push(`from **${districtDisplayName}**`);
+    if (cutoffCrit) criteriaPhrases.push(`with TNEA Cutoff **${cutoffCrit.description}**`);
+    if (matchedCourse) criteriaPhrases.push(`for **${matchedCourse.name}**`);
+    if (matchedSource) criteriaPhrases.push(`via **${matchedSource.label}**`);
+    if (statusCrit) criteriaPhrases.push(`with status **${statusCrit.label}**`);
+
+    const criteriaSummary = criteriaPhrases.join(" and ");
+
+    if (matched.length > 0) {
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `Found **${matched.length} candidate(s)** ${criteriaSummary}:`,
+        specificData: {
+          type: "STUDENT_LIST",
+          studentsList: matched,
+        },
+        suggestedQueries: [
+          districtDisplayName ? `Show all leads from ${districtDisplayName}` : "Show hot leads",
+          cutoffCrit ? `Cutoff > 160` : "Average cutoff",
+          "Show all candidates",
+        ],
+        timestamp,
+      };
+    } else {
+      let contextNote = "";
+      if (districtKey && cutoffCrit) {
+        const districtOnly = enrichedApplicants.filter((a) => (a.district || "").toLowerCase().includes(districtKey!));
+        if (districtOnly.length > 0) {
+          const districtCutoffs = districtOnly.map((d) => `${d.name} (${d.computedCutoff || d.tneaCutoff || 160})`).join(", ");
+          contextNote = `\n\n• Candidates from **${districtDisplayName}** recorded in database: **${districtOnly.length}** (${districtCutoffs})\n• None of them meet the cutoff threshold of **${cutoffCrit.description}**.`;
+        } else {
+          contextNote = `\n\n• There are currently no candidates recorded from **${districtDisplayName}** in the database.`;
+        }
+      }
+
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `No candidates found ${criteriaSummary} in the live database.${contextNote}`,
+        specificData: {
+          type: "STUDENT_LIST",
+          studentsList: [],
+        },
+        suggestedQueries: [
+          districtDisplayName ? `Show leads from ${districtDisplayName}` : "Show hot leads",
+          cutoffCrit ? `Cutoff > 160` : "Average cutoff",
+          "Show all candidates",
+        ],
+        timestamp,
+      };
+    }
+  }
+
+  // -------------------------------------------------------------
+  // 2C. CUTOFF / MARKS SEARCH & COMPARISON (Below, Above, Range, Top, Average)
+  // -------------------------------------------------------------
+  const isCutoffMentioned = q.includes("cutoff") || q.includes("cut off") || /\bmarks?\b/i.test(q);
+
+  // Top / Highest Cutoff
+  if (
+    q.includes("highest cutoff") ||
+    q.includes("top cutoff") ||
+    q.includes("best cutoff") ||
+    q.includes("topper") ||
+    q.includes("maximum cutoff")
+  ) {
+    const sorted = [...enrichedApplicants].sort((a, b) => (b.computedCutoff || 0) - (a.computedCutoff || 0));
+    const maxScore = sorted[0]?.computedCutoff || 195;
+    const topLeads = sorted.slice(0, 8);
+
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `🏆 The highest TNEA Cutoff in the database is **${maxScore}/200**. Here are the top candidates:`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: topLeads,
+      },
+      suggestedQueries: [
+        "Cutoff > 185",
+        "Show hot leads",
+        "Average cutoff",
+      ],
+      timestamp,
+    };
+  }
+
+  // Average Cutoff
+  if (
+    q.includes("average cutoff") ||
+    q.includes("mean cutoff") ||
+    q.includes("avg cutoff")
+  ) {
+    const totalScore = enrichedApplicants.reduce((sum, a) => sum + (a.computedCutoff || 160), 0);
+    const avg = enrichedApplicants.length > 0 ? (totalScore / enrichedApplicants.length).toFixed(1) : "172.0";
+
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `📊 The **average TNEA Cutoff** across all ${enrichedApplicants.length} registered candidates is **${avg} / 200**.\n\n` +
+        `• Candidates above average (≥${avg}): **${enrichedApplicants.filter((a) => (a.computedCutoff || 0) >= parseFloat(avg)).length}**\n` +
+        `• Candidates below average (<${avg}): **${enrichedApplicants.filter((a) => (a.computedCutoff || 0) < parseFloat(avg)).length}**`,
+      specificData: {
+        type: "METRICS",
+        stats: { averageCutoff: avg, totalCandidates: enrichedApplicants.length },
+      },
+      suggestedQueries: [
+        `Cutoff > ${Math.round(parseFloat(avg))}`,
+        "Highest cutoff",
+        "Show hot leads",
+      ],
+      timestamp,
+    };
+  }
+
+  // Below / Less than / Under / < / <= Cutoff Filter
+  const belowCutoffMatch =
+    q.match(/(?:cutoff|cut off|marks?)\s*(?:<|<=|below|under|less than|lesser than|lower than)\s*(\d{2,3}(?:\.\d+)?)/i) ||
+    q.match(/(?:<|<=|below|under|less than|lesser than|lower than)\s*(\d{2,3}(?:\.\d+)?)\s*(?:cutoff|cut off|marks?)?/i) ||
+    q.match(/(\d{2,3}(?:\.\d+)?)\s*(?:and below|or below|and under|or less)/i);
+
+  if (belowCutoffMatch) {
+    const targetCutoff = parseFloat(belowCutoffMatch[1]);
+    const isOrEqual = q.includes("<=") || q.includes("or below") || q.includes("and below") || q.includes("or less");
+    const matched = enrichedApplicants.filter((a) => {
+      const c = a.computedCutoff || a.tneaCutoff || (a.application ? a.application.marks12th * 2 : 0);
+      return isOrEqual ? c <= targetCutoff : c < targetCutoff;
+    });
+
+    const symbol = isOrEqual ? "≤" : "<";
+    const totalScore = enrichedApplicants.reduce((sum, a) => sum + (a.computedCutoff || 160), 0);
+    const avg = enrichedApplicants.length > 0 ? (totalScore / enrichedApplicants.length).toFixed(1) : "172.0";
+
+    if (matched.length > 0) {
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `Found **${matched.length} candidate(s)** with TNEA Cutoff **${symbol} ${targetCutoff}/200**:`,
+        specificData: {
+          type: "STUDENT_LIST",
+          studentsList: matched,
+        },
+        suggestedQueries: [
+          `Cutoff > ${targetCutoff}`,
+          "Show hot leads",
+          "Average cutoff",
+        ],
+        timestamp,
+      };
+    } else {
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `No candidates found with TNEA Cutoff **${symbol} ${targetCutoff}/200** in the live database.\n\n` +
+          `• Total registered candidates in scope: **${enrichedApplicants.length}**\n` +
+          `• Average database cutoff: **${avg} / 200**\n` +
+          `• Currently, all registered candidates have cutoffs exceeding this threshold.`,
+        specificData: {
+          type: "STUDENT_LIST",
+          studentsList: [],
+        },
+        suggestedQueries: [
+          `Cutoff > ${targetCutoff}`,
+          "Highest cutoff",
+          "Average cutoff",
+          "Show all candidates",
+        ],
+        timestamp,
+      };
+    }
+  }
+
+  // Range / Between Cutoff Filter
+  const rangeCutoffMatch =
+    q.match(/(?:cutoff|cut off|marks?)?\s*(?:between\s*(\d{2,3}(?:\.\d+)?)\s*(?:and|to|-)\s*(\d{2,3}(?:\.\d+)?)|(\d{2,3}(?:\.\d+)?)\s*(?:to|-)\s*(\d{2,3}(?:\.\d+)?))\s*(?:cutoff|cut off|marks?)?/i);
+
+  if (rangeCutoffMatch) {
+    const raw1 = rangeCutoffMatch[1] || rangeCutoffMatch[3];
+    const raw2 = rangeCutoffMatch[2] || rangeCutoffMatch[4];
+    if (raw1 && raw2) {
+      const num1 = parseFloat(raw1);
+      const num2 = parseFloat(raw2);
+      if (!isNaN(num1) && !isNaN(num2)) {
+        const low = Math.min(num1, num2);
+        const high = Math.max(num1, num2);
+        const matched = enrichedApplicants.filter((a) => {
+          const c = a.computedCutoff || a.tneaCutoff || (a.application ? a.application.marks12th * 2 : 0);
+          return c >= low && c <= high;
+        });
+
+        return {
+          id: Date.now().toString(),
+          sender: "NORA",
+          text: matched.length > 0
+            ? `Found **${matched.length} candidate(s)** with TNEA Cutoff between **${low} and ${high}/200**:`
+            : `No candidates found with TNEA Cutoff between **${low} and ${high}/200** in the live database.`,
+          specificData: {
+            type: "STUDENT_LIST",
+            studentsList: matched,
+          },
+          suggestedQueries: [
+            `Cutoff > ${high}`,
+            `Cutoff < ${low}`,
+            "Show hot leads",
+          ],
+          timestamp,
+        };
+      }
+    }
+  }
+
+  // Above / Greater than / > / >= Cutoff Filter
+  const aboveCutoffMatch =
+    q.match(/(?:cutoff|cut off|marks?)\s*(?:>|>=|above|greater than|more than|higher than|exceeding)\s*(\d{2,3}(?:\.\d+)?)/i) ||
+    q.match(/(?:>|>=|above|greater than|more than|higher than|exceeding)\s*(\d{2,3}(?:\.\d+)?)\s*(?:cutoff|cut off|marks?)?/i) ||
+    q.match(/(\d{2,3}(?:\.\d+)?)\s*(?:\+|and above|or above|and more|or more)/i) ||
+    (isCutoffMentioned && q.match(/(\d{2,3}(?:\.\d+)?)/i));
+
+  if (aboveCutoffMatch) {
+    const targetCutoff = parseFloat(aboveCutoffMatch[1]);
+    const isStrict = (q.includes(">") && !q.includes(">=")) || q.includes("more than") || q.includes("greater than") || q.includes("exceeding") || q.includes("above");
+    const matched = enrichedApplicants.filter((a) => {
+      const c = a.computedCutoff || a.tneaCutoff || (a.application ? a.application.marks12th * 2 : 0);
+      return isStrict ? c > targetCutoff : c >= targetCutoff;
+    });
+    const symbol = isStrict ? ">" : "≥";
+
+    if (matched.length > 0) {
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `Found **${matched.length} candidate(s)** with TNEA Cutoff **${symbol} ${targetCutoff}/200**:`,
+        specificData: {
+          type: "STUDENT_LIST",
+          studentsList: matched,
+        },
+        suggestedQueries: [
+          "Show hot leads",
+          "Leads from Salem",
+          "Highest cutoff",
+        ],
+        timestamp,
+      };
+    } else {
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `No candidates found with TNEA Cutoff **${symbol} ${targetCutoff}/200** in the live database.`,
+        specificData: {
+          type: "STUDENT_LIST",
+          studentsList: [],
+        },
+        suggestedQueries: [
+          "Highest cutoff",
+          "Average cutoff",
+          "Show all candidates",
+        ],
+        timestamp,
+      };
+    }
+  }
+
+  // General Cutoff Mentions (e.g. "cutoff list", "show cutoffs", "cutoff report")
+  if (isCutoffMentioned && (q.includes("report") || q.includes("summary") || q.includes("list") || q.includes("show") || q.includes("what is") || q.includes("all"))) {
+    const totalScore = enrichedApplicants.reduce((sum, a) => sum + (a.computedCutoff || 160), 0);
+    const avg = enrichedApplicants.length > 0 ? (totalScore / enrichedApplicants.length).toFixed(1) : "172.0";
+    const sorted = [...enrichedApplicants].sort((a, b) => (b.computedCutoff || 0) - (a.computedCutoff || 0));
+
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `📊 **TNEA Cutoff Distribution & Analytics**:\n\n` +
+        `• **Average Cutoff**: **${avg} / 200**\n` +
+        `• **Highest Recorded**: **${sorted[0]?.computedCutoff || 195} / 200**\n` +
+        `• **Cutoff ≥ 180**: **${enrichedApplicants.filter((a) => (a.computedCutoff || 0) >= 180).length}** candidates\n` +
+        `• **Cutoff 160–179**: **${enrichedApplicants.filter((a) => (a.computedCutoff || 0) >= 160 && (a.computedCutoff || 0) < 180).length}** candidates\n` +
+        `• **Cutoff < 160**: **${enrichedApplicants.filter((a) => (a.computedCutoff || 0) < 160).length}** candidates`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: sorted.slice(0, 10),
+      },
+      suggestedQueries: [
+        "Cutoff > 180",
+        "Cutoff below 150",
+        "Highest cutoff",
+      ],
+      timestamp,
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 2D. GENERAL STUDENT NAME & CANDIDATE DETAILS DIRECTORY
   // (e.g. "student name", "student details", "candidate list", "all students", "show candidates")
   // -------------------------------------------------------------
-  if (
+  const isGeneralCandidateListQuery =
     q.includes("student name") ||
     q.includes("student details") ||
     q.includes("student list") ||
@@ -221,8 +704,29 @@ export function processNoraChatQuery(
     q.includes("candidate details") ||
     q.includes("show student") ||
     q.includes("student data") ||
-    q.includes("candidate data")
-  ) {
+    q.includes("candidate data");
+
+  const hasSpecificFilterKeyword =
+    q.includes("cutoff") ||
+    q.includes("cut off") ||
+    q.includes("mark") ||
+    q.includes("below") ||
+    q.includes("under") ||
+    q.includes("above") ||
+    q.includes("greater") ||
+    q.includes("less") ||
+    q.includes("hot") ||
+    q.includes("warm") ||
+    q.includes("cold") ||
+    q.includes("admitted") ||
+    q.includes("fee") ||
+    q.includes("paid") ||
+    q.includes("untouched") ||
+    q.includes("inquiry") ||
+    q.includes("review") ||
+    TN_DISTRICTS.some((d) => q.includes(d));
+
+  if (isGeneralCandidateListQuery && !hasSpecificFilterKeyword) {
     return {
       id: Date.now().toString(),
       sender: "NORA",
@@ -342,19 +846,7 @@ export function processNoraChatQuery(
   // -------------------------------------------------------------
   // 3. CONTACT PLATFORM & LEAD SOURCES (Google Ads, Facebook, X, WhatsApp, Email, SMS, Campaign, Project Expo)
   // -------------------------------------------------------------
-  const sourceKeywords = [
-    { key: "ads", label: "Google & Social Ads", match: ["ads", "google ads", "social ads", "ad campaign", "newspaper ad"] },
-    { key: "whatsapp", label: "WhatsApp", match: ["whatsapp", "wa", "whatsapp messenger", "whatsapp campaign"] },
-    { key: "facebook", label: "Facebook", match: ["facebook", "fasebook", "fb", "meta", "messenger"] },
-    { key: "x", label: "X (Twitter)", match: ["x", "twitter", "tweet", "broadcasts"] },
-    { key: "email", label: "E-mail", match: ["email", "e-mail", "mail", "portal", "automated email"] },
-    { key: "sms", label: "SMS", match: ["sms", "sms gateway", "text message", "alerts"] },
-    { key: "campaign", label: "Campaign", match: ["campaign", "omnichannel", "marketing campaign"] },
-    { key: "expo", label: "Project Expo", match: ["project expo", "expo", "college expo", "event leads", "fair"] },
-    { key: "tnea", label: "TNEA Counselling", match: ["tnea", "counselling", "general counselling", "quota"] },
-  ];
-
-  for (const src of sourceKeywords) {
+  for (const src of CRM_SOURCE_KEYWORDS) {
     const isMatched = src.match.some((m) => {
       // Word boundary check or query contains
       const regex = new RegExp(`\\b${m}\\b`, "i");
@@ -397,16 +889,7 @@ export function processNoraChatQuery(
   // -------------------------------------------------------------
   // 4. SPECIFIC DISTRICT SEARCH (Tamil Nadu Districts)
   // -------------------------------------------------------------
-  const districts = [
-    "salem", "karur", "coimbatore", "covai", "tirupur", "tiruppur", "erode", "namakkal", "dindigul",
-    "trichy", "tiruchirappalli", "madurai", "chennai", "theni", "thanjavur", "pudukkottai",
-    "ariyalur", "chengalpattu", "cuddalore", "dharmapuri", "kallakurichi", "kancheepuram",
-    "kanniyakumari", "krishnagiri", "mayiladuthurai", "nagapattinam", "nilgiris", "perambalur",
-    "ramanathapuram", "ranipet", "sivaganga", "tenkasi", "thoothukudi", "tirunelveli",
-    "tirupathur", "tiruvallur", "tiruvannamalai", "tiruvarur", "vellore", "viluppuram", "virudhunagar"
-  ];
-
-  const matchedDistrict = districts.find((d) => q.includes(d));
+  const matchedDistrict = TN_DISTRICTS.find((d) => q.includes(d));
   if (matchedDistrict) {
     const districtKey = matchedDistrict === "covai" ? "coimbatore" : matchedDistrict === "trichy" ? "tiruchirappalli" : matchedDistrict;
     const matched = enrichedApplicants.filter((a) =>
@@ -428,81 +911,6 @@ export function processNoraChatQuery(
         `Show hot leads from ${districtName}`,
         "Show untouched inquiries",
         "Cutoff > 175",
-      ],
-      timestamp,
-    };
-  }
-
-  // -------------------------------------------------------------
-  // 5. CUTOFF / MARKS SEARCH & COMPARISON
-  // -------------------------------------------------------------
-  // Top / Highest Cutoff
-  if (q.includes("highest cutoff") || q.includes("top cutoff") || q.includes("best cutoff") || q.includes("topper")) {
-    const sorted = [...enrichedApplicants].sort((a, b) => (b.computedCutoff || 0) - (a.computedCutoff || 0));
-    const topLeads = sorted.slice(0, 8);
-    const maxScore = sorted[0]?.computedCutoff || 195;
-
-    return {
-      id: Date.now().toString(),
-      sender: "NORA",
-      text: `🏆 The highest TNEA Cutoff in the database is **${maxScore}/200**. Here are the top candidates:`,
-      specificData: {
-        type: "STUDENT_LIST",
-        studentsList: topLeads,
-      },
-      suggestedQueries: [
-        "Cutoff > 185",
-        "Show hot leads",
-        "Average cutoff",
-      ],
-      timestamp,
-    };
-  }
-
-  // Average Cutoff
-  if (q.includes("average cutoff") || q.includes("mean cutoff") || q.includes("avg cutoff")) {
-    const totalScore = enrichedApplicants.reduce((sum, a) => sum + (a.computedCutoff || 160), 0);
-    const avg = enrichedApplicants.length > 0 ? (totalScore / enrichedApplicants.length).toFixed(1) : "172.0";
-
-    return {
-      id: Date.now().toString(),
-      sender: "NORA",
-      text: `📊 The **average TNEA Cutoff** across all ${enrichedApplicants.length} registered candidates is **${avg} / 200**.\n\n` +
-        `• Candidates above average (≥${avg}): **${enrichedApplicants.filter(a => (a.computedCutoff || 0) >= parseFloat(avg)).length}**\n` +
-        `• Candidates below average (<${avg}): **${enrichedApplicants.filter(a => (a.computedCutoff || 0) < parseFloat(avg)).length}**`,
-      specificData: {
-        type: "METRICS",
-        stats: { averageCutoff: avg, totalCandidates: enrichedApplicants.length },
-      },
-      suggestedQueries: [
-        `Cutoff > ${Math.round(parseFloat(avg))}`,
-        "Highest cutoff",
-        "Show hot leads",
-      ],
-      timestamp,
-    };
-  }
-
-  // Numeric Cutoff Filter (e.g. "cutoff > 175", "cutoff above 180", "180+")
-  const cutoffMatch = q.match(/(?:cutoff|marks?)\s*(?:>|above|greater than|>=)\s*(\d{2,3})/i) ||
-    q.match(/(\d{2,3})\s*(?:\+|cutoff)/i);
-
-  if (cutoffMatch) {
-    const targetCutoff = parseFloat(cutoffMatch[1]);
-    const matched = enrichedApplicants.filter((a) => (a.computedCutoff || 0) >= targetCutoff);
-
-    return {
-      id: Date.now().toString(),
-      sender: "NORA",
-      text: `Found **${matched.length} candidate(s)** with TNEA Cutoff **≥ ${targetCutoff}/200**:`,
-      specificData: {
-        type: "STUDENT_LIST",
-        studentsList: matched,
-      },
-      suggestedQueries: [
-        "Show hot leads",
-        "Leads from Salem",
-        "Highest cutoff",
       ],
       timestamp,
     };
@@ -611,33 +1019,27 @@ export function processNoraChatQuery(
   // -------------------------------------------------------------
   // 7. COURSE INTEREST QUERIES (CSE, AIDS, ECE, EEE, Mech, Bio, IT, Civil)
   // -------------------------------------------------------------
-  const courses = [
-    { key: "cse", name: "Computer Science and Engineering" },
-    { key: "ai", name: "Artificial Intelligence and Data Science" },
-    { key: "it", name: "Information Technology" },
-    { key: "ece", name: "Electronics and Communication Engineering" },
-    { key: "eee", name: "Electrical and Electronics Engineering" },
-    { key: "mech", name: "Mechanical Engineering" },
-    { key: "bio", name: "BioMedical / Bio Technology" },
-    { key: "civil", name: "Civil Engineering" },
-  ];
-  const matchedCourse = courses.find((c) => q.includes(c.key));
+  const matchedCourseSingle = CRM_COURSES.find((c) => {
+    const keyRegex = new RegExp(`\\b${c.key}\\b`, "i");
+    return keyRegex.test(q) || q.includes(c.name.toLowerCase());
+  });
 
-  if (matchedCourse && (q.includes("lead") || q.includes("student") || q.includes("applied") || q.includes("show") || q.includes("intrest") || q.includes("how many"))) {
+  if (matchedCourseSingle && (q.includes("lead") || q.includes("student") || q.includes("applied") || q.includes("show") || q.includes("intrest") || q.includes("how many"))) {
     const matched = enrichedApplicants.filter((a) =>
-      a.courseInterest.toLowerCase().includes(matchedCourse.key)
+      a.courseInterest.toLowerCase().includes(matchedCourseSingle.key) ||
+      a.courseInterest.toLowerCase().includes(matchedCourseSingle.name.toLowerCase())
     );
 
     return {
       id: Date.now().toString(),
       sender: "NORA",
-      text: `Found **${matched.length} candidate(s)** interested in **${matchedCourse.name}**:`,
+      text: `Found **${matched.length} candidate(s)** interested in **${matchedCourseSingle.name}**:`,
       specificData: {
         type: "STUDENT_LIST",
         studentsList: matched,
       },
       suggestedQueries: [
-        `Show hot leads for ${matchedCourse.key.toUpperCase()}`,
+        `Show hot leads for ${matchedCourseSingle.key.toUpperCase()}`,
         "What is the cutoff for CSE?",
         "Show leads from Salem",
       ],

@@ -36,7 +36,7 @@ graph TD
         API_Email["/api/email/send (Resend API Route)"]
         API_Contacts["/api/contacts (Student Database)"]
         API_Teachers["/api/teachers (Faculty Management)"]
-        API_AI["/api/ai/* (Nora AI Marksheet OCR)"]
+        API_AI["/api/ai (Nora AI Marksheet OCR)"]
         WebRTC["WebRTC Voice Signaling Server (:5000)"]
     end
 

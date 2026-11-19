@@ -1729,7 +1729,7 @@ export default function Sidebar({
                   </div>
                   <span
                     className={`text-xs font-black uppercase tracking-wider ${
-                      isLight ? "text-slate-950 font-black" : "text-white"
+                      isLight ? "text-black" : "text-white"
                     }`}
                   >
                     Preferences & Tools
@@ -1777,8 +1777,8 @@ export default function Sidebar({
                         <Settings className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col text-left truncate">
-                        <span className="font-bold text-[14px]">Admin Settings</span>
-                        <span className="text-[12px] text-slate-400 font-medium">System Configuration</span>
+                        <span className={`font-bold text-[14px] ${isLight ? "text-slate-900" : "text-white"}`}>Admin Settings</span>
+                        <span className={`text-[12px] font-medium ${isLight ? "text-slate-600" : "text-slate-400"}`}>System Configuration</span>
                       </div>
                     </div>
                     <span className="text-[11px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30">
@@ -1811,10 +1811,10 @@ export default function Sidebar({
                         )}
                       </div>
                       <div className="flex flex-col text-left">
-                        <span className="font-bold text-[14px]">
+                        <span className={`font-bold text-[14px] ${isLight ? "text-slate-900" : "text-white"}`}>
                           {theme === "DARK" ? "Dark Mode" : "Light Mode"}
                         </span>
-                        <span className="text-[12px] text-slate-400">
+                        <span className={`text-[12px] ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                           {theme === "DARK" ? "Dark theme active" : "Light theme active"}
                         </span>
                       </div>
@@ -1855,8 +1855,8 @@ export default function Sidebar({
                       <Download className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col text-left">
-                      <span className="font-bold text-[14px]">Download App</span>
-                      <span className="text-[12px] text-slate-400">Android & iOS APK</span>
+                      <span className={`font-bold text-[14px] ${isLight ? "text-slate-900" : "text-white"}`}>Download App</span>
+                      <span className={`text-[12px] ${isLight ? "text-slate-600" : "text-slate-400"}`}>Android & iOS APK</span>
                     </div>
                   </div>
                   <span className="text-[12px] text-sky-400 font-bold group-hover:translate-x-0.5 transition-transform">
