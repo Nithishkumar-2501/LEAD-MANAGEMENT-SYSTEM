@@ -188,14 +188,14 @@ export default function SocialMediaPlatformModule({
 
   // Live Firebase Students State
   const [firebaseStudents, setFirebaseStudents] = useState<StudentRecord[]>(() => {
-    if (applicants && applicants.length > 0) return applicants;
+    if (applicants && applicants.length > 0) return applicants.filter((item) => item && item.id);
     try {
       if (typeof window !== "undefined") {
         const cached = localStorage.getItem("vsb_firebase_leads_cache");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.filter((item: any) => !isLeadDeleted(item.id));
+            return parsed.filter((item: any) => item && item.id && !isLeadDeleted(item.id));
           }
         }
       }
@@ -206,28 +206,30 @@ export default function SocialMediaPlatformModule({
   // Synchronize when applicants prop updates from parent dashboard
   useEffect(() => {
     if (applicants && applicants.length > 0) {
-      setFirebaseStudents(applicants.filter((item) => !isLeadDeleted(item.id)));
+      setFirebaseStudents(applicants.filter((item) => item && item.id && !isLeadDeleted(item.id)));
     }
   }, [applicants]);
 
   // Real-time observer directly from Firebase Firestore & Realtime Database
   useEffect(() => {
     const unsub = subscribeToFirebaseStudents((liveList) => {
-      if (liveList && liveList.length > 0) {
-        setFirebaseStudents(liveList);
+      if (liveList && Array.isArray(liveList)) {
+        setFirebaseStudents(liveList.filter((item) => item && item.id));
       }
     });
 
     fetchStudentsFromFirestore().then((list) => {
-      if (list && list.length > 0) {
-        setFirebaseStudents(list);
+      if (list && Array.isArray(list) && list.length > 0) {
+        setFirebaseStudents(list.filter((item) => item && item.id));
       } else {
         fetchStudentsFromRTDB().then((rtdbList) => {
-          if (rtdbList && rtdbList.length > 0) {
-            setFirebaseStudents(rtdbList);
+          if (rtdbList && Array.isArray(rtdbList) && rtdbList.length > 0) {
+            setFirebaseStudents(rtdbList.filter((item) => item && item.id));
           }
         });
       }
+    }).catch((e) => {
+      console.warn("Students fetch notice:", e);
     });
 
     return () => {
@@ -252,7 +254,7 @@ export default function SocialMediaPlatformModule({
   // Calculate live student counts from Firebase
   const channelCounts = useMemo(() => {
     const counts: Record<string, number> = {
-      ALL: firebaseStudents.length,
+      ALL: 0,
       ADS: 0,
       FACEBOOK: 0,
       TWITTER: 0,
@@ -262,7 +264,14 @@ export default function SocialMediaPlatformModule({
       EXPO: 0,
     };
 
-    firebaseStudents.forEach((student) => {
+    (firebaseStudents || []).forEach((student) => {
+      if (!student) return;
+      if (loggedInCampus && loggedInCampus !== "ALL") {
+        if (student.campus && student.campus !== "ALL" && student.campus !== loggedInCampus) {
+          return;
+        }
+      }
+      counts.ALL++;
       const ch = getLeadChannel(student.source);
       if (counts[ch] !== undefined) {
         counts[ch]++;
@@ -270,7 +279,7 @@ export default function SocialMediaPlatformModule({
     });
 
     return counts;
-  }, [firebaseStudents]);
+  }, [firebaseStudents, loggedInCampus]);
 
   // Dynamic Navigation Channels matching Real Firebase Student Count
   const channels = [
@@ -326,58 +335,76 @@ export default function SocialMediaPlatformModule({
 
   // Map real Firebase students to social media table items
   const socialLeads = useMemo(() => {
-    return firebaseStudents.map((s) => {
-      const ch = getLeadChannel(s.source);
-      let platform = s.source || "Official Portal";
-      let icon = Share2;
-      let color = "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
+    return (firebaseStudents || [])
+      .filter((s): s is StudentRecord => Boolean(s && s.id))
+      .filter((s) => {
+        if (loggedInCampus && loggedInCampus !== "ALL") {
+          return !s.campus || s.campus === "ALL" || s.campus === loggedInCampus;
+        }
+        return true;
+      })
+      .map((s) => {
+        const ch = getLeadChannel(s.source);
+        let platform = s.source || "Official Portal";
+        let icon = Share2;
+        let color = "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
 
-      if (ch === "ADS") {
-        platform = "Google Ads";
-        icon = Megaphone;
-        color = "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      } else if (ch === "FACEBOOK") {
-        platform = "Facebook";
-        icon = Share2;
-        color = "bg-sky-500/20 text-sky-400 border-sky-500/30";
-      } else if (ch === "TWITTER") {
-        platform = "X (Twitter)";
-        icon = Send;
-        color = "bg-slate-500/20 text-slate-300 border-slate-500/30";
-      } else if (ch === "WHATSAPP") {
-        platform = "WhatsApp";
-        icon = MessageSquare;
-        color = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-      } else if (ch === "EMAIL") {
-        platform = "E-mail";
-        icon = Mail;
-        color = "bg-purple-500/20 text-purple-400 border-purple-500/30";
-      } else if (ch === "SMS") {
-        platform = "SMS";
-        icon = MessageCircle;
-        color = "bg-amber-500/20 text-amber-400 border-amber-500/30";
-      } else if (ch === "EXPO") {
-        platform = "Project Expo";
-        icon = Award;
-        color = "bg-teal-500/20 text-teal-400 border-teal-500/30";
-      }
+        if (ch === "ADS") {
+          platform = "Google Ads";
+          icon = Megaphone;
+          color = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+        } else if (ch === "FACEBOOK") {
+          platform = "Facebook";
+          icon = Share2;
+          color = "bg-sky-500/20 text-sky-400 border-sky-500/30";
+        } else if (ch === "TWITTER") {
+          platform = "X (Twitter)";
+          icon = Send;
+          color = "bg-slate-500/20 text-slate-300 border-slate-500/30";
+        } else if (ch === "WHATSAPP") {
+          platform = "WhatsApp";
+          icon = MessageSquare;
+          color = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+        } else if (ch === "EMAIL") {
+          platform = "E-mail";
+          icon = Mail;
+          color = "bg-purple-500/20 text-purple-400 border-purple-500/30";
+        } else if (ch === "SMS") {
+          platform = "SMS";
+          icon = MessageCircle;
+          color = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+        } else if (ch === "EXPO") {
+          platform = "Project Expo";
+          icon = Award;
+          color = "bg-teal-500/20 text-teal-400 border-teal-500/30";
+        }
 
-      return {
-        id: s.id,
-        name: s.name,
-        email: s.email || "student@vsb.ac.in",
-        phone: s.phone || "+91 94421 88990",
-        platform,
-        channelKey: ch,
-        icon,
-        color,
-        campaign: s.courseInterest || s.source || "Engineering Admission 2026",
-        status: s.status === "ADMITTED" ? "Admitted" : s.status === "IN_REVIEW" ? "Under Review" : s.status === "CONTACTED" ? "Contacted" : "Verified Lead",
-        time: s.createdAt ? new Date(s.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "Recently",
-        campus: s.campus || "ALL",
-      };
-    });
-  }, [firebaseStudents]);
+        let timeStr = "Recently";
+        if (s.createdAt) {
+          try {
+            const d = new Date(s.createdAt);
+            if (!isNaN(d.getTime())) {
+              timeStr = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+            }
+          } catch (e) {}
+        }
+
+        return {
+          id: s.id,
+          name: s.name || "Student Applicant",
+          email: s.email || "student@vsb.ac.in",
+          phone: s.phone || "+91 94421 88990",
+          platform,
+          channelKey: ch,
+          icon,
+          color,
+          campaign: s.courseInterest || s.source || "Engineering Admission 2026",
+          status: s.status === "ADMITTED" ? "Admitted" : s.status === "IN_REVIEW" ? "Under Review" : s.status === "CONTACTED" ? "Contacted" : "Verified Lead",
+          time: timeStr,
+          campus: s.campus || "ALL",
+        };
+      });
+  }, [firebaseStudents, loggedInCampus]);
 
   const filteredLeads = useMemo(() => {
     const q = (searchQuery || "").toLowerCase();
