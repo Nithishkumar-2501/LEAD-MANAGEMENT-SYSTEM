@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Teacher, CampusLocation, VSB_DEPARTMENTS_COURSES, Lead, Application } from "@/types/crm";
 import { MOCK_TEACHERS } from "@/lib/mockData";
 import { parseCSVToTeachers } from "@/lib/csvParser";
@@ -488,6 +488,58 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     });
     return map;
   }, [teachers]);
+
+  // Normalize course strings for robust matching across "B.E." and "B.E" variations
+  const normalizeCourseName = useCallback((courseStr?: string) => {
+    return (courseStr || "").replace(/\./g, "").trim().toLowerCase();
+  }, []);
+
+  // Dynamic course options for faculty edit modal: includes all VSB courses and faculty member's exact assigned program
+  const teacherCourseOptions = useMemo(() => {
+    const options = [...VSB_DEPARTMENTS_COURSES] as string[];
+    const currentAssigned = editingTeacher?.coursesAssigned?.[0];
+    if (currentAssigned) {
+      const exactIndex = options.indexOf(currentAssigned);
+      if (exactIndex === -1) {
+        const normCurrent = normalizeCourseName(currentAssigned);
+        const normIndex = options.findIndex(
+          (c) => normalizeCourseName(c) === normCurrent
+        );
+        if (normIndex !== -1) {
+          options[normIndex] = currentAssigned;
+        } else {
+          options.push(currentAssigned);
+        }
+      }
+    }
+    return options;
+  }, [editingTeacher?.coursesAssigned, normalizeCourseName]);
+
+  // Selected primary course for the active editing faculty
+  const selectedPrimaryCourse = useMemo(() => {
+    if (!editingTeacher) return VSB_DEPARTMENTS_COURSES[0];
+    const currentAssigned = editingTeacher.coursesAssigned?.[0];
+    if (currentAssigned) {
+      if (teacherCourseOptions.includes(currentAssigned)) {
+        return currentAssigned;
+      }
+      const normCurrent = normalizeCourseName(currentAssigned);
+      const matched = teacherCourseOptions.find(
+        (c) => normalizeCourseName(c) === normCurrent
+      );
+      if (matched) return matched;
+      return currentAssigned;
+    }
+    // Fallback: match by teacher's department if coursesAssigned is empty
+    if (editingTeacher.department) {
+      const deptNorm = normalizeCourseName(editingTeacher.department);
+      const deptMatch = teacherCourseOptions.find((c) =>
+        normalizeCourseName(c).includes(deptNorm)
+      );
+      if (deptMatch) return deptMatch;
+    }
+    return teacherCourseOptions[0] || VSB_DEPARTMENTS_COURSES[0];
+  }, [editingTeacher, teacherCourseOptions, normalizeCourseName]);
 
 
   const filteredTeachers = useMemo(() => {
@@ -1848,17 +1900,20 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   <label className="block text-slate-300 font-semibold mb-1">Primary Course {currentUserRole === "TEACHER" && "(Locked)"}</label>
                   <select
                     disabled={currentUserRole === "TEACHER"}
-                    value={editingTeacher.coursesAssigned[0] || VSB_DEPARTMENTS_COURSES[0]}
+                    value={selectedPrimaryCourse}
                     onChange={(e) => {
-                      const courses = [...editingTeacher.coursesAssigned];
-                      courses[0] = e.target.value;
+                      const newCourse = e.target.value;
+                      const courses = editingTeacher.coursesAssigned && editingTeacher.coursesAssigned.length > 0
+                        ? [...editingTeacher.coursesAssigned]
+                        : [newCourse];
+                      courses[0] = newCourse;
                       setEditingTeacher({ ...editingTeacher, coursesAssigned: courses });
                     }}
                     className={`w-full border rounded-xl px-3 py-2 text-slate-100 ${
                       currentUserRole === "TEACHER" ? "bg-slate-950/80 border-slate-800 text-slate-400 cursor-not-allowed" : "bg-slate-900 border-slate-700"
                     }`}
                   >
-                    {VSB_DEPARTMENTS_COURSES.map((course) => (
+                    {teacherCourseOptions.map((course) => (
                       <option key={course} value={course}>
                         {course}
                       </option>
