@@ -885,7 +885,7 @@ export default function ApplicationManagerModule({
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
-                  <th className="p-3 text-center sticky right-0 z-20 min-w-[70px] w-16 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-sm border-l border-slate-200 dark:border-white/10 shadow-[-4px_0_8px_rgba(0,0,0,0.06)] whitespace-nowrap">
+                  <th className="p-3 text-center md:sticky md:right-0 z-20 min-w-[70px] w-16 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-sm border-l border-slate-200 dark:border-white/10 md:shadow-[-4px_0_8px_rgba(0,0,0,0.06)] whitespace-nowrap">
                     Action
                   </th>
                 </tr>
@@ -1024,7 +1024,7 @@ export default function ApplicationManagerModule({
                         </td>
 
                         {/* Row Actions Menu */}
-                        <td className="p-3 text-center sticky right-0 z-10 min-w-[70px] w-16 bg-white/95 dark:bg-slate-900/95 group-hover:bg-sky-50/95 dark:group-hover:bg-slate-800/95 transition-colors backdrop-blur-sm border-l border-slate-200 dark:border-white/10 shadow-[-4px_0_8px_rgba(0,0,0,0.06)] relative whitespace-nowrap">
+                        <td className="p-3 text-center md:sticky md:right-0 z-10 min-w-[70px] w-16 bg-white/95 dark:bg-slate-900/95 group-hover:bg-sky-50/95 dark:group-hover:bg-slate-800/95 transition-colors backdrop-blur-sm border-l border-slate-200 dark:border-white/10 md:shadow-[-4px_0_8px_rgba(0,0,0,0.06)] relative whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setActiveMenuId(activeMenuId === app.id ? null : app.id)}
