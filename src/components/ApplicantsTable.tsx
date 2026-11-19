@@ -297,11 +297,10 @@ export default function ApplicantsTable({
                 setSelectedStage(st);
                 setPageIndex(0);
               }}
-              className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 text-[12.5px] sm:text-[13px] font-bold cursor-pointer ${
-                selectedStage === st
+              className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 text-[12.5px] sm:text-[13px] font-bold cursor-pointer ${selectedStage === st
                   ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-sky-400 shadow-sm border border-slate-200/80 dark:border-slate-700"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
-              }`}
+                }`}
             >
               {st.replace("_", " ")}
             </button>
