@@ -229,7 +229,7 @@ export default function ContactDirectoryModule({
   };
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchField, setSearchField] = useState<"Mobile" | "Email" | "Name" | "User Id" | "Lead Id" | "All Fields">("Mobile");
+  const [searchField, setSearchField] = useState<"Mobile" | "Email" | "Name" | "User Id" | "Lead Id" | "Campus" | "Cutoff" | "All Fields">("Mobile");
   const [isSearchFieldDropdownOpen, setIsSearchFieldDropdownOpen] = useState(false);
   const [starredSearchFields, setStarredSearchFields] = useState<Record<string, boolean>>({
     Email: true,
@@ -237,6 +237,8 @@ export default function ContactDirectoryModule({
     Name: false,
     "User Id": false,
     "Lead Id": false,
+    Campus: false,
+    Cutoff: false,
   });
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
@@ -1374,6 +1376,25 @@ export default function ContactDirectoryModule({
       const appNo = (c.counsellingAppNo || "").toLowerCase();
       const leadId = String(c.id || "").toLowerCase();
 
+      const campusStr = (c.campus || "").toLowerCase();
+      const cutoffVal = (c as any).tneaCutoff ?? (c as any).cutoff;
+      const cutoffStr = cutoffVal !== undefined && cutoffVal !== null ? String(cutoffVal) : "";
+      const cleanCutoffQuery = q.replace(/^cutoff\s*[:=]?\s*/i, "").trim();
+      let matchCut =
+        (cutoffStr.length > 0 && cutoffStr.includes(q)) ||
+        (cleanCutoffQuery.length > 0 && cutoffStr.length > 0 && cutoffStr.includes(cleanCutoffQuery));
+      const opMatch = q.match(/^(?:cutoff\s*[:=]?\s*)?([><]=?)\s*(\d+(?:\.\d+)?)$/i);
+      if (opMatch && typeof cutoffVal === "number") {
+        const op = opMatch[1];
+        const targetVal = parseFloat(opMatch[2]);
+        if (!isNaN(targetVal)) {
+          if (op === ">") matchCut = cutoffVal > targetVal;
+          else if (op === ">=") matchCut = cutoffVal >= targetVal;
+          else if (op === "<") matchCut = cutoffVal < targetVal;
+          else if (op === "<=") matchCut = cutoffVal <= targetVal;
+        }
+      }
+
       // Field-specific search matching the selected dropdown criteria
       if (searchField === "Email") {
         return email.includes(q);
@@ -1391,8 +1412,14 @@ export default function ContactDirectoryModule({
           appNo.includes(q)
         );
       }
+      if (searchField === "Campus") {
+        return campusStr.includes(q) || (q === "cbe" && campusStr.includes("coimbatore"));
+      }
+      if (searchField === "Cutoff") {
+        return matchCut;
+      }
 
-      // Default: "All Fields" search
+      // Default: "All Fields" search (supports both Karur & Coimbatore campuses and cutoffs)
       return (
         (numQuery && leadId === numQuery) ||
         leadId.includes(numQuery || q) ||
@@ -1405,6 +1432,9 @@ export default function ContactDirectoryModule({
         school.includes(q) ||
         district.includes(q) ||
         address.includes(q) ||
+        campusStr.includes(q) ||
+        (q === "cbe" && campusStr.includes("coimbatore")) ||
+        matchCut ||
         (stateInfo.detailedLabel || "").toLowerCase().includes(q) ||
         (stateInfo.state || "").toLowerCase() === q
       );
@@ -2754,7 +2784,7 @@ export default function ContactDirectoryModule({
               {/* Popover Dropdown for Field Selection (Matching Screenshot) */}
               {isSearchFieldDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl z-50 py-1.5 text-[14px] font-sans text-slate-800 dark:text-white animate-in fade-in zoom-in-95">
-                  {(["Email", "Mobile", "Name", "User Id", "Lead Id", "All Fields"] as const).map((field) => (
+                  {(["Email", "Mobile", "Name", "User Id", "Lead Id", "Campus", "Cutoff", "All Fields"] as const).map((field) => (
                     <div
                       key={field}
                       onClick={() => {

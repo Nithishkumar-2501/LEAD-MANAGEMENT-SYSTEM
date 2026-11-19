@@ -47,6 +47,7 @@ export interface StudentCallRecord {
   school: string;
   courseInterest: string;
   cutoffMarks: number;
+  campus?: "KARUR" | "COIMBATORE";
   isTalked: boolean;
   talkedAt?: string;
   durationText?: string;
@@ -323,18 +324,24 @@ export default function TeacherStudentAuditModal({
       }
     } catch (e) {}
 
-    // Ensure legacy records in localStorage have cutoffMarks populated
+    // Ensure legacy records in localStorage have cutoffMarks and campus populated
     if (loaded && loaded.length > 0) {
       let needsSave = false;
       const startIdx = getTeacherStartIdx(teacher.assignedRangeText, teacher.email);
+      const facultyCampus = (teacher.campus as "KARUR" | "COIMBATORE") || "KARUR";
       loaded = loaded.map((s, idx) => {
+        let updated = s;
         if (s.cutoffMarks === undefined || s.cutoffMarks === null || isNaN(s.cutoffMarks)) {
           const contactNo = s.leadNumber || (startIdx + idx);
           const computedCutoff = Number((165 + ((contactNo * 13) % 34) + ((contactNo % 5) * 0.25)).toFixed(2));
           needsSave = true;
-          return { ...s, cutoffMarks: computedCutoff };
+          updated = { ...updated, cutoffMarks: computedCutoff };
         }
-        return s;
+        if (!updated.campus) {
+          needsSave = true;
+          updated = { ...updated, campus: facultyCampus };
+        }
+        return updated;
       });
       if (needsSave) {
         try {
@@ -355,6 +362,7 @@ export default function TeacherStudentAuditModal({
 
       const generated: StudentCallRecord[] = [];
       const primaryCourse = teacher.coursesAssigned[0] || teacher.department;
+      const facultyCampus = (teacher.campus as "KARUR" | "COIMBATORE") || "KARUR";
 
       for (let i = 0; i < quota; i++) {
         const contactNo = startIdx + i;
@@ -391,12 +399,15 @@ export default function TeacherStudentAuditModal({
             interestStatus = "REVIEWING";
           }
 
-          callNotes = SAMPLE_TALK_NOTES[(contactNo + i) % SAMPLE_TALK_NOTES.length];
-          transcript = `[00:04] ${teacher.name}: Good morning, calling from V.S.B. Engineering College admissions office for ${fName}.
+          callNotes = SAMPLE_TALK_NOTES[(contactNo + i) % SAMPLE_TALK_NOTES.length].replace(
+            "VSB Karur",
+            `VSB ${facultyCampus === "COIMBATORE" ? "Coimbatore" : "Karur"}`
+          );
+          transcript = `[00:04] ${teacher.name}: Good morning, calling from V.S.B. Engineering College admissions office (${facultyCampus} Campus) for ${fName}.
 [00:15] ${fName}: Good morning Sir/Ma'am! Yes, I applied for ${primaryCourse}.
 [00:35] ${teacher.name}: Your TNEA cutoff score is ${cutoff}. You are in our merit admission bracket.
 [01:10] ${fName}: Thank you Sir! What are the hostel facilities and campus placement opportunities?
-[02:00] ${teacher.name}: We offer Wi-Fi enabled AC/Non-AC hostels, and top recruiters include TCS, Cognizant, Zoho, and L&T with packages up to 24 LPA.`;
+[02:00] ${teacher.name}: We offer Wi-Fi enabled AC/Non-AC hostels at our ${facultyCampus} Campus, and top recruiters include TCS, Cognizant, Zoho, and L&T with packages up to 24 LPA.`;
         }
 
         generated.push({
@@ -409,6 +420,7 @@ export default function TeacherStudentAuditModal({
           school,
           courseInterest: primaryCourse,
           cutoffMarks: cutoff,
+          campus: facultyCampus,
           isTalked,
           talkedAt,
           durationText,
@@ -498,6 +510,12 @@ export default function TeacherStudentAuditModal({
           }
         }
 
+        // Campus matching (Karur / Coimbatore / CBE)
+        const studentCampus = (s.campus || teacher?.campus || "").toLowerCase();
+        const matchesCampus =
+          studentCampus.includes(q) ||
+          (q === "cbe" && studentCampus.includes("coimbatore"));
+
         // Multi-term support (e.g. "Swetha 186.25" or "Swetha Mech")
         const tokens = q.split(/\s+/).filter(Boolean);
         let matchesAllTokens = false;
@@ -507,6 +525,9 @@ export default function TeacherStudentAuditModal({
             const tokenCutoff =
               (cutoffStr.length > 0 && cutoffStr.includes(token)) ||
               (tokenClean.length > 0 && cutoffStr.length > 0 && cutoffStr.includes(tokenClean));
+            const tokenCampus =
+              studentCampus.includes(token) ||
+              (token === "cbe" && studentCampus.includes("coimbatore"));
 
             return (
               (s.studentName || "").toLowerCase().includes(token) ||
@@ -517,7 +538,8 @@ export default function TeacherStudentAuditModal({
               (s.leadNumber ? s.leadNumber.toString() : "").includes(token) ||
               (s.leadNumber ? `#${s.leadNumber}`.toLowerCase().includes(token) : false) ||
               (s.courseInterest || "").toLowerCase().includes(token) ||
-              tokenCutoff
+              tokenCutoff ||
+              tokenCampus
             );
           });
         }
@@ -531,6 +553,7 @@ export default function TeacherStudentAuditModal({
           matchesNumber ||
           matchesCourse ||
           matchesCutoff ||
+          matchesCampus ||
           matchesAllTokens
         );
       }
@@ -608,9 +631,9 @@ export default function TeacherStudentAuditModal({
   const handleExportCSV = () => {
     if (!teacher) return;
 
-    let csv = "Lead No,Student Name,Phone,Email,District,School,Cutoff,Call Status,Talked Time,Duration,Interest Status,Teacher Notes\n";
+    let csv = "Lead No,Student Name,Phone,Email,District,School,Cutoff,Campus,Call Status,Talked Time,Duration,Interest Status,Teacher Notes\n";
     studentRecords.forEach((s) => {
-      csv += `"${s.leadNumber}","${s.studentName}","${s.phone}","${s.email}","${s.district}","${s.school}","${s.cutoffMarks}","${s.isTalked ? "TALKED" : "NOT TALKED"}","${s.talkedAt || "N/A"}","${s.durationText || "N/A"}","${s.interestStatus || "PENDING"}","${(s.callNotes || "").replace(/"/g, '""')}"\n`;
+      csv += `"${s.leadNumber}","${s.studentName}","${s.phone}","${s.email}","${s.district}","${s.school}","${s.cutoffMarks}","${s.campus || teacher.campus || "KARUR"}","${s.isTalked ? "TALKED" : "NOT TALKED"}","${s.talkedAt || "N/A"}","${s.durationText || "N/A"}","${s.interestStatus || "PENDING"}","${(s.callNotes || "").replace(/"/g, '""')}"\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -955,6 +978,15 @@ export default function TeacherStudentAuditModal({
                           </span>
                           <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800">
                             Cutoff: {student.cutoffMarks}
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              (student.campus || teacher?.campus) === "COIMBATORE"
+                                ? "bg-purple-950/80 text-purple-300 border-purple-700/60"
+                                : "bg-sky-950/80 text-sky-300 border-sky-700/60"
+                            }`}
+                          >
+                            {student.campus || teacher?.campus || "KARUR"} Campus
                           </span>
                         </div>
 
