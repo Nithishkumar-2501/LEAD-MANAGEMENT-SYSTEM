@@ -70,7 +70,7 @@ export function predictStudentConversion(input: StudentPredictionInput): Predict
   const district = input.district || "Karur";
   const board = input.board || "State Board";
   const source = input.source || "TNEA Counselling";
-  const followups = Math.max(0, input.counselorFollowups || 1);
+  const followups = Math.max(0, input.counselorFollowups !== undefined ? input.counselorFollowups : 2);
 
   // 2. Compute Cutoff Factor based on Community Baseline
   const communityBaselines = (modelData.community_baselines as Record<string, number>) || {

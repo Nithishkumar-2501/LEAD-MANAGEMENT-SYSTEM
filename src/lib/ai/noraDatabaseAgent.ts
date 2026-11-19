@@ -54,6 +54,7 @@ export function processNoraChatQuery(
       community: a.community || "BC",
       district: a.district || "Karur",
       source: a.source || "TNEA Counselling",
+      counselorFollowups: 2,
       courseInterest: a.courseInterest,
       status: a.status,
       stage: a.application?.stage,
