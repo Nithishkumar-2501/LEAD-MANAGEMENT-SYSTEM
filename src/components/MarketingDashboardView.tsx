@@ -140,6 +140,13 @@ export default function MarketingDashboardView({
     },
   ];
 
+  const totalInquiries = channels.reduce((sum, ch) => sum + ch.count, 0);
+  const totalSpend = channels.reduce((sum, ch) => {
+    const cplNum = Number(ch.cpl.replace(/[^0-9.]/g, "")) || 0;
+    return sum + ch.count * cplNum;
+  }, 0);
+  const avgCpl = totalInquiries > 0 ? Math.round(totalSpend / totalInquiries) : 0;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300 font-sans">
       {/* Header Banner */}
@@ -159,7 +166,7 @@ export default function MarketingDashboardView({
         </div>
 
         <div className="px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-[13px] sm:text-[14px] font-bold text-blue-700 dark:text-blue-300 shadow-2xs self-start sm:self-auto shrink-0">
-          Total Inquiries: 2,440 Candidates
+          Total Inquiries: {totalInquiries.toLocaleString("en-IN")} Candidates
         </div>
       </div>
 
@@ -172,7 +179,7 @@ export default function MarketingDashboardView({
               Total Campaign Spend
             </p>
             <h4 className="text-[28px] sm:text-[30px] lg:text-[32px] font-black text-slate-900 dark:text-white mt-1 leading-tight">
-              ₹2,45,000
+              ₹{totalSpend.toLocaleString("en-IN")}
             </h4>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold shrink-0">
@@ -187,7 +194,7 @@ export default function MarketingDashboardView({
               Average Cost-per-Lead
             </p>
             <h4 className="text-[28px] sm:text-[30px] lg:text-[32px] font-black text-sky-600 dark:text-sky-400 mt-1 leading-tight">
-              ₹100 / Lead
+              ₹{avgCpl.toLocaleString("en-IN")} / Lead
             </h4>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 flex items-center justify-center font-bold shrink-0">
