@@ -59,6 +59,7 @@ import {
   fetchStudentsFromRTDB,
   subscribeToFirebaseStudents,
   fetchTeachersFromFirebase,
+  fetchPaymentsFromFirebase,
   updateTeacherOnlineStatus,
   StudentRecord,
 } from "@/lib/firebaseSync";
@@ -103,6 +104,7 @@ export default function DashboardPage() {
 
   const [applicants, setApplicants] = useState<(Lead & { application: Application })[]>([]);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TODAYS_TASKS);
+  const [payments, setPayments] = useState<Payment[]>([]);
 
   // Real-time Institutional Access Suspension state (controlled by Root Creator)
   const [institutionSuspension, setInstitutionSuspension] = useState<{
@@ -583,6 +585,13 @@ export default function DashboardPage() {
     // Auto-seed and synchronize all faculty records to Firebase Firestore & RTDB on app startup
     fetchTeachersFromFirebase().catch((err) => {
       console.warn("Initial Firebase teachers synchronization notice:", err);
+    });
+
+    // Synchronize live student fee payment transactions from Firebase Firestore
+    fetchPaymentsFromFirebase().then((data) => {
+      if (data && data.length > 0) setPayments(data);
+    }).catch((err) => {
+      console.warn("Initial Firebase payments synchronization notice:", err);
     });
 
     return () => {
@@ -1138,6 +1147,8 @@ export default function DashboardPage() {
             metrics={dynamicMetrics}
             statusCounts={dynamicStatusCounts}
             applicants={filteredApplicants}
+            allApplicants={applicants}
+            payments={payments}
             tasks={filteredTasks}
             searchQuery={searchQuery}
             selectedCampus={selectedCampus}
@@ -1268,6 +1279,8 @@ export default function DashboardPage() {
             onTriggerToast={triggerToast}
             currentLeadsCount={applicants.length}
             applicants={applicants}
+            payments={payments}
+            onPaymentsChange={setPayments}
           />
         )}
 

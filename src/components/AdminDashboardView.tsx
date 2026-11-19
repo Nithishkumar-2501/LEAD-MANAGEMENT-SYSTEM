@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Lead,
   Application,
@@ -8,6 +8,7 @@ import {
   SummaryMetrics,
   LeadStatusCounts,
   CampusLocation,
+  Payment,
 } from "@/types/crm";
 import {
   ShieldCheck,
@@ -59,11 +60,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { MAX_FREE_LEAD_LIMIT, getEffectiveLeadCount } from "@/lib/leadQuotaService";
+import { fetchPaymentsFromFirebase } from "@/lib/firebaseSync";
+import { calculateStudentFeeMetrics } from "@/lib/feeMetricsService";
 
 interface AdminDashboardViewProps {
   metrics: SummaryMetrics;
   statusCounts: LeadStatusCounts;
   applicants: (Lead & { application: Application })[];
+  allApplicants?: (Lead & { application: Application })[];
+  payments?: Payment[];
   tasks: Task[];
   searchQuery: string;
   selectedCampus: CampusLocation;
@@ -82,6 +87,8 @@ export default function AdminDashboardView({
   metrics,
   statusCounts,
   applicants,
+  allApplicants,
+  payments: propPayments = [],
   tasks,
   searchQuery,
   selectedCampus,
@@ -95,33 +102,41 @@ export default function AdminDashboardView({
   onImportLeads,
   onDeleteApplicant,
 }: AdminDashboardViewProps) {
+  const [internalPayments, setInternalPayments] = useState<Payment[]>([]);
+
+  // Synchronize live Firebase payments if not passed directly from parent
+  useEffect(() => {
+    if (!propPayments || propPayments.length === 0) {
+      fetchPaymentsFromFirebase().then((data) => {
+        if (data && data.length > 0) setInternalPayments(data);
+      }).catch((e) => console.warn("AdminDashboardView fetchPayments notice:", e));
+    }
+  }, [propPayments]);
+
+  const effectivePayments = propPayments && propPayments.length > 0 ? propPayments : internalPayments;
+  const effectiveApplicants = allApplicants && allApplicants.length > 0 ? allApplicants : applicants;
+
   const [timeline, setTimeline] = useState<"7d" | "30d" | "90d" | "1y">("7d");
   const [funnelViewMode, setFunnelViewMode] = useState<"SINGLE" | "GRID" | "SEGREGATION">("SINGLE");
   const [activeStageIndex, setActiveStageIndex] = useState(1);
-  const liveLeadCount = getEffectiveLeadCount(applicants.length);
+  const liveLeadCount = getEffectiveLeadCount(effectiveApplicants.length);
   const remainingFreeQuota = Math.max(0, MAX_FREE_LEAD_LIMIT - liveLeadCount);
   const isCapReached = liveLeadCount >= MAX_FREE_LEAD_LIMIT;
 
-  // Real-time calculation of how many students have paid their fees
-  const feePaidStudentsCount = useMemo(() => {
-    return applicants.filter((a) =>
-      a.application?.paymentStatus === "COMPLETED" ||
-      a.status === "ADMITTED" ||
-      a.application?.stage === "FEE_PAID"
-    ).length;
-  }, [applicants]);
+  // Real-time calculation of student fee records strictly matching PaymentBillingModule console
+  const feeMetrics = useMemo(() => {
+    return calculateStudentFeeMetrics(
+      effectiveApplicants,
+      effectivePayments,
+      selectedCampus,
+      selectedCampus === "ALL" ? "KARUR" : selectedCampus
+    );
+  }, [effectiveApplicants, effectivePayments, selectedCampus]);
 
-  const totalAdmittedStudents = useMemo(() => {
-    const scopedApplicants = selectedCampus === "ALL"
-      ? applicants
-      : applicants.filter((a) => (a.campus || "KARUR") === selectedCampus);
-    if (scopedApplicants.length === 0 || metrics.totalLeads === 0) return 0;
-    const admitted = scopedApplicants.filter((a) => a.status === "ADMITTED" || a.application?.stage === "FEE_PAID").length;
-    return Math.max(admitted, feePaidStudentsCount, metrics.seatsFilled || 0);
-  }, [applicants, selectedCampus, feePaidStudentsCount, metrics.seatsFilled, metrics.totalLeads]);
-
-  const feePendingStudentsCount = Math.max(0, totalAdmittedStudents - feePaidStudentsCount);
-  const feePaidPercentage = Math.round((feePaidStudentsCount / Math.max(1, totalAdmittedStudents)) * 100);
+  const feePaidStudentsCount = feeMetrics.paidStudentsCount;
+  const totalAdmittedStudents = feeMetrics.totalStudentsCount;
+  const feePendingStudentsCount = feeMetrics.pendingStudentsCount;
+  const feePaidPercentage = feeMetrics.paidPercentage;
 
   // Time-based greeting
   const greeting = useMemo(() => {

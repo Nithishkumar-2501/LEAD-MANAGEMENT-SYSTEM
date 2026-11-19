@@ -33,31 +33,21 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { getWhatsAppUrl } from "@/lib/whatsappSender";
+import {
+  buildStudentFeeRecords,
+  calculateStudentFeeMetrics,
+  StudentFeeSummaryItem,
+} from "@/lib/feeMetricsService";
 
-export interface StudentFeeItem {
-  id: string;
-  studentName: string;
-  applicationNo: string;
-  course: string;
-  campus: CampusLocation;
-  phone: string;
-  email: string;
-  feeCategory: "Tuition Fee" | "Seat Allotment Deposit" | "Hostel & Mess Fee" | "Transport Fee";
-  totalFee: number;
-  amountPaid: number;
-  balanceDue: number;
-  status: "COMPLETED" | "PENDING" | "PARTIAL";
-  transactionId?: string;
-  paymentMethod?: string;
-  paidAt?: string;
-  rawPayment?: Payment;
-}
+export type StudentFeeItem = StudentFeeSummaryItem;
 
 interface PaymentBillingModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
   onTriggerToast: (msg: string) => void;
   currentLeadsCount?: number;
   applicants?: (Lead & { application: Application })[];
+  payments?: Payment[];
+  onPaymentsChange?: (updated: Payment[]) => void;
 }
 
 export default function PaymentBillingModule({
@@ -65,8 +55,11 @@ export default function PaymentBillingModule({
   onTriggerToast,
   currentLeadsCount = 0,
   applicants = [],
+  payments: propPayments,
+  onPaymentsChange,
 }: PaymentBillingModuleProps) {
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [internalPayments, setInternalPayments] = useState<Payment[]>([]);
+  const payments = propPayments && propPayments.length > 0 ? propPayments : internalPayments;
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "COMPLETED" | "PENDING" | "PARTIAL">("ALL");
@@ -89,12 +82,15 @@ export default function PaymentBillingModule({
     transactionId: `VSB_TXN_${Date.now().toString().slice(-6)}`,
   });
 
-  // Load live payments from Firebase
+  // Load live payments from Firebase if not passed by parent
   const loadPayments = async () => {
     setIsLoading(true);
     try {
       const data = await fetchPaymentsFromFirebase(loggedInCampus);
-      setPayments(data || []);
+      setInternalPayments(data || []);
+      if (onPaymentsChange && data) {
+        onPaymentsChange(data);
+      }
     } catch (e) {
       console.warn("Error loading payments:", e);
     } finally {
@@ -103,125 +99,30 @@ export default function PaymentBillingModule({
   };
 
   useEffect(() => {
-    loadPayments();
-  }, [loggedInCampus]);
+    if (!propPayments || propPayments.length === 0) {
+      loadPayments();
+    } else {
+      setIsLoading(false);
+    }
+  }, [loggedInCampus, propPayments]);
 
   // Aggregate student fee list from CRM applicants + Firebase receipts
   const allStudentFeeRecords: StudentFeeItem[] = useMemo(() => {
-    const list: StudentFeeItem[] = [];
-    const processedStudentNames = new Set<string>();
-
-    // 1. Process admitted / enrolled applicants from CRM database
-    applicants.forEach((app, idx) => {
-      const name = app.name || "Student Applicant";
-      processedStudentNames.add(name.toLowerCase());
-
-      // Check if this student has a recorded payment in Firebase
-      const matchingPayment = payments.find(
-        (p) =>
-          p.applicationId === app.id ||
-          p.studentName.toLowerCase() === name.toLowerCase()
-      );
-
-      const hasPartialPayment =
-        matchingPayment?.status === "PARTIAL" ||
-        (app.application as any)?.paymentStatus === "PARTIAL" ||
-        (matchingPayment && matchingPayment.amount < 85000);
-
-      const isCompleted =
-        !hasPartialPayment &&
-        (matchingPayment?.status === "COMPLETED" ||
-          app.application?.paymentStatus === "COMPLETED" ||
-          app.status === "ADMITTED" ||
-          (app.application?.stage as string) === "FEE_PAID");
-
-      const totalFee = 85000;
-      const amountPaid = matchingPayment
-        ? matchingPayment.amount
-        : isCompleted
-        ? 85000
-        : 0;
-      const balanceDue = Math.max(0, totalFee - amountPaid);
-
-      const status: "COMPLETED" | "PENDING" | "PARTIAL" =
-        balanceDue === 0 && amountPaid >= totalFee && !hasPartialPayment
-          ? "COMPLETED"
-          : amountPaid > 0
-          ? "PARTIAL"
-          : "PENDING";
-
-      list.push({
-        id: app.id || `stud_${idx}`,
-        studentName: name,
-        applicationNo: (app.application as any)?.applicationNo || `VSB-2026-${String(idx + 1).padStart(4, "0")}`,
-        course: app.courseInterest || "B.E. Computer Science and Engineering",
-        campus: app.campus || loggedInCampus,
-        phone: app.phone || "",
-        email: app.email || "",
-        feeCategory: "Tuition Fee",
-        totalFee,
-        amountPaid,
-        balanceDue,
-        status,
-        transactionId: matchingPayment?.transactionId || (isCompleted ? `VSB_TXN_${app.id.slice(-6)}` : undefined),
-        paymentMethod: matchingPayment ? "Online UPI / NetBanking" : isCompleted ? "Net Banking" : undefined,
-        paidAt: matchingPayment?.createdAt || (isCompleted ? app.createdAt : undefined),
-        rawPayment: matchingPayment,
-      });
-    });
-
-    // 2. Add any standalone Firebase payments not directly mapped to an applicant
-    payments.forEach((p, idx) => {
-      if (!processedStudentNames.has(p.studentName.toLowerCase())) {
-        processedStudentNames.add(p.studentName.toLowerCase());
-        const totalFee = Math.max(p.amount, 85000);
-        const amountPaid = p.amount;
-        const balanceDue = Math.max(0, totalFee - amountPaid);
-        const status: "COMPLETED" | "PENDING" | "PARTIAL" =
-          balanceDue === 0 && amountPaid >= totalFee && p.status !== "PARTIAL"
-            ? "COMPLETED"
-            : amountPaid > 0
-            ? "PARTIAL"
-            : "PENDING";
-
-        list.push({
-          id: p.id || `pay_${idx}`,
-          studentName: p.studentName,
-          applicationNo: `VSB-PAY-${p.id.slice(-4)}`,
-          course: p.course || "B.E. Computer Science and Engineering",
-          campus: p.campus || loggedInCampus,
-          phone: "",
-          email: "",
-          feeCategory: "Tuition Fee",
-          totalFee,
-          amountPaid,
-          balanceDue,
-          status,
-          transactionId: p.transactionId,
-          paymentMethod: "Online UPI / NetBanking",
-          paidAt: p.createdAt,
-          rawPayment: p,
-        });
-      }
-    });
-
-    return list;
+    return buildStudentFeeRecords(applicants, payments, loggedInCampus);
   }, [applicants, payments, loggedInCampus]);
 
-  // Campus-Scoped Student Fee Records for Headcount Metrics & Tabs
-  const campusScopedFeeRecords = useMemo(() => {
-    return allStudentFeeRecords.filter(
-      (s) => campusFilter === "ALL" || s.campus === campusFilter
-    );
-  }, [allStudentFeeRecords, campusFilter]);
+  // Unified fee headcount metrics strictly scoped to active campus filter
+  const feeMetrics = useMemo(() => {
+    return calculateStudentFeeMetrics(applicants, payments, campusFilter, loggedInCampus);
+  }, [applicants, payments, campusFilter, loggedInCampus]);
 
-  // Overall Headcount Metrics (Strictly scoped to active campus filter)
-  const totalStudentsCount = campusScopedFeeRecords.length;
-  const paidStudentsCount = campusScopedFeeRecords.filter((s) => s.status === "COMPLETED").length;
-  const pendingStudentsCount = campusScopedFeeRecords.filter((s) => s.status === "PENDING").length;
-  const partialStudentsCount = campusScopedFeeRecords.filter((s) => s.status === "PARTIAL").length;
-  const paidPercentage = totalStudentsCount > 0 ? Math.round((paidStudentsCount / totalStudentsCount) * 100) : 0;
-  const totalAmountCollected = campusScopedFeeRecords.reduce((sum, s) => sum + s.amountPaid, 0);
+  const campusScopedFeeRecords = feeMetrics.records;
+  const totalStudentsCount = feeMetrics.totalStudentsCount;
+  const paidStudentsCount = feeMetrics.paidStudentsCount;
+  const pendingStudentsCount = feeMetrics.pendingStudentsCount;
+  const partialStudentsCount = feeMetrics.partialStudentsCount;
+  const paidPercentage = feeMetrics.paidPercentage;
+  const totalAmountCollected = feeMetrics.totalAmountCollected;
 
   // Filtered Student Fee List
   const filteredStudents = useMemo(() => {
@@ -265,7 +166,10 @@ export default function PaymentBillingModule({
 
       const ok = await savePaymentToFirebase(payload);
       if (ok) {
-        setPayments((prev) => [payload, ...prev]);
+        setInternalPayments((prev) => [payload, ...prev]);
+        if (onPaymentsChange) {
+          onPaymentsChange([payload, ...payments]);
+        }
         onTriggerToast(`🎉 Student fee payment ₹${payload.amount.toLocaleString("en-IN")} recorded for ${payload.studentName}!`);
         setIsRecordModalOpen(false);
         setNewPayment({
@@ -295,7 +199,7 @@ export default function PaymentBillingModule({
       course: s.course,
       campus: (s.campus === "COIMBATORE" ? "COIMBATORE" : "KARUR") as "KARUR" | "COIMBATORE",
       amount: s.balanceDue > 0 ? s.balanceDue : s.totalFee,
-      feeCategory: s.feeCategory,
+      feeCategory: (s.feeCategory as any) || "Tuition Fee",
       status: "COMPLETED",
       paymentMethod: "Online UPI / NetBanking",
       transactionId: `VSB_TXN_${Date.now().toString().slice(-6)}`,
