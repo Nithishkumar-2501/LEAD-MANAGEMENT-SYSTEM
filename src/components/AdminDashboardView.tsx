@@ -112,10 +112,13 @@ export default function AdminDashboardView({
   }, [applicants]);
 
   const totalAdmittedStudents = useMemo(() => {
-    if (applicants.length === 0) return 0;
-    const admitted = applicants.filter((a) => a.status === "ADMITTED" || a.application?.stage === "FEE_PAID").length;
+    const scopedApplicants = selectedCampus === "ALL"
+      ? applicants
+      : applicants.filter((a) => (a.campus || "KARUR") === selectedCampus);
+    if (scopedApplicants.length === 0 || metrics.totalLeads === 0) return 0;
+    const admitted = scopedApplicants.filter((a) => a.status === "ADMITTED" || a.application?.stage === "FEE_PAID").length;
     return Math.max(admitted, feePaidStudentsCount, metrics.seatsFilled || 0);
-  }, [applicants, feePaidStudentsCount, metrics.seatsFilled]);
+  }, [applicants, selectedCampus, feePaidStudentsCount, metrics.seatsFilled, metrics.totalLeads]);
 
   const feePendingStudentsCount = Math.max(0, totalAdmittedStudents - feePaidStudentsCount);
   const feePaidPercentage = Math.round((feePaidStudentsCount / Math.max(1, totalAdmittedStudents)) * 100);
@@ -137,40 +140,55 @@ export default function AdminDashboardView({
   };
 
   // Cutoff Range Aggregation
-  const cutoffBrackets = useMemo(() => [
-    {
-      label: "190+ Merit Waiver",
-      shortLabel: "190+ Cutoff",
-      count: applicants.length === 0 ? 0 : applicants.filter((a) => (a.tneaCutoff || 180) >= 190).length,
-      color: "#10b981",
-      fillColor: "bg-emerald-500",
-      description: "100% Tuition Fee Scholarship",
-    },
-    {
-      label: "180-189 First Class",
-      shortLabel: "180-189",
-      count: applicants.length === 0 ? 0 : applicants.filter((a) => (a.tneaCutoff || 180) >= 180 && (a.tneaCutoff || 180) < 190).length,
-      color: "#0284c7",
-      fillColor: "bg-sky-500",
-      description: "Priority Core Branch Allocation",
-    },
-    {
-      label: "170-179 Preferred",
-      shortLabel: "170-179",
-      count: applicants.length === 0 ? 0 : applicants.filter((a) => (a.tneaCutoff || 180) >= 170 && (a.tneaCutoff || 180) < 180).length,
-      color: "#6366f1",
-      fillColor: "bg-indigo-500",
-      description: "Counseling First Choice",
-    },
-    {
-      label: "<170 Management",
-      shortLabel: "< 170",
-      count: applicants.length === 0 ? 0 : applicants.filter((a) => (a.tneaCutoff || 180) < 170).length,
-      color: "#f59e0b",
-      fillColor: "bg-amber-500",
-      description: "Direct Management Allocation",
-    },
-  ], [applicants]);
+  const cutoffBrackets = useMemo(() => {
+    const scopedApplicants = selectedCampus === "ALL"
+      ? applicants
+      : applicants.filter((a) => (a.campus || "KARUR") === selectedCampus);
+
+    if (scopedApplicants.length === 0 || metrics.totalLeads === 0) {
+      return [
+        { label: "190+ Merit Waiver", shortLabel: "190+ Cutoff", count: 0, color: "#10b981", fillColor: "bg-emerald-500", description: "100% Tuition Fee Scholarship" },
+        { label: "180-189 First Class", shortLabel: "180-189", count: 0, color: "#0284c7", fillColor: "bg-sky-500", description: "Priority Core Branch Allocation" },
+        { label: "170-179 Preferred", shortLabel: "170-179", count: 0, color: "#6366f1", fillColor: "bg-indigo-500", description: "Counseling First Choice" },
+        { label: "<170 Management", shortLabel: "< 170", count: 0, color: "#f59e0b", fillColor: "bg-amber-500", description: "Direct Management Allocation" },
+      ];
+    }
+
+    return [
+      {
+        label: "190+ Merit Waiver",
+        shortLabel: "190+ Cutoff",
+        count: scopedApplicants.filter((a) => (a.tneaCutoff || 180) >= 190).length,
+        color: "#10b981",
+        fillColor: "bg-emerald-500",
+        description: "100% Tuition Fee Scholarship",
+      },
+      {
+        label: "180-189 First Class",
+        shortLabel: "180-189",
+        count: scopedApplicants.filter((a) => (a.tneaCutoff || 180) >= 180 && (a.tneaCutoff || 180) < 190).length,
+        color: "#0284c7",
+        fillColor: "bg-sky-500",
+        description: "Priority Core Branch Allocation",
+      },
+      {
+        label: "170-179 Preferred",
+        shortLabel: "170-179",
+        count: scopedApplicants.filter((a) => (a.tneaCutoff || 180) >= 170 && (a.tneaCutoff || 180) < 180).length,
+        color: "#6366f1",
+        fillColor: "bg-indigo-500",
+        description: "Counseling First Choice",
+      },
+      {
+        label: "<170 Management",
+        shortLabel: "< 170",
+        count: scopedApplicants.filter((a) => (a.tneaCutoff || 180) < 170).length,
+        color: "#f59e0b",
+        fillColor: "bg-amber-500",
+        description: "Direct Management Allocation",
+      },
+    ];
+  }, [applicants, selectedCampus, metrics.totalLeads]);
 
   // Lead Conversion Funnel Stages
   const totalLeads =
@@ -236,7 +254,11 @@ export default function AdminDashboardView({
   // Lead Velocity Trend Data (for AreaChart) - dynamically scoped to campus applicants & activity
   const leadVelocityTrend = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    if (applicants.length === 0) {
+    const scopedApplicants = selectedCampus === "ALL"
+      ? applicants
+      : applicants.filter((a) => (a.campus || "KARUR") === selectedCampus);
+
+    if (scopedApplicants.length === 0 || metrics.totalLeads === 0) {
       return days.map((day) => ({ day, leads: 0, calls: 0 }));
     }
 
@@ -249,7 +271,7 @@ export default function AdminDashboardView({
     };
 
     let hasDateMatch = false;
-    applicants.forEach((a) => {
+    scopedApplicants.forEach((a) => {
       if (a.createdAt) {
         const d = new Date(a.createdAt);
         if (!isNaN(d.getTime())) {
@@ -285,7 +307,7 @@ export default function AdminDashboardView({
     }
 
     // Proportional distribution based on active campus total applicants
-    const total = applicants.length;
+    const total = scopedApplicants.length;
     const weights = [
       { day: "Mon", leadPct: 0.08, callRatio: 1.7 },
       { day: "Tue", leadPct: 0.13, callRatio: 1.7 },
@@ -301,10 +323,10 @@ export default function AdminDashboardView({
       const calls = Math.max(0, Math.round(leads * w.callRatio));
       return { day: w.day, leads, calls };
     });
-  }, [applicants, tasks]);
+  }, [applicants, tasks, selectedCampus, metrics.totalLeads]);
 
   // Overall Target Score (ScoreDonut)
-  const admissionVelocityScore = applicants.length === 0 ? 0 : 88;
+  const admissionVelocityScore = (metrics.totalLeads === 0 || applicants.length === 0) ? 0 : 88;
 
   // Active Stage for Funnel
   const currentStage = funnelStages[activeStageIndex] || funnelStages[0];

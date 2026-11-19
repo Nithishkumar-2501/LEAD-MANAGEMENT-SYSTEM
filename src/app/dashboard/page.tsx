@@ -1063,7 +1063,8 @@ export default function DashboardPage() {
         return false;
       }
     }
-    if (selectedCampus !== "ALL" && item.campus && item.campus !== selectedCampus) {
+    const itemCampus = item.campus || "KARUR";
+    if (selectedCampus !== "ALL" && itemCampus !== selectedCampus) {
       return false;
     }
     if (selectedStageFilter && item.status !== selectedStageFilter) {
