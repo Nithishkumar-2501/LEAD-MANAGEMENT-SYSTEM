@@ -205,16 +205,21 @@ export default function DashboardPage() {
   // 2. Ctrl + Z (or Cmd + Z on Mac) to focus candidate Search Bar
   useEffect(() => {
     const handleGlobalShortcuts = (e: KeyboardEvent) => {
-      // 1. Intercept Ctrl+A / Cmd+A -> Open NORA AI Chatbot
+      // 1. Intercept Ctrl+A / Cmd+A -> Open NORA AI Chatbot (when not typing in an input/editable field)
       if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A" || e.code === "KeyA")) {
         const activeEl = document.activeElement as HTMLElement | null;
 
-        // If user is currently typing/editing inside Nora AI modal's input or textarea, allow native select-all
-        const isInsideNoraInput = Boolean(
-          activeEl?.closest("#nora-ai-modal") &&
-          (activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA" || activeEl?.getAttribute("contenteditable") === "true")
+        // If user is currently typing/editing inside any input, textarea, or contenteditable element, allow native select-all
+        const isEditable = Boolean(
+          activeEl && (
+            activeEl.tagName === "INPUT" ||
+            activeEl.tagName === "TEXTAREA" ||
+            activeEl.isContentEditable ||
+            activeEl.getAttribute("contenteditable") === "true" ||
+            activeEl.closest("input, textarea, [contenteditable='true']")
+          )
         );
-        if (isInsideNoraInput) {
+        if (isEditable) {
           return;
         }
 
@@ -226,17 +231,21 @@ export default function DashboardPage() {
         return;
       }
 
-      // 2. Intercept Ctrl+Z / Cmd+Z -> Focus candidate Search Bar
+      // 2. Intercept Ctrl+Z / Cmd+Z -> Focus candidate Search Bar (when not typing in an input/editable field)
       if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z" || e.code === "KeyZ") && !e.shiftKey) {
         const activeEl = document.activeElement as HTMLElement | null;
 
-        // If user is ALREADY inside the candidate search bar, preserve native undo
-        if (activeEl?.id === "header-candidate-search" || activeEl?.id === "mobile-candidate-search") {
-          return;
-        }
-
-        // If user is actively typing inside a multi-line textarea or contenteditable element, preserve native undo
-        if (activeEl?.tagName === "TEXTAREA" || activeEl?.getAttribute("contenteditable") === "true") {
+        // If user is actively typing inside any input, textarea, or contenteditable element, preserve native undo
+        const isEditable = Boolean(
+          activeEl && (
+            activeEl.tagName === "INPUT" ||
+            activeEl.tagName === "TEXTAREA" ||
+            activeEl.isContentEditable ||
+            activeEl.getAttribute("contenteditable") === "true" ||
+            activeEl.closest("input, textarea, [contenteditable='true']")
+          )
+        );
+        if (isEditable) {
           return;
         }
 
