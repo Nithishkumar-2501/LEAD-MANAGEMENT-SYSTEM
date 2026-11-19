@@ -130,13 +130,15 @@ export default function PaymentBillingModule({
         (app.application?.stage as string) === "FEE_PAID";
 
       const totalFee = 85000;
-      const amountPaid = isCompleted
-        ? matchingPayment?.amount || 85000
-        : matchingPayment ? matchingPayment.amount : 0;
+      const amountPaid = matchingPayment
+        ? matchingPayment.amount
+        : isCompleted
+        ? 85000
+        : 0;
       const balanceDue = Math.max(0, totalFee - amountPaid);
 
       const status: "COMPLETED" | "PENDING" | "PARTIAL" =
-        amountPaid >= totalFee
+        balanceDue === 0 && amountPaid >= totalFee
           ? "COMPLETED"
           : amountPaid > 0
           ? "PARTIAL"
@@ -167,6 +169,15 @@ export default function PaymentBillingModule({
       if (!processedStudentNames.has(p.studentName.toLowerCase())) {
         processedStudentNames.add(p.studentName.toLowerCase());
         const totalFee = Math.max(p.amount, 85000);
+        const amountPaid = p.amount;
+        const balanceDue = Math.max(0, totalFee - amountPaid);
+        const status: "COMPLETED" | "PENDING" | "PARTIAL" =
+          balanceDue === 0 && amountPaid >= totalFee
+            ? "COMPLETED"
+            : amountPaid > 0
+            ? "PARTIAL"
+            : "PENDING";
+
         list.push({
           id: p.id || `pay_${idx}`,
           studentName: p.studentName,
@@ -177,9 +188,9 @@ export default function PaymentBillingModule({
           email: "",
           feeCategory: "Tuition Fee",
           totalFee,
-          amountPaid: p.amount,
-          balanceDue: Math.max(0, totalFee - p.amount),
-          status: p.status === "COMPLETED" ? "COMPLETED" : "PENDING",
+          amountPaid,
+          balanceDue,
+          status,
           transactionId: p.transactionId,
           paymentMethod: "Online UPI / NetBanking",
           paidAt: p.createdAt,
@@ -359,7 +370,9 @@ export default function PaymentBillingModule({
             </div>
             <div class="meta-item">
               <span class="meta-label">Fee Payment Status:</span>
-              <span class="meta-val" style="color:#059669;">✔ ${s.status === "COMPLETED" ? "FEES FULLY PAID" : s.status}</span>
+              <span class="meta-val" style="color:${s.balanceDue === 0 && s.status === "COMPLETED" ? "#059669" : "#d97706"};">
+                ${s.balanceDue === 0 && s.status === "COMPLETED" ? "✔ FEES FULLY PAID" : `⚠️ PARTIAL / TOKEN PAID (BALANCE DUE: ₹${s.balanceDue.toLocaleString("en-IN")})`}
+              </span>
             </div>
           </div>
 
@@ -368,7 +381,7 @@ export default function PaymentBillingModule({
               <tr>
                 <th>Fee Description / Account Head</th>
                 <th>Academic Year</th>
-                <th style="text-align: right;">Amount Paid (INR)</th>
+                <th style="text-align: right;">Amount (INR)</th>
               </tr>
             </thead>
             <tbody>
@@ -378,12 +391,27 @@ export default function PaymentBillingModule({
                   <span style="color:#64748b; font-size:11px;">Degree & Branch: ${s.course}</span>
                 </td>
                 <td>2026 - 2027</td>
-                <td style="text-align: right; font-weight:800;">₹${s.amountPaid.toLocaleString("en-IN")}.00</td>
+                <td style="text-align: right; font-weight:800;">₹${s.totalFee.toLocaleString("en-IN")}.00</td>
               </tr>
               <tr class="amount-row">
+                <td colspan="2" style="text-align: right;">TOTAL ASSESSED FEE:</td>
+                <td style="text-align: right;">₹${s.totalFee.toLocaleString("en-IN")}.00</td>
+              </tr>
+              <tr class="amount-row" style="color: #059669;">
                 <td colspan="2" style="text-align: right;">TOTAL STUDENT FEE RECEIVED:</td>
                 <td style="text-align: right;">₹${s.amountPaid.toLocaleString("en-IN")}.00</td>
               </tr>
+              ${s.balanceDue > 0 ? `
+              <tr class="amount-row" style="color: #dc2626;">
+                <td colspan="2" style="text-align: right;">OUTSTANDING BALANCE DUE:</td>
+                <td style="text-align: right;">₹${s.balanceDue.toLocaleString("en-IN")}.00</td>
+              </tr>
+              ` : `
+              <tr class="amount-row" style="color: #059669;">
+                <td colspan="2" style="text-align: right;">OUTSTANDING BALANCE:</td>
+                <td style="text-align: right;">₹0.00 (NIL)</td>
+              </tr>
+              `}
             </tbody>
           </table>
 
@@ -394,7 +422,9 @@ export default function PaymentBillingModule({
 
           <div class="stamp-box">
             <div>
-              <div class="stamp">VERIFIED & CONFIRMED</div>
+              <div class="stamp" style="${s.balanceDue > 0 ? 'border-color: #d97706; color: #d97706;' : ''}">
+                ${s.balanceDue > 0 ? 'PARTIAL PAYMENT RECORDED' : 'VERIFIED & CONFIRMED'}
+              </div>
               <p style="font-size: 10px; color: #64748b; margin-top: 5px;">VSB Central Treasury</p>
             </div>
             <div class="signature">
@@ -426,10 +456,10 @@ export default function PaymentBillingModule({
     }
 
     let text = "";
-    if (s.status === "COMPLETED") {
+    if (s.status === "COMPLETED" && s.balanceDue === 0) {
       text = `Dear ${s.studentName}, your college fee payment of ₹${s.amountPaid.toLocaleString("en-IN")} for ${s.course} at V.S.B. Engineering College has been verified and confirmed. Receipt No: ${s.transactionId || s.applicationNo}. Thank you!`;
     } else {
-      text = `Dear ${s.studentName}, your college admission fee payment for ${s.course} at V.S.B. Engineering College is currently pending (Balance Due: ₹${s.balanceDue.toLocaleString("en-IN")}). Please complete your fee payment to secure your seat. Helpline: +91 98424 11223.`;
+      text = `Dear ${s.studentName}, your college admission fee payment for ${s.course} at V.S.B. Engineering College has an outstanding balance due of ₹${s.balanceDue.toLocaleString("en-IN")} (Amount Paid: ₹${s.amountPaid.toLocaleString("en-IN")}). Please complete your fee payment to secure your seat. Helpline: +91 98424 11223.`;
     }
 
     const url = getWhatsAppUrl(s.phone, text);

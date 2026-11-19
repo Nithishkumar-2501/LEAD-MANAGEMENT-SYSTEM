@@ -1492,7 +1492,7 @@ export async function seedInitialPaymentsToFirebase(): Promise<Payment[]> {
       course: "B.E. Electronics & Communication",
       campus: "KARUR",
       amount: 80000,
-      status: "COMPLETED",
+      status: "PARTIAL",
       transactionId: "VSB_TXN_998827363",
       createdAt: "2026-08-10T11:30:00Z",
     },

@@ -10,9 +10,9 @@
     "f1_score": 100.0,
     "roc_auc": 0.924,
     "confusion_matrix": {
-      "tp": 505,
+      "tp": 576,
       "fp": 0,
-      "tn": 495,
+      "tn": 424,
       "fn": 0
     }
   },
