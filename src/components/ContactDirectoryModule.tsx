@@ -10,7 +10,7 @@ import { mobileSafeFetch } from "@/lib/mobileFetch";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
-import ApplicantDetailModal from "@/components/ApplicantDetailModal";
+import ApplicantDetailModal, { getEffectiveCutoff } from "@/components/ApplicantDetailModal";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { getStudentLeadState } from "@/lib/studentLeadState";
 import {
@@ -1346,13 +1346,24 @@ export default function ContactDirectoryModule({
     else if (rule.field === "Registered Email") fieldValue = c.email;
     else if (rule.field === "Registered Mobile") fieldValue = c.phone;
     else if (rule.field === "Lead Stage") {
+      const s = (c.status || "NEW").toUpperCase();
       const stateInfo = getStudentLeadState(c);
-      fieldValue = `${c.status || ""} ${stateInfo.state} ${stateInfo.detailedLabel}`;
+      let stageName = "New Inquiry";
+      if (s === "ADMITTED" || s === "HOT") stageName = "Admitted";
+      else if (s === "REJECTED" || s === "COLD" || s === "NOT_INTERESTED") stageName = "Rejected Not Interested";
+      else if (s === "IN_REVIEW") stageName = "Cutoff Review";
+      else if (s === "CONTACTED") stageName = "Contacted";
+      else if (s === "NEW" || s === "INQUIRY") stageName = "New Inquiry";
+
+      fieldValue = `${stageName} ${s} ${stateInfo.state}`;
     }
     else if (rule.field === "Campus") fieldValue = c.campus;
     else if (rule.field === "Course") fieldValue = c.courseInterest || "";
     else if (rule.field === "Gender") fieldValue = (c as any).gender || "Male";
-    else if (rule.field === "TNEA Cutoff") fieldValue = String((c as any).tneaCutoff || 180);
+    else if (rule.field === "TNEA Cutoff") {
+      const cutoffVal = getEffectiveCutoff(c.tneaCutoff, c.application?.marks12th) ?? (c as any).tneaCutoff ?? 180;
+      fieldValue = String(cutoffVal);
+    }
     else if (rule.field === "Community") fieldValue = (c as any).community || "BC";
     else fieldValue = "";
 
