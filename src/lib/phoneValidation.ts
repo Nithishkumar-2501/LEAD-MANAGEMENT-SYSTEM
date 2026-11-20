@@ -4,7 +4,7 @@ import { Lead } from "@/types/crm";
  * Extracts raw 10-digit mobile number from string.
  * Strips non-digits, leading +91 or leading 0.
  */
-export function extractRaw10Digits(phone: string): string {
+export function extractRaw10Digits(phone?: string | null): string {
   if (!phone) return "";
   let digits = phone.replace(/\D/g, "");
   if (digits.length === 12 && digits.startsWith("91")) {

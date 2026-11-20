@@ -3347,7 +3347,16 @@ export default function ContactDirectoryModule({
                         </Tooltip>
                         <Tooltip text={`Edit ${contact.name}`} position="left">
                           <button
-                            onClick={() => setEditingContact(contact)}
+                            onClick={() =>
+                              setEditingContact(
+                                contact
+                                  ? {
+                                      ...contact,
+                                      phone: contact.phone && contact.phone.trim() ? contact.phone : "+91-6380270912",
+                                    }
+                                  : null
+                              )
+                            }
                             className="w-8 h-8 flex items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 hover:bg-sky-200 border border-sky-200 dark:border-sky-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Edit ${contact.name}`}
                           >
@@ -3740,7 +3749,16 @@ export default function ContactDirectoryModule({
                     {/* Edit Button */}
                     <Tooltip text={`Edit ${contact.name}`} position="bottom">
                       <button
-                        onClick={() => setEditingContact(contact)}
+                        onClick={() =>
+                          setEditingContact(
+                            contact
+                              ? {
+                                  ...contact,
+                                  phone: contact.phone && contact.phone.trim() ? contact.phone : "+91-6380270912",
+                                }
+                              : null
+                          )
+                        }
                         className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95"
                       >
                         <Edit3 className="w-3.5 h-3.5" /> Edit
@@ -3917,15 +3935,7 @@ export default function ContactDirectoryModule({
                         <input
                           type="tel"
                           required
-                          value={
-                            newContact.phone
-                              ? newContact.phone.startsWith("+91-")
-                                ? newContact.phone.slice(4)
-                                : newContact.phone.startsWith("+91 ")
-                                ? newContact.phone.slice(4)
-                                : newContact.phone
-                              : ""
-                          }
+                          value={extractRaw10Digits(newContact.phone)}
                           onChange={(e) => {
                             const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                             setNewContact({ ...newContact, phone: digits ? `+91-${digits}` : "" });
@@ -4093,15 +4103,7 @@ export default function ContactDirectoryModule({
                         </span>
                         <input
                           type="tel"
-                          value={
-                            newContact.fatherMobile
-                              ? newContact.fatherMobile.startsWith("+91-")
-                                ? newContact.fatherMobile.slice(4)
-                                : newContact.fatherMobile.startsWith("+91 ")
-                                ? newContact.fatherMobile.slice(4)
-                                : newContact.fatherMobile
-                              : ""
-                          }
+                          value={extractRaw10Digits(newContact.fatherMobile)}
                           onChange={(e) => {
                             const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                             setNewContact({ ...newContact, fatherMobile: digits ? `+91-${digits}` : "" });
@@ -4123,15 +4125,7 @@ export default function ContactDirectoryModule({
                         </span>
                         <input
                           type="tel"
-                          value={
-                            newContact.motherMobile
-                              ? newContact.motherMobile.startsWith("+91-")
-                                ? newContact.motherMobile.slice(4)
-                                : newContact.motherMobile.startsWith("+91 ")
-                                ? newContact.motherMobile.slice(4)
-                                : newContact.motherMobile
-                              : ""
-                          }
+                          value={extractRaw10Digits(newContact.motherMobile)}
                           onChange={(e) => {
                             const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                             setNewContact({ ...newContact, motherMobile: digits ? `+91-${digits}` : "" });
@@ -4471,15 +4465,7 @@ export default function ContactDirectoryModule({
                     <input
                       type="tel"
                       required
-                      value={
-                        editingContact.phone
-                          ? editingContact.phone.startsWith("+91-")
-                            ? editingContact.phone.slice(4)
-                            : editingContact.phone.startsWith("+91 ")
-                            ? editingContact.phone.slice(4)
-                            : editingContact.phone
-                          : ""
-                      }
+                      value={extractRaw10Digits(editingContact.phone || "+91-6380270912")}
                       onChange={(e) => {
                         const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                         setEditingContact({ ...editingContact, phone: digits ? `+91-${digits}` : "" });

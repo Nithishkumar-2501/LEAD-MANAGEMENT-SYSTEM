@@ -70,7 +70,7 @@ import {
   fetchStudentDocumentsFromFirebase,
   deleteStudentDocumentFromFirebase,
 } from "@/lib/firebaseSync";
-import { validateLeadPhoneNumber, formatPhoneWith91 } from "@/lib/phoneValidation";
+import { validateLeadPhoneNumber, formatPhoneWith91, extractRaw10Digits } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { getStudentLeadState } from "@/lib/studentLeadState";
@@ -184,10 +184,11 @@ export default function ApplicantDetailModal({
   const getInitialFormData = (appLead: (Lead & { application: Application }) | null) => {
     if (!appLead) return null;
     const effective = getEffectiveCutoff(appLead.tneaCutoff, appLead.application?.marks12th);
+    const resolvedPhone = appLead.phone && appLead.phone.trim() ? appLead.phone : "+91-6380270912";
     if ((appLead.tneaCutoff === undefined || appLead.tneaCutoff === null || appLead.tneaCutoff === 0) && effective !== undefined) {
-      return { ...appLead, tneaCutoff: effective };
+      return { ...appLead, phone: resolvedPhone, tneaCutoff: effective };
     }
-    return appLead;
+    return { ...appLead, phone: resolvedPhone };
   };
 
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(() =>
@@ -2481,15 +2482,7 @@ export default function ApplicantDetailModal({
                           <input
                             type="tel"
                             required
-                            value={
-                              formData.phone
-                                ? formData.phone.startsWith("+91-")
-                                  ? formData.phone.slice(4)
-                                  : formData.phone.startsWith("+91 ")
-                                  ? formData.phone.slice(4)
-                                  : formData.phone
-                                : ""
-                            }
+                            value={extractRaw10Digits(formData.phone || "+91-6380270912")}
                             onChange={(e) => {
                               const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                               setFormData({ ...formData, phone: digits ? `+91-${digits}` : "" });

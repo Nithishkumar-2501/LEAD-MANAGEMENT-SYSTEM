@@ -39,7 +39,7 @@ import {
   fetchOfflineUploadLogsFromFirebase,
   saveOfflineUploadBatchToFirebase,
 } from "@/lib/firebaseSync";
-import { formatPhoneWith91 } from "@/lib/phoneValidation";
+import { formatPhoneWith91, extractRaw10Digits } from "@/lib/phoneValidation";
 
 interface ApplicationManagerModuleProps {
   loggedInCampus?: CampusLocation;
@@ -1220,15 +1220,7 @@ export default function ApplicationManagerModule({
                     <input
                       type="tel"
                       required
-                      value={
-                        editingApp.registeredMobile
-                          ? editingApp.registeredMobile.startsWith("+91-")
-                            ? editingApp.registeredMobile.slice(4)
-                            : editingApp.registeredMobile.startsWith("+91 ")
-                            ? editingApp.registeredMobile.slice(4)
-                            : editingApp.registeredMobile
-                          : ""
-                      }
+                      value={extractRaw10Digits(editingApp.registeredMobile)}
                       onChange={(e) => {
                         const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                         setEditingApp({ ...editingApp, registeredMobile: digits ? `+91-${digits}` : "" });
@@ -1413,15 +1405,7 @@ export default function ApplicationManagerModule({
                     <input
                       type="tel"
                       required
-                      value={
-                        newApp.registeredMobile
-                          ? newApp.registeredMobile.startsWith("+91-")
-                            ? newApp.registeredMobile.slice(4)
-                            : newApp.registeredMobile.startsWith("+91 ")
-                            ? newApp.registeredMobile.slice(4)
-                            : newApp.registeredMobile
-                          : ""
-                      }
+                      value={extractRaw10Digits(newApp.registeredMobile)}
                       onChange={(e) => {
                         const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                         setNewApp({ ...newApp, registeredMobile: digits ? `+91-${digits}` : "" });
