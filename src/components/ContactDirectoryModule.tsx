@@ -460,6 +460,9 @@ export default function ContactDirectoryModule({
   const [leadOwnerFilter, setLeadOwnerFilter] = useState("Select Here");
   const [campaignSourceFilter, setCampaignSourceFilter] = useState("Select Here");
   const [trafficChannelFilter, setTrafficChannelFilter] = useState("Select Here");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [moreCourseFilter, setMoreCourseFilter] = useState("Select Here");
+  const [moreCampusFilter, setMoreCampusFilter] = useState("Select Here");
   const [selectedViewName, setSelectedViewName] = useState("Default View");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -1637,7 +1640,39 @@ export default function ContactDirectoryModule({
 
     const matchesTrafficChannel = () => {
       if (!trafficChannelFilter || trafficChannelFilter === "Select Here") return true;
-      return true;
+      const chanLower = trafficChannelFilter.toLowerCase();
+      const srcLower = (c.source || "").toLowerCase();
+      if (chanLower.includes("direct")) {
+        return (
+          srcLower.includes("walk") ||
+          srcLower.includes("direct") ||
+          srcLower.includes("intake") ||
+          srcLower.includes("counselling") ||
+          srcLower.includes("offline")
+        );
+      }
+      if (chanLower.includes("social")) {
+        return (
+          srcLower.includes("social") ||
+          srcLower.includes("facebook") ||
+          srcLower.includes("instagram") ||
+          srcLower.includes("twitter") ||
+          srcLower.includes("whatsapp") ||
+          srcLower.includes("youtube") ||
+          srcLower.includes("ads")
+        );
+      }
+      return srcLower.includes(chanLower);
+    };
+
+    const matchesMoreCourse = () => {
+      if (!moreCourseFilter || moreCourseFilter === "Select Here" || moreCourseFilter === "ALL") return true;
+      return (c.courseInterest || "").toLowerCase().includes(moreCourseFilter.toLowerCase());
+    };
+
+    const matchesMoreCampus = () => {
+      if (!moreCampusFilter || moreCampusFilter === "Select Here" || moreCampusFilter === "ALL") return true;
+      return (c.campus || "").toUpperCase() === moreCampusFilter.toUpperCase();
     };
 
     return (
@@ -1655,7 +1690,9 @@ export default function ContactDirectoryModule({
       matchesLeadStage() &&
       matchesLeadOwner() &&
       matchesCampaignSource() &&
-      matchesTrafficChannel()
+      matchesTrafficChannel() &&
+      matchesMoreCourse() &&
+      matchesMoreCampus()
     );
   });
 
@@ -2761,9 +2798,68 @@ export default function ContactDirectoryModule({
             </select>
           </div>
 
-          <button className="px-3.5 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-slate-700 dark:text-slate-300 font-semibold text-[13.5px] hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors">
-            +2 more
+          {/* +2 More / Additional Filters Toggle Button */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextState = !showMoreFilters;
+              setShowMoreFilters(nextState);
+              if (onTriggerToast) {
+                onTriggerToast(
+                  nextState
+                    ? "✨ Revealed additional filters: Preferred Course & Target Campus"
+                    : "Hidden additional filters"
+                );
+              }
+            }}
+            className={`px-3.5 py-2 rounded-full border text-[13.5px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 min-h-[40px] shadow-sm ${
+              showMoreFilters
+                ? "bg-sky-600 text-white border-sky-500 hover:bg-sky-500"
+                : "bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-white/15 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+            }`}
+            aria-expanded={showMoreFilters}
+            title={showMoreFilters ? "Hide additional filters" : "Click to reveal additional filters (Preferred Course & Target Campus)"}
+          >
+            <span>{showMoreFilters ? "− Less" : "+2 more"}</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showMoreFilters ? "rotate-180" : ""}`} />
           </button>
+
+          {/* Additional Filter 1: Preferred Course */}
+          {showMoreFilters && (
+            <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-200">
+              <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">Preferred Course:</span>
+              <select
+                value={moreCourseFilter}
+                onChange={(e) => setMoreCourseFilter(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
+              >
+                <option value="Select Here">Select Course ∨</option>
+                <option value="ALL">All Courses</option>
+                {VSB_DEPARTMENTS_COURSES.map((course) => (
+                  <option key={course} value={course}>
+                    {course}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Additional Filter 2: Target Campus */}
+          {showMoreFilters && (
+            <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-200">
+              <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">Target Campus:</span>
+              <select
+                value={moreCampusFilter}
+                onChange={(e) => setMoreCampusFilter(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
+              >
+                <option value="Select Here">Select Campus ∨</option>
+                <option value="ALL">All Campuses</option>
+                <option value="KARUR">Karur Campus</option>
+                <option value="COIMBATORE">Coimbatore Campus</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Right: Quick Search Dropdown & Field Search Input (Matching Meritto Screenshot) */}
