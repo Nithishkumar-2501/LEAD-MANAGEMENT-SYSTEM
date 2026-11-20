@@ -4634,7 +4634,7 @@ export default function ContactDirectoryModule({
       {/* SIDE DRAWER 1: FILTER LEADS BY (Image 1 Reference) */}
       {isFilterDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-white/10 animate-in slide-in-from-right duration-300">
+          <div className="w-full max-w-full sm:max-w-2xl lg:max-w-3xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-white/10 animate-in slide-in-from-right duration-300">
             {/* Header */}
             <div className="p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-slate-900">
               <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Filter leads by</h3>
@@ -4647,7 +4647,7 @@ export default function ContactDirectoryModule({
             </div>
 
             {/* Drawer Content Body */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-6 bg-slate-50/50 dark:bg-slate-950/50">
+            <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 space-y-6 bg-slate-50/50 dark:bg-slate-950/50">
               {/* Include Activity Filters Toggle */}
               <div className="flex items-center justify-end gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
@@ -4664,7 +4664,7 @@ export default function ContactDirectoryModule({
               </div>
 
               {/* Lead Filters Container */}
-              <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-white/10 p-5 shadow-sm space-y-4">
+              <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-white/10 p-3.5 sm:p-5 shadow-sm space-y-4">
                 {/* Mode Selector & Filter Count Badge */}
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
                   <div className="flex items-center gap-2 text-xs font-bold">
@@ -4700,8 +4700,8 @@ export default function ContactDirectoryModule({
                 <div className="space-y-3">
                   {filterRules.map((rule) => (
                     <div key={rule.id} className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-400 text-xs shrink-0">▶</span>
+                      <div className="flex items-center gap-2 min-w-0 w-full">
+                        <span className="text-slate-400 text-xs shrink-0 select-none">▶</span>
 
                         {/* Field Select */}
                         <select
@@ -4712,7 +4712,7 @@ export default function ContactDirectoryModule({
                               filterRules.map((r) => (r.id === rule.id ? { ...r, field: val } : r))
                             );
                           }}
-                          className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-36 sm:w-44 shrink-0 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="State">State</option>
                           <option value="City">City</option>
@@ -4736,7 +4736,7 @@ export default function ContactDirectoryModule({
                               filterRules.map((r) => (r.id === rule.id ? { ...r, operator: val } : r))
                             );
                           }}
-                          className="w-28 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-24 sm:w-28 shrink-0 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2 sm:px-2.5 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="Equals">Equals</option>
                           <option value="Contains">Contains</option>
@@ -4755,7 +4755,7 @@ export default function ContactDirectoryModule({
                                 filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
                               );
                             }}
-                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="Tamil Nadu">Tamil Nadu</option>
                             <option value="Kerala">Kerala</option>
@@ -4771,7 +4771,7 @@ export default function ContactDirectoryModule({
                                 filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
                               );
                             }}
-                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             {TAMIL_NADU_DISTRICTS.map((d) => (
                               <option key={d} value={d}>
@@ -4779,6 +4779,39 @@ export default function ContactDirectoryModule({
                               </option>
                             ))}
                           </select>
+                        ) : rule.field === "Lead Stage" ? (
+                          <select
+                            value={rule.value}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFilterRules(
+                                filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
+                              );
+                            }}
+                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="New Inquiry">New Inquiry</option>
+                            <option value="Cutoff Review">Cutoff Review</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Admitted">Admitted</option>
+                            <option value="Rejected">Rejected</option>
+                          </select>
+                        ) : rule.field === "TNEA Cutoff" ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="200"
+                            value={rule.value}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFilterRules(
+                                filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
+                              );
+                            }}
+                            placeholder="e.g. 175"
+                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-mono font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
                         ) : (
                           <input
                             type="text"
@@ -4790,34 +4823,36 @@ export default function ContactDirectoryModule({
                               );
                             }}
                             placeholder="Enter value..."
-                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         )}
 
                         {/* Action Buttons (+ / -) */}
-                        {filterRules.length > 1 && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          {filterRules.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => setFilterRules(filterRules.filter((r) => r.id !== rule.id))}
+                              className="p-1.5 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition-colors shrink-0"
+                              title="Remove Filter"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={() => setFilterRules(filterRules.filter((r) => r.id !== rule.id))}
-                            className="p-1.5 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition-colors"
-                            title="Remove Filter"
+                            onClick={() =>
+                              setFilterRules([
+                                ...filterRules,
+                                { id: String(Date.now()), field: "City", operator: "Equals", value: "Karur" },
+                              ])
+                            }
+                            className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors shrink-0"
+                            title="Add Sub-Rule"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFilterRules([
-                              ...filterRules,
-                              { id: String(Date.now()), field: "City", operator: "Equals", value: "Karur" },
-                            ])
-                          }
-                          className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors"
-                          title="Add Sub-Rule"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                        </div>
                       </div>
 
                       {rule.field === "City" && (
