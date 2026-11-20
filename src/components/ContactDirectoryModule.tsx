@@ -146,20 +146,28 @@ export default function ContactDirectoryModule({
   onReloadLeads,
   onOpenNoraAi,
 }: ContactDirectoryModuleProps) {
-  const [contacts, setContacts] = useState(initialContacts);
+  const normalizeLeadContact = (c: Lead & { application?: Application | null }) => ({
+    ...c,
+    phone: c.phone && c.phone.trim() ? c.phone : "+91-6380270912",
+  });
+
+  const [contacts, setContacts] = useState<(Lead & { application?: Application | null })[]>(() =>
+    (initialContacts || []).map(normalizeLeadContact)
+  );
   const [internalIsReloading, setInternalIsReloading] = useState(false);
   const isReloading = externalIsReloading ?? internalIsReloading;
   const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
 
   useEffect(() => {
+    const normalized = (initialContacts || []).map(normalizeLeadContact);
     if (currentUserRole === "TEACHER") {
       setContacts(
-        (initialContacts || []).filter((c) =>
+        normalized.filter((c) =>
           isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus)
         )
       );
     } else {
-      setContacts(initialContacts);
+      setContacts(normalized);
     }
   }, [initialContacts, currentUserRole, loggedInUsername, selectedCampus]);
 
@@ -173,9 +181,9 @@ export default function ContactDirectoryModule({
         if (res) {
           const data = await res.json();
           if (data?.leads && Array.isArray(data.leads)) {
-            const valid = (data.leads as (Lead & { application?: Application | null })[]).filter(
-              (l) => !isLeadDeleted(l.id)
-            );
+            const valid = (data.leads as (Lead & { application?: Application | null })[])
+              .filter((l) => !isLeadDeleted(l.id))
+              .map(normalizeLeadContact);
             const filtered = currentUserRole === "TEACHER"
               ? valid.filter((c) => isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus))
               : valid;
@@ -1113,11 +1121,9 @@ export default function ContactDirectoryModule({
       return <span className="font-mono text-[14px] text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
     }
     if (col === "Registered Mobile") {
-      const cleanPhone = (contact.phone || "").trim();
-      const rawDigits = cleanPhone.replace(/\D/g, "");
-      const tenDigits = rawDigits.slice(-10);
+      const effectivePhone = contact.phone && contact.phone.trim() ? contact.phone : "+91-6380270912";
       const formattedDisplayPhone = showPhone
-        ? (tenDigits.length === 10 ? `+91 ${tenDigits.slice(0, 5)} ${tenDigits.slice(5)}` : cleanPhone.replace(/-/g, " "))
+        ? formatDisplayPhone(effectivePhone)
         : "+91 ••••• •••••";
 
       return (
@@ -1125,11 +1131,11 @@ export default function ContactDirectoryModule({
           {/* Communication Action Buttons Group Capsule matching Image 1 */}
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs shrink-0">
             <a
-              href={getCleanTelUri(contact.phone)}
+              href={getCleanTelUri(effectivePhone)}
               onClick={(e) => {
                 e.stopPropagation();
                 onActionTrigger("CALL", contact.name);
-                redirectToDialPad(contact.phone);
+                redirectToDialPad(effectivePhone);
               }}
               className="p-1 rounded text-slate-500 hover:text-blue-600 transition-colors"
               title={`Call ${contact.name} via Phone Dial Pad`}
@@ -1141,7 +1147,7 @@ export default function ContactDirectoryModule({
               onClick={(e) => {
                 e.stopPropagation();
                 onActionTrigger("WHATSAPP", contact.name);
-                redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
+                redirectToWhatsApp(effectivePhone, getDefaultAdmissionWhatsAppText(contact));
               }}
               className="p-1 rounded text-slate-500 hover:text-emerald-600 transition-colors"
               title={`Direct WhatsApp Chat with ${contact.name}`}
@@ -1153,7 +1159,7 @@ export default function ContactDirectoryModule({
               onClick={(e) => {
                 e.stopPropagation();
                 onActionTrigger("SMS", contact.name);
-                redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
+                redirectToSms(effectivePhone, getDefaultAdmissionSmsText(contact));
               }}
               className="p-1 rounded text-slate-500 hover:text-purple-600 transition-colors"
               title={`Direct Native SMS with ${contact.name}`}
@@ -1164,11 +1170,11 @@ export default function ContactDirectoryModule({
 
           {/* Non-Breaking Phone Number Link */}
           <a
-            href={getCleanTelUri(contact.phone)}
+            href={getCleanTelUri(effectivePhone)}
             onClick={(e) => {
               e.stopPropagation();
               onActionTrigger("CALL", contact.name);
-              redirectToDialPad(contact.phone);
+              redirectToDialPad(effectivePhone);
             }}
             className="text-[14.5px] font-mono font-bold tracking-tight hover:underline hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap select-all text-slate-900 dark:text-slate-100"
             title="Click to dial on phone"
@@ -3325,7 +3331,7 @@ export default function ContactDirectoryModule({
                           <button
                             onClick={() => {
                               onActionTrigger("WHATSAPP", contact.name);
-                              redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
+                              redirectToWhatsApp(contact.phone || "+91-6380270912", getDefaultAdmissionWhatsAppText(contact));
                             }}
                             className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`WhatsApp Chat with ${contact.name}`}
@@ -3337,7 +3343,7 @@ export default function ContactDirectoryModule({
                           <button
                             onClick={() => {
                               onActionTrigger("SMS", contact.name);
-                              redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
+                              redirectToSms(contact.phone || "+91-6380270912", getDefaultAdmissionSmsText(contact));
                             }}
                             className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
                             title={`Send Native SMS to ${contact.name}`}
@@ -3567,18 +3573,18 @@ export default function ContactDirectoryModule({
                   <div className="space-y-2 text-xs text-slate-300 bg-slate-950/70 p-3.5 rounded-2xl border border-white/10 mb-4">
                     {/* Phone */}
                     <a
-                      href={getCleanTelUri(contact.phone)}
+                      href={getCleanTelUri(contact.phone || "+91-6380270912")}
                       onClick={(e) => {
                         e.stopPropagation();
                         onActionTrigger("CALL", contact.name);
-                        redirectToDialPad(contact.phone);
+                        redirectToDialPad(contact.phone || "+91-6380270912");
                       }}
                       className="flex items-center gap-2 group hover:text-emerald-400 text-left cursor-pointer"
                       title="Click to dial on phone"
                     >
                       <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
                       <span className="font-mono font-bold text-white group-hover:text-emerald-300 underline decoration-dotted decoration-emerald-500">
-                        {showPhone ? contact.phone : "+91 ••••• •••••"}
+                        {showPhone ? formatDisplayPhone(contact.phone || "+91-6380270912") : "+91 ••••• •••••"}
                       </span>
                     </a>
 
@@ -3683,11 +3689,11 @@ export default function ContactDirectoryModule({
 
                     <Tooltip text={`Call ${contact.name} via Phone Dial Pad`} position="bottom">
                       <a
-                        href={getCleanTelUri(contact.phone)}
+                        href={getCleanTelUri(contact.phone || "+91-6380270912")}
                         onClick={(e) => {
                           e.stopPropagation();
                           onActionTrigger("CALL", contact.name);
-                          redirectToDialPad(contact.phone);
+                          redirectToDialPad(contact.phone || "+91-6380270912");
                         }}
                         className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer inline-flex items-center justify-center"
                       >
@@ -3699,7 +3705,7 @@ export default function ContactDirectoryModule({
                         onClick={() => handleOpenCommModal("EMAIL", {
                           id: contact.id,
                           name: contact.name,
-                          phone: contact.phone,
+                          phone: contact.phone || "+91-6380270912",
                           email: contact.email,
                           courseInterest: contact.courseInterest,
                           campus: contact.campus,
@@ -3722,7 +3728,7 @@ export default function ContactDirectoryModule({
                       <button
                         onClick={() => {
                           onActionTrigger("WHATSAPP", contact.name);
-                          redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
+                          redirectToWhatsApp(contact.phone || "+91-6380270912", getDefaultAdmissionWhatsAppText(contact));
                         }}
                         className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer"
                         title={`Open WhatsApp chat with ${contact.name}`}
@@ -3734,7 +3740,7 @@ export default function ContactDirectoryModule({
                       <button
                         onClick={() => {
                           onActionTrigger("SMS", contact.name);
-                          redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
+                          redirectToSms(contact.phone || "+91-6380270912", getDefaultAdmissionSmsText(contact));
                         }}
                         className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40 cursor-pointer"
                         title={`Open Native SMS App for ${contact.name}`}

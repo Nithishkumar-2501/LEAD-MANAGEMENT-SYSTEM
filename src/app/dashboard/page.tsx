@@ -501,9 +501,12 @@ export default function DashboardPage() {
       if (res) {
         const data = await res.json();
         if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
-          const dbLeads = (data.leads as (Lead & { application: Application })[]).filter(
-            (l) => !isLeadDeleted(l.id)
-          );
+          const dbLeads = (data.leads as (Lead & { application: Application })[])
+            .filter((l) => !isLeadDeleted(l.id))
+            .map((l) => ({
+              ...l,
+              phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
+            }));
           const map = new Map<string, Lead & { application: Application }>();
           dbLeads.forEach((item) => map.set(item.id, item));
           const merged = Array.from(map.values());
@@ -530,7 +533,12 @@ export default function DashboardPage() {
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const validCached = parsed.filter((item) => !isLeadDeleted(item.id));
+          const validCached = parsed
+            .filter((item) => !isLeadDeleted(item.id))
+            .map((l) => ({
+              ...l,
+              phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
+            }));
           setApplicants(validCached);
         }
       }
@@ -543,9 +551,12 @@ export default function DashboardPage() {
       .then((res) => res ? res.json() : null)
       .then((data) => {
         if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
-          const dbLeads = (data.leads as (Lead & { application: Application })[]).filter(
-            (l) => !isLeadDeleted(l.id)
-          );
+          const dbLeads = (data.leads as (Lead & { application: Application })[])
+            .filter((l) => !isLeadDeleted(l.id))
+            .map((l) => ({
+              ...l,
+              phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
+            }));
           setApplicants((prev) => {
             const map = new Map<string, Lead & { application: Application }>();
             prev.filter((p) => !isLeadDeleted(p.id)).forEach((item) => map.set(item.id, item));
