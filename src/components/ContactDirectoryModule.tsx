@@ -305,8 +305,9 @@ export default function ContactDirectoryModule({
     const fullCand = getFullCandidateWithApp(contact);
     if (onSelectApplicant) {
       onSelectApplicant(fullCand);
+    } else {
+      setSelectedCandidateForModal(fullCand);
     }
-    setSelectedCandidateForModal(fullCand);
   };
 
   // Export Leads to CSV (Meritto Architecture: Zero Data Loss)
@@ -4616,8 +4617,8 @@ export default function ContactDirectoryModule({
         onSaveCallRecording={handleSaveCallRecording}
       />
 
-      {/* APPLICANT PROFILE / LEAD DETAILS MODAL (Image 2) */}
-      {selectedCandidateForModal && (
+      {/* APPLICANT PROFILE / LEAD DETAILS MODAL (Fallback when not handled by parent onSelectApplicant) */}
+      {!onSelectApplicant && selectedCandidateForModal && (
         <ApplicantDetailModal
           applicant={selectedCandidateForModal}
           currentUserRole={currentUserRole}
