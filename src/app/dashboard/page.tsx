@@ -506,6 +506,7 @@ export default function DashboardPage() {
             .map((l) => ({
               ...l,
               phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
+              source: l.source && l.source.trim() ? l.source : "Organic",
             }));
           const map = new Map<string, Lead & { application: Application }>();
           dbLeads.forEach((item) => map.set(item.id, item));
@@ -538,6 +539,7 @@ export default function DashboardPage() {
             .map((l) => ({
               ...l,
               phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
+              source: l.source && l.source.trim() ? l.source : "Organic",
             }));
           setApplicants(validCached);
         }
@@ -556,6 +558,7 @@ export default function DashboardPage() {
             .map((l) => ({
               ...l,
               phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
+              source: l.source && l.source.trim() ? l.source : "Organic",
             }));
           setApplicants((prev) => {
             const map = new Map<string, Lead & { application: Application }>();

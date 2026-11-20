@@ -149,6 +149,7 @@ export default function ContactDirectoryModule({
   const normalizeLeadContact = (c: Lead & { application?: Application | null }) => ({
     ...c,
     phone: c.phone && c.phone.trim() ? c.phone : "+91-6380270912",
+    source: c.source && c.source.trim() ? c.source : "Organic",
   });
 
   const [contacts, setContacts] = useState<(Lead & { application?: Application | null })[]>(() =>
@@ -1243,7 +1244,7 @@ export default function ContactDirectoryModule({
       return (
         <span className="px-3 py-1 rounded-full text-[13px] font-semibold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/20 whitespace-nowrap inline-flex items-center gap-1.5">
           <span>📢</span>
-          <span>{contact.source || "Direct Entry"}</span>
+          <span>{contact.source || "Organic"}</span>
         </span>
       );
     }
@@ -1640,9 +1641,10 @@ export default function ContactDirectoryModule({
 
     const matchesCampaignSource = () => {
       if (!campaignSourceFilter || campaignSourceFilter === "Select Here") return true;
-      const srcLower = (c.source || "").toLowerCase();
-      const filterLower = campaignSourceFilter.toLowerCase();
-      return srcLower.includes(filterLower) || filterLower.includes(srcLower);
+      const effectiveSource = (c.source && c.source.trim() ? c.source : "Organic").toLowerCase();
+      const filterLower = campaignSourceFilter.toLowerCase().trim();
+      if (!effectiveSource || !filterLower) return false;
+      return effectiveSource.includes(filterLower) || filterLower.includes(effectiveSource);
     };
 
     const matchesTrafficChannel = () => {

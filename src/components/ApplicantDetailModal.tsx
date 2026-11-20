@@ -185,10 +185,11 @@ export default function ApplicantDetailModal({
     if (!appLead) return null;
     const effective = getEffectiveCutoff(appLead.tneaCutoff, appLead.application?.marks12th);
     const resolvedPhone = appLead.phone && appLead.phone.trim() ? appLead.phone : "+91-6380270912";
+    const resolvedSource = appLead.source && appLead.source.trim() ? appLead.source : "Organic";
     if ((appLead.tneaCutoff === undefined || appLead.tneaCutoff === null || appLead.tneaCutoff === 0) && effective !== undefined) {
-      return { ...appLead, phone: resolvedPhone, tneaCutoff: effective };
+      return { ...appLead, phone: resolvedPhone, source: resolvedSource, tneaCutoff: effective };
     }
-    return { ...appLead, phone: resolvedPhone };
+    return { ...appLead, phone: resolvedPhone, source: resolvedSource };
   };
 
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(() =>
