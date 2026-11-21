@@ -350,6 +350,15 @@ export default function Sidebar({
 
   const socialPlatformSubItems = [
     {
+      id: "CONTACT_PLATFORM" as ActiveTab,
+      label: "All Social Media",
+      sublabel: "Omnichannel Overview",
+      icon: Share2,
+      color: "from-purple-500 to-indigo-600",
+      activeBorder: "border-purple-400",
+      activeGlow: "shadow-purple-500/30",
+    },
+    {
       id: "SOCIAL_ADS" as ActiveTab,
       label: "Google & Social Ads",
       sublabel: "Targeted Ad Campaigns",
@@ -517,7 +526,7 @@ export default function Sidebar({
         setIsAdmissionCrmOpen(false);
         setIsAppManagerOpen(false);
         if (!socialPlatformSubItems.some((item) => item.id === activeTab)) {
-          onTabChange("SOCIAL_ADS");
+          onTabChange("CONTACT_PLATFORM");
         }
       }
       return next;
@@ -1539,7 +1548,7 @@ export default function Sidebar({
                         : "bg-purple-500/20 text-purple-300 border border-purple-400/30"
                     }`}
                   >
-                    8
+                    {socialPlatformSubItems.length}
                   </span>
                   <div className="p-0.5 rounded-lg transition-transform">
                     <ChevronRight

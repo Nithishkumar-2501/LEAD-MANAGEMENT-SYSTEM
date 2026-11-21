@@ -1249,6 +1249,7 @@ export default function DashboardPage() {
             loggedInCampus={selectedCampus}
             onTriggerToast={triggerToast}
             onNavigateTab={setActiveTab}
+            applicants={applicants}
           />
         )}
 
@@ -1393,22 +1394,26 @@ export default function DashboardPage() {
 
       {/* MODALS */}
       <ErrorBoundary fallbackTitle="New Applicant Form Encountered an Issue" onReset={() => setIsCreateModalOpen(false)}>
-        <CreateApplicationModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onApplicationCreated={handleCreateApplication}
+        {isCreateModalOpen && (
+          <CreateApplicationModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onApplicationCreated={handleCreateApplication}
+            existingLeads={applicants}
+            loggedInUsername={loggedInUsername}
+          />
+        )}
+      </ErrorBoundary>
+
+      {isQuickLeadModalOpen && (
+        <AddQuickLeadModal
+          isOpen={isQuickLeadModalOpen}
+          onClose={() => setIsQuickLeadModalOpen(false)}
+          onLeadAdded={handleCreateApplication}
           existingLeads={applicants}
           loggedInUsername={loggedInUsername}
         />
-      </ErrorBoundary>
-
-      <AddQuickLeadModal
-        isOpen={isQuickLeadModalOpen}
-        onClose={() => setIsQuickLeadModalOpen(false)}
-        onLeadAdded={handleCreateApplication}
-        existingLeads={applicants}
-        loggedInUsername={loggedInUsername}
-      />
+      )}
 
       {selectedApplicant && (
         <ApplicantDetailModal

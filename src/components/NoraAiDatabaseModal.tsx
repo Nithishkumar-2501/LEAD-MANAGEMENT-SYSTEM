@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Lead, Application, CampusLocation, ActiveTab } from "@/types/crm";
 import { processNoraChatQuery, NoraChatMessage } from "@/lib/ai/noraDatabaseAgent";
+import { renderFormattedMarkdown } from "@/lib/formatMarkdown";
 
 interface NoraAiDatabaseModalProps {
   isOpen: boolean;
@@ -256,7 +257,7 @@ export default function NoraAiDatabaseModal({
                   >
                     {/* Text display */}
                     <div className="whitespace-pre-line font-sans">
-                      {msg.text}
+                      {renderFormattedMarkdown(msg.text, { isUser })}
                     </div>
 
                     {/* SPECIFIC DATA: SINGLE STUDENT LOOKUP */}

@@ -36,6 +36,7 @@ import {
 } from "@/lib/ai/leadScoringEngine";
 import { askVirtualCounselor, generateOutreachPitch } from "@/lib/ai/counselorKnowledge";
 import modelData from "@/lib/ai/leadPredictorModel.json";
+import { renderFormattedMarkdown } from "@/lib/formatMarkdown";
 
 interface AiIntelligenceModuleProps {
   applicants: (Lead & { application: Application })[];
@@ -888,11 +889,11 @@ export default function AiIntelligenceModule({
                   <div
                     className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed ${
                       msg.sender === "USER"
-                        ? "bg-indigo-600 text-white rounded-br-none"
+                        ? "bg-indigo-600 text-white rounded-br-none font-medium"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-none border border-slate-200 dark:border-slate-700 whitespace-pre-line"
                     }`}
                   >
-                    {msg.text}
+                    {renderFormattedMarkdown(msg.text, { isUser: msg.sender === "USER" })}
                   </div>
                   <span className="text-[10px] text-slate-400 mt-1 px-1">{msg.time}</span>
                 </div>

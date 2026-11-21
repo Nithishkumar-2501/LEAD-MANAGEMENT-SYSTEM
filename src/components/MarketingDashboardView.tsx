@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ActiveTab, CampusLocation } from "@/types/crm";
+import { useState, useEffect, useMemo } from "react";
+import { ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import {
   Megaphone,
   Share2,
@@ -19,22 +19,83 @@ import {
 import { FaBookmark } from "react-icons/fa6";
 import { colorVariants } from "@/components/ui/blog-card";
 import { cn } from "@/lib/utils";
+import {
+  subscribeToFirebaseStudents,
+  fetchStudentsFromRTDB,
+  isLeadDeleted,
+} from "@/lib/firebaseSync";
+import {
+  getMarketingChannelKey,
+  MarketingChannelKey,
+} from "@/lib/leadSourceAnalytics";
 
 interface MarketingDashboardViewProps {
   loggedInCampus: CampusLocation;
   onTriggerToast?: (msg: string) => void;
   onNavigateTab?: (tab: ActiveTab) => void;
+  applicants?: (Lead & { application?: Application | null })[];
 }
 
 export default function MarketingDashboardView({
   loggedInCampus,
   onTriggerToast,
   onNavigateTab,
+  applicants,
 }: MarketingDashboardViewProps) {
   const [bookmarkedChannels, setBookmarkedChannels] = useState<string[]>([
     "WhatsApp Business Bot",
     "Google & Social Ads",
   ]);
+
+  const [liveStudents, setLiveStudents] = useState<(Lead & { application?: Application | null })[]>(
+    applicants && applicants.length > 0 ? applicants : []
+  );
+
+  // Synchronize when applicants prop updates from parent dashboard
+  useEffect(() => {
+    if (applicants && applicants.length > 0) {
+      setLiveStudents(applicants.filter((item) => item && item.id && !isLeadDeleted(item.id)));
+    }
+  }, [applicants]);
+
+  // Subscribe to Firebase Live DB updates if parent applicants prop is not yet loaded
+  useEffect(() => {
+    if (applicants && applicants.length > 0) return;
+    let unsub: (() => void) | null = null;
+    try {
+      unsub = subscribeToFirebaseStudents((students) => {
+        if (students && students.length > 0) {
+          setLiveStudents(students.filter((item) => item && item.id && !isLeadDeleted(item.id)));
+        }
+      });
+    } catch (e) {
+      console.warn("Firebase realtime sync notice:", e);
+    }
+
+    fetchStudentsFromRTDB()
+      .then((rtdbList) => {
+        if (rtdbList && rtdbList.length > 0) {
+          setLiveStudents(rtdbList.filter((item) => item && item.id && !isLeadDeleted(item.id)));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      if (unsub) unsub();
+    };
+  }, [applicants]);
+
+  // Dynamic calculations based strictly on selected campus and live database
+  const campusLeads = useMemo(() => {
+    const list = applicants && applicants.length > 0 ? applicants : liveStudents;
+    return (list || []).filter((item) => {
+      if (!item || !item.id || isLeadDeleted(item.id)) return false;
+      if (loggedInCampus && loggedInCampus !== "ALL") {
+        return !item.campus || item.campus === "ALL" || item.campus === loggedInCampus;
+      }
+      return true;
+    });
+  }, [applicants, liveStudents, loggedInCampus]);
 
   const toggleBookmark = (title: string) => {
     setBookmarkedChannels((prev) => {
@@ -49,103 +110,153 @@ export default function MarketingDashboardView({
     });
   };
 
+  // Group campus leads dynamically into 8 campaign channels
+  const channelCounts = useMemo(() => {
+    const counts: Record<MarketingChannelKey, number> = {
+      ADS: 0,
+      FACEBOOK: 0,
+      WHATSAPP: 0,
+      TWITTER: 0,
+      EMAIL: 0,
+      SMS: 0,
+      CAMPAIGN: 0,
+      EXPO: 0,
+    };
+
+    campusLeads.forEach((lead) => {
+      const key = getMarketingChannelKey(lead.source);
+      if (counts[key] !== undefined) {
+        counts[key]++;
+      }
+    });
+
+    return counts;
+  }, [campusLeads]);
+
   const channels = [
     {
+      key: "ADS" as MarketingChannelKey,
       title: "Google & Social Ads",
       tab: "SOCIAL_ADS" as ActiveTab,
-      count: 520,
+      count: channelCounts.ADS,
       cpl: "₹140",
+      cplNum: 140,
       roi: "+240%",
       icon: Megaphone,
       manager: "AdWords Engine",
       role: "PPC & Meta Ads",
-      meta: "520 Inquiries",
+      meta: `${channelCounts.ADS.toLocaleString("en-IN")} ${channelCounts.ADS === 1 ? "Inquiry" : "Inquiries"}`,
     },
     {
+      key: "FACEBOOK" as MarketingChannelKey,
       title: "Facebook Messenger",
       tab: "SOCIAL_FACEBOOK" as ActiveTab,
-      count: 340,
+      count: channelCounts.FACEBOOK,
       cpl: "₹115",
+      cplNum: 115,
       roi: "+180%",
       icon: Share2,
       manager: "Meta AI Concierge",
       role: "Social DMs & Lead Gen",
-      meta: "340 Inquiries",
+      meta: `${channelCounts.FACEBOOK.toLocaleString("en-IN")} ${channelCounts.FACEBOOK === 1 ? "Inquiry" : "Inquiries"}`,
     },
     {
+      key: "WHATSAPP" as MarketingChannelKey,
       title: "WhatsApp Business Bot",
       tab: "SOCIAL_WHATSAPP" as ActiveTab,
-      count: 410,
+      count: channelCounts.WHATSAPP,
       cpl: "₹65",
+      cplNum: 65,
       roi: "+390%",
       icon: MessageSquare,
       manager: "Meta Cloud WhatsApp",
       role: "Official Verified Bot",
-      meta: "410 Inquiries",
+      meta: `${channelCounts.WHATSAPP.toLocaleString("en-IN")} ${channelCounts.WHATSAPP === 1 ? "Inquiry" : "Inquiries"}`,
     },
     {
+      key: "TWITTER" as MarketingChannelKey,
       title: "X (Twitter) Rank Bot",
       tab: "SOCIAL_TWITTER" as ActiveTab,
-      count: 180,
+      count: channelCounts.TWITTER,
       cpl: "₹95",
+      cplNum: 95,
       roi: "+150%",
       icon: Send,
       manager: "X Realtime Feed",
       role: "TNEA Ranks & Counseling",
-      meta: "180 Inquiries",
+      meta: `${channelCounts.TWITTER.toLocaleString("en-IN")} ${channelCounts.TWITTER === 1 ? "Inquiry" : "Inquiries"}`,
     },
     {
+      key: "EMAIL" as MarketingChannelKey,
       title: "E-mail Cutoff Campaigns",
       tab: "SOCIAL_EMAIL" as ActiveTab,
-      count: 210,
+      count: channelCounts.EMAIL,
       cpl: "₹35",
+      cplNum: 35,
       roi: "+410%",
       icon: Mail,
       manager: "SendGrid Admission Hub",
       role: "Cutoff Newsletters",
-      meta: "210 Inquiries",
+      meta: `${channelCounts.EMAIL.toLocaleString("en-IN")} ${channelCounts.EMAIL === 1 ? "Inquiry" : "Inquiries"}`,
     },
     {
+      key: "SMS" as MarketingChannelKey,
       title: "SMS Gateway Alerts",
       tab: "SOCIAL_SMS" as ActiveTab,
-      count: 140,
+      count: channelCounts.SMS,
       cpl: "₹40",
+      cplNum: 40,
       roi: "+290%",
       icon: MessageCircle,
       manager: "TRAI DLT Gateway",
       role: "Instant SMS Alerts",
-      meta: "140 Inquiries",
+      meta: `${channelCounts.SMS.toLocaleString("en-IN")} ${channelCounts.SMS === 1 ? "Inquiry" : "Inquiries"}`,
     },
     {
+      key: "CAMPAIGN" as MarketingChannelKey,
       title: "Admission Drive Outreach",
       tab: "SOCIAL_CAMPAIGN" as ActiveTab,
-      count: 390,
+      count: channelCounts.CAMPAIGN,
       cpl: "₹180",
+      cplNum: 180,
       roi: "+310%",
       icon: Sparkles,
       manager: "On-Ground Outreach",
       role: "Direct Walk-in Expo",
-      meta: "390 Inquiries",
+      meta: `${channelCounts.CAMPAIGN.toLocaleString("en-IN")} ${channelCounts.CAMPAIGN === 1 ? "Inquiry" : "Inquiries"}`,
     },
     {
+      key: "EXPO" as MarketingChannelKey,
       title: "School Project Expo Spot",
       tab: "SOCIAL_EXPO" as ActiveTab,
-      count: 250,
+      count: channelCounts.EXPO,
       cpl: "₹85",
+      cplNum: 85,
       roi: "+220%",
       icon: Award,
       manager: "School Outreach Wing",
       role: "+2 Science Exhibitions",
-      meta: "250 Inquiries",
+      meta: `${channelCounts.EXPO.toLocaleString("en-IN")} ${channelCounts.EXPO === 1 ? "Inquiry" : "Inquiries"}`,
     },
   ];
 
-  const totalInquiries = channels.reduce((sum, ch) => sum + ch.count, 0);
+  const totalInquiries = campusLeads.length;
+  const confirmedAdmissions = campusLeads.filter((a) => a.status === "ADMITTED").length;
+
   const totalSpend = channels.reduce((sum, ch) => {
-    const cplNum = Number(ch.cpl.replace(/[^0-9.]/g, "")) || 0;
-    return sum + ch.count * cplNum;
+    return sum + ch.count * ch.cplNum;
   }, 0);
+
   const avgCpl = totalInquiries > 0 ? Math.round(totalSpend / totalInquiries) : 0;
+
+  // Real-time conversion ROI calculated against total campaign investment (₹95,000 revenue per admitted student)
+  const conversionRoiDisplay = useMemo(() => {
+    if (totalSpend === 0) return "+0%";
+    const totalRevenue = confirmedAdmissions * 95000;
+    if (totalRevenue === 0) return "0%";
+    const roi = Math.round(((totalRevenue - totalSpend) / totalSpend) * 100);
+    return roi >= 0 ? `+${roi.toLocaleString("en-IN")}%` : `${roi.toLocaleString("en-IN")}%`;
+  }, [confirmedAdmissions, totalSpend]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 font-sans">
@@ -165,12 +276,21 @@ export default function MarketingDashboardView({
           </div>
         </div>
 
-        <div className="px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-[13px] sm:text-[14px] font-bold text-blue-700 dark:text-blue-300 shadow-2xs self-start sm:self-auto shrink-0">
-          Total Inquiries: {totalInquiries.toLocaleString("en-IN")} Candidates
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto shrink-0">
+          <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-[12.5px] sm:text-[13px] font-bold text-emerald-700 dark:text-emerald-300 shadow-2xs flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{loggedInCampus === "ALL" ? "All Campuses" : `${loggedInCampus} Campus`}</span>
+            <span className="text-emerald-500/60 dark:text-emerald-400/60">•</span>
+            <span>Live DB</span>
+          </div>
+
+          <div className="px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-[13px] sm:text-[14px] font-bold text-blue-700 dark:text-blue-300 shadow-2xs">
+            Total Inquiries: {totalInquiries.toLocaleString("en-IN")} {totalInquiries === 1 ? "Candidate" : "Candidates"}
+          </div>
         </div>
       </div>
 
-      {/* 4 Summary Performance Stats matching Image 2 */}
+      {/* 4 Summary Performance Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Campaign Spend */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
@@ -209,7 +329,7 @@ export default function MarketingDashboardView({
               Conversion ROI
             </p>
             <h4 className="text-[28px] sm:text-[30px] lg:text-[32px] font-black text-emerald-600 dark:text-emerald-400 mt-1 leading-tight">
-              +315%
+              {conversionRoiDisplay}
             </h4>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center font-bold shrink-0">
@@ -224,7 +344,7 @@ export default function MarketingDashboardView({
               Confirmed Admissions
             </p>
             <h4 className="text-[28px] sm:text-[30px] lg:text-[32px] font-black text-amber-600 dark:text-amber-400 mt-1 leading-tight">
-              185 Students
+              {confirmedAdmissions.toLocaleString("en-IN")} {confirmedAdmissions === 1 ? "Student" : "Students"}
             </h4>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center justify-center font-bold shrink-0">
@@ -233,7 +353,7 @@ export default function MarketingDashboardView({
         </div>
       </div>
 
-      {/* 8 Channel Cards matching Image 2 & Blog2 Color Variants */}
+      {/* 8 Channel Cards matching Blog2 Color Variants */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {channels.map((ch, index) => {
           const Icon = ch.icon;

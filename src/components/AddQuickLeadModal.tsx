@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Mail, Phone, AlertCircle, Share2, GraduationCap, CheckCircle2 } from "lucide-react";
 import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
@@ -19,6 +19,38 @@ interface AddQuickLeadModalProps {
   loggedInUsername?: string;
 }
 
+const getInitialQuickLeadData = () => ({
+  // Core Lead Details
+  formInterested: VSB_DEPARTMENTS_COURSES[0],
+  name: "",
+  email: "",
+  gender: "Male",
+  phone: "",
+  state: "Tamil Nadu",
+  city: "Karur",
+
+  // Additional Details
+  fatherName: "",
+  motherName: "",
+  bloodGroup: "O+",
+  physicallyDisabled: "No",
+  community: "BC",
+  address: "",
+  school: "",
+  marks10th: "85",
+  marks12th: "88",
+  tneaCutoff: "178.5",
+
+  // Facebook / Social Details
+  fbLeadId: `fb_lead_${Date.now().toString().slice(-6)}`,
+  fbCampaign: "VSB_Admissions_2026_TN_Engineering",
+  fbAdSet: "TN_Higher_Secondary_Aspirants_Direct",
+  fbAdName: "BTech_AI_Admissions_Banner_2026",
+  fbFormName: "Direct_Admission_Form_2026",
+  fbPageName: "V.S.B. Engineering College Official",
+  fbPlatform: "Meta Ads (Facebook & Instagram)",
+});
+
 export default function AddQuickLeadModal({
   isOpen,
   onClose,
@@ -33,37 +65,28 @@ export default function AddQuickLeadModal({
   const [error, setError] = useState<string | null>(null);
   const quotaEval = evaluateLeadQuota(existingLeads.length, 1);
 
-  const [formData, setFormData] = useState({
-    // Core Lead Details
-    formInterested: VSB_DEPARTMENTS_COURSES[0],
-    name: "",
-    email: "",
-    gender: "Male",
-    phone: "",
-    state: "Tamil Nadu",
-    city: "Karur",
+  const [formData, setFormData] = useState(getInitialQuickLeadData());
 
-    // Additional Details
-    fatherName: "",
-    motherName: "",
-    bloodGroup: "O+",
-    physicallyDisabled: "No",
-    community: "BC",
-    address: "",
-    school: "",
-    marks10th: "85",
-    marks12th: "88",
-    tneaCutoff: "178.5",
+  const resetForm = () => {
+    setFormData(getInitialQuickLeadData());
+    setUploadVia("EMAIL");
+    setError(null);
+    setActiveTab("LEAD");
+    setIsQrModalOpen(false);
+    setPendingSaveAndNew(false);
+  };
 
-    // Facebook / Social Details
-    fbLeadId: `fb_lead_${Date.now().toString().slice(-6)}`,
-    fbCampaign: "VSB_Admissions_2026_TN_Engineering",
-    fbAdSet: "TN_Higher_Secondary_Aspirants_Direct",
-    fbAdName: "BTech_AI_Admissions_Banner_2026",
-    fbFormName: "Direct_Admission_Form_2026",
-    fbPageName: "V.S.B. Engineering College Official",
-    fbPlatform: "Meta Ads (Facebook & Instagram)",
-  });
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  // Discard any unsaved candidate entries whenever modal opens or closes
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -247,7 +270,7 @@ export default function AddQuickLeadModal({
       setError(null);
       setActiveTab("LEAD");
     } else {
-      onClose();
+      handleClose();
     }
   };
 
@@ -260,7 +283,7 @@ export default function AddQuickLeadModal({
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Add Quick Lead</h3>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -873,7 +896,7 @@ export default function AddQuickLeadModal({
         <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900 flex items-center justify-end gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="px-4 py-2 rounded-lg border border-slate-300 dark:border-white/15 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             Cancel

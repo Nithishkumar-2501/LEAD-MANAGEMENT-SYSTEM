@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, UserPlus, Send, AlertTriangle } from "lucide-react";
 import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
@@ -18,6 +18,26 @@ interface CreateApplicationModalProps {
   loggedInUsername?: string;
 }
 
+const INITIAL_FORM_DATA = {
+  name: "",
+  email: "",
+  phone: "",
+  fatherName: "",
+  motherName: "",
+  gender: "Male",
+  bloodGroup: "O+",
+  physicallyDisabled: "No",
+  community: "BC",
+  address: "",
+  school: "",
+  courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
+  campus: "KARUR" as CampusLocation,
+  source: "TNEA Counselling",
+  marks10th: 0,
+  marks12th: 0,
+  stage: "INQUIRY" as AppStage,
+};
+
 export default function CreateApplicationModal({
   isOpen,
   onClose,
@@ -26,29 +46,28 @@ export default function CreateApplicationModal({
   loggedInUsername = "Admin",
 }: CreateApplicationModalProps) {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    fatherName: "",
-    motherName: "",
-    gender: "Male",
-    bloodGroup: "O+",
-    physicallyDisabled: "No",
-    community: "BC",
-    address: "",
-    school: "",
-    courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
-    campus: "KARUR" as CampusLocation,
-    source: "TNEA Counselling",
-    marks10th: 0,
-    marks12th: 0,
-    stage: "INQUIRY" as AppStage,
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const quotaEval = evaluateLeadQuota(existingLeads.length, 1);
+
+  const resetForm = () => {
+    setFormData(INITIAL_FORM_DATA);
+    setError(null);
+    setIsQrModalOpen(false);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -118,7 +137,7 @@ export default function CreateApplicationModal({
       await saveStudentToFirebase(createdLead);
 
       onApplicationCreated(createdLead);
-      setIsQrModalOpen(false);
+      resetForm();
       onClose();
     } catch (err: any) {
       setError(err.message || "An error occurred while creating application.");
@@ -155,8 +174,10 @@ export default function CreateApplicationModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={handleClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
@@ -426,7 +447,7 @@ export default function CreateApplicationModal({
           <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all"
             >
               Cancel

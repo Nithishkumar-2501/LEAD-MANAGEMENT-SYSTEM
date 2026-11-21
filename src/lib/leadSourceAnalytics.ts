@@ -29,6 +29,84 @@ export interface AllLeadSourcesSummary {
   dominantSource: LeadSourceChannelMeta;
 }
 
+export type MarketingChannelKey =
+  | "ADS"
+  | "FACEBOOK"
+  | "WHATSAPP"
+  | "TWITTER"
+  | "EMAIL"
+  | "SMS"
+  | "CAMPAIGN"
+  | "EXPO";
+
+/**
+ * Maps a lead's source string cleanly to one of the 8 Marketing Dashboard channels
+ */
+export function getMarketingChannelKey(source?: string): MarketingChannelKey {
+  const src = (source || "").toLowerCase().trim();
+
+  // Facebook & Instagram
+  if (
+    src.includes("facebook") ||
+    src.includes("fb") ||
+    src.includes("meta") ||
+    src.includes("instagram") ||
+    src.includes("insta")
+  ) {
+    return "FACEBOOK";
+  }
+
+  // WhatsApp
+  if (src.includes("whatsapp") || src.includes("wa")) {
+    return "WHATSAPP";
+  }
+
+  // Twitter / X
+  if (src.includes("twitter") || src.includes("x (") || src === "x" || src.includes("tweet")) {
+    return "TWITTER";
+  }
+
+  // Email
+  if (src.includes("email") || src.includes("e-mail") || src.includes("mail") || src.includes("newsletter")) {
+    return "EMAIL";
+  }
+
+  // SMS
+  if (src.includes("sms") || src.includes("message") || src.includes("text")) {
+    return "SMS";
+  }
+
+  // Project Expo & School Outreach
+  if (
+    src.includes("expo") ||
+    src.includes("science fair") ||
+    src.includes("school outreach") ||
+    src.includes("project fair") ||
+    src.includes("innovation exhibit") ||
+    src.includes("fair")
+  ) {
+    return "EXPO";
+  }
+
+  // Google & Social Ads
+  if (
+    src.includes("google") ||
+    src.includes("adwords") ||
+    src.includes("g-ad") ||
+    src.includes("search ad") ||
+    src.includes("ppc") ||
+    src.includes("newspaper ad") ||
+    src.includes("social ads") ||
+    src === "ads" ||
+    src === "ad"
+  ) {
+    return "ADS";
+  }
+
+  // Default: Admission Drive, On-Ground Outreach, Walk-in, Portals & Counselling
+  return "CAMPAIGN";
+}
+
 /**
  * Classifies a lead into its distinct primary acquisition channel
  */

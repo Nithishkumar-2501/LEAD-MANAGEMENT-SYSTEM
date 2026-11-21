@@ -45,6 +45,7 @@ import {
   isLeadDeleted,
   StudentRecord,
 } from "@/lib/firebaseSync";
+import { getMarketingChannelKey } from "@/lib/leadSourceAnalytics";
 import SpecularButton from "@/components/SpecularButton";
 
 export interface CollegeCampaign {
@@ -152,6 +153,7 @@ export default function SocialMediaPlatformModule({
     else if (activeTab === "SOCIAL_SMS") setSelectedSubTab("SMS");
     else if (activeTab === "SOCIAL_CAMPAIGN") setSelectedSubTab("CAMPAIGN");
     else if (activeTab === "SOCIAL_EXPO") setSelectedSubTab("EXPO");
+    else if (activeTab === "CONTACT_PLATFORM") setSelectedSubTab("ALL");
   }, [activeTab]);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -242,26 +244,7 @@ export default function SocialMediaPlatformModule({
 
   // Map each student's source to its marketing channel ID
   const getLeadChannel = (source?: string): string => {
-    const src = (source || "").toLowerCase();
-    if (src.includes("google") || src.includes("ad") || src.includes("search")) return "ADS";
-    if (src.includes("facebook") || src.includes("fb") || src.includes("meta") || src.includes("instagram")) return "FACEBOOK";
-    if (src.includes("twitter") || src.includes("x (") || src === "x") return "TWITTER";
-    if (src.includes("whatsapp") || src.includes("wa")) return "WHATSAPP";
-    if (src.includes("email") || src.includes("e-mail") || src.includes("mail")) return "EMAIL";
-    if (src.includes("sms") || src.includes("message")) return "SMS";
-    if (src.includes("expo") || src.includes("fair")) return "EXPO";
-    if (
-      src.includes("drive") ||
-      src.includes("outreach") ||
-      src.includes("walkin") ||
-      src.includes("walk-in") ||
-      src.includes("campaign") ||
-      src.includes("on-ground") ||
-      src.includes("direct")
-    ) {
-      return "CAMPAIGN";
-    }
-    return "OTHER";
+    return getMarketingChannelKey(source);
   };
 
   // Calculate live student counts from Firebase
@@ -593,6 +576,7 @@ export default function SocialMediaPlatformModule({
               onClick={() => {
                 setSelectedSubTab(ch.id);
                 const tabMap: Record<string, ActiveTab> = {
+                  ALL: "CONTACT_PLATFORM",
                   ADS: "SOCIAL_ADS",
                   FACEBOOK: "SOCIAL_FACEBOOK",
                   TWITTER: "SOCIAL_TWITTER",

@@ -163,7 +163,7 @@ export default function Header({
       {/* Top Bar: Brand, Campus Selector & Right Navigation Controls */}
       <div className="flex items-center justify-between gap-1.5 sm:gap-3 xl:gap-4 min-w-0">
         {/* Left: Official College Brand */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Official V.S.B. Engineering College Logo Emblem */}
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shadow-xs bg-white shrink-0 flex items-center justify-center p-0.5">
             <Image
@@ -174,17 +174,18 @@ export default function Header({
               className="w-full h-full object-contain rounded-full"
             />
           </div>
-          <div className="min-w-0">
-            <h1 className="font-black text-[16px] sm:text-[17px] md:text-[18px] text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5 truncate">
-              <span className="truncate text-slate-900 dark:text-white font-black hidden sm:inline">V.S.B. ENGINEERING COLLEGE</span>
-              <span className="truncate text-slate-900 dark:text-white font-black sm:hidden">V.S.B. COLLEGE</span>
-              <span className="hidden 2xl:inline-flex items-center text-[12.5px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-2.5 py-0.5 rounded-md shrink-0">
+          <div className="min-w-0 flex flex-col justify-center">
+            <h1 className="font-black text-[15px] sm:text-[16px] md:text-[17px] xl:text-[18px] text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <span className="text-slate-900 dark:text-white font-black hidden xl:inline whitespace-nowrap">V.S.B. ENGINEERING COLLEGE</span>
+              <span className="text-slate-900 dark:text-white font-black hidden xs:inline xl:hidden whitespace-nowrap">V.S.B. COLLEGE</span>
+              <span className="text-slate-900 dark:text-white font-black xs:hidden whitespace-nowrap">V.S.B.</span>
+              <span className="hidden 2xl:inline-flex items-center text-[12px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-2 py-0.5 rounded-md shrink-0">
                 SPHEREX CRM
               </span>
             </h1>
-            <p className="text-[13px] sm:text-[13.5px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium truncate mt-0.5">
+            <p className="text-[11.5px] sm:text-[12.5px] md:text-[13px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-medium whitespace-nowrap mt-0.5">
               <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              <span className="truncate">Karur & Coimbatore</span>
+              <span>Karur & Coimbatore</span>
             </p>
           </div>
         </div>
@@ -227,7 +228,7 @@ export default function Header({
           )}
 
           {/* Clean Segmented Campus Selector */}
-          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[13.5px] sm:text-[14px] 2xl:text-[14.5px] shrink-0">
+          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[13px] xl:text-[13.5px] 2xl:text-[14.5px] shrink-0">
             {currentUserRole === "TEACHER" ? (
               <>
                 {/* Karur Campus for Teacher */}
@@ -235,7 +236,7 @@ export default function Header({
                   <Tooltip text="Active Session: V.S.B. Karur Campus (Faculty Profile)">
                     <button
                       type="button"
-                      className="flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[13.5px] sm:text-[14px] 2xl:text-[14.5px]"
+                      className="flex items-center gap-1.5 2xl:gap-2 px-2 xl:px-2.5 2xl:px-3.5 py-1 sm:py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[13px] xl:text-[13.5px] 2xl:text-[14.5px]"
                     >
                       <Building2 className="w-4 h-4 shrink-0" />
                       <span>Karur<span className="hidden 2xl:inline"> Campus</span></span>
@@ -245,7 +246,7 @@ export default function Header({
                   <Tooltip text="Access restricted: Coimbatore faculty cannot access Karur campus">
                     <button
                       type="button"
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
+                      className="flex items-center gap-1.5 px-2 xl:px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[12.5px] xl:text-[13px]"
                       disabled
                     >
                       <Lock className="w-3.5 h-3.5 shrink-0" />
@@ -259,7 +260,7 @@ export default function Header({
                   <Tooltip text="Active Session: V.S.B. Coimbatore Campus (Faculty Profile)">
                     <button
                       type="button"
-                      className="flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[13.5px] sm:text-[14px] 2xl:text-[14.5px]"
+                      className="flex items-center gap-1.5 2xl:gap-2 px-2 xl:px-2.5 2xl:px-3.5 py-1 sm:py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[13px] xl:text-[13.5px] 2xl:text-[14.5px]"
                     >
                       <GraduationCap className="w-4 h-4 shrink-0" />
                       <span>Coimbatore<span className="hidden 2xl:inline"> Campus</span></span>
@@ -269,7 +270,7 @@ export default function Header({
                   <Tooltip text="Access restricted: Karur faculty cannot access Coimbatore campus">
                     <button
                       type="button"
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
+                      className="flex items-center gap-1.5 px-2 xl:px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[12.5px] xl:text-[13px]"
                       disabled
                     >
                       <Lock className="w-3.5 h-3.5 shrink-0" />
@@ -286,7 +287,7 @@ export default function Header({
                   <button
                     type="button"
                     onClick={() => onCampusChange("KARUR")}
-                    className={`flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-1.5 rounded-md text-[13.5px] sm:text-[14px] 2xl:text-[14.5px] transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 2xl:gap-2 px-2 xl:px-2.5 2xl:px-3.5 py-1 sm:py-1.5 rounded-md text-[13px] xl:text-[13.5px] 2xl:text-[14.5px] transition-all cursor-pointer ${
                       selectedCampus === "KARUR"
                         ? "bg-blue-600 text-white font-bold shadow-xs"
                         : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60 font-semibold"
@@ -302,7 +303,7 @@ export default function Header({
                   <button
                     type="button"
                     onClick={() => onCampusChange("COIMBATORE")}
-                    className={`flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-1.5 rounded-md text-[13.5px] sm:text-[14px] 2xl:text-[14.5px] transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 2xl:gap-2 px-2 xl:px-2.5 2xl:px-3.5 py-1 sm:py-1.5 rounded-md text-[13px] xl:text-[13.5px] 2xl:text-[14.5px] transition-all cursor-pointer ${
                       selectedCampus === "COIMBATORE"
                         ? "bg-blue-600 text-white font-bold shadow-xs"
                         : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60 font-semibold"
@@ -398,11 +399,11 @@ export default function Header({
             )}
           </div>
 
-          {/* Ask Nora AI Button — compact on mobile */}
+          {/* Ask Nora AI Button — compact on mobile and tablet */}
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="press-spring flex items-center gap-1.5 2xl:gap-2 px-2 sm:px-3 2xl:px-4 py-1.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13px] sm:text-[13.5px] 2xl:text-[14px] shadow-xs transition-all duration-150 cursor-pointer shrink-0"
+            className="press-spring flex items-center gap-1.5 2xl:gap-2 px-2 sm:px-2.5 xl:px-3 2xl:px-4 py-1.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13px] sm:text-[13.5px] 2xl:text-[14px] shadow-xs transition-all duration-150 cursor-pointer shrink-0"
             title="Ask Nora AI to analyze the live student database (Shortcut: Ctrl + A)"
           >
             <img
@@ -413,18 +414,18 @@ export default function Header({
               className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover shrink-0"
               style={{ width: "20px", height: "20px" }}
             />
-            <span className="hidden sm:inline text-[13.5px] 2xl:text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
+            <span className="hidden xl:inline text-[13.5px] 2xl:text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
             <kbd className="hidden 2xl:inline-flex items-center px-1.5 py-0.5 text-[12px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
               Ctrl+A
             </kbd>
           </button>
 
-          {/* Header Leads Counter: Assigned Contacts for TEACHER, Live DB Quota for ADMIN (desktop/tablet only) */}
+          {/* Header Leads Counter: Assigned Contacts for TEACHER, Live DB Quota for ADMIN (desktop only) */}
           {currentUserRole === "TEACHER" ? (
             <button
               type="button"
               onClick={() => onTabChange("CONTACTS")}
-              className="press-spring hidden md:flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
+              className="press-spring hidden xl:flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
               title={`My Assigned Contacts: ${visibleApplicants.length.toLocaleString("en-IN")} leads allocated by Admissions Admin. Click to view Lead Directory.`}
             >
               <span className="relative flex h-2 w-2 shrink-0">
@@ -450,7 +451,7 @@ export default function Header({
             <button
               type="button"
               onClick={() => onTabChange("CONTACTS")}
-              className={`press-spring hidden md:flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-xs shrink-0 ${
+              className={`press-spring hidden xl:flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-xs shrink-0 ${
                 isLimitReached
                   ? "bg-rose-500/10 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300"
                   : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:border-indigo-400"

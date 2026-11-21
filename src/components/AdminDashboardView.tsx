@@ -62,6 +62,7 @@ import { cn } from "@/lib/utils";
 import { MAX_FREE_LEAD_LIMIT, getEffectiveLeadCount } from "@/lib/leadQuotaService";
 import { fetchPaymentsFromFirebase } from "@/lib/firebaseSync";
 import { calculateStudentFeeMetrics } from "@/lib/feeMetricsService";
+import { getEffectiveCutoff } from "@/components/ApplicantDetailModal";
 
 interface AdminDashboardViewProps {
   metrics: SummaryMetrics;
@@ -170,7 +171,10 @@ export default function AdminDashboardView({
 
   // Dynamic campus-scoped intelligence & predictions
   const scopedMeritLeads = useMemo(() => {
-    return scopedApplicants.filter((a) => (a.tneaCutoff || 0) >= 190);
+    return scopedApplicants.filter((a) => {
+      const cutoff = getEffectiveCutoff(a.tneaCutoff, a.application?.marks12th, (a as any).cutoff) ?? 0;
+      return cutoff >= 190;
+    });
   }, [scopedApplicants]);
 
   const scopedMeritAwaitingCall = useMemo(() => {
@@ -275,11 +279,15 @@ export default function AdminDashboardView({
       ];
     }
 
+    const getApplicantCutoff = (a: Lead & { application: Application }): number => {
+      return getEffectiveCutoff(a.tneaCutoff, a.application?.marks12th, (a as any).cutoff) ?? 0;
+    };
+
     return [
       {
         label: "190+ Merit Waiver",
         shortLabel: "190+ Cutoff",
-        count: scopedApplicants.filter((a) => (a.tneaCutoff || 180) >= 190).length,
+        count: scopedApplicants.filter((a) => getApplicantCutoff(a) >= 190).length,
         color: "#10b981",
         fillColor: "bg-emerald-500",
         description: "100% Tuition Fee Scholarship",
@@ -287,7 +295,10 @@ export default function AdminDashboardView({
       {
         label: "180-189 First Class",
         shortLabel: "180-189",
-        count: scopedApplicants.filter((a) => (a.tneaCutoff || 180) >= 180 && (a.tneaCutoff || 180) < 190).length,
+        count: scopedApplicants.filter((a) => {
+          const c = getApplicantCutoff(a);
+          return c >= 180 && c < 190;
+        }).length,
         color: "#0284c7",
         fillColor: "bg-sky-500",
         description: "Priority Core Branch Allocation",
@@ -295,7 +306,10 @@ export default function AdminDashboardView({
       {
         label: "170-179 Preferred",
         shortLabel: "170-179",
-        count: scopedApplicants.filter((a) => (a.tneaCutoff || 180) >= 170 && (a.tneaCutoff || 180) < 180).length,
+        count: scopedApplicants.filter((a) => {
+          const c = getApplicantCutoff(a);
+          return c >= 170 && c < 180;
+        }).length,
         color: "#6366f1",
         fillColor: "bg-indigo-500",
         description: "Counseling First Choice",
@@ -303,7 +317,7 @@ export default function AdminDashboardView({
       {
         label: "<170 Management",
         shortLabel: "< 170",
-        count: scopedApplicants.filter((a) => (a.tneaCutoff || 180) < 170).length,
+        count: scopedApplicants.filter((a) => getApplicantCutoff(a) < 170).length,
         color: "#f59e0b",
         fillColor: "bg-amber-500",
         description: "Direct Management Allocation",
@@ -708,7 +722,7 @@ export default function AdminDashboardView({
               </div>
             </div>
             <span className="text-[13px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full">
-              {applicants.length} Registered Applicants
+              {scopedApplicants.length} Registered Applicants
             </span>
           </div>
 
