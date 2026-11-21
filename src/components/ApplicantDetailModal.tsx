@@ -66,6 +66,7 @@ import { parseMarksheetDocument } from "@/lib/ai/marksheetOcrEngine";
 import { analyzeCallTranscript } from "@/lib/ai/callSentimentEngine";
 import {
   saveStudentToFirebase,
+  saveApplicationToFirebase,
   uploadStudentDocumentToFirebase,
   fetchStudentDocumentsFromFirebase,
   deleteStudentDocumentFromFirebase,
@@ -165,13 +166,14 @@ export function getEffectiveCutoff(
   fallbackCutoff?: number
 ): number | undefined {
   if (leadCutoff !== undefined && leadCutoff !== null && leadCutoff > 0) {
-    return leadCutoff;
+    return Math.min(200, Math.max(0, leadCutoff));
   }
   if (fallbackCutoff !== undefined && fallbackCutoff !== null && fallbackCutoff > 0) {
-    return fallbackCutoff;
+    return Math.min(200, Math.max(0, fallbackCutoff));
   }
   if (marks12th && marks12th > 0) {
-    return Number((marks12th * 2).toFixed(2));
+    const raw = Number((marks12th * 2).toFixed(2));
+    return Math.min(200, Math.max(0, raw));
   }
   return undefined;
 }
@@ -892,6 +894,23 @@ export default function ApplicantDetailModal({
       return;
     }
 
+    // Validate Academic Marks and Cutoff bounds
+    const m12 = formData.application?.marks12th;
+    if (m12 !== undefined && m12 !== null && (m12 > 100 || m12 < 0)) {
+      alert(`Invalid 12th HSC Marks: Percentage cannot exceed 100% (entered: ${m12}%). Please correct it before saving.`);
+      return;
+    }
+    const m10 = formData.application?.marks10th;
+    if (m10 !== undefined && m10 !== null && (m10 > 100 || m10 < 0)) {
+      alert(`Invalid 10th SSLC Marks: Percentage cannot exceed 100% (entered: ${m10}%). Please correct it before saving.`);
+      return;
+    }
+    const cut = formData.tneaCutoff;
+    if (cut !== undefined && cut !== null && (cut > 200 || cut < 0)) {
+      alert(`Invalid TNEA Cutoff: Score cannot exceed 200 (entered: ${cut}). Please correct it before saving.`);
+      return;
+    }
+
     const cleanPhone = formatPhoneWith91(formData.phone);
     const cleanFatherMobile = formData.fatherMobile ? formatPhoneWith91(formData.fatherMobile) : formData.fatherMobile;
     const cleanMotherMobile = formData.motherMobile ? formatPhoneWith91(formData.motherMobile) : formData.motherMobile;
@@ -1029,6 +1048,28 @@ export default function ApplicantDetailModal({
 
     try {
       await saveStudentToFirebase(updatedApplicant);
+      try {
+        const campusPrefix = updatedApplicant.campus === "COIMBATORE" ? "CTC" : "EC";
+        const appNo = `VSB${campusPrefix}/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+        await saveApplicationToFirebase({
+          id: updatedApplicant.id,
+          registeredName: updatedApplicant.name,
+          applicationNo: (updatedApplicant as any).applicationNo || appNo,
+          formName: `Application Form VSB ${updatedApplicant.campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
+          registeredEmail: updatedApplicant.email,
+          registeredMobile: updatedApplicant.phone,
+          formStatus: updatedApplicant.status === "ADMITTED" || updatedPaymentStatus === "Payment Approved" ? "Complete" : "Incomplete",
+          paymentStatus: updatedPaymentStatus === "Payment Approved" ? "Payment Approved" : "Payment Pending",
+          paymentMethod: updatedPaymentStatus === "Payment Approved" ? "Online UPI / NetBanking" : "-",
+          applicationOwner: updatedApplicant.campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh",
+          applicationStage: updatedApplicant.status === "ADMITTED" || updatedPaymentStatus === "Payment Approved" ? "Admission Offered" : "Inquiry Stage",
+          campus: updatedApplicant.campus || "KARUR",
+          createdAt: new Date().toISOString().split("T")[0],
+          updatedAt: new Date().toISOString().split("T")[0],
+        });
+      } catch (appErr) {
+        console.warn("Application sync notice:", appErr);
+      }
       try {
         await mobileSafeFetch("/api/applications", {
           method: "PUT",
@@ -2796,18 +2837,38 @@ export default function ApplicantDetailModal({
                           step="0.1"
                           max="100"
                           min="0"
-                          value={formData.application?.marks10th || 0}
-                          onChange={(e) =>
+                          value={formData.application?.marks10th !== undefined && formData.application?.marks10th !== null ? formData.application.marks10th : ""}
+                          onChange={(e) => {
+                            const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
                             setFormData({
                               ...formData,
                               application: {
                                 ...(formData.application || app),
-                                marks10th: parseFloat(e.target.value) || 0,
+                                marks10th: isNaN(val) ? 0 : val,
                               },
-                            })
-                          }
-                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            });
+                          }}
+                          onBlur={(e) => {
+                            const raw = e.target.value.trim();
+                            if (raw !== "") {
+                              const num = parseFloat(raw);
+                              if (!isNaN(num)) {
+                                e.target.value = String(num);
+                              }
+                            }
+                          }}
+                          className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2 font-mono font-bold focus:outline-none focus:ring-2 ${
+                            (formData.application?.marks10th ?? 0) > 100 || (formData.application?.marks10th ?? 0) < 0
+                              ? "border-rose-500 dark:border-rose-500 ring-2 ring-rose-400/50 text-rose-600 dark:text-rose-400 focus:ring-rose-500"
+                              : "border-slate-300 dark:border-white/10 text-slate-950 dark:text-white focus:ring-sky-500"
+                          }`}
+                          aria-invalid={(formData.application?.marks10th ?? 0) > 100 || (formData.application?.marks10th ?? 0) < 0}
                         />
+                        {((formData.application?.marks10th ?? 0) > 100 || (formData.application?.marks10th ?? 0) < 0) && (
+                          <p className="text-[11px] font-bold text-rose-500 dark:text-rose-400 mt-1 flex items-center gap-1">
+                            <span>⚠️ Percentage cannot exceed 100% (entered: {formData.application?.marks10th}%)</span>
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -2819,21 +2880,66 @@ export default function ApplicantDetailModal({
                           step="0.1"
                           max="100"
                           min="0"
-                          value={formData.application?.marks12th || 0}
+                          value={formData.application?.marks12th !== undefined && formData.application?.marks12th !== null ? formData.application.marks12th : ""}
                           onChange={(e) => {
-                            const new12th = parseFloat(e.target.value) || 0;
-                            const autoCutoff = Number((new12th * 2).toFixed(2));
+                            const raw = e.target.value;
+                            if (raw === "") {
+                              setFormData({
+                                ...formData,
+                                tneaCutoff: 0,
+                                application: {
+                                  ...(formData.application || app),
+                                  marks12th: 0,
+                                },
+                              });
+                              return;
+                            }
+                            const new12th = parseFloat(raw);
+                            const parsedNum = isNaN(new12th) ? 0 : new12th;
+                            // Derived cutoff strictly capped within stated maximum of 200
+                            const autoCutoff = Math.min(200, Math.max(0, Number((parsedNum * 2).toFixed(2))));
                             setFormData({
                               ...formData,
                               tneaCutoff: autoCutoff,
                               application: {
                                 ...(formData.application || app),
-                                marks12th: new12th,
+                                marks12th: parsedNum,
                               },
                             });
                           }}
-                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          onBlur={(e) => {
+                            const raw = e.target.value.trim();
+                            if (raw !== "") {
+                              const num = parseFloat(raw);
+                              if (!isNaN(num)) {
+                                // Normalizes leading zeroes on blur (e.g. "0101" -> "101")
+                                e.target.value = String(num);
+                                const autoCutoff = Math.min(200, Math.max(0, Number((num * 2).toFixed(2))));
+                                if (formData) {
+                                  setFormData({
+                                    ...formData,
+                                    tneaCutoff: autoCutoff,
+                                    application: {
+                                      ...(formData.application || app),
+                                      marks12th: num,
+                                    },
+                                  });
+                                }
+                              }
+                            }
+                          }}
+                          className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2 font-mono font-bold focus:outline-none focus:ring-2 ${
+                            (formData.application?.marks12th ?? 0) > 100 || (formData.application?.marks12th ?? 0) < 0
+                              ? "border-rose-500 dark:border-rose-500 ring-2 ring-rose-400/50 text-rose-600 dark:text-rose-400 focus:ring-rose-500"
+                              : "border-slate-300 dark:border-white/10 text-slate-950 dark:text-white focus:ring-sky-500"
+                          }`}
+                          aria-invalid={(formData.application?.marks12th ?? 0) > 100 || (formData.application?.marks12th ?? 0) < 0}
                         />
+                        {((formData.application?.marks12th ?? 0) > 100 || (formData.application?.marks12th ?? 0) < 0) && (
+                          <p className="text-[11px] font-bold text-rose-500 dark:text-rose-400 mt-1 flex items-center gap-1">
+                            <span>⚠️ Percentage cannot exceed 100% (entered: {formData.application?.marks12th}%)</span>
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -2841,9 +2947,16 @@ export default function ApplicantDetailModal({
                           <label className="block font-black text-slate-800 dark:text-slate-200">
                             TNEA Cutoff (Out of 200)
                           </label>
-                          {!applicant?.tneaCutoff && formData.application?.marks12th ? (
-                            <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400">
-                              (Derived from 12th Marks: {formData.application.marks12th}%)
+                          {formData.application?.marks12th ? (
+                            <span
+                              className={`text-[10px] font-bold ${
+                                (formData.application.marks12th > 100 || formData.application.marks12th < 0)
+                                  ? "text-rose-500 dark:text-rose-400"
+                                  : "text-sky-600 dark:text-sky-400"
+                              }`}
+                            >
+                              (Derived from 12th Marks: {formData.application.marks12th}%
+                              {formData.application.marks12th > 100 ? " • Exceeds 100%" : ""})
                             </span>
                           ) : null}
                         </div>
@@ -2857,8 +2970,27 @@ export default function ApplicantDetailModal({
                             const val = parseFloat(e.target.value);
                             setFormData({ ...formData, tneaCutoff: isNaN(val) ? 0 : val });
                           }}
-                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          onBlur={(e) => {
+                            const raw = e.target.value.trim();
+                            if (raw !== "") {
+                              const num = parseFloat(raw);
+                              if (!isNaN(num)) {
+                                e.target.value = String(num);
+                              }
+                            }
+                          }}
+                          className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2 font-mono font-bold focus:outline-none focus:ring-2 ${
+                            (formData.tneaCutoff ?? 0) > 200 || (formData.tneaCutoff ?? 0) < 0
+                              ? "border-rose-500 dark:border-rose-500 ring-2 ring-rose-400/50 text-rose-600 dark:text-rose-400 focus:ring-rose-500"
+                              : "border-slate-300 dark:border-white/10 text-slate-950 dark:text-white focus:ring-sky-500"
+                          }`}
+                          aria-invalid={(formData.tneaCutoff ?? 0) > 200 || (formData.tneaCutoff ?? 0) < 0}
                         />
+                        {((formData.tneaCutoff ?? 0) > 200 || (formData.tneaCutoff ?? 0) < 0) && (
+                          <p className="text-[11px] font-bold text-rose-500 dark:text-rose-400 mt-1 flex items-center gap-1">
+                            <span>⚠️ Cutoff cannot exceed maximum of 200 (entered: {formData.tneaCutoff})</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 

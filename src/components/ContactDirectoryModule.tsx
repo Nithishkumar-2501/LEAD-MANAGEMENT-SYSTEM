@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads, downloadSampleLeadsCSV } from "@/lib/csvParser";
-import { TAMIL_NADU_DISTRICTS, STATE_DISTRICTS } from "@/lib/mockData";
+import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase, saveApplicationToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted, normalizeAllFirebasePhones } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits, formatPhoneWith91 } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
-import ApplicantDetailModal, { getEffectiveCutoff } from "@/components/ApplicantDetailModal";
-import { formatRegistrationDate, getLeadRegistrationDate } from "@/lib/dateUtils";
+import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { getStudentLeadState } from "@/lib/studentLeadState";
 import {
@@ -147,30 +146,37 @@ export default function ContactDirectoryModule({
   onReloadLeads,
   onOpenNoraAi,
 }: ContactDirectoryModuleProps) {
-  const normalizeLeadContact = (c: Lead & { application?: Application | null }) => ({
-    ...c,
-    phone: c.phone && c.phone.trim() ? c.phone : "+91-6380270912",
-    source: c.source && c.source.trim() ? c.source : "Organic",
-  });
-
-  const [contacts, setContacts] = useState<(Lead & { application?: Application | null })[]>(() =>
-    (initialContacts || []).map(normalizeLeadContact)
-  );
+  const [contacts, setContacts] = useState(initialContacts);
   const [internalIsReloading, setInternalIsReloading] = useState(false);
   const isReloading = externalIsReloading ?? internalIsReloading;
   const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
 
   useEffect(() => {
-    const normalized = (initialContacts || []).map(normalizeLeadContact);
-    if (currentUserRole === "TEACHER") {
-      setContacts(
-        normalized.filter((c) =>
-          isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus)
-        )
-      );
-    } else {
-      setContacts(normalized);
-    }
+    const targetContacts =
+      currentUserRole === "TEACHER"
+        ? normalized.filter((c) =>
+            isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus)
+          )
+        : normalized;
+
+    setContacts((prev) => {
+      if (prev.length === targetContacts.length) {
+        let isIdentical = true;
+        for (let i = 0; i < prev.length; i++) {
+          if (
+            prev[i].id !== targetContacts[i].id ||
+            prev[i].status !== targetContacts[i].status ||
+            prev[i].updatedAt !== targetContacts[i].updatedAt ||
+            prev[i].name !== targetContacts[i].name
+          ) {
+            isIdentical = false;
+            break;
+          }
+        }
+        if (isIdentical) return prev;
+      }
+      return targetContacts;
+    });
   }, [initialContacts, currentUserRole, loggedInUsername, selectedCampus]);
 
   const handleReloadData = async () => {
@@ -183,9 +189,9 @@ export default function ContactDirectoryModule({
         if (res) {
           const data = await res.json();
           if (data?.leads && Array.isArray(data.leads)) {
-            const valid = (data.leads as (Lead & { application?: Application | null })[])
-              .filter((l) => !isLeadDeleted(l.id))
-              .map(normalizeLeadContact);
+            const valid = (data.leads as (Lead & { application?: Application | null })[]).filter(
+              (l) => !isLeadDeleted(l.id)
+            );
             const filtered = currentUserRole === "TEACHER"
               ? valid.filter((c) => isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus))
               : valid;
@@ -239,7 +245,7 @@ export default function ContactDirectoryModule({
   };
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchField, setSearchField] = useState<"Mobile" | "Email" | "Name" | "User Id" | "Lead Id" | "Campus" | "Cutoff" | "All Fields">("Mobile");
+  const [searchField, setSearchField] = useState<"Mobile" | "Email" | "Name" | "User Id" | "Lead Id" | "All Fields">("Mobile");
   const [isSearchFieldDropdownOpen, setIsSearchFieldDropdownOpen] = useState(false);
   const [starredSearchFields, setStarredSearchFields] = useState<Record<string, boolean>>({
     Email: true,
@@ -247,8 +253,6 @@ export default function ContactDirectoryModule({
     Name: false,
     "User Id": false,
     "Lead Id": false,
-    Campus: false,
-    Cutoff: false,
   });
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
@@ -286,7 +290,9 @@ export default function ContactDirectoryModule({
     if (col === "Address For communication") return c.address || "";
     if (col === "Community") return (c as any).community || "";
     if (col === "User Registration Date") {
-      return formatRegistrationDate(c, false, "Date Unavailable");
+      if (!c.createdAt) return "";
+      const d = new Date(c.createdAt);
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
     if (col === "Lead Stage") return c.status || "";
     return "";
@@ -313,14 +319,13 @@ export default function ContactDirectoryModule({
     const fullCand = getFullCandidateWithApp(contact);
     if (onSelectApplicant) {
       onSelectApplicant(fullCand);
-    } else {
-      setSelectedCandidateForModal(fullCand);
     }
+    setSelectedCandidateForModal(fullCand);
   };
 
   // Export Leads to CSV (Meritto Architecture: Zero Data Loss)
   const handleExportCSV = () => {
-    const listToExport = selectedRows.length > 0 
+    const listToExport = selectedRows.length > 0
       ? sortedAndFilteredContacts.filter((c) => selectedRows.includes(c.id))
       : sortedAndFilteredContacts;
 
@@ -360,7 +365,7 @@ export default function ContactDirectoryModule({
       `"${(c.assignedTo || "").replace(/"/g, '""')}"`,
       `"${(c.source || "").replace(/"/g, '""')}"`,
       `"${c.status || ""}"`,
-      `"${formatRegistrationDate(c, false, "Date Unavailable")}"`
+      `"${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ""}"`
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -469,9 +474,6 @@ export default function ContactDirectoryModule({
   const [leadOwnerFilter, setLeadOwnerFilter] = useState("Select Here");
   const [campaignSourceFilter, setCampaignSourceFilter] = useState("Select Here");
   const [trafficChannelFilter, setTrafficChannelFilter] = useState("Select Here");
-  const [showMoreFilters, setShowMoreFilters] = useState(false);
-  const [moreCourseFilter, setMoreCourseFilter] = useState("Select Here");
-  const [moreCampusFilter, setMoreCampusFilter] = useState("Select Here");
   const [selectedViewName, setSelectedViewName] = useState("Default View");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -815,7 +817,7 @@ export default function ContactDirectoryModule({
     }
     const normCurrent = currentCourse.replace(/\./g, "").trim().toLowerCase();
     const matched = editCourseOptions.find(
-      (c: string) => c.replace(/\./g, "").trim().toLowerCase() === normCurrent
+      (c) => c.replace(/\./g, "").trim().toLowerCase() === normCurrent
     );
     if (matched) return matched;
     return currentCourse;
@@ -1121,9 +1123,11 @@ export default function ContactDirectoryModule({
       return <span className="font-mono text-[14px] text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">{showEmail ? contact.email : "•••••@•••••.•••"}</span>;
     }
     if (col === "Registered Mobile") {
-      const effectivePhone = contact.phone && contact.phone.trim() ? contact.phone : "+91-6380270912";
+      const cleanPhone = (contact.phone || "").trim();
+      const rawDigits = cleanPhone.replace(/\D/g, "");
+      const tenDigits = rawDigits.slice(-10);
       const formattedDisplayPhone = showPhone
-        ? formatDisplayPhone(effectivePhone)
+        ? (tenDigits.length === 10 ? `+91 ${tenDigits.slice(0, 5)} ${tenDigits.slice(5)}` : cleanPhone.replace(/-/g, " "))
         : "+91 ••••• •••••";
 
       return (
@@ -1131,11 +1135,11 @@ export default function ContactDirectoryModule({
           {/* Communication Action Buttons Group Capsule matching Image 1 */}
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs shrink-0">
             <a
-              href={getCleanTelUri(effectivePhone)}
+              href={getCleanTelUri(contact.phone)}
               onClick={(e) => {
                 e.stopPropagation();
                 onActionTrigger("CALL", contact.name);
-                redirectToDialPad(effectivePhone);
+                redirectToDialPad(contact.phone);
               }}
               className="p-1 rounded text-slate-500 hover:text-blue-600 transition-colors"
               title={`Call ${contact.name} via Phone Dial Pad`}
@@ -1147,7 +1151,7 @@ export default function ContactDirectoryModule({
               onClick={(e) => {
                 e.stopPropagation();
                 onActionTrigger("WHATSAPP", contact.name);
-                redirectToWhatsApp(effectivePhone, getDefaultAdmissionWhatsAppText(contact));
+                redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
               }}
               className="p-1 rounded text-slate-500 hover:text-emerald-600 transition-colors"
               title={`Direct WhatsApp Chat with ${contact.name}`}
@@ -1159,7 +1163,7 @@ export default function ContactDirectoryModule({
               onClick={(e) => {
                 e.stopPropagation();
                 onActionTrigger("SMS", contact.name);
-                redirectToSms(effectivePhone, getDefaultAdmissionSmsText(contact));
+                redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
               }}
               className="p-1 rounded text-slate-500 hover:text-purple-600 transition-colors"
               title={`Direct Native SMS with ${contact.name}`}
@@ -1170,11 +1174,11 @@ export default function ContactDirectoryModule({
 
           {/* Non-Breaking Phone Number Link */}
           <a
-            href={getCleanTelUri(effectivePhone)}
+            href={getCleanTelUri(contact.phone)}
             onClick={(e) => {
               e.stopPropagation();
               onActionTrigger("CALL", contact.name);
-              redirectToDialPad(effectivePhone);
+              redirectToDialPad(contact.phone);
             }}
             className="text-[14.5px] font-mono font-bold tracking-tight hover:underline hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap select-all text-slate-900 dark:text-slate-100"
             title="Click to dial on phone"
@@ -1196,9 +1200,8 @@ export default function ContactDirectoryModule({
       return (
         <div className="flex items-center gap-2.5 whitespace-nowrap">
           <span
-            className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-              isAssigned ? "bg-emerald-500 shadow-xs shadow-emerald-400" : "bg-amber-400"
-            }`}
+            className={`w-2.5 h-2.5 rounded-full shrink-0 ${isAssigned ? "bg-emerald-500 shadow-xs shadow-emerald-400" : "bg-amber-400"
+              }`}
           />
           <div className="text-left leading-tight">
             <p className="font-semibold text-[14.5px] text-slate-900 dark:text-slate-200">{displayName}</p>
@@ -1213,11 +1216,10 @@ export default function ContactDirectoryModule({
       const isHigh = cutoff >= 175;
       return (
         <span
-          className={`px-3 py-1 rounded-full font-mono text-[13.5px] font-bold border inline-block ${
-            isHigh
-              ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30"
-              : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10"
-          }`}
+          className={`px-3 py-1 rounded-full font-mono text-[13.5px] font-bold border inline-block ${isHigh
+            ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30"
+            : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10"
+            }`}
         >
           {cutoff} / 200
         </span>
@@ -1243,20 +1245,14 @@ export default function ContactDirectoryModule({
       return (
         <span className="px-3 py-1 rounded-full text-[13px] font-semibold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/20 whitespace-nowrap inline-flex items-center gap-1.5">
           <span>📢</span>
-          <span>{contact.source || "Organic"}</span>
+          <span>{contact.source || "Direct Entry"}</span>
         </span>
       );
     }
     if (col === "User Registration Date") {
-      const regDate = getLeadRegistrationDate(contact);
-      if (!regDate) {
-        return (
-          <span className="text-slate-400 dark:text-slate-500 font-medium text-[13px] italic whitespace-nowrap">
-            Date Unavailable
-          </span>
-        );
-      }
-      const formattedDate = formatRegistrationDate(regDate, true);
+      if (!contact.createdAt) return <span></span>;
+      const d = new Date(contact.createdAt);
+      const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
       return <span className="text-slate-800 dark:text-slate-200 font-mono text-[13px] font-medium whitespace-nowrap">{formattedDate}</span>;
     }
     if (col === "Lead Stage") {
@@ -1305,9 +1301,8 @@ export default function ContactDirectoryModule({
               const nextVal = e.target.value as LeadStatus;
               handleLeadStatusChange(contact, nextVal);
             }}
-            className={`appearance-none cursor-pointer pl-3 pr-8 py-1.5 rounded-full text-[14px] font-bold border transition-all duration-200 outline-none focus:ring-2 focus:ring-sky-500/40 shadow-sm min-h-[34px] whitespace-nowrap min-w-[160px] ${themeClasses} ${
-              isBusy ? "opacity-60 cursor-not-allowed" : ""
-            }`}
+            className={`appearance-none cursor-pointer pl-3 pr-8 py-1.5 rounded-full text-[14px] font-bold border transition-all duration-200 outline-none focus:ring-2 focus:ring-sky-500/40 shadow-sm min-h-[34px] whitespace-nowrap min-w-[160px] ${themeClasses} ${isBusy ? "opacity-60 cursor-not-allowed" : ""
+              }`}
             title={`Lead Stage: ${currentVal}. Click to update stage.`}
           >
             <option value="INQUIRY" className="bg-slate-900 text-sky-300 font-bold">
@@ -1351,24 +1346,13 @@ export default function ContactDirectoryModule({
     else if (rule.field === "Registered Email") fieldValue = c.email;
     else if (rule.field === "Registered Mobile") fieldValue = c.phone;
     else if (rule.field === "Lead Stage") {
-      const s = (c.status || "NEW").toUpperCase();
       const stateInfo = getStudentLeadState(c);
-      let stageName = "New Inquiry";
-      if (s === "ADMITTED" || s === "HOT") stageName = "Admitted";
-      else if (s === "REJECTED" || s === "COLD" || s === "NOT_INTERESTED") stageName = "Rejected Not Interested";
-      else if (s === "IN_REVIEW") stageName = "Cutoff Review";
-      else if (s === "CONTACTED") stageName = "Contacted";
-      else if (s === "NEW" || s === "INQUIRY") stageName = "New Inquiry";
-
-      fieldValue = `${stageName} ${s} ${stateInfo.state}`;
+      fieldValue = `${c.status || ""} ${stateInfo.state} ${stateInfo.detailedLabel}`;
     }
     else if (rule.field === "Campus") fieldValue = c.campus;
     else if (rule.field === "Course") fieldValue = c.courseInterest || "";
     else if (rule.field === "Gender") fieldValue = (c as any).gender || "Male";
-    else if (rule.field === "TNEA Cutoff") {
-      const cutoffVal = getEffectiveCutoff(c.tneaCutoff, c.application?.marks12th) ?? (c as any).tneaCutoff ?? 180;
-      fieldValue = String(cutoffVal);
-    }
+    else if (rule.field === "TNEA Cutoff") fieldValue = String((c as any).tneaCutoff || 180);
     else if (rule.field === "Community") fieldValue = (c as any).community || "BC";
     else fieldValue = "";
 
@@ -1384,9 +1368,10 @@ export default function ContactDirectoryModule({
   };
 
   // Filter Contacts
-  const filteredContacts = contacts.filter((c) => {
-    const stateInfo = getStudentLeadState(c);
-    const matchesSearch = (() => {
+  const filteredContacts = useMemo(() => {
+    return contacts.filter((c) => {
+      const stateInfo = getStudentLeadState(c);
+      const matchesSearch = (() => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase().trim();
       const numQuery = q.replace(/^(lead\s*#?|#)/i, "").trim();
@@ -1394,8 +1379,6 @@ export default function ContactDirectoryModule({
       const name = (c.name || "").toLowerCase();
       const email = (c.email || "").toLowerCase();
       const phone = (c.phone || "").toLowerCase();
-      const cleanPhone = phone.replace(/\D/g, "");
-      const cleanQ = q.replace(/\D/g, "");
       const course = (c.courseInterest || "").toLowerCase();
       const school = (c.school || "").toLowerCase();
       const district = (c.district || "").toLowerCase();
@@ -1403,50 +1386,6 @@ export default function ContactDirectoryModule({
       const appNo = (c.counsellingAppNo || "").toLowerCase();
       const leadId = String(c.id || "").toLowerCase();
 
-      const campusStr = (c.campus || "").toLowerCase();
-      const cutoffVal = (c as any).tneaCutoff ?? (c as any).cutoff;
-      const cutoffStr = cutoffVal !== undefined && cutoffVal !== null ? String(cutoffVal) : "";
-      const cleanCutoffQuery = q.replace(/^cutoff\s*[:=]?\s*/i, "").trim();
-      let matchCut =
-        (cutoffStr.length > 0 && cutoffStr.includes(q)) ||
-        (cleanCutoffQuery.length > 0 && cutoffStr.length > 0 && cutoffStr.includes(cleanCutoffQuery));
-      const opMatch = q.match(/^(?:cutoff\s*[:=]?\s*)?([><]=?)\s*(\d+(?:\.\d+)?)$/i);
-      if (opMatch && typeof cutoffVal === "number") {
-        const op = opMatch[1];
-        const targetVal = parseFloat(opMatch[2]);
-        if (!isNaN(targetVal)) {
-          if (op === ">") matchCut = cutoffVal > targetVal;
-          else if (op === ">=") matchCut = cutoffVal >= targetVal;
-          else if (op === "<") matchCut = cutoffVal < targetVal;
-          else if (op === "<=") matchCut = cutoffVal <= targetVal;
-        }
-      }
-
-      // Field-specific search matching the selected dropdown criteria
-      if (searchField === "Email") {
-        return email.includes(q);
-      }
-      if (searchField === "Mobile") {
-        return phone.includes(q) || (cleanQ.length > 0 && cleanPhone.includes(cleanQ));
-      }
-      if (searchField === "Name") {
-        return name.includes(q);
-      }
-      if (searchField === "User Id" || searchField === "Lead Id") {
-        return (
-          (numQuery && leadId === numQuery) ||
-          leadId.includes(numQuery || q) ||
-          appNo.includes(q)
-        );
-      }
-      if (searchField === "Campus") {
-        return campusStr.includes(q) || (q === "cbe" && campusStr.includes("coimbatore"));
-      }
-      if (searchField === "Cutoff") {
-        return matchCut;
-      }
-
-      // Default: "All Fields" search (supports both Karur & Coimbatore campuses and cutoffs)
       return (
         (numQuery && leadId === numQuery) ||
         leadId.includes(numQuery || q) ||
@@ -1454,14 +1393,10 @@ export default function ContactDirectoryModule({
         name.includes(q) ||
         email.includes(q) ||
         phone.includes(q) ||
-        (cleanQ.length > 0 && cleanPhone.includes(cleanQ)) ||
         course.includes(q) ||
         school.includes(q) ||
         district.includes(q) ||
         address.includes(q) ||
-        campusStr.includes(q) ||
-        (q === "cbe" && campusStr.includes("coimbatore")) ||
-        matchCut ||
         (stateInfo.detailedLabel || "").toLowerCase().includes(q) ||
         (stateInfo.state || "").toLowerCase() === q
       );
@@ -1545,7 +1480,7 @@ export default function ContactDirectoryModule({
       ];
       const selectedMonth = monthLowerNames.find((m) => regDateFilter.toLowerCase().includes(m));
 
-      const leadDateObj = getLeadRegistrationDate(c) || new Date(2026, 7, 12);
+      const leadDateObj = c.createdAt ? new Date(c.createdAt) : new Date(2026, 7, 12);
       const leadYear = leadDateObj.getFullYear().toString();
       const leadMonth = monthLowerNames[leadDateObj.getMonth()];
 
@@ -1564,7 +1499,6 @@ export default function ContactDirectoryModule({
     const matchesSelectedView = () => {
       if (!selectedViewName || selectedViewName === "Default View" || selectedViewName === "All Leads" || selectedViewName === "All Enquiries") return true;
       if (selectedViewName === "Fresh & Untouched" || selectedViewName === "Untouched Leads") {
-        if (c.status === "CONTACTED" || c.status === "ADMITTED" || c.status === "REJECTED") return false;
         return !c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY";
       }
       if (selectedViewName === "Today's Follow-ups" || selectedViewName === "Follow-ups Due") {
@@ -1630,10 +1564,7 @@ export default function ContactDirectoryModule({
         return stateInfo.state === "COLD";
       }
       if (valLower === "untouched") {
-        if (statusUpper === "CONTACTED" || statusUpper === "ADMITTED" || statusUpper === "REJECTED") {
-          return false;
-        }
-        return statusUpper === "NEW" || statusUpper === "UNTOUCHED";
+        return statusUpper === "NEW" || statusUpper === "UNTOUCHED" || !c.assignedTo;
       }
       if (valLower === "new inquiry") {
         return statusUpper === "NEW" || statusUpper === "INQUIRY" || statusUpper === "IN_REVIEW";
@@ -1661,47 +1592,14 @@ export default function ContactDirectoryModule({
 
     const matchesCampaignSource = () => {
       if (!campaignSourceFilter || campaignSourceFilter === "Select Here") return true;
-      const effectiveSource = (c.source && c.source.trim() ? c.source : "Organic").toLowerCase();
-      const filterLower = campaignSourceFilter.toLowerCase().trim();
-      if (!effectiveSource || !filterLower) return false;
-      return effectiveSource.includes(filterLower) || filterLower.includes(effectiveSource);
+      const srcLower = (c.source || "").toLowerCase();
+      const filterLower = campaignSourceFilter.toLowerCase();
+      return srcLower.includes(filterLower) || filterLower.includes(srcLower);
     };
 
     const matchesTrafficChannel = () => {
       if (!trafficChannelFilter || trafficChannelFilter === "Select Here") return true;
-      const chanLower = trafficChannelFilter.toLowerCase();
-      const srcLower = (c.source || "").toLowerCase();
-      if (chanLower.includes("direct")) {
-        return (
-          srcLower.includes("walk") ||
-          srcLower.includes("direct") ||
-          srcLower.includes("intake") ||
-          srcLower.includes("counselling") ||
-          srcLower.includes("offline")
-        );
-      }
-      if (chanLower.includes("social")) {
-        return (
-          srcLower.includes("social") ||
-          srcLower.includes("facebook") ||
-          srcLower.includes("instagram") ||
-          srcLower.includes("twitter") ||
-          srcLower.includes("whatsapp") ||
-          srcLower.includes("youtube") ||
-          srcLower.includes("ads")
-        );
-      }
-      return srcLower.includes(chanLower);
-    };
-
-    const matchesMoreCourse = () => {
-      if (!moreCourseFilter || moreCourseFilter === "Select Here" || moreCourseFilter === "ALL") return true;
-      return (c.courseInterest || "").toLowerCase().includes(moreCourseFilter.toLowerCase());
-    };
-
-    const matchesMoreCampus = () => {
-      if (!moreCampusFilter || moreCampusFilter === "Select Here" || moreCampusFilter === "ALL") return true;
-      return (c.campus || "").toUpperCase() === moreCampusFilter.toUpperCase();
+      return true;
     };
 
     return (
@@ -1719,27 +1617,52 @@ export default function ContactDirectoryModule({
       matchesLeadStage() &&
       matchesLeadOwner() &&
       matchesCampaignSource() &&
-      matchesTrafficChannel() &&
-      matchesMoreCourse() &&
-      matchesMoreCampus()
+      matchesTrafficChannel()
     );
   });
+  }, [
+    contacts,
+    searchQuery,
+    searchField,
+    selectedCampus,
+    selectedDistrict,
+    selectedStatus,
+    counsellingFilter,
+    currentUserRole,
+    loggedInUsername,
+    filterRules,
+    filterLogicMode,
+    columnFilters,
+    regDateFilter,
+    selectedViewName,
+    selectedAcquisitionChannel,
+    leadStageFilter,
+    leadOwnerFilter,
+    campaignSourceFilter,
+    trafficChannelFilter,
+    moreCourseFilter,
+    moreCampusFilter,
+  ]);
 
-  const sortedAndFilteredContacts = [...filteredContacts].sort((a, b) => {
-    if (!sortColumn) return 0;
-    const valA = getFieldValueForCol(a, sortColumn).toLowerCase();
-    const valB = getFieldValueForCol(b, sortColumn).toLowerCase();
-    if (valA < valB) return sortDirection === "asc" ? -1 : 1;
-    if (valA > valB) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
+  const sortedAndFilteredContacts = useMemo(() => {
+    if (!sortColumn) return filteredContacts;
+    return [...filteredContacts].sort((a, b) => {
+      const valA = getFieldValueForCol(a, sortColumn).toLowerCase();
+      const valB = getFieldValueForCol(b, sortColumn).toLowerCase();
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredContacts, sortColumn, sortDirection]);
 
   // Table Pagination Calculations
   const totalPages = Math.max(1, Math.ceil(sortedAndFilteredContacts.length / rowsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const dirStartIndex = (safeCurrentPage - 1) * rowsPerPage;
   const dirEndIndex = Math.min(sortedAndFilteredContacts.length, dirStartIndex + rowsPerPage);
-  const paginatedContacts = sortedAndFilteredContacts.slice(dirStartIndex, dirEndIndex);
+  const paginatedContacts = useMemo(() => {
+    return sortedAndFilteredContacts.slice(dirStartIndex, dirEndIndex);
+  }, [sortedAndFilteredContacts, dirStartIndex, dirEndIndex]);
 
   // Tamil Nadu Districts list (All 38 Districts)
   const districts = ["ALL", ...TAMIL_NADU_DISTRICTS];
@@ -2090,7 +2013,7 @@ export default function ContactDirectoryModule({
 
   // Real-time Lead Funnel KPI Calculations (Meritto Education CRM Architecture)
   const totalLeadsCount = contacts.length;
-  const freshLeadsCount = contacts.filter((c) => c.status !== "CONTACTED" && c.status !== "ADMITTED" && c.status !== "REJECTED" && (!c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY")).length;
+  const freshLeadsCount = contacts.filter((c) => !c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY").length;
   const followUpsDueCount = contacts.filter((c) => c.status === "CONTACTED" || c.status === "IN_REVIEW").length;
   const hotLeadsCount = contacts.filter((c) => getStudentLeadState(c).state === "HOT").length;
   const verifiedLeadsCount = contacts.filter((c) => c.phone && c.phone.length >= 10).length;
@@ -2195,9 +2118,8 @@ export default function ContactDirectoryModule({
             title="Reload latest leads from database"
           >
             <RotateCcw
-              className={`w-4 h-4 ${
-                isReloading ? "animate-spin text-sky-500" : "transition-transform hover:-rotate-45"
-              }`}
+              className={`w-4 h-4 ${isReloading ? "animate-spin text-sky-500" : "transition-transform hover:-rotate-45"
+                }`}
             />
             <span>{isReloading ? "Reloading..." : "Sync"}</span>
           </button>
@@ -2216,9 +2138,8 @@ export default function ContactDirectoryModule({
           {/* Sync Status Badge */}
           <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10">
             <span
-              className={`w-2 h-2 rounded-full ${
-                isReloading ? "bg-amber-400 animate-ping" : "bg-emerald-500"
-              }`}
+              className={`w-2 h-2 rounded-full ${isReloading ? "bg-amber-400 animate-ping" : "bg-emerald-500"
+                }`}
             />
             <span>{isReloading ? "Syncing Firebase..." : `Live sync: ${lastSyncTime}`}</span>
           </div>
@@ -2254,21 +2175,19 @@ export default function ContactDirectoryModule({
           <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-300 dark:border-white/10">
             <button
               onClick={() => setDirectoryViewMode("TABLE")}
-              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
-                directoryViewMode === "TABLE"
-                  ? "bg-blue-600 text-white shadow"
-                  : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
-              }`}
+              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${directoryViewMode === "TABLE"
+                ? "bg-blue-600 text-white shadow"
+                : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
+                }`}
             >
               📋 Lead Table
             </button>
             <button
               onClick={() => setDirectoryViewMode("GRID")}
-              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
-                directoryViewMode === "GRID"
-                  ? "bg-blue-600 text-white shadow"
-                  : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
-              }`}
+              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${directoryViewMode === "GRID"
+                ? "bg-blue-600 text-white shadow"
+                : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
+                }`}
             >
               🎴 Cards View
             </button>
@@ -2570,41 +2489,37 @@ export default function ContactDirectoryModule({
             </span>
             <button
               onClick={() => setCounsellingFilter("ALL")}
-              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 cursor-pointer ${
-                counsellingFilter === "ALL"
-                  ? "neu-pill-active"
-                  : ""
-              }`}
+              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 cursor-pointer ${counsellingFilter === "ALL"
+                ? "neu-pill-active"
+                : ""
+                }`}
             >
               All Intake
             </button>
             <button
               onClick={() => setCounsellingFilter("COUNSELLING_ONLY")}
-              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                counsellingFilter === "COUNSELLING_ONLY"
-                  ? "neu-pill-active"
-                  : ""
-              }`}
+              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${counsellingFilter === "COUNSELLING_ONLY"
+                ? "neu-pill-active"
+                : ""
+                }`}
             >
               <span>✅ Applied TNEA</span>
             </button>
             <button
               onClick={() => setCounsellingFilter("GOVT_QUOTA")}
-              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                counsellingFilter === "GOVT_QUOTA"
-                  ? "neu-pill-active"
-                  : ""
-              }`}
+              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${counsellingFilter === "GOVT_QUOTA"
+                ? "neu-pill-active"
+                : ""
+                }`}
             >
               <span>🏛️ 7.5% Govt Quota</span>
             </button>
             <button
               onClick={() => setCounsellingFilter("MANAGEMENT_ONLY")}
-              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                counsellingFilter === "MANAGEMENT_ONLY"
-                  ? "neu-pill-active"
-                  : ""
-              }`}
+              className={`neu-pill px-3.5 py-1 text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${counsellingFilter === "MANAGEMENT_ONLY"
+                ? "neu-pill-active"
+                : ""
+                }`}
             >
               <span>💼 Management Quota</span>
             </button>
@@ -2612,21 +2527,20 @@ export default function ContactDirectoryModule({
         </div>
 
         {/* One by One Icon Status Filter Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-2.5 pt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3 pt-1">
           <button
             onClick={() => setSelectedStatus("ALL")}
-            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
-              selectedStatus === "ALL"
-                ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
-                : "neu-card-item"
-            }`}
+            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${selectedStatus === "ALL"
+              ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
+              : "neu-card-item"
+              }`}
           >
-            <span className="text-lg sm:text-xl shrink-0">🌟</span>
+            <span className="text-xl sm:text-2xl shrink-0">🌟</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className="block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap">
+              <span className="block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words">
                 {currentUserRole === "TEACHER" ? "Assigned Leads" : "All Leads"}
               </span>
-              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "ALL" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "ALL" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {currentUserRole === "TEACHER"
                   ? `${contacts.length.toLocaleString()} Assigned`
                   : `${contacts.length.toLocaleString()} / ${MAX_FREE_LEAD_LIMIT.toLocaleString()} (Live DB)`}
@@ -2636,18 +2550,17 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("HOT")}
-            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-2.5 cursor-pointer min-w-0 ${
-              selectedStatus === "HOT"
-                ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
-                : "neu-card-item"
-            }`}
+            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${selectedStatus === "HOT"
+              ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
+              : "neu-card-item"
+              }`}
           >
-            <span className="text-lg sm:text-xl shrink-0">🔥</span>
+            <span className="text-xl sm:text-2xl shrink-0">🔥</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className={`block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap ${selectedStatus === "HOT" ? "text-white" : "text-rose-600 dark:text-rose-400"}`}>
+              <span className={`block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words ${selectedStatus === "HOT" ? "text-white" : "text-rose-600 dark:text-rose-400"}`}>
                 HOT (Admitted)
               </span>
-              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "HOT" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "HOT" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "HOT").length} Admitted
               </span>
             </div>
@@ -2655,18 +2568,17 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("WARM")}
-            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
-              selectedStatus === "WARM"
-                ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
-                : "neu-card-item"
-            }`}
+            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${selectedStatus === "WARM"
+              ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
+              : "neu-card-item"
+              }`}
           >
-            <span className="text-lg sm:text-xl shrink-0">⚡</span>
+            <span className="text-xl sm:text-2xl shrink-0">⚡</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className={`block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap ${selectedStatus === "WARM" ? "text-white" : "text-amber-600 dark:text-amber-400"}`}>
+              <span className={`block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words ${selectedStatus === "WARM" ? "text-white" : "text-amber-600 dark:text-amber-400"}`}>
                 WARM (Ready)
               </span>
-              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "WARM" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "WARM" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "WARM").length} Ready
               </span>
             </div>
@@ -2674,18 +2586,17 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("COLD")}
-            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
-              selectedStatus === "COLD"
-                ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
-                : "neu-card-item"
-            }`}
+            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${selectedStatus === "COLD"
+              ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
+              : "neu-card-item"
+              }`}
           >
-            <span className="text-lg sm:text-xl shrink-0">❄️</span>
+            <span className="text-xl sm:text-2xl shrink-0">❄️</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className={`block text-xs sm:text-sm xl:text-[13px] font-bold break-normal leading-snug ${selectedStatus === "COLD" ? "text-white" : "text-sky-600 dark:text-sky-400"}`}>
+              <span className={`block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words ${selectedStatus === "COLD" ? "text-white" : "text-sky-600 dark:text-sky-400"}`}>
                 COLD (Not Interested)
               </span>
-              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "COLD" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "COLD" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "COLD").length} Leads
               </span>
             </div>
@@ -2693,16 +2604,15 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("CONTACTED")}
-            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
-              selectedStatus === "CONTACTED"
-                ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
-                : "neu-card-item"
-            }`}
+            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${selectedStatus === "CONTACTED"
+              ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
+              : "neu-card-item"
+              }`}
           >
-            <span className="text-lg sm:text-xl shrink-0">📞</span>
+            <span className="text-xl sm:text-2xl shrink-0">📞</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className="block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap">Contacted</span>
-              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "CONTACTED" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className="block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words">Contacted</span>
+              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "CONTACTED" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => c.status === "CONTACTED").length} Leads
               </span>
             </div>
@@ -2710,16 +2620,15 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("IN_REVIEW")}
-            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
-              selectedStatus === "IN_REVIEW"
-                ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
-                : "neu-card-item"
-            }`}
+            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${selectedStatus === "IN_REVIEW"
+              ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
+              : "neu-card-item"
+              }`}
           >
-            <span className="text-lg sm:text-xl shrink-0">📊</span>
+            <span className="text-xl sm:text-2xl shrink-0">📊</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className="block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap">Cutoff Review</span>
-              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "IN_REVIEW" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className="block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words">Cutoff Review</span>
+              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "IN_REVIEW" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => c.status === "IN_REVIEW").length} Leads
               </span>
             </div>
@@ -2827,76 +2736,17 @@ export default function ContactDirectoryModule({
             </select>
           </div>
 
-          {/* +2 More / Additional Filters Toggle Button */}
-          <button
-            type="button"
-            onClick={() => {
-              const nextState = !showMoreFilters;
-              setShowMoreFilters(nextState);
-              if (onTriggerToast) {
-                onTriggerToast(
-                  nextState
-                    ? "✨ Revealed additional filters: Preferred Course & Target Campus"
-                    : "Hidden additional filters"
-                );
-              }
-            }}
-            className={`px-3.5 py-2 rounded-full border text-[13.5px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 min-h-[40px] shadow-sm ${
-              showMoreFilters
-                ? "bg-sky-600 text-white border-sky-500 hover:bg-sky-500"
-                : "bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-white/15 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-            }`}
-            aria-expanded={showMoreFilters}
-            title={showMoreFilters ? "Hide additional filters" : "Click to reveal additional filters (Preferred Course & Target Campus)"}
-          >
-            <span>{showMoreFilters ? "− Less" : "+2 more"}</span>
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showMoreFilters ? "rotate-180" : ""}`} />
+          <button className="px-3.5 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-slate-700 dark:text-slate-300 font-semibold text-[13.5px] hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors">
+            +2 more
           </button>
-
-          {/* Additional Filter 1: Preferred Course */}
-          {showMoreFilters && (
-            <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-200">
-              <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">Preferred Course:</span>
-              <select
-                value={moreCourseFilter}
-                onChange={(e) => setMoreCourseFilter(e.target.value)}
-                className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
-              >
-                <option value="Select Here">Select Course ∨</option>
-                <option value="ALL">All Courses</option>
-                {VSB_DEPARTMENTS_COURSES.map((course) => (
-                  <option key={course} value={course}>
-                    {course}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Additional Filter 2: Target Campus */}
-          {showMoreFilters && (
-            <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-200">
-              <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-300 hidden xl:inline">Target Campus:</span>
-              <select
-                value={moreCampusFilter}
-                onChange={(e) => setMoreCampusFilter(e.target.value)}
-                className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-full px-4 py-2 text-[14px] text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm min-h-[40px]"
-              >
-                <option value="Select Here">Select Campus ∨</option>
-                <option value="ALL">All Campuses</option>
-                <option value="KARUR">Karur Campus</option>
-                <option value="COIMBATORE">Coimbatore Campus</option>
-              </select>
-            </div>
-          )}
         </div>
 
         {/* Right: Quick Search Dropdown & Field Search Input (Matching Meritto Screenshot) */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto sm:ml-auto">
+        <div className="flex items-center gap-2.5 ml-auto shrink-0">
           {/* Combined Field Selector + Search Input Bar */}
-          <div className="relative flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-sky-500 transition-all min-h-[40px] w-full sm:w-auto flex-1 sm:flex-initial">
+          <div className="relative flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-sky-500 transition-all min-h-[40px]">
             {/* Field Dropdown Selector Button */}
-            <div className="relative shrink-0">
+            <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsSearchFieldDropdownOpen(!isSearchFieldDropdownOpen)}
@@ -2909,7 +2759,7 @@ export default function ContactDirectoryModule({
               {/* Popover Dropdown for Field Selection (Matching Screenshot) */}
               {isSearchFieldDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl z-50 py-1.5 text-[14px] font-sans text-slate-800 dark:text-white animate-in fade-in zoom-in-95">
-                  {(["Email", "Mobile", "Name", "User Id", "Lead Id", "Campus", "Cutoff", "All Fields"] as const).map((field) => (
+                  {(["Email", "Mobile", "Name", "User Id", "Lead Id"] as const).map((field) => (
                     <div
                       key={field}
                       onClick={() => {
@@ -2927,7 +2777,7 @@ export default function ContactDirectoryModule({
             </div>
 
             {/* Input Box */}
-            <div className="relative flex items-center flex-1 min-w-[120px] sm:w-52 lg:w-64">
+            <div className="relative flex items-center w-52 sm:w-64">
               <input
                 type="text"
                 value={searchQuery}
@@ -2950,33 +2800,31 @@ export default function ContactDirectoryModule({
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 ml-auto sm:ml-0 shrink-0">
-            {/* Grid Layout Toggle Icon */}
-            <button
-              onClick={() => setIsCustomizeColumnDrawerOpen(true)}
-              className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-sm min-h-[40px] flex items-center justify-center shrink-0"
-              title="Customize Grid Columns"
-            >
-              <div className="w-4 h-4 grid grid-cols-2 gap-0.5 items-center justify-center">
-                <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
-                <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
-                <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
-                <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
-              </div>
-            </button>
+          {/* Grid Layout Toggle Icon */}
+          <button
+            onClick={() => setIsCustomizeColumnDrawerOpen(true)}
+            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-sm min-h-[40px] flex items-center justify-center"
+            title="Customize Grid Columns"
+          >
+            <div className="w-4 h-4 grid grid-cols-2 gap-0.5 items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+            </div>
+          </button>
 
-            {/* Advanced Filter Funnel Button with Active Count Badge */}
-            <button
-              onClick={() => setIsFilterDrawerOpen(true)}
-              className="px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold flex items-center gap-2 transition-colors shadow-sm min-h-[40px] shrink-0"
-            >
-              <Filter className="w-4 h-4 text-blue-600" />
-              <span className="text-[14px]">Advanced Filter</span>
-              <span className="bg-blue-600 text-white text-[12px] font-extrabold px-2 py-0.5 rounded-full">
-                {filterRules.length}
-              </span>
-            </button>
-          </div>
+          {/* Advanced Filter Funnel Button with Active Count Badge */}
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold flex items-center gap-2 transition-colors shadow-sm min-h-[40px]"
+          >
+            <Filter className="w-4 h-4 text-blue-600" />
+            <span className="text-[14px]">Advanced Filter</span>
+            <span className="bg-blue-600 text-white text-[12px] font-extrabold px-2 py-0.5 rounded-full">
+              {filterRules.length}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -2988,10 +2836,7 @@ export default function ContactDirectoryModule({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setSearchField("All Fields");
-              }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search name, phone, school, district, address..."
               className="w-full bg-slate-950/80 border border-white/20 rounded-xl pl-10 pr-4 py-2.5 text-[14px] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-xl min-h-[42px]"
             />
@@ -3264,10 +3109,10 @@ export default function ContactDirectoryModule({
                                 cIdx === 0
                                   ? `${55 + (sIdx % 4) * 10}%`
                                   : cIdx === 1
-                                  ? `${70 + (sIdx % 3) * 10}%`
-                                  : cIdx === 2
-                                  ? "65%"
-                                  : `${40 + (cIdx % 3) * 15}%`,
+                                    ? `${70 + (sIdx % 3) * 10}%`
+                                    : cIdx === 2
+                                      ? "65%"
+                                      : `${40 + (cIdx % 3) * 15}%`,
                             }}
                           />
                         </td>
@@ -3290,123 +3135,113 @@ export default function ContactDirectoryModule({
                       onClick={() => handleCandidateClick(contact)}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer animate-in fade-in duration-200 border-b border-slate-200 dark:border-white/5 min-h-[64px]"
                     >
-                    {/* Select Checkbox */}
-                    <td className="p-3.5 text-center border-b border-slate-200 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={selectedRows.includes(contact.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedRows([...selectedRows, contact.id]);
-                          } else {
-                            setSelectedRows(selectedRows.filter((id) => id !== contact.id));
-                          }
-                        }}
-                        aria-label={`Select ${contact.name}`}
-                        className="mx-auto after:hidden data-checked:border-sky-600 data-checked:bg-sky-600 data-checked:text-white dark:data-checked:border-sky-500 dark:data-checked:bg-sky-500 dark:data-checked:text-white"
-                      />
-                    </td>
-
-                    {/* Dynamically Render Data Cells for Each Selected Column */}
-                    {selectedColumns.map((col) => (
-                      <td
-                        key={col}
-                        className={`p-3.5 align-middle whitespace-nowrap border-b border-slate-200 dark:border-white/5 ${getColumnWidthClass(col)} ${
-                          col === "Registered Name" ? "font-bold text-blue-600 dark:text-sky-400 hover:underline" : ""
-                        }`}
-                      >
-                        {renderCellContent(contact, col)}
+                      {/* Select Checkbox */}
+                      <td className="p-3.5 text-center border-b border-slate-200 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedRows.includes(contact.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedRows([...selectedRows, contact.id]);
+                            } else {
+                              setSelectedRows(selectedRows.filter((id) => id !== contact.id));
+                            }
+                          }}
+                          aria-label={`Select ${contact.name}`}
+                          className="mx-auto after:hidden data-checked:border-sky-600 data-checked:bg-sky-600 data-checked:text-white dark:data-checked:border-sky-500 dark:data-checked:bg-sky-500 dark:data-checked:text-white"
+                        />
                       </td>
-                    ))}
 
-                    {/* Actions Column with Sticky Pinning to Right */}
-                    <td
-                      className="p-3.5 text-center md:sticky md:right-0 z-10 min-w-[210px] w-56 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-b border-slate-200 dark:border-white/10 md:shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:md:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex items-center justify-center gap-2 min-w-[195px]">
-                        <Tooltip text={`Send Official Email to ${contact.name}`} position="left">
-                          <button
-                            onClick={() =>
-                              handleOpenCommModal("EMAIL", {
-                                id: contact.id,
-                                name: contact.name,
-                                email: contact.email,
-                                phone: contact.phone,
-                                courseInterest: contact.courseInterest,
-                                campus: contact.campus,
-                                school: contact.school || undefined,
-                                district: contact.district || undefined,
-                                state: contact.state || undefined,
-                                tneaCutoff: contact.tneaCutoff,
-                                counsellingAppNo: contact.counsellingAppNo,
-                                marks10th: (contact as any).marks10th || contact.application?.marks10th,
-                                marks12th: (contact as any).marks12th || contact.application?.marks12th,
-                                stage: contact.application?.stage,
-                                status: contact.status,
-                              })
-                            }
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
-                            title={`Send Email to ${contact.name}`}
-                          >
-                            <Mail className="w-4 h-4" />
-                          </button>
-                        </Tooltip>
-                        <Tooltip text={`WhatsApp Chat with ${contact.name}`} position="left">
-                          <button
-                            onClick={() => {
-                              onActionTrigger("WHATSAPP", contact.name);
-                              redirectToWhatsApp(contact.phone || "+91-6380270912", getDefaultAdmissionWhatsAppText(contact));
-                            }}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
-                            title={`WhatsApp Chat with ${contact.name}`}
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </button>
-                        </Tooltip>
-                        <Tooltip text={`Native SMS to ${contact.name}`} position="left">
-                          <button
-                            onClick={() => {
-                              onActionTrigger("SMS", contact.name);
-                              redirectToSms(contact.phone || "+91-6380270912", getDefaultAdmissionSmsText(contact));
-                            }}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
-                            title={`Send Native SMS to ${contact.name}`}
-                          >
-                            <Send className="w-4 h-4" />
-                          </button>
-                        </Tooltip>
-                        <Tooltip text={`Edit ${contact.name}`} position="left">
-                          <button
-                            onClick={() =>
-                              setEditingContact(
-                                contact
-                                  ? {
-                                      ...contact,
-                                      phone: contact.phone && contact.phone.trim() ? contact.phone : "+91-6380270912",
-                                    }
-                                  : null
-                              )
-                            }
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 hover:bg-sky-200 border border-sky-200 dark:border-sky-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
-                            title={`Edit ${contact.name}`}
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        </Tooltip>
-                        <Tooltip text={`Delete ${contact.name}`} position="left">
-                          <button
-                            onClick={() => handleDeleteContact(contact.id, contact.name)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 hover:bg-rose-200 border border-rose-200 dark:border-rose-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
-                            title={`Delete ${contact.name}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </Tooltip>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                      {/* Dynamically Render Data Cells for Each Selected Column */}
+                      {selectedColumns.map((col) => (
+                        <td
+                          key={col}
+                          className={`p-3.5 align-middle whitespace-nowrap border-b border-slate-200 dark:border-white/5 ${getColumnWidthClass(col)} ${col === "Registered Name" ? "font-bold text-blue-600 dark:text-sky-400 hover:underline" : ""
+                            }`}
+                        >
+                          {renderCellContent(contact, col)}
+                        </td>
+                      ))}
+
+                      {/* Actions Column with Sticky Pinning to Right */}
+                      <td
+                        className="p-3.5 text-center md:sticky md:right-0 z-10 min-w-[210px] w-56 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 transition-colors border-l border-b border-slate-200 dark:border-white/10 md:shadow-[-8px_0_16px_rgba(0,0,0,0.08)] dark:md:shadow-[-8px_0_16px_rgba(0,0,0,0.4)] whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-center gap-2 min-w-[195px]">
+                          <Tooltip text={`Send Official Email to ${contact.name}`} position="left">
+                            <button
+                              onClick={() =>
+                                handleOpenCommModal("EMAIL", {
+                                  id: contact.id,
+                                  name: contact.name,
+                                  email: contact.email,
+                                  phone: contact.phone,
+                                  courseInterest: contact.courseInterest,
+                                  campus: contact.campus,
+                                  school: contact.school || undefined,
+                                  district: contact.district || undefined,
+                                  state: contact.state || undefined,
+                                  tneaCutoff: contact.tneaCutoff,
+                                  counsellingAppNo: contact.counsellingAppNo,
+                                  marks10th: (contact as any).marks10th || contact.application?.marks10th,
+                                  marks12th: (contact as any).marks12th || contact.application?.marks12th,
+                                  stage: contact.application?.stage,
+                                  status: contact.status,
+                                })
+                              }
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                              title={`Send Email to ${contact.name}`}
+                            >
+                              <Mail className="w-4 h-4" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip text={`WhatsApp Chat with ${contact.name}`} position="left">
+                            <button
+                              onClick={() => {
+                                onActionTrigger("WHATSAPP", contact.name);
+                                redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
+                              }}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                              title={`WhatsApp Chat with ${contact.name}`}
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip text={`Native SMS to ${contact.name}`} position="left">
+                            <button
+                              onClick={() => {
+                                onActionTrigger("SMS", contact.name);
+                                redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
+                              }}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-200 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                              title={`Send Native SMS to ${contact.name}`}
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip text={`Edit ${contact.name}`} position="left">
+                            <button
+                              onClick={() => setEditingContact(contact)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 hover:bg-sky-200 border border-sky-200 dark:border-sky-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                              title={`Edit ${contact.name}`}
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip text={`Delete ${contact.name}`} position="left">
+                            <button
+                              onClick={() => handleDeleteContact(contact.id, contact.name)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 hover:bg-rose-200 border border-rose-200 dark:border-rose-800/40 shadow-2xs transition-all hover:scale-110 active:scale-95 cursor-pointer shrink-0"
+                              title={`Delete ${contact.name}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -3465,11 +3300,10 @@ export default function ContactDirectoryModule({
                       <button
                         key={pNum}
                         onClick={() => setCurrentPage(pNum)}
-                        className={`w-8 h-8 rounded-lg font-bold text-[13px] transition-all cursor-pointer shadow-2xs ${
-                          isActive
-                            ? "bg-sky-500 text-white font-extrabold ring-2 ring-sky-300 scale-105"
-                            : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/30 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
-                        }`}
+                        className={`w-8 h-8 rounded-lg font-bold text-[13px] transition-all cursor-pointer shadow-2xs ${isActive
+                          ? "bg-sky-500 text-white font-extrabold ring-2 ring-sky-300 scale-105"
+                          : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/30 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+                          }`}
                       >
                         {pNum}
                       </button>
@@ -3597,18 +3431,18 @@ export default function ContactDirectoryModule({
                   <div className="space-y-2 text-xs text-slate-300 bg-slate-950/70 p-3.5 rounded-2xl border border-white/10 mb-4">
                     {/* Phone */}
                     <a
-                      href={getCleanTelUri(contact.phone || "+91-6380270912")}
+                      href={getCleanTelUri(contact.phone)}
                       onClick={(e) => {
                         e.stopPropagation();
                         onActionTrigger("CALL", contact.name);
-                        redirectToDialPad(contact.phone || "+91-6380270912");
+                        redirectToDialPad(contact.phone);
                       }}
                       className="flex items-center gap-2 group hover:text-emerald-400 text-left cursor-pointer"
                       title="Click to dial on phone"
                     >
                       <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
                       <span className="font-mono font-bold text-white group-hover:text-emerald-300 underline decoration-dotted decoration-emerald-500">
-                        {showPhone ? formatDisplayPhone(contact.phone || "+91-6380270912") : "+91 ••••• •••••"}
+                        {showPhone ? contact.phone : "+91 ••••• •••••"}
                       </span>
                     </a>
 
@@ -3646,7 +3480,7 @@ export default function ContactDirectoryModule({
                     )}
 
                     {/* TNEA Counselling Details Box */}
-                    {(contact.counsellingAppNo || contact.tneaCutoff || contact.application?.marks12th) && (
+                    {(contact.counsellingAppNo || contact.tneaCutoff) && (
                       <div className="pt-2 border-t border-white/10 space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
@@ -3663,18 +3497,10 @@ export default function ContactDirectoryModule({
                           )}
                         </div>
 
-                        {(contact.tneaCutoff || contact.application?.marks12th) && (
+                        {contact.tneaCutoff && (
                           <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
                             <span className="text-slate-300">
-                              Cutoff:{" "}
-                              <strong className="text-sky-300 font-mono font-bold">
-                                {contact.tneaCutoff ?? (contact.application?.marks12th ? Number((contact.application.marks12th * 2).toFixed(1)) : 160)} / 200
-                              </strong>
-                              {!contact.tneaCutoff && contact.application?.marks12th ? (
-                                <span className="text-[9px] text-sky-400 font-normal ml-1">
-                                  (from 12th)
-                                </span>
-                              ) : null}
+                              Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff} / 200</strong>
                             </span>
                             <span className="text-indigo-300 text-[10px]">
                               {contact.counsellingCategory || ""}
@@ -3686,14 +3512,14 @@ export default function ContactDirectoryModule({
 
                     {/* Admin Teacher Assignment Dropdown */}
                     {currentUserRole === "ADMIN" && (
-                      <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 text-[11px] min-w-0">
+                      <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px]">
                         <span className="text-slate-400 font-bold flex items-center gap-1 shrink-0">
                           🧑‍🏫 Assign Faculty:
                         </span>
                         <select
                           value={contact.assignedTo || ""}
                           onChange={(e) => handleAssignTeacher(contact.id, e.target.value)}
-                          className="w-full sm:w-auto sm:max-w-[180px] min-w-0 truncate bg-slate-900 border border-white/20 text-sky-300 font-bold px-2 py-1 sm:py-0.5 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
+                          className="bg-slate-900 border border-white/20 text-sky-300 font-bold px-2 py-0.5 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
                         >
                           <option value="">-- Select Faculty ({contact.campus || "Same Campus"}) --</option>
                           {FACULTY_MEMBERS.filter((f) => !contact.campus || f.campus === contact.campus).map((f) => (
@@ -3713,11 +3539,11 @@ export default function ContactDirectoryModule({
 
                     <Tooltip text={`Call ${contact.name} via Phone Dial Pad`} position="bottom">
                       <a
-                        href={getCleanTelUri(contact.phone || "+91-6380270912")}
+                        href={getCleanTelUri(contact.phone)}
                         onClick={(e) => {
                           e.stopPropagation();
                           onActionTrigger("CALL", contact.name);
-                          redirectToDialPad(contact.phone || "+91-6380270912");
+                          redirectToDialPad(contact.phone);
                         }}
                         className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer inline-flex items-center justify-center"
                       >
@@ -3729,7 +3555,7 @@ export default function ContactDirectoryModule({
                         onClick={() => handleOpenCommModal("EMAIL", {
                           id: contact.id,
                           name: contact.name,
-                          phone: contact.phone || "+91-6380270912",
+                          phone: contact.phone,
                           email: contact.email,
                           courseInterest: contact.courseInterest,
                           campus: contact.campus,
@@ -3752,7 +3578,7 @@ export default function ContactDirectoryModule({
                       <button
                         onClick={() => {
                           onActionTrigger("WHATSAPP", contact.name);
-                          redirectToWhatsApp(contact.phone || "+91-6380270912", getDefaultAdmissionWhatsAppText(contact));
+                          redirectToWhatsApp(contact.phone, getDefaultAdmissionWhatsAppText(contact));
                         }}
                         className="p-2 rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white border border-emerald-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-emerald-500/40 cursor-pointer"
                         title={`Open WhatsApp chat with ${contact.name}`}
@@ -3764,7 +3590,7 @@ export default function ContactDirectoryModule({
                       <button
                         onClick={() => {
                           onActionTrigger("SMS", contact.name);
-                          redirectToSms(contact.phone || "+91-6380270912", getDefaultAdmissionSmsText(contact));
+                          redirectToSms(contact.phone, getDefaultAdmissionSmsText(contact));
                         }}
                         className="p-2 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white border border-indigo-400/40 transition-all shadow-md transform hover:-translate-y-1 hover:scale-125 hover:shadow-lg hover:shadow-indigo-500/40 cursor-pointer"
                         title={`Open Native SMS App for ${contact.name}`}
@@ -3779,16 +3605,7 @@ export default function ContactDirectoryModule({
                     {/* Edit Button */}
                     <Tooltip text={`Edit ${contact.name}`} position="bottom">
                       <button
-                        onClick={() =>
-                          setEditingContact(
-                            contact
-                              ? {
-                                  ...contact,
-                                  phone: contact.phone && contact.phone.trim() ? contact.phone : "+91-6380270912",
-                                }
-                              : null
-                          )
-                        }
+                        onClick={() => setEditingContact(contact)}
                         className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-white border border-sky-400/40 text-xs font-bold transition-all flex items-center gap-1 shadow-md transform hover:-translate-y-1 hover:scale-110 active:scale-95"
                       >
                         <Edit3 className="w-3.5 h-3.5" /> Edit
@@ -3853,15 +3670,13 @@ export default function ContactDirectoryModule({
                 <button
                   type="button"
                   onClick={() => setNewContactStep(1)}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    newContactStep === 1
-                      ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
-                      : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${newContactStep === 1
+                    ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
+                    : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
+                    }`}
                 >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                    newContactStep === 1 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
-                  }`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${newContactStep === 1 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
+                    }`}>
                     1
                   </span>
                   <span className="truncate">Student</span>
@@ -3876,15 +3691,13 @@ export default function ContactDirectoryModule({
                       handleNextStep1();
                     }
                   }}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    newContactStep === 2
-                      ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
-                      : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${newContactStep === 2
+                    ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
+                    : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
+                    }`}
                 >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                    newContactStep === 2 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
-                  }`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${newContactStep === 2 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
+                    }`}>
                     2
                   </span>
                   <span className="truncate">Parents</span>
@@ -3899,15 +3712,13 @@ export default function ContactDirectoryModule({
                       handleNextStep1();
                     }
                   }}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    newContactStep === 3
-                      ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
-                      : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${newContactStep === 3
+                    ? "bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-lg shadow-sky-500/20"
+                    : "bg-slate-900/60 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800/60"
+                    }`}
                 >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                    newContactStep === 3 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
-                  }`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${newContactStep === 3 ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"
+                    }`}>
                     3
                   </span>
                   <span className="truncate">Category</span>
@@ -3965,9 +3776,17 @@ export default function ContactDirectoryModule({
                         <input
                           type="tel"
                           required
-                          value={extractRaw10Digits(newContact.phone)}
+                          value={
+                            newContact.phone
+                              ? newContact.phone.startsWith("+91-")
+                                ? newContact.phone.slice(4)
+                                : newContact.phone.startsWith("+91 ")
+                                  ? newContact.phone.slice(4)
+                                  : newContact.phone
+                              : ""
+                          }
                           onChange={(e) => {
-                            const digits = extractRaw10Digits(e.target.value).slice(0, 10);
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                             setNewContact({ ...newContact, phone: digits ? `+91-${digits}` : "" });
                             if (addModalError) setAddModalError(null);
                           }}
@@ -4051,7 +3870,7 @@ export default function ContactDirectoryModule({
                         onChange={(e) => setNewContact({ ...newContact, district: e.target.value })}
                         className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                       >
-                        {(STATE_DISTRICTS[newContact.state] || TAMIL_NADU_DISTRICTS).map((d) => (
+                        {districts.filter((d) => d !== "ALL").map((d) => (
                           <option key={d} value={d} className="bg-slate-900">
                             {d}
                           </option>
@@ -4062,12 +3881,7 @@ export default function ContactDirectoryModule({
                       <label className="block text-xs font-bold text-slate-300 mb-1">Student State</label>
                       <select
                         value={newContact.state}
-                        onChange={(e) => {
-                          const newState = e.target.value;
-                          const dists = STATE_DISTRICTS[newState] || TAMIL_NADU_DISTRICTS;
-                          const newDist = dists.includes(newContact.district) ? newContact.district : (dists[0] || "");
-                          setNewContact({ ...newContact, state: newState, district: newDist });
-                        }}
+                        onChange={(e) => setNewContact({ ...newContact, state: e.target.value })}
                         className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                       >
                         {INDIAN_STATES.map((s) => (
@@ -4138,9 +3952,17 @@ export default function ContactDirectoryModule({
                         </span>
                         <input
                           type="tel"
-                          value={extractRaw10Digits(newContact.fatherMobile)}
+                          value={
+                            newContact.fatherMobile
+                              ? newContact.fatherMobile.startsWith("+91-")
+                                ? newContact.fatherMobile.slice(4)
+                                : newContact.fatherMobile.startsWith("+91 ")
+                                  ? newContact.fatherMobile.slice(4)
+                                  : newContact.fatherMobile
+                              : ""
+                          }
                           onChange={(e) => {
-                            const digits = extractRaw10Digits(e.target.value).slice(0, 10);
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                             setNewContact({ ...newContact, fatherMobile: digits ? `+91-${digits}` : "" });
                           }}
                           placeholder="98765 11223"
@@ -4160,9 +3982,17 @@ export default function ContactDirectoryModule({
                         </span>
                         <input
                           type="tel"
-                          value={extractRaw10Digits(newContact.motherMobile)}
+                          value={
+                            newContact.motherMobile
+                              ? newContact.motherMobile.startsWith("+91-")
+                                ? newContact.motherMobile.slice(4)
+                                : newContact.motherMobile.startsWith("+91 ")
+                                  ? newContact.motherMobile.slice(4)
+                                  : newContact.motherMobile
+                              : ""
+                          }
                           onChange={(e) => {
-                            const digits = extractRaw10Digits(e.target.value).slice(0, 10);
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                             setNewContact({ ...newContact, motherMobile: digits ? `+91-${digits}` : "" });
                           }}
                           placeholder="98765 44556"
@@ -4272,11 +4102,10 @@ export default function ContactDirectoryModule({
                       <button
                         type="button"
                         onClick={() => setNewContact({ ...newContact, interestStatus: "Interested" })}
-                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                          newContact.interestStatus === "Interested"
-                            ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-lg shadow-emerald-500/20"
-                            : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
-                        }`}
+                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${newContact.interestStatus === "Interested"
+                          ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-lg shadow-emerald-500/20"
+                          : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
+                          }`}
                       >
                         <span className="text-base">🔥</span>
                         <span className="text-[11px] font-black">Interested</span>
@@ -4286,11 +4115,10 @@ export default function ContactDirectoryModule({
                       <button
                         type="button"
                         onClick={() => setNewContact({ ...newContact, interestStatus: "Considering" })}
-                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                          newContact.interestStatus === "Considering"
-                            ? "bg-amber-500/20 border-amber-400 text-amber-300 shadow-lg shadow-amber-500/20"
-                            : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
-                        }`}
+                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${newContact.interestStatus === "Considering"
+                          ? "bg-amber-500/20 border-amber-400 text-amber-300 shadow-lg shadow-amber-500/20"
+                          : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
+                          }`}
                       >
                         <span className="text-base">⚡</span>
                         <span className="text-[11px] font-black">Considering</span>
@@ -4300,11 +4128,10 @@ export default function ContactDirectoryModule({
                       <button
                         type="button"
                         onClick={() => setNewContact({ ...newContact, interestStatus: "Not Interested" })}
-                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                          newContact.interestStatus === "Not Interested"
-                            ? "bg-rose-500/20 border-rose-400 text-rose-300 shadow-lg shadow-rose-500/20"
-                            : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
-                        }`}
+                        className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${newContact.interestStatus === "Not Interested"
+                          ? "bg-rose-500/20 border-rose-400 text-rose-300 shadow-lg shadow-rose-500/20"
+                          : "bg-slate-950/60 border-white/10 text-slate-400 hover:border-white/30"
+                          }`}
                       >
                         <span className="text-base">❄️</span>
                         <span className="text-[11px] font-black">Not Interested</span>
@@ -4368,11 +4195,10 @@ export default function ContactDirectoryModule({
                                 source: opt.id === "Other" ? "Other" : opt.label,
                               })
                             }
-                            className={`px-2.5 py-1.5 rounded-xl border text-left flex items-center gap-1.5 transition-all text-[11px] cursor-pointer ${
-                              isSelected
-                                ? "bg-sky-500/25 border-sky-400 text-sky-200 shadow-md shadow-sky-500/20 font-bold"
-                                : "bg-slate-950/60 border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20 font-medium"
-                            }`}
+                            className={`px-2.5 py-1.5 rounded-xl border text-left flex items-center gap-1.5 transition-all text-[11px] cursor-pointer ${isSelected
+                              ? "bg-sky-500/25 border-sky-400 text-sky-200 shadow-md shadow-sky-500/20 font-bold"
+                              : "bg-slate-950/60 border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20 font-medium"
+                              }`}
                           >
                             <span className="text-xs">{opt.icon}</span>
                             <span className="truncate">{opt.shortLabel}</span>
@@ -4432,9 +4258,8 @@ export default function ContactDirectoryModule({
                     <button
                       type="submit"
                       disabled={isSubmittingContact}
-                      className={`glossy-btn px-6 py-2.5 text-xs font-extrabold flex items-center gap-2 text-white bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 shadow-xl shadow-pink-500/40 rounded-full cursor-pointer hover:scale-[1.02] active:scale-95 transition-all ${
-                        isSubmittingContact ? "opacity-70 cursor-not-allowed" : ""
-                      }`}
+                      className={`glossy-btn px-6 py-2.5 text-xs font-extrabold flex items-center gap-2 text-white bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 shadow-xl shadow-pink-500/40 rounded-full cursor-pointer hover:scale-[1.02] active:scale-95 transition-all ${isSubmittingContact ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
                     >
                       {isSubmittingContact ? (
                         <>
@@ -4500,9 +4325,17 @@ export default function ContactDirectoryModule({
                     <input
                       type="tel"
                       required
-                      value={extractRaw10Digits(editingContact.phone || "+91-6380270912")}
+                      value={
+                        editingContact.phone
+                          ? editingContact.phone.startsWith("+91-")
+                            ? editingContact.phone.slice(4)
+                            : editingContact.phone.startsWith("+91 ")
+                              ? editingContact.phone.slice(4)
+                              : editingContact.phone
+                          : ""
+                      }
                       onChange={(e) => {
-                        const digits = extractRaw10Digits(e.target.value).slice(0, 10);
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                         setEditingContact({ ...editingContact, phone: digits ? `+91-${digits}` : "" });
                       }}
                       placeholder="98765 43210"
@@ -4575,9 +4408,9 @@ export default function ContactDirectoryModule({
                     onChange={(e) => setEditingContact({ ...editingContact, courseInterest: e.target.value })}
                     className="w-full bg-slate-950 border border-white/20 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                   >
-                    {editCourseOptions.map((course: string) => {
+                    {editCourseOptions.map((course) => {
                       const isUnsupported = !VSB_DEPARTMENTS_COURSES.some(
-                        (c: string) => c.replace(/\./g, "").trim().toLowerCase() === course.replace(/\./g, "").trim().toLowerCase()
+                        (c) => c.replace(/\./g, "").trim().toLowerCase() === course.replace(/\./g, "").trim().toLowerCase()
                       );
                       return (
                         <option key={course} value={course} className="bg-slate-900">
@@ -4638,8 +4471,8 @@ export default function ContactDirectoryModule({
         onSaveCallRecording={handleSaveCallRecording}
       />
 
-      {/* APPLICANT PROFILE / LEAD DETAILS MODAL (Fallback when not handled by parent onSelectApplicant) */}
-      {!onSelectApplicant && selectedCandidateForModal && (
+      {/* APPLICANT PROFILE / LEAD DETAILS MODAL (Image 2) */}
+      {selectedCandidateForModal && (
         <ApplicantDetailModal
           applicant={selectedCandidateForModal}
           currentUserRole={currentUserRole}
@@ -4661,7 +4494,7 @@ export default function ContactDirectoryModule({
       {/* SIDE DRAWER 1: FILTER LEADS BY (Image 1 Reference) */}
       {isFilterDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-full sm:max-w-2xl lg:max-w-3xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-white/10 animate-in slide-in-from-right duration-300">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-white/10 animate-in slide-in-from-right duration-300">
             {/* Header */}
             <div className="p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-slate-900">
               <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Filter leads by</h3>
@@ -4674,7 +4507,7 @@ export default function ContactDirectoryModule({
             </div>
 
             {/* Drawer Content Body */}
-            <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 space-y-6 bg-slate-50/50 dark:bg-slate-950/50">
+            <div className="p-6 overflow-y-auto flex-1 space-y-6 bg-slate-50/50 dark:bg-slate-950/50">
               {/* Include Activity Filters Toggle */}
               <div className="flex items-center justify-end gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
@@ -4691,7 +4524,7 @@ export default function ContactDirectoryModule({
               </div>
 
               {/* Lead Filters Container */}
-              <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-white/10 p-3.5 sm:p-5 shadow-sm space-y-4">
+              <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-white/10 p-5 shadow-sm space-y-4">
                 {/* Mode Selector & Filter Count Badge */}
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
                   <div className="flex items-center gap-2 text-xs font-bold">
@@ -4727,8 +4560,8 @@ export default function ContactDirectoryModule({
                 <div className="space-y-3">
                   {filterRules.map((rule) => (
                     <div key={rule.id} className="space-y-1">
-                      <div className="flex items-center gap-2 min-w-0 w-full">
-                        <span className="text-slate-400 text-xs shrink-0 select-none">▶</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400 text-xs shrink-0">▶</span>
 
                         {/* Field Select */}
                         <select
@@ -4739,7 +4572,7 @@ export default function ContactDirectoryModule({
                               filterRules.map((r) => (r.id === rule.id ? { ...r, field: val } : r))
                             );
                           }}
-                          className="w-36 sm:w-44 shrink-0 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="State">State</option>
                           <option value="City">City</option>
@@ -4763,7 +4596,7 @@ export default function ContactDirectoryModule({
                               filterRules.map((r) => (r.id === rule.id ? { ...r, operator: val } : r))
                             );
                           }}
-                          className="w-24 sm:w-28 shrink-0 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2 sm:px-2.5 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-28 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="Equals">Equals</option>
                           <option value="Contains">Contains</option>
@@ -4782,7 +4615,7 @@ export default function ContactDirectoryModule({
                                 filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
                               );
                             }}
-                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="Tamil Nadu">Tamil Nadu</option>
                             <option value="Kerala">Kerala</option>
@@ -4798,7 +4631,7 @@ export default function ContactDirectoryModule({
                                 filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
                               );
                             }}
-                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             {TAMIL_NADU_DISTRICTS.map((d) => (
                               <option key={d} value={d}>
@@ -4806,39 +4639,6 @@ export default function ContactDirectoryModule({
                               </option>
                             ))}
                           </select>
-                        ) : rule.field === "Lead Stage" ? (
-                          <select
-                            value={rule.value}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setFilterRules(
-                                filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
-                              );
-                            }}
-                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="New Inquiry">New Inquiry</option>
-                            <option value="Cutoff Review">Cutoff Review</option>
-                            <option value="Contacted">Contacted</option>
-                            <option value="Admitted">Admitted</option>
-                            <option value="Rejected">Rejected</option>
-                          </select>
-                        ) : rule.field === "TNEA Cutoff" ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="200"
-                            value={rule.value}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setFilterRules(
-                                filterRules.map((r) => (r.id === rule.id ? { ...r, value: val } : r))
-                              );
-                            }}
-                            placeholder="e.g. 175"
-                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-mono font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
                         ) : (
                           <input
                             type="text"
@@ -4850,36 +4650,34 @@ export default function ContactDirectoryModule({
                               );
                             }}
                             placeholder="Enter value..."
-                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         )}
 
                         {/* Action Buttons (+ / -) */}
-                        <div className="flex items-center gap-1 shrink-0">
-                          {filterRules.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => setFilterRules(filterRules.filter((r) => r.id !== rule.id))}
-                              className="p-1.5 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition-colors shrink-0"
-                              title="Remove Filter"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                        {filterRules.length > 1 && (
                           <button
                             type="button"
-                            onClick={() =>
-                              setFilterRules([
-                                ...filterRules,
-                                { id: String(Date.now()), field: "City", operator: "Equals", value: "Karur" },
-                              ])
-                            }
-                            className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors shrink-0"
-                            title="Add Sub-Rule"
+                            onClick={() => setFilterRules(filterRules.filter((r) => r.id !== rule.id))}
+                            className="p-1.5 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition-colors"
+                            title="Remove Filter"
                           >
-                            <Plus className="w-3.5 h-3.5" />
+                            <X className="w-3.5 h-3.5" />
                           </button>
-                        </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFilterRules([
+                              ...filterRules,
+                              { id: String(Date.now()), field: "City", operator: "Equals", value: "Karur" },
+                            ])
+                          }
+                          className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors"
+                          title="Add Sub-Rule"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
                       </div>
 
                       {rule.field === "City" && (
@@ -5109,8 +4907,8 @@ export default function ContactDirectoryModule({
                     setRegDateFilter("2026");
                   }}
                   className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${calSelectedYear === 2026
-                      ? "bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-600/40 font-black"
-                      : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
+                    ? "bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-600/40 font-black"
+                    : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
                     }`}
                 >
                   📅 Year 2026
@@ -5121,8 +4919,8 @@ export default function ContactDirectoryModule({
                     setRegDateFilter("2027");
                   }}
                   className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${calSelectedYear === 2027
-                      ? "bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-600/40 font-black"
-                      : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
+                    ? "bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-600/40 font-black"
+                    : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
                     }`}
                 >
                   🚀 Year 2027 (Next)
@@ -5133,8 +4931,8 @@ export default function ContactDirectoryModule({
                     setRegDateFilter("2025");
                   }}
                   className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${calSelectedYear === 2025
-                      ? "bg-amber-600 text-white border-amber-400 shadow-md shadow-amber-600/40 font-black"
-                      : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
+                    ? "bg-amber-600 text-white border-amber-400 shadow-md shadow-amber-600/40 font-black"
+                    : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
                     }`}
                 >
                   ⏪ Year 2025
@@ -5252,8 +5050,8 @@ export default function ContactDirectoryModule({
                         }
                       }}
                       className={`h-8 rounded-xl text-xs font-extrabold flex items-center justify-center transition-all cursor-pointer ${isSelectedDay
-                          ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-lg shadow-sky-500/40 scale-105"
-                          : "hover:bg-slate-800 text-slate-300 hover:text-white"
+                        ? "bg-gradient-to-r from-sky-400 to-indigo-500 text-white shadow-lg shadow-sky-500/40 scale-105"
+                        : "hover:bg-slate-800 text-slate-300 hover:text-white"
                         }`}
                     >
                       {dayNum}
@@ -5487,8 +5285,8 @@ export default function ContactDirectoryModule({
                   <button
                     onClick={() => setSelectedAuditDate("2026-08-22")}
                     className={`px-3 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer border ${selectedAuditDate === "2026-08-22"
-                        ? "bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-600/30"
-                        : "bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800"
+                      ? "bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-600/30"
+                      : "bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800"
                       }`}
                   >
                     Today (Aug 22, 2026)
@@ -5647,10 +5445,10 @@ export default function ContactDirectoryModule({
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span
                                   className={`px-3 py-1 rounded-full text-[10px] font-black border ${rec.studentInterestStatus === "INTERESTED"
-                                      ? "bg-emerald-950 text-emerald-300 border-emerald-800"
-                                      : rec.studentInterestStatus === "ADMITTED"
-                                        ? "bg-sky-950 text-sky-300 border-sky-800"
-                                        : "bg-amber-950 text-amber-300 border-amber-800"
+                                    ? "bg-emerald-950 text-emerald-300 border-emerald-800"
+                                    : rec.studentInterestStatus === "ADMITTED"
+                                      ? "bg-sky-950 text-sky-300 border-sky-800"
+                                      : "bg-amber-950 text-amber-300 border-amber-800"
                                     }`}
                                 >
                                   {rec.studentInterestStatus === "INTERESTED" && "🌟 Interested to Join"}
@@ -5809,11 +5607,10 @@ export default function ContactDirectoryModule({
                       setTimeout(() => setHasCopiedLink(false), 2500);
                       if (onTriggerToast) onTriggerToast("📋 Application link copied to clipboard!");
                     }}
-                    className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      hasCopiedLink
-                        ? "bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                        : "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600"
-                    }`}
+                    className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${hasCopiedLink
+                      ? "bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                      : "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600"
+                      }`}
                   >
                     {hasCopiedLink ? (
                       <>

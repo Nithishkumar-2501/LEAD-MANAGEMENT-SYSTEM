@@ -40,6 +40,7 @@ import {
   saveOfflineUploadBatchToFirebase,
 } from "@/lib/firebaseSync";
 import { formatPhoneWith91, extractRaw10Digits } from "@/lib/phoneValidation";
+import { parseSafeDate } from "@/lib/dateUtils";
 
 interface ApplicationManagerModuleProps {
   loggedInCampus?: CampusLocation;
@@ -77,6 +78,16 @@ export default function ApplicationManagerModule({
   const [advFilterDateFrom, setAdvFilterDateFrom] = useState("");
   const [advFilterDateTo, setAdvFilterDateTo] = useState("");
   const [advFilterPaymentMethod, setAdvFilterPaymentMethod] = useState("ALL");
+
+  // Validate date range: Created From cannot be later than Created Until
+  const isDateRangeInvalid = useMemo(() => {
+    if (!advFilterDateFrom || !advFilterDateTo) return false;
+    const from = parseSafeDate(advFilterDateFrom);
+    const to = parseSafeDate(advFilterDateTo);
+    if (!from || !to) return false;
+    to.setHours(23, 59, 59, 999);
+    return from.getTime() > to.getTime();
+  }, [advFilterDateFrom, advFilterDateTo]);
 
   // Selection & Pagination
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -143,6 +154,17 @@ export default function ApplicationManagerModule({
   // Filter & Search Logic
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
+      // Resolve effective campus of application
+      const appCampus: CampusLocation =
+        app.campus ||
+        (app.formName?.toLowerCase().includes("coimb") ||
+        app.applicationNo?.includes("CTC") ||
+        app.applicationOwner?.toLowerCase().includes("coimbatore") ||
+        app.applicationOwner?.includes("Meenakshi") ||
+        app.applicationOwner?.includes("Arulmurugan")
+          ? "COIMBATORE"
+          : "KARUR");
+
       // Campus filter:
       // If user hasn't explicitly selected a specific form (or cross-campus form), scope to loggedInCampus.
       // If user explicitly chooses a specific form (e.g. "Coimb" or "Karur"), allow records matching that form.
@@ -150,15 +172,14 @@ export default function ApplicationManagerModule({
         selectedFormFilter === "ALL" &&
         advFilterCampus === "ALL" &&
         loggedInCampus !== "ALL" &&
-        app.campus &&
-        app.campus !== loggedInCampus
+        appCampus !== loggedInCampus
       ) {
         return false;
       }
       // Form filter
       if (selectedFormFilter !== "ALL") {
         const formStr = (app.formName || "").toLowerCase();
-        const campusStr = (app.campus || "").toLowerCase();
+        const campusStr = appCampus.toLowerCase();
         const filterStr = selectedFormFilter.toLowerCase();
         const matchesForm = formStr.includes(filterStr);
         const matchesCampus =
@@ -201,20 +222,33 @@ export default function ApplicationManagerModule({
       }
       // --- Advanced filters ---
       // Campus (advanced – independent of loggedInCampus role scope)
-      if (advFilterCampus !== "ALL" && app.campus && app.campus !== advFilterCampus) {
+      if (advFilterCampus !== "ALL" && appCampus !== advFilterCampus) {
         return false;
       }
       // Date range – created at
-      if (advFilterDateFrom) {
-        const created = new Date(app.createdAt);
-        const from = new Date(advFilterDateFrom);
-        if (created < from) return false;
+      if (isDateRangeInvalid) {
+        // Impossible date range (From is later than Until) matches zero records
+        return false;
       }
-      if (advFilterDateTo) {
-        const created = new Date(app.createdAt);
-        const to = new Date(advFilterDateTo);
-        to.setHours(23, 59, 59, 999);
-        if (created > to) return false;
+      if (advFilterDateFrom || advFilterDateTo) {
+        const created = parseSafeDate(app.createdAt);
+        // If a date filter is active, records without a valid creation date cannot match
+        if (!created) return false;
+
+        if (advFilterDateFrom) {
+          const from = parseSafeDate(advFilterDateFrom);
+          if (from) {
+            from.setHours(0, 0, 0, 0);
+            if (created < from) return false;
+          }
+        }
+        if (advFilterDateTo) {
+          const to = parseSafeDate(advFilterDateTo);
+          if (to) {
+            to.setHours(23, 59, 59, 999);
+            if (created > to) return false;
+          }
+        }
       }
       // Payment method
       if (advFilterPaymentMethod !== "ALL" && (app.paymentMethod || "Not Specified") !== advFilterPaymentMethod) {
@@ -248,12 +282,18 @@ export default function ApplicationManagerModule({
     advFilterCampus,
     advFilterDateFrom,
     advFilterDateTo,
+    isDateRangeInvalid,
     advFilterPaymentMethod,
   ]);
 
   // Sorting
   const sortedApplications = useMemo(() => {
     return [...filteredApplications].sort((a, b) => {
+      if (sortField === "createdAt") {
+        const timeA = parseSafeDate(a.createdAt)?.getTime() || 0;
+        const timeB = parseSafeDate(b.createdAt)?.getTime() || 0;
+        return sortAsc ? timeA - timeB : timeB - timeA;
+      }
       const aVal = a[sortField] || "";
       const bVal = b[sortField] || "";
       if (aVal < bVal) return sortAsc ? -1 : 1;
@@ -300,15 +340,68 @@ export default function ApplicationManagerModule({
     );
   };
 
+  // Open Edit Modal with Complete Identity Validation
+  const openEditModal = (app: ManagedApplication) => {
+    const campus: CampusLocation =
+      app.campus ||
+      (app.formName?.toLowerCase().includes("coimb") ||
+      app.applicationNo?.includes("CTC") ||
+      app.applicationOwner?.toLowerCase().includes("coimbatore") ||
+      app.applicationOwner?.includes("Meenakshi") ||
+      app.applicationOwner?.includes("Arulmurugan")
+        ? "COIMBATORE"
+        : "KARUR");
+
+    const prefix = campus === "COIMBATORE" ? "VSBCTC/2026/" : "VSBEC/2026/";
+    const resolvedAppNo =
+      app.applicationNo && app.applicationNo.trim() !== "" && app.applicationNo !== "-"
+        ? app.applicationNo
+        : `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
+    const resolvedName =
+      app.registeredName && app.registeredName.trim() !== "" && app.registeredName !== "Applicant"
+        ? app.registeredName
+        : `Applicant (${resolvedAppNo})`;
+    const resolvedEmail =
+      app.registeredEmail && app.registeredEmail.trim() !== "" && app.registeredEmail !== "-"
+        ? app.registeredEmail
+        : `${resolvedName.toLowerCase().replace(/[^a-z0-9]/g, "") || "applicant"}@gmail.com`;
+    const rawMobileDigits = extractRaw10Digits(app.registeredMobile || "");
+    const resolvedMobile =
+      rawMobileDigits.length === 10 ? `+91-${rawMobileDigits}` : "+91-9876543210";
+
+    const resolvedFormName =
+      app.formName ||
+      `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`;
+
+    const resolvedOwner =
+      app.applicationOwner ||
+      (campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh");
+
+    setEditingApp({
+      ...app,
+      campus,
+      formName: resolvedFormName,
+      applicationOwner: resolvedOwner,
+      applicationNo: resolvedAppNo,
+      registeredName: resolvedName,
+      registeredEmail: resolvedEmail,
+      registeredMobile: resolvedMobile,
+    });
+  };
+
   // Save Edit
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingApp) return;
     setIsSaving(true);
     try {
+      const cleanMobile = formatPhoneWith91(editingApp.registeredMobile);
       const updatedApp: ManagedApplication = {
         ...editingApp,
-        registeredMobile: formatPhoneWith91(editingApp.registeredMobile),
+        registeredName: editingApp.registeredName.trim() || `Applicant (${editingApp.applicationNo})`,
+        applicationNo: editingApp.applicationNo.trim() || `VSBEC/2026/${Math.floor(1000 + Math.random() * 9000)}`,
+        registeredEmail: editingApp.registeredEmail.trim() || `${editingApp.registeredName.toLowerCase().replace(/[^a-z0-9]/g, "") || "applicant"}@gmail.com`,
+        registeredMobile: extractRaw10Digits(cleanMobile).length === 10 ? cleanMobile : "+91-9876543210",
       };
       await saveApplicationToFirebase(updatedApp);
       setApplications((prev) =>
@@ -350,19 +443,20 @@ export default function ApplicationManagerModule({
       const now = new Date();
       const dateFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
       const cleanMobile = formatPhoneWith91(newApp.registeredMobile);
+      const payloadCampus = (newApp.campus as any) || "KARUR";
       const payload: ManagedApplication = {
         id: `app_${Date.now()}`,
         registeredName: newApp.registeredName,
         applicationNo: newApp.applicationNo,
-        formName: newApp.formName || "Application Form VSB Karur (Engineering)",
+        formName: newApp.formName || `Application Form VSB ${payloadCampus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
         registeredEmail: newApp.registeredEmail || "",
         registeredMobile: cleanMobile,
         formStatus: (newApp.formStatus as any) || "Incomplete",
         paymentStatus: (newApp.paymentStatus as any) || "Payment Pending",
         paymentMethod: newApp.paymentMethod || "-",
-        applicationOwner: newApp.applicationOwner || "Prof. P. Rajesh",
+        applicationOwner: newApp.applicationOwner || (payloadCampus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh"),
         applicationStage: newApp.applicationStage || "Inquiry Stage",
-        campus: (newApp.campus as any) || "KARUR",
+        campus: payloadCampus,
         createdAt: `${dateFormatted} 12:00 PM`,
         updatedAt: `${dateFormatted} 12:00 PM`,
       };
@@ -898,81 +992,103 @@ export default function ApplicationManagerModule({
 
           {/* ADVANCED FILTER PANEL (collapsible) */}
           {showAdvancedFilters && (
-            <div className="px-3.5 py-3 bg-sky-50/80 dark:bg-sky-950/40 border-b border-sky-200 dark:border-sky-500/20 flex flex-col md:flex-row items-stretch md:items-end gap-3 text-xs sm:text-sm">
-              {/* Campus Filter */}
-              <div className="relative min-w-[130px]">
-                <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
-                  Campus
-                </label>
-                <select
-                  value={advFilterCampus}
-                  onChange={(e) => setAdvFilterCampus(e.target.value)}
-                  className="w-full appearance-none bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
-                >
-                  <option value="ALL">All Campuses</option>
-                  <option value="KARUR">Karur (612)</option>
-                  <option value="COIMBATORE">Coimbatore (714)</option>
-                </select>
+            <div className="px-3.5 py-3 bg-sky-50/80 dark:bg-sky-950/40 border-b border-sky-200 dark:border-sky-500/20 flex flex-col gap-3 text-xs sm:text-sm">
+              <div className="flex flex-col md:flex-row items-stretch md:items-end gap-3">
+                {/* Campus Filter */}
+                <div className="relative min-w-[130px]">
+                  <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
+                    Campus
+                  </label>
+                  <select
+                    value={advFilterCampus}
+                    onChange={(e) => setAdvFilterCampus(e.target.value)}
+                    className="w-full appearance-none bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  >
+                    <option value="ALL">All Campuses</option>
+                    <option value="KARUR">Karur (612)</option>
+                    <option value="COIMBATORE">Coimbatore (714)</option>
+                  </select>
+                </div>
+
+                {/* Date From */}
+                <div className="relative min-w-[140px]">
+                  <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
+                    Created From
+                  </label>
+                  <input
+                    type="date"
+                    value={advFilterDateFrom}
+                    onChange={(e) => setAdvFilterDateFrom(e.target.value)}
+                    className={`w-full bg-white dark:bg-slate-800 border rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 ${
+                      isDateRangeInvalid
+                        ? "border-rose-400 dark:border-rose-500 ring-1 ring-rose-400 focus:ring-rose-500"
+                        : "border-sky-300 dark:border-sky-600 focus:ring-sky-500"
+                    }`}
+                    aria-invalid={isDateRangeInvalid}
+                  />
+                </div>
+
+                {/* Date To */}
+                <div className="relative min-w-[140px]">
+                  <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
+                    Created Until
+                  </label>
+                  <input
+                    type="date"
+                    value={advFilterDateTo}
+                    onChange={(e) => setAdvFilterDateTo(e.target.value)}
+                    className={`w-full bg-white dark:bg-slate-800 border rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 ${
+                      isDateRangeInvalid
+                        ? "border-rose-400 dark:border-rose-500 ring-1 ring-rose-400 focus:ring-rose-500"
+                        : "border-sky-300 dark:border-sky-600 focus:ring-sky-500"
+                    }`}
+                    aria-invalid={isDateRangeInvalid}
+                  />
+                </div>
+
+                {/* Payment Method */}
+                <div className="relative min-w-[150px]">
+                  <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
+                    Payment Method
+                  </label>
+                  <select
+                    value={advFilterPaymentMethod}
+                    onChange={(e) => setAdvFilterPaymentMethod(e.target.value)}
+                    className="w-full appearance-none bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  >
+                    <option value="ALL">All Methods</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Cash">Cash</option>
+                    <option value="DD">DD / Demand Draft</option>
+                    <option value="Online Transfer">Online Transfer</option>
+                    <option value="Not Specified">Not Specified</option>
+                  </select>
+                </div>
+
+                {/* Reset Advanced Filters */}
+                {(advFilterCampus !== "ALL" || advFilterDateFrom || advFilterDateTo || advFilterPaymentMethod !== "ALL") && (
+                  <button
+                    onClick={() => {
+                      setAdvFilterCampus("ALL");
+                      setAdvFilterDateFrom("");
+                      setAdvFilterDateTo("");
+                      setAdvFilterPaymentMethod("ALL");
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-sky-200 dark:bg-sky-800 hover:bg-sky-300 dark:hover:bg-sky-700 text-sky-800 dark:text-sky-200 text-xs font-bold cursor-pointer transition-colors self-end"
+                  >
+                    Reset Advanced
+                  </button>
+                )}
               </div>
 
-              {/* Date From */}
-              <div className="relative min-w-[140px]">
-                <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
-                  Created From
-                </label>
-                <input
-                  type="date"
-                  value={advFilterDateFrom}
-                  onChange={(e) => setAdvFilterDateFrom(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
-                />
-              </div>
-
-              {/* Date To */}
-              <div className="relative min-w-[140px]">
-                <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
-                  Created Until
-                </label>
-                <input
-                  type="date"
-                  value={advFilterDateTo}
-                  onChange={(e) => setAdvFilterDateTo(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
-                />
-              </div>
-
-              {/* Payment Method */}
-              <div className="relative min-w-[150px]">
-                <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
-                  Payment Method
-                </label>
-                <select
-                  value={advFilterPaymentMethod}
-                  onChange={(e) => setAdvFilterPaymentMethod(e.target.value)}
-                  className="w-full appearance-none bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
-                >
-                  <option value="ALL">All Methods</option>
-                  <option value="UPI">UPI</option>
-                  <option value="Cash">Cash</option>
-                  <option value="DD">DD / Demand Draft</option>
-                  <option value="Online Transfer">Online Transfer</option>
-                  <option value="Not Specified">Not Specified</option>
-                </select>
-              </div>
-
-              {/* Reset Advanced Filters */}
-              {(advFilterCampus !== "ALL" || advFilterDateFrom || advFilterDateTo || advFilterPaymentMethod !== "ALL") && (
-                <button
-                  onClick={() => {
-                    setAdvFilterCampus("ALL");
-                    setAdvFilterDateFrom("");
-                    setAdvFilterDateTo("");
-                    setAdvFilterPaymentMethod("ALL");
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-sky-200 dark:bg-sky-800 hover:bg-sky-300 dark:hover:bg-sky-700 text-sky-800 dark:text-sky-200 text-xs font-bold cursor-pointer transition-colors self-end"
-                >
-                  Reset Advanced
-                </button>
+              {/* Date Range Validation Warning Banner */}
+              {isDateRangeInvalid && (
+                <div className="w-full flex items-center gap-2 p-2.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-lg text-rose-700 dark:text-rose-300 text-xs font-semibold animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <span>
+                    <strong>Date Range Error:</strong> &quot;Created From&quot; date ({advFilterDateFrom}) cannot be later than &quot;Created Until&quot; date ({advFilterDateTo}). Showing zero matching records.
+                  </span>
+                </div>
               )}
             </div>
           )}
@@ -1084,28 +1200,55 @@ export default function ApplicationManagerModule({
                   <tr>
                     <td colSpan={10} className="text-center py-12 text-slate-500 dark:text-slate-400">
                       <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto px-4">
-                        <FileSpreadsheet className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                        <p className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
-                          {selectedFormFilter !== "ALL"
-                            ? `No records found for ${selectedFormFilter === "Coimb" ? "Application Form VSB Coimbatore" : "Application Form VSB Karur"}`
-                            : "No applications found matching the selected filters"}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {selectedFormFilter === "Coimb"
-                            ? "There are currently no submitted applications under the Coimbatore form, or none match the active filters."
-                            : "Try clearing or adjusting your search filters to view records."}
-                        </p>
-                        {selectedFormFilter !== "ALL" && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedFormFilter("ALL");
-                              setCurrentPage(1);
-                            }}
-                            className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800 transition-colors cursor-pointer"
-                          >
-                            Reset Form Filter
-                          </button>
+                        {isDateRangeInvalid ? (
+                          <>
+                            <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 dark:text-rose-400 mb-1">
+                              <AlertCircle className="w-6 h-6" />
+                            </div>
+                            <p className="font-bold text-rose-700 dark:text-rose-300 text-sm">
+                              Invalid Date Range Filter
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                              &quot;Created From&quot; ({advFilterDateFrom}) is after &quot;Created Until&quot; ({advFilterDateTo}). No application records can satisfy both limits.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAdvFilterDateFrom("");
+                                setAdvFilterDateTo("");
+                                setCurrentPage(1);
+                              }}
+                              className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
+                            >
+                              Reset Date Range
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <FileSpreadsheet className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                            <p className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
+                              {selectedFormFilter !== "ALL"
+                                ? `No records found for ${selectedFormFilter === "Coimb" ? "Application Form VSB Coimbatore" : "Application Form VSB Karur"}`
+                                : "No applications found matching the selected filters"}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {selectedFormFilter === "Coimb"
+                                ? "There are currently no submitted applications under the Coimbatore form, or none match the active filters."
+                                : "Try clearing or adjusting your search filters to view records."}
+                            </p>
+                            {selectedFormFilter !== "ALL" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedFormFilter("ALL");
+                                  setCurrentPage(1);
+                                }}
+                                className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800 transition-colors cursor-pointer"
+                              >
+                                Reset Form Filter
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>
@@ -1132,11 +1275,17 @@ export default function ApplicationManagerModule({
                         <td className="p-3 whitespace-nowrap">
                           <button
                             type="button"
-                            onClick={() => setEditingApp(app)}
+                            onClick={() => openEditModal(app)}
                             className="text-left font-bold text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 hover:underline cursor-pointer flex items-center gap-1.5 text-sm"
                             title="Click to edit application data"
                           >
-                            <span>{app.registeredName || "Applicant"}</span>
+                            <span>
+                              {app.registeredName && app.registeredName.trim() !== "" && app.registeredName !== "Applicant"
+                                ? app.registeredName
+                                : app.applicationNo && app.applicationNo !== "-"
+                                ? `Applicant (${app.applicationNo})`
+                                : `Applicant #${app.id.slice(-4)}`}
+                            </span>
                             {app.paymentStatus === "Payment Approved" && (
                               <span className="text-xs text-amber-500" title="Verified Admission">
                                 ✨
@@ -1147,31 +1296,65 @@ export default function ApplicationManagerModule({
 
                         {/* Application No */}
                         <td className="p-3 whitespace-nowrap font-mono font-bold text-slate-700 dark:text-slate-300 text-sm">
-                          {app.applicationNo || "-"}
+                          {app.applicationNo && app.applicationNo !== "-" ? app.applicationNo : "-"}
                         </td>
 
                         {/* Form Name */}
-                        <td className="p-3 whitespace-nowrap text-slate-700 dark:text-slate-300 max-w-[200px] truncate text-sm font-medium" title={app.formName || "Application Form"}>
-                          {app.formName || "Application Form VSB (Engineering)"}
+                        <td className="p-3 whitespace-nowrap text-slate-700 dark:text-slate-300 max-w-[240px] text-sm font-medium">
+                          {(() => {
+                            const effectiveCampus =
+                              app.campus ||
+                              (app.formName?.toLowerCase().includes("coimb") ||
+                              app.applicationNo?.includes("CTC") ||
+                              app.applicationOwner?.toLowerCase().includes("coimbatore") ||
+                              app.applicationOwner?.includes("Meenakshi") ||
+                              app.applicationOwner?.includes("Arulmurugan")
+                                ? "COIMBATORE"
+                                : "KARUR");
+                            const isCrossCampusKarurOnCoimb = effectiveCampus === "COIMBATORE" && app.formName?.includes("Karur");
+                            const isCrossCampusCoimbOnKarur = effectiveCampus === "KARUR" && app.formName?.includes("Coimbatore");
+
+                            return (
+                              <div className="flex flex-col">
+                                <span className="truncate font-semibold" title={app.formName || "Application Form"}>
+                                  {app.formName || `Application Form VSB ${effectiveCampus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`}
+                                </span>
+                                {isCrossCampusKarurOnCoimb && (
+                                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5" title="Student belongs to Coimbatore Campus (714) via Karur Form">
+                                    <AlertCircle className="w-3 h-3 shrink-0" />
+                                    <span>Cross-Campus • Coimbatore (714)</span>
+                                  </span>
+                                )}
+                                {isCrossCampusCoimbOnKarur && (
+                                  <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 flex items-center gap-1 mt-0.5" title="Student belongs to Karur Campus (612) via Coimbatore Form">
+                                    <AlertCircle className="w-3 h-3 shrink-0" />
+                                    <span>Cross-Campus • Karur (612)</span>
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         {/* Registered Email */}
                         <td className="p-3 whitespace-nowrap text-slate-600 dark:text-slate-400 text-sm">
-                          {app.registeredEmail || "-"}
+                          {app.registeredEmail && app.registeredEmail !== "-" ? app.registeredEmail : "-"}
                         </td>
 
                         {/* Registered Mobile */}
                         <td className="p-3 whitespace-nowrap font-mono font-bold text-slate-700 dark:text-slate-300 text-sm">
-                          <span className="text-sky-600 dark:text-sky-400 font-extrabold">+91-</span>
-                          <span>
-                            {app.registeredMobile
-                              ? app.registeredMobile.startsWith("+91-")
-                                ? app.registeredMobile.slice(4)
-                                : app.registeredMobile.startsWith("+91 ")
-                                ? app.registeredMobile.slice(4)
-                                : app.registeredMobile
-                              : "-"}
-                          </span>
+                          {(() => {
+                            const rawDigits = extractRaw10Digits(app.registeredMobile || "");
+                            if (rawDigits.length === 10) {
+                              return (
+                                <>
+                                  <span className="text-sky-600 dark:text-sky-400 font-extrabold">+91-</span>
+                                  <span>{rawDigits}</span>
+                                </>
+                              );
+                            }
+                            return <span className="text-slate-400 font-normal">-</span>;
+                          })()}
                         </td>
 
                         {/* Form Status Badge */}
@@ -1243,7 +1426,7 @@ export default function ApplicationManagerModule({
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setEditingApp(app);
+                                  openEditModal(app);
                                   setActiveMenuId(null);
                                 }}
                                 className="w-full px-3 py-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold flex items-center gap-2"
@@ -1436,12 +1619,61 @@ export default function ApplicationManagerModule({
                   </div>
                 </div>
 
+                {/* Campus Location */}
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Campus</label>
+                  <select
+                    value={editingApp.campus || "KARUR"}
+                    onChange={(e) => {
+                      const newCampus = e.target.value as CampusLocation;
+                      const isCoimb = newCampus === "COIMBATORE";
+                      const newForm = `Application Form VSB ${isCoimb ? "Coimbatore" : "Karur"} (Engineering)`;
+                      const newOwner = isCoimb ? "Dr. S. Meenakshi" : "Prof. P. Rajesh";
+                      let newAppNo = editingApp.applicationNo || "";
+                      if (isCoimb && newAppNo.startsWith("VSBEC/")) {
+                        newAppNo = newAppNo.replace("VSBEC/", "VSBCTC/");
+                      } else if (!isCoimb && newAppNo.startsWith("VSBCTC/")) {
+                        newAppNo = newAppNo.replace("VSBCTC/", "VSBEC/");
+                      }
+                      setEditingApp({
+                        ...editingApp,
+                        campus: newCampus,
+                        formName: newForm,
+                        applicationOwner: newOwner,
+                        applicationNo: newAppNo,
+                      });
+                    }}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  >
+                    <option value="KARUR">Karur (612)</option>
+                    <option value="COIMBATORE">Coimbatore (714)</option>
+                  </select>
+                </div>
+
                 {/* Form Name */}
                 <div className="sm:col-span-2 space-y-1">
                   <label className="font-extrabold text-slate-700 dark:text-slate-300">Form Name</label>
                   <select
                     value={editingApp.formName}
-                    onChange={(e) => setEditingApp({ ...editingApp, formName: e.target.value })}
+                    onChange={(e) => {
+                      const newForm = e.target.value;
+                      const isCoimb = newForm.includes("Coimbatore");
+                      const syncedCampus: CampusLocation = isCoimb ? "COIMBATORE" : "KARUR";
+                      const syncedOwner = isCoimb ? "Dr. S. Meenakshi" : "Prof. P. Rajesh";
+                      let newAppNo = editingApp.applicationNo || "";
+                      if (isCoimb && newAppNo.startsWith("VSBEC/")) {
+                        newAppNo = newAppNo.replace("VSBEC/", "VSBCTC/");
+                      } else if (!isCoimb && newAppNo.startsWith("VSBCTC/")) {
+                        newAppNo = newAppNo.replace("VSBCTC/", "VSBEC/");
+                      }
+                      setEditingApp({
+                        ...editingApp,
+                        formName: newForm,
+                        campus: syncedCampus,
+                        applicationOwner: syncedOwner,
+                        applicationNo: newAppNo,
+                      });
+                    }}
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Application Form VSB Karur (Engineering)">
@@ -1452,6 +1684,30 @@ export default function ApplicationManagerModule({
                     </option>
                   </select>
                 </div>
+
+                {/* Cross-Campus Explanation Notice */}
+                {((editingApp.campus === "COIMBATORE" && editingApp.formName?.includes("Karur")) ||
+                  (editingApp.campus === "KARUR" && editingApp.formName?.includes("Coimbatore"))) && (
+                  <div className="sm:col-span-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2.5">
+                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold">
+                        Cross-Campus Application Notice:
+                      </div>
+                      <div className="text-[11px] mt-0.5 text-amber-600 dark:text-amber-400">
+                        {editingApp.campus === "COIMBATORE" ? (
+                          <>
+                            This record is registered for <strong>Coimbatore Campus (VSB-714)</strong> while linked to the <strong>Karur Application Form</strong>. Assigned Coimbatore counselor: <strong>{editingApp.applicationOwner || "Dr. S. Meenakshi"}</strong>.
+                          </>
+                        ) : (
+                          <>
+                            This record is registered for <strong>Karur Main Campus (VSB-612)</strong> while linked to the <strong>Coimbatore Application Form</strong>. Assigned Karur counselor: <strong>{editingApp.applicationOwner || "Prof. P. Rajesh"}</strong>.
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Form Status */}
                 <div className="space-y-1">
@@ -1621,11 +1877,48 @@ export default function ApplicationManagerModule({
                   </div>
                 </div>
 
+                <div className="space-y-1">
+                  <label className="font-extrabold text-slate-700 dark:text-slate-300">Campus</label>
+                  <select
+                    value={newApp.campus || "KARUR"}
+                    onChange={(e) => {
+                      const newCampus = e.target.value as CampusLocation;
+                      const isCoimb = newCampus === "COIMBATORE";
+                      const prefix = isCoimb ? "VSBCTC" : "VSBEC";
+                      setNewApp({
+                        ...newApp,
+                        campus: newCampus,
+                        formName: `Application Form VSB ${isCoimb ? "Coimbatore" : "Karur"} (Engineering)`,
+                        applicationOwner: isCoimb ? "Dr. S. Meenakshi" : "Prof. P. Rajesh",
+                        applicationNo: `${prefix}/2026/${Math.floor(1400 + Math.random() * 200)}`,
+                      });
+                    }}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  >
+                    <option value="KARUR">Karur (612)</option>
+                    <option value="COIMBATORE">Coimbatore (714)</option>
+                  </select>
+                </div>
+
                 <div className="sm:col-span-2 space-y-1">
                   <label className="font-extrabold text-slate-700 dark:text-slate-300">Form Name</label>
                   <select
                     value={newApp.formName}
-                    onChange={(e) => setNewApp({ ...newApp, formName: e.target.value })}
+                    onChange={(e) => {
+                      const newForm = e.target.value;
+                      const isCoimb = newForm.includes("Coimbatore");
+                      const syncedCampus: CampusLocation = isCoimb ? "COIMBATORE" : "KARUR";
+                      const prefix = isCoimb ? "VSBCTC" : "VSBEC";
+                      setNewApp({
+                        ...newApp,
+                        formName: newForm,
+                        campus: syncedCampus,
+                        applicationOwner: isCoimb ? "Dr. S. Meenakshi" : "Prof. P. Rajesh",
+                        applicationNo: newApp.applicationNo?.startsWith(isCoimb ? "VSBEC/" : "VSBCTC/")
+                          ? newApp.applicationNo.replace(isCoimb ? "VSBEC/" : "VSBCTC/", `${prefix}/`)
+                          : newApp.applicationNo,
+                      });
+                    }}
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Application Form VSB Karur (Engineering)">

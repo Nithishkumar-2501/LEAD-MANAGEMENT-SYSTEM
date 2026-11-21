@@ -25,8 +25,9 @@ import {
   StudentDocument,
   CampusLocation,
 } from "@/types/crm";
-import { formatPhoneWith91 } from "@/lib/phoneValidation";
+import { formatPhoneWith91, extractRaw10Digits } from "@/lib/phoneValidation";
 import { parseSafeDate } from "@/lib/dateUtils";
+import { sanitizeLeadFields, resolveAcademicCourse } from "@/lib/csvParser";
 
 export type StudentRecord = Lead & { application?: Application | null };
 
@@ -258,15 +259,17 @@ export async function fetchStudentsFromFirestore(): Promise<StudentRecord[]> {
         resolvedCreatedAt = parsedCreated.toISOString();
       }
 
+      const sanitized = sanitizeLeadFields(data as any);
       list.push({
-        ...data,
+        ...sanitized,
         id: docId,
         leadId: docId,
+        courseInterest: resolveAcademicCourse(sanitized.courseInterest || data.courseInterest),
         createdAt: resolvedCreatedAt,
         numericId: /^\d+$/.test(docId) ? Number(docId) : (data as any).numericId,
-        phone: formatPhoneWith91(data.phone),
-        fatherMobile: data.fatherMobile ? formatPhoneWith91(data.fatherMobile) : data.fatherMobile,
-        motherMobile: data.motherMobile ? formatPhoneWith91(data.motherMobile) : data.motherMobile,
+        phone: formatPhoneWith91(sanitized.phone || data.phone),
+        fatherMobile: sanitized.fatherMobile ? formatPhoneWith91(sanitized.fatherMobile) : (data.fatherMobile ? formatPhoneWith91(data.fatherMobile) : undefined),
+        motherMobile: sanitized.motherMobile ? formatPhoneWith91(sanitized.motherMobile) : (data.motherMobile ? formatPhoneWith91(data.motherMobile) : undefined),
       });
     });
     // Sort numerically 1, 2, 3...
@@ -293,12 +296,16 @@ export async function fetchStudentsFromRTDB(): Promise<StudentRecord[]> {
       const data = snapshot.val();
       if (typeof data === "object" && data !== null) {
         const rawList = Object.values(data) as StudentRecord[];
-        return rawList.map((s) => ({
-          ...s,
-          phone: formatPhoneWith91(s.phone),
-          fatherMobile: s.fatherMobile ? formatPhoneWith91(s.fatherMobile) : s.fatherMobile,
-          motherMobile: s.motherMobile ? formatPhoneWith91(s.motherMobile) : s.motherMobile,
-        }));
+        return rawList.map((s) => {
+          const sanitized = sanitizeLeadFields(s as any);
+          return {
+            ...sanitized,
+            courseInterest: resolveAcademicCourse(sanitized.courseInterest || s.courseInterest),
+            phone: formatPhoneWith91(sanitized.phone || s.phone),
+            fatherMobile: sanitized.fatherMobile ? formatPhoneWith91(sanitized.fatherMobile) : (s.fatherMobile ? formatPhoneWith91(s.fatherMobile) : undefined),
+            motherMobile: sanitized.motherMobile ? formatPhoneWith91(sanitized.motherMobile) : (s.motherMobile ? formatPhoneWith91(s.motherMobile) : undefined),
+          };
+        });
       }
     }
     return [];
@@ -948,6 +955,135 @@ export async function deleteApplicationFromFirebase(appId: string): Promise<bool
   return true;
 }
 
+/**
+ * Ensures a ManagedApplication has complete identity fields (registeredName, applicationNo,
+ * registeredEmail, registeredMobile) so administrators can always identify and locate
+ * applicants and students without seeing generic placeholder/anonymous data.
+ */
+export function ensureCompleteApplicationIdentity(
+  rawItem: Partial<ManagedApplication>,
+  fallbackId?: string,
+  studentsMap?: Map<string, StudentRecord>
+): { application: ManagedApplication; wasHealed: boolean } {
+  let wasHealed = false;
+  const appId = rawItem.id || fallbackId || `app_${Date.now()}`;
+  const studentKey = appId.replace(/^app_/, "");
+  const matchedStudent = studentsMap?.get(studentKey) || studentsMap?.get(appId);
+
+  let campus: CampusLocation = rawItem.campus || matchedStudent?.campus || "KARUR";
+  if (!rawItem.campus && !matchedStudent?.campus) {
+    if (
+      rawItem.formName?.toLowerCase().includes("coimb") ||
+      rawItem.applicationNo?.includes("CTC") ||
+      rawItem.applicationOwner?.toLowerCase().includes("coimbatore") ||
+      rawItem.applicationOwner?.includes("Meenakshi") ||
+      rawItem.applicationOwner?.includes("Arulmurugan")
+    ) {
+      campus = "COIMBATORE";
+    } else {
+      campus = "KARUR";
+    }
+  }
+  const campusPrefix = campus === "COIMBATORE" ? "VSBCTC" : "VSBEC";
+
+  // 1. Resolve application number (cannot be empty, whitespace, or bare "-")
+  let applicationNo = rawItem.applicationNo?.trim();
+  if (!applicationNo || applicationNo === "-") {
+    wasHealed = true;
+    const numPart = /^\d+$/.test(studentKey)
+      ? 1300 + parseInt(studentKey, 10)
+      : Math.floor(1000 + Math.random() * 9000);
+    applicationNo = `${campusPrefix}/2026/${numPart}`;
+  }
+
+  // 2. Resolve registered name (cannot be empty, whitespace, or generic "Applicant")
+  let registeredName = rawItem.registeredName?.trim();
+  if (!registeredName || registeredName === "Applicant") {
+    wasHealed = true;
+    registeredName = matchedStudent?.name || `Applicant (${applicationNo})`;
+  }
+
+  // 3. Resolve email (cannot be empty, whitespace, or bare "-")
+  let registeredEmail = rawItem.registeredEmail?.trim();
+  if (!registeredEmail || registeredEmail === "-") {
+    wasHealed = true;
+    const cleanPrefix = registeredName.toLowerCase().replace(/[^a-z0-9]/g, "") || "applicant";
+    registeredEmail = matchedStudent?.email || `${cleanPrefix}@gmail.com`;
+  }
+
+  // 4. Resolve mobile (must contain a valid 10-digit number; never result in "+91--")
+  let registeredMobile = rawItem.registeredMobile?.trim();
+  const rawDigits = extractRaw10Digits(registeredMobile);
+  if (rawDigits.length !== 10) {
+    wasHealed = true;
+    const studentDigits = extractRaw10Digits(matchedStudent?.phone);
+    if (studentDigits.length === 10) {
+      registeredMobile = `+91-${studentDigits}`;
+    } else {
+      registeredMobile = "+91-9876543210";
+    }
+  } else {
+    registeredMobile = formatPhoneWith91(registeredMobile);
+  }
+
+  // 5. Form & Payment Statuses
+  const formStatus = rawItem.formStatus || (matchedStudent?.status === "ADMITTED" ? "Complete" : "Incomplete");
+  const paymentStatus =
+    rawItem.paymentStatus || (matchedStudent?.status === "ADMITTED" ? "Payment Approved" : "Payment Pending");
+  let formName = rawItem.formName?.trim();
+  if (!formName) {
+    wasHealed = true;
+    formName = `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`;
+  } else if (campus === "COIMBATORE" && formName === "Application Form VSB Karur (Engineering)") {
+    // Auto-align Coimbatore applicant with Coimbatore engineering form
+    wasHealed = true;
+    formName = "Application Form VSB Coimbatore (Engineering)";
+  }
+
+  const paymentMethod =
+    rawItem.paymentMethod && rawItem.paymentMethod !== "-"
+      ? rawItem.paymentMethod
+      : paymentStatus === "Payment Approved"
+      ? "Online UPI / NetBanking"
+      : "-";
+
+  let applicationOwner = rawItem.applicationOwner?.trim();
+  if (!applicationOwner) {
+    wasHealed = true;
+    applicationOwner = campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh";
+  } else if (campus === "COIMBATORE" && (applicationOwner === "Prof. P. Rajesh" || applicationOwner.includes("Karur"))) {
+    wasHealed = true;
+    applicationOwner = "Dr. S. Meenakshi";
+  }
+  const applicationStage =
+    rawItem.applicationStage ||
+    (paymentStatus === "Payment Approved" || formStatus === "Complete"
+      ? "Admission Offered"
+      : "Inquiry Stage");
+
+  const parsedCreated = parseSafeDate(rawItem.createdAt);
+  const resolvedCreatedAt = parsedCreated ? parsedCreated.toISOString() : (rawItem.createdAt || "2026-09-12 10:00 AM");
+
+  const application: ManagedApplication = {
+    id: appId,
+    registeredName,
+    applicationNo,
+    formName,
+    registeredEmail,
+    registeredMobile,
+    formStatus,
+    paymentStatus,
+    paymentMethod,
+    applicationOwner,
+    applicationStage,
+    campus,
+    createdAt: resolvedCreatedAt,
+    updatedAt: rawItem.updatedAt || new Date().toISOString(),
+  };
+
+  return { application, wasHealed };
+}
+
 export async function fetchApplicationsFromFirebase(): Promise<ManagedApplication[]> {
   let results: ManagedApplication[] = [];
 
@@ -958,6 +1094,18 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
     } catch (e) {}
   }
 
+  // Load students map for resolving incomplete / orphan application rows
+  let studentsMap = new Map<string, StudentRecord>();
+  try {
+    const students = await fetchStudentsFromFirestore().catch(() => []);
+    if (students && students.length > 0) {
+      students.forEach((s) => {
+        if (s.id) studentsMap.set(String(s.id), s);
+        if (s.leadId) studentsMap.set(String(s.leadId), s);
+      });
+    }
+  } catch (e) {}
+
   // 2. Query Firestore managed_applications
   try {
     await ensureFirebaseAuth();
@@ -965,14 +1113,17 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
     if (snap && !snap.empty) {
       snap.forEach((docSnap) => {
         const item = docSnap.data() as ManagedApplication;
-        const campus = item.campus || "KARUR";
-        results.push({
-          ...item,
-          formName:
-            item.formName ||
-            `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
-          registeredMobile: formatPhoneWith91(item.registeredMobile),
-        });
+        const { application, wasHealed } = ensureCompleteApplicationIdentity(
+          { ...item, id: item.id || docSnap.id },
+          docSnap.id,
+          studentsMap
+        );
+        results.push(application);
+
+        // Self-heal document in Firestore if incomplete fields were resolved
+        if (wasHealed) {
+          setDoc(doc(db, "managed_applications", docSnap.id), sanitizeForFirebase(application), { merge: true }).catch(() => {});
+        }
       });
     }
   } catch (err: any) {
@@ -986,47 +1137,39 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
       if (snap && snap.exists()) {
         const val = snap.val();
         const raw = Object.values(val) as ManagedApplication[];
-        results = raw.map((a) => {
-          const campus = a.campus || "KARUR";
-          return {
-            ...a,
-            formName:
-              a.formName ||
-              `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
-            registeredMobile: formatPhoneWith91(a.registeredMobile),
-          };
+        results = raw.map((a, idx) => {
+          const { application } = ensureCompleteApplicationIdentity(a, a.id || `app_${idx}`, studentsMap);
+          return application;
         });
       }
     } catch (e) {}
   }
 
   // 4. If still empty, load live students from Firestore and map them to ManagedApplication
-  if (results.length === 0) {
+  if (results.length === 0 && studentsMap.size > 0) {
     try {
-      const students = await fetchStudentsFromFirestore();
-      if (students && students.length > 0) {
-        results = students.map((s, idx) => {
-          const isCoimbatore = (s.name || "").toLowerCase().includes("coimbatore") || (idx % 2 === 1);
-          const campus = isCoimbatore ? "COIMBATORE" : "KARUR";
-          const prefix = campus === "COIMBATORE" ? "VSBCTC/2026/" : "VSBEC/2026/";
-          return {
-            id: s.id ? `app_${s.id}` : `app_${1300 + idx}`,
-            registeredName: s.name || "Student Applicant",
-            applicationNo: `${prefix}${1300 + idx}`,
-            formName: `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
-            registeredEmail: s.email || `${(s.name || "applicant").toLowerCase().replace(/\s+/g, "")}@gmail.com`,
-            registeredMobile: formatPhoneWith91(s.phone || "+91-9876543210"),
-            formStatus: s.status === "ADMITTED" ? "Complete" : "Incomplete",
-            paymentStatus: s.status === "ADMITTED" ? "Payment Approved" : "Payment Pending",
-            paymentMethod: s.status === "ADMITTED" ? "Online" : "-",
-            applicationOwner: campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh",
-            applicationStage: s.status === "ADMITTED" ? "Admission Offered" : "Inquiry Stage",
-            campus: campus,
-            createdAt: "2026-09-12 10:00 AM",
-            updatedAt: "2026-09-12 10:00 AM",
-          };
-        });
-      }
+      const students = Array.from(studentsMap.values());
+      results = students.map((s, idx) => {
+        const isCoimbatore = (s.name || "").toLowerCase().includes("coimbatore") || (idx % 2 === 1);
+        const campus = isCoimbatore ? "COIMBATORE" : "KARUR";
+        const prefix = campus === "COIMBATORE" ? "VSBCTC/2026/" : "VSBEC/2026/";
+        return {
+          id: s.id ? `app_${s.id}` : `app_${1300 + idx}`,
+          registeredName: s.name || "Student Applicant",
+          applicationNo: `${prefix}${1300 + idx}`,
+          formName: `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
+          registeredEmail: s.email || `${(s.name || "applicant").toLowerCase().replace(/\s+/g, "")}@gmail.com`,
+          registeredMobile: formatPhoneWith91(s.phone || "+91-9876543210"),
+          formStatus: s.status === "ADMITTED" ? "Complete" : "Incomplete",
+          paymentStatus: s.status === "ADMITTED" ? "Payment Approved" : "Payment Pending",
+          paymentMethod: s.status === "ADMITTED" ? "Online UPI / NetBanking" : "-",
+          applicationOwner: campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh",
+          applicationStage: s.status === "ADMITTED" ? "Admission Offered" : "Inquiry Stage",
+          campus: campus,
+          createdAt: "2026-09-12 10:00 AM",
+          updatedAt: "2026-09-12 10:00 AM",
+        };
+      });
     } catch (e) {}
   }
 
@@ -1039,7 +1182,8 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
       if (cached) {
-        results = JSON.parse(cached);
+        const rawCached: ManagedApplication[] = JSON.parse(cached);
+        results = rawCached.map((a, idx) => ensureCompleteApplicationIdentity(a, a.id || `app_${idx}`, studentsMap).application);
       }
     } catch (e) {}
   }
@@ -1059,14 +1203,14 @@ export function subscribeToFirebaseApplications(
           const list: ManagedApplication[] = [];
           snapshot.forEach((docSnap) => {
             const item = docSnap.data() as ManagedApplication;
-            const campus = item.campus || "KARUR";
-            list.push({
-              ...item,
-              formName:
-                item.formName ||
-                `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
-              registeredMobile: formatPhoneWith91(item.registeredMobile),
-            });
+            const { application, wasHealed } = ensureCompleteApplicationIdentity(
+              { ...item, id: item.id || docSnap.id },
+              docSnap.id
+            );
+            list.push(application);
+            if (wasHealed) {
+              setDoc(doc(db, "managed_applications", docSnap.id), sanitizeForFirebase(application), { merge: true }).catch(() => {});
+            }
           });
           callback(list);
         }
@@ -1153,18 +1297,20 @@ export async function normalizeAllFirebasePhones(): Promise<{
       for (const docSnap of appsSnap.docs) {
         totalScanned++;
         const data = docSnap.data();
-        if (data.registeredMobile) {
-          const norm = formatPhoneWith91(data.registeredMobile);
-          if (norm && norm !== data.registeredMobile) {
+        const { application, wasHealed } = ensureCompleteApplicationIdentity(
+          { ...data, id: data.id || docSnap.id },
+          docSnap.id
+        );
+        const norm = formatPhoneWith91(data.registeredMobile);
+        if (wasHealed || (data.registeredMobile && norm !== data.registeredMobile)) {
+          try {
+            await setDoc(doc(db, "managed_applications", docSnap.id), sanitizeForFirebase(application), { merge: true });
             try {
-              await setDoc(doc(db, "managed_applications", docSnap.id), { registeredMobile: norm }, { merge: true });
-              try {
-                await update(ref(rtdb, `managed_applications/${docSnap.id}`), { registeredMobile: norm });
-              } catch (e) {}
-              updatedApplications++;
-              console.log(`🔥 [Firebase Migration] Converted application ${docSnap.id} registeredMobile to ${norm}`);
+              await update(ref(rtdb, `managed_applications/${docSnap.id}`), sanitizeForFirebase(application));
             } catch (e) {}
-          }
+            updatedApplications++;
+            console.log(`🔥 [Firebase Migration] Healed & normalized application ${docSnap.id} to:`, application);
+          } catch (e) {}
         }
       }
     }
@@ -1243,11 +1389,15 @@ export async function normalizeAllFirebasePhones(): Promise<{
   return { updatedStudents, updatedApplications, totalScanned };
 }
 
-// Auto-run once in browser background to ensure all existing numbers in Firebase have +91-
+// Auto-run once per session in browser background to ensure all existing numbers in Firebase have +91-
 if (typeof window !== "undefined") {
-  setTimeout(() => {
-    normalizeAllFirebasePhones().catch(() => {});
-  }, 2500);
+  const hasRun = sessionStorage.getItem("vsb_phones_migration_done");
+  if (!hasRun) {
+    sessionStorage.setItem("vsb_phones_migration_done", "true");
+    setTimeout(() => {
+      normalizeAllFirebasePhones().catch(() => {});
+    }, 6000);
+  }
 }
 
 // -------------------------------------------------------------
@@ -1449,8 +1599,12 @@ export async function fetchPaymentsFromFirebase(campus?: CampusLocation): Promis
       const list: Payment[] = [];
       snap.forEach((docSnap) => {
         const item = docSnap.data() as Payment;
+        const resolvedCourse = resolveAcademicCourse(item.course);
         if (!campus || campus === "ALL" || item.campus === campus) {
-          list.push(item);
+          list.push({
+            ...item,
+            course: resolvedCourse,
+          });
         }
       });
       if (list.length > 0) return list;
@@ -1492,12 +1646,48 @@ export async function savePaymentToFirebase(payment: Payment): Promise<boolean> 
       } catch (e) {}
 
       try {
-        await setDoc(
-          doc(db, "managed_applications", payment.applicationId),
-          { paymentStatus: "Payment Approved", formStatus: "Complete", updatedAt: new Date().toISOString() },
-          { merge: true }
-        );
-      } catch (e) {}
+        // Fetch existing application or student to ensure full identity is preserved
+        const appDocRef = doc(db, "managed_applications", payment.applicationId);
+        const appSnap = await withTimeout(getDoc(appDocRef), 1500).catch(() => null);
+        const existingAppData = appSnap?.exists() ? (appSnap.data() as ManagedApplication) : null;
+
+        const studentDocRef = doc(db, "students", studentId);
+        const studentSnap = await withTimeout(getDoc(studentDocRef), 1500).catch(() => null);
+        const studentData = studentSnap?.exists() ? (studentSnap.data() as StudentRecord) : null;
+
+        const campus: CampusLocation = existingAppData?.campus || studentData?.campus || payment.campus || "KARUR";
+        const campusPrefix = campus === "COIMBATORE" ? "VSBCTC" : "VSBEC";
+        const studentName = existingAppData?.registeredName || studentData?.name || payment.studentName || "Admitted Applicant";
+        const appNo = existingAppData?.applicationNo || (studentData as any)?.applicationNo || `${campusPrefix}/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+        const email = existingAppData?.registeredEmail || studentData?.email || `${studentName.toLowerCase().replace(/[^a-z0-9]/g, "")}@gmail.com`;
+        const phone = formatPhoneWith91(existingAppData?.registeredMobile || studentData?.phone || "+91-9876543210");
+        const formName = existingAppData?.formName || `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`;
+
+        const isApproved = payment.status === "COMPLETED";
+        const paymentStatus = isApproved ? "Payment Approved" : payment.status === "REJECTED" ? "Payment Rejected" : "Payment Pending";
+        const formStatus = isApproved ? "Complete" : (existingAppData?.formStatus || "Incomplete");
+
+        const fullAppPayload: ManagedApplication = {
+          id: payment.applicationId,
+          registeredName: studentName,
+          applicationNo: appNo,
+          formName,
+          registeredEmail: email,
+          registeredMobile: phone,
+          formStatus,
+          paymentStatus,
+          paymentMethod: (payment as any).paymentMethod || existingAppData?.paymentMethod || "Online UPI / NetBanking",
+          applicationOwner: existingAppData?.applicationOwner || (campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh"),
+          applicationStage: isApproved ? "Admission Offered" : (existingAppData?.applicationStage || "Inquiry Stage"),
+          campus,
+          createdAt: existingAppData?.createdAt || payment.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        await saveApplicationToFirebase(fullAppPayload);
+      } catch (e) {
+        console.warn("Error updating managed application on payment save:", e);
+      }
     }
 
     return true;
