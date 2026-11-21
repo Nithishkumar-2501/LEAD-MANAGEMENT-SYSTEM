@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Mail, Phone, AlertCircle, Share2, GraduationCap, CheckCircle2 } from "lucide-react";
 import { Lead, Application, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
-import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
+import { TAMIL_NADU_DISTRICTS, STATE_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
@@ -541,7 +541,12 @@ export default function AddQuickLeadModal({
                   </label>
                   <select
                     value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    onChange={(e) => {
+                      const newState = e.target.value;
+                      const dists = STATE_DISTRICTS[newState] || TAMIL_NADU_DISTRICTS;
+                      const newCity = dists.includes(formData.city) ? formData.city : (dists[0] || "");
+                      setFormData({ ...formData, state: newState, city: newCity });
+                    }}
                     className="w-full border border-slate-300 dark:border-white/15 rounded-lg p-2.5 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="Tamil Nadu">Tamil Nadu</option>
@@ -561,7 +566,7 @@ export default function AddQuickLeadModal({
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     className="w-full border border-slate-300 dark:border-white/15 rounded-lg p-2.5 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 max-h-48"
                   >
-                    {TAMIL_NADU_DISTRICTS.map((dist) => (
+                    {(STATE_DISTRICTS[formData.state] || TAMIL_NADU_DISTRICTS).map((dist) => (
                       <option key={dist} value={dist} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                         {dist}
                       </option>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads, downloadSampleLeadsCSV } from "@/lib/csvParser";
-import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
+import { TAMIL_NADU_DISTRICTS, STATE_DISTRICTS } from "@/lib/mockData";
 import { saveStudentToFirebase, saveApplicationToFirebase, deleteStudentFromFirebase, markLeadAsDeleted, isLeadDeleted, normalizeAllFirebasePhones } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, extractRaw10Digits, formatPhoneWith91 } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
@@ -4051,7 +4051,7 @@ export default function ContactDirectoryModule({
                         onChange={(e) => setNewContact({ ...newContact, district: e.target.value })}
                         className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                       >
-                        {districts.filter((d) => d !== "ALL").map((d) => (
+                        {(STATE_DISTRICTS[newContact.state] || TAMIL_NADU_DISTRICTS).map((d) => (
                           <option key={d} value={d} className="bg-slate-900">
                             {d}
                           </option>
@@ -4062,7 +4062,12 @@ export default function ContactDirectoryModule({
                       <label className="block text-xs font-bold text-slate-300 mb-1">Student State</label>
                       <select
                         value={newContact.state}
-                        onChange={(e) => setNewContact({ ...newContact, state: e.target.value })}
+                        onChange={(e) => {
+                          const newState = e.target.value;
+                          const dists = STATE_DISTRICTS[newState] || TAMIL_NADU_DISTRICTS;
+                          const newDist = dists.includes(newContact.district) ? newContact.district : (dists[0] || "");
+                          setNewContact({ ...newContact, state: newState, district: newDist });
+                        }}
                         className="w-full bg-slate-950 border border-white/20 rounded-xl sm:rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
                       >
                         {INDIAN_STATES.map((s) => (
