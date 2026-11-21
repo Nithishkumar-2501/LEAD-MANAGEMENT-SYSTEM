@@ -188,6 +188,7 @@ export default function ApplicantDetailModal({
   existingLeads = [],
 }: ApplicantDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [backupFormData, setBackupFormData] = useState<(Lead & { application: Application }) | null>(null);
 
   const getInitialFormData = (appLead: (Lead & { application: Application }) | null) => {
     if (!appLead) return null;
@@ -208,6 +209,40 @@ export default function ApplicantDetailModal({
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(() =>
     getInitialFormData(applicant)
   );
+
+  const handleOpenEditModal = () => {
+    if (formData) {
+      setBackupFormData(JSON.parse(JSON.stringify(formData)));
+    }
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (backupFormData) {
+      setFormData(backupFormData);
+      setBackupFormData(null);
+    }
+    setIsEditing(false);
+  };
+
+  // Sync snapshot whenever edit mode is opened
+  useEffect(() => {
+    if (isEditing && formData && !backupFormData) {
+      setBackupFormData(JSON.parse(JSON.stringify(formData)));
+    }
+  }, [isEditing, formData, backupFormData]);
+
+  // Handle Escape key to cancel and discard unsaved edits
+  useEffect(() => {
+    if (!isEditing) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCancelEdit();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isEditing, backupFormData]);
   const [currentStageKey, setCurrentStageKey] = useState<string>(() => getStageKeyForLead(applicant));
 
   const effectiveCutoff = useMemo(() => {
@@ -945,6 +980,7 @@ export default function ApplicantDetailModal({
       setSaveSuccessToast(`🔥 Successfully saved ${formData.name}'s data to Firebase!`);
       setTimeout(() => {
         setSaveSuccessToast(null);
+        setBackupFormData(null);
         setIsEditing(false);
       }, 1400);
     } catch (err: any) {
@@ -1165,7 +1201,7 @@ export default function ApplicantDetailModal({
 
             {/* Edit Details Button at Top Right */}
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={handleOpenEditModal}
               className="press-spring flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer hover:scale-105"
               title="Edit Student Data & Save to Firebase"
             >
@@ -1376,7 +1412,7 @@ export default function ApplicantDetailModal({
                       {/* Pencil Icon next to Student State */}
                       <button
                         type="button"
-                        onClick={() => setIsEditing(true)}
+                        onClick={handleOpenEditModal}
                         className="p-0.5 rounded hover:bg-sky-100 dark:hover:bg-sky-900 text-slate-500 dark:text-slate-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors inline-flex items-center cursor-pointer ml-0.5"
                         title="Edit State & Student Info"
                       >
@@ -1530,7 +1566,7 @@ export default function ApplicantDetailModal({
                   </button>
 
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={handleOpenEditModal}
                     className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-300 dark:border-sky-700 text-sky-800 dark:text-sky-300 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105"
                     title="Edit Student Data & Save to Firebase"
                   >
@@ -1564,7 +1600,7 @@ export default function ApplicantDetailModal({
                 {/* PROMINENT EDIT STUDENT DATA BUTTON */}
                 <button
                   type="button"
-                  onClick={() => setIsEditing(true)}
+                  onClick={handleOpenEditModal}
                   className="w-full mt-3 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   title="Edit Student Information & Save to Firebase"
                 >
@@ -1921,7 +1957,7 @@ export default function ApplicantDetailModal({
 
                     <button
                       type="button"
-                      onClick={() => setIsEditing(true)}
+                      onClick={handleOpenEditModal}
                       className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
                       <Edit3 className="w-3.5 h-3.5" /> Edit Profile
@@ -2455,8 +2491,18 @@ export default function ApplicantDetailModal({
         {/* DEDICATED EDIT STUDENT DATA MODAL OVERLAY (FIREBASE & DATABASE SYNC)     */}
         {/* ========================================================================= */}
         {isEditing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-white/20 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-950 dark:text-white animate-in zoom-in-95 duration-200">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isSavingFirebase) {
+                handleCancelEdit();
+              }
+            }}
+          >
+            <div
+              className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-white/20 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-950 dark:text-white animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Header */}
               <div className="p-4 px-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
                 <div className="flex items-center gap-2.5">
@@ -2476,9 +2522,10 @@ export default function ApplicantDetailModal({
 
                 <button
                   type="button"
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleCancelEdit}
                   disabled={isSavingFirebase}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Cancel and discard unsaved changes"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -3220,7 +3267,7 @@ export default function ApplicantDetailModal({
                     <button
                       type="button"
                       disabled={isSavingFirebase}
-                      onClick={() => setIsEditing(false)}
+                      onClick={handleCancelEdit}
                       className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all cursor-pointer"
                     >
                       Cancel

@@ -20,7 +20,17 @@ import {
   resolveTeacherByUsername,
 } from "@/lib/firebaseSync";
 import { formatPhoneWith91 } from "@/lib/phoneValidation";
-import { getTeacherCallStats, isFacultyBatchAllocated } from "@/lib/teacherAssignment";
+import {
+  getTeacherCallStats,
+  isFacultyBatchAllocated,
+  getTeacherStartIdx,
+  parseBatchRange,
+  doBatchRangesOverlap,
+  findNextAvailableBatchRange,
+  findConflictingAllocatedTeacher,
+  reconcileOverlappingTeacherBatches,
+  BatchRange,
+} from "@/lib/teacherAssignment";
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
@@ -208,6 +218,32 @@ export function getDepartmentMeta(deptName: string) {
   };
 }
 
+const ALLOCATION_CHIP_PALETTES = [
+  "bg-indigo-100 border-indigo-300",
+  "bg-sky-100 border-sky-300",
+  "bg-pink-100 border-pink-300",
+  "bg-purple-100 border-purple-300",
+  "bg-emerald-100 border-emerald-300",
+  "bg-teal-100 border-teal-300",
+  "bg-violet-100 border-violet-300",
+  "bg-rose-100 border-rose-300",
+  "bg-cyan-100 border-cyan-300",
+  "bg-amber-100 border-amber-300",
+];
+
+export function formatBatchRangeLabel(rangeText?: string): string {
+  if (!rangeText) return "";
+  const match = rangeText.match(/#(\d+)\s*(?:to|-)\s*#?(\d+)/i);
+  if (match) {
+    return `(#${match[1]} - #${match[2]})`;
+  }
+  const singleMatch = rangeText.match(/#(\d+)/);
+  if (singleMatch) {
+    return `(#${singleMatch[1]})`;
+  }
+  return `(${rangeText.replace(/^(?:Contacts|Batch)\s*/i, "").trim()})`;
+}
+
 export default function TeacherModule({ loggedInCampus, currentUserRole, loggedInUsername, onTriggerToast, applicants = [], onSelectApplicant }: TeacherModuleProps) {
   const [teachers, setTeachers] = useState<Teacher[]>(() => {
     if (typeof window !== "undefined") {
@@ -216,12 +252,25 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return mergeWithMockTeachers(parsed);
+            const { reconciled, modified } = reconcileOverlappingTeacherBatches(mergeWithMockTeachers(parsed));
+            if (modified.length > 0) {
+              modified.forEach((m) => {
+                saveTeacherToFirebase(m);
+                try {
+                  localStorage.removeItem(`vsb_teacher_call_records_${m.id || m.email}`);
+                } catch (e) {}
+              });
+              try {
+                localStorage.setItem("vsb_crm_teachers", JSON.stringify(reconciled));
+              } catch (e) {}
+            }
+            return reconciled;
           }
         }
       } catch (e) {}
     }
-    return mergeWithMockTeachers(MOCK_TEACHERS);
+    const { reconciled } = reconcileOverlappingTeacherBatches(mergeWithMockTeachers(MOCK_TEACHERS));
+    return reconciled;
   });
   const [search, setSearch] = useState("");
   // Default to Mechanical Engineering so the user immediately gets their requested department view
@@ -250,6 +299,22 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [splitTargetTeacher, setSplitTargetTeacher] = useState("rajesh.mech@vsbec.in");
   const [splitQuantity, setSplitQuantity] = useState(100);
   const [splitStartNumber, setSplitStartNumber] = useState(1);
+
+  const splitConflict = useMemo(() => {
+    if (splitStartNumber < 1 || splitStartNumber > 1000 || splitQuantity < 1) return null;
+    return findConflictingAllocatedTeacher(splitTargetTeacher, splitStartNumber, splitQuantity, teachers);
+  }, [splitTargetTeacher, splitStartNumber, splitQuantity, teachers]);
+
+  const suggestedNextBatch = useMemo(() => {
+    const occupied: BatchRange[] = [];
+    teachers.forEach((t) => {
+      if (t.id === splitTargetTeacher || t.email === splitTargetTeacher) return;
+      if (!isFacultyBatchAllocated(t)) return;
+      const r = parseBatchRange(t.assignedRangeText);
+      if (r) occupied.push(r);
+    });
+    return findNextAvailableBatchRange(occupied, splitQuantity || 100, 1000);
+  }, [splitTargetTeacher, splitQuantity, teachers]);
 
   // Admin Call Analytics & Audio Audit State
   const [isAdminAuditDrawerOpen, setIsAdminAuditDrawerOpen] = useState(false);
@@ -342,11 +407,31 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
   const [isFirebaseSyncing, setIsFirebaseSyncing] = useState(false);
 
+  // Helper to reconcile and sanitize teachers list to guarantee zero overlapping batches
+  const reconcileAndPersistTeachers = (incoming: Teacher[]): Teacher[] => {
+    const { reconciled, modified } = reconcileOverlappingTeacherBatches(incoming);
+    if (modified.length > 0) {
+      modified.forEach((m) => {
+        saveTeacherToFirebase(m);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem(`vsb_teacher_call_records_${m.id || m.email}`);
+          } catch (e) {}
+        }
+      });
+      try {
+        localStorage.setItem("vsb_crm_teachers", JSON.stringify(reconciled));
+      } catch (e) {}
+    }
+    return reconciled;
+  };
+
   // Persistent Storage Sync Helper (LocalStorage + Database API)
   const saveTeachersList = (updatedList: Teacher[]) => {
-    setTeachers(updatedList);
+    const reconciled = reconcileAndPersistTeachers(updatedList);
+    setTeachers(reconciled);
     try {
-      localStorage.setItem("vsb_crm_teachers", JSON.stringify(updatedList));
+      localStorage.setItem("vsb_crm_teachers", JSON.stringify(reconciled));
     } catch (e) {}
   };
 
@@ -359,7 +444,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const merged = mergeWithMockTeachers(parsed);
-          setTeachers(merged);
+          const reconciled = reconcileAndPersistTeachers(merged);
+          setTeachers(reconciled);
         }
       }
     } catch (err) {}
@@ -369,8 +455,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
       .then((fbTeachers) => {
         if (Array.isArray(fbTeachers) && fbTeachers.length > 0) {
           const merged = mergeWithMockTeachers(fbTeachers);
-          setTeachers(merged);
-          saveTeachersList(merged);
+          const reconciled = reconcileAndPersistTeachers(merged);
+          setTeachers(reconciled);
         }
       })
       .catch((err) => {
@@ -381,8 +467,8 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     const unsubscribe = subscribeToFirebaseTeachers((liveList) => {
       if (Array.isArray(liveList) && liveList.length > 0) {
         const merged = mergeWithMockTeachers(liveList);
-        setTeachers(merged);
-        saveTeachersList(merged);
+        const reconciled = reconcileAndPersistTeachers(merged);
+        setTeachers(reconciled);
       }
     });
 
@@ -393,10 +479,11 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
         if (Array.isArray(data) && data.length > 0) {
           setTeachers((prev) => {
             const merged = mergeWithMockTeachers([...prev, ...data]);
+            const reconciled = reconcileAndPersistTeachers(merged);
             try {
-              localStorage.setItem("vsb_crm_teachers", JSON.stringify(merged));
+              localStorage.setItem("vsb_crm_teachers", JSON.stringify(reconciled));
             } catch (e) {}
-            return merged;
+            return reconciled;
           });
         }
       })
@@ -789,6 +876,19 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const tchEndIndex = Math.min(filteredTeachers.length, tchStartIndex + rowsPerPage);
   const paginatedTeachers = filteredTeachers.slice(tchStartIndex, tchEndIndex);
 
+  const allocatedTeachers = useMemo(() => {
+    return teachers
+      .filter((t) => isFacultyBatchAllocated(t))
+      .sort((a, b) => getTeacherStartIdx(a.assignedRangeText, a.email) - getTeacherStartIdx(b.assignedRangeText, b.email));
+  }, [teachers]);
+
+  const totalAllocatedLeads = useMemo(() => {
+    return allocatedTeachers.reduce((sum, t) => sum + (t.assignedQuota || 100), 0);
+  }, [allocatedTeachers]);
+
+  const totalDatabaseLeads = 1000;
+  const unassignedLeadsCount = Math.max(0, totalDatabaseLeads - totalAllocatedLeads);
+
   return (
     <div className="space-y-6">
       {/* Module Overview Stat Cards */}
@@ -866,30 +966,35 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               <span className="text-xl">⚡</span> Total Database Leads: <span className="text-indigo-400 font-black">1,000 Contacts</span>
             </h3>
             <p className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
-              <span>Admin can split database leads into specific teacher batches (e.g. 100 contacts to Prof. P. Rajesh). Teachers exclusively view & edit their assigned batch while remaining 900 leads stay protected.</span>
+              <span>Admin can split database leads into specific teacher batches (e.g. 100 contacts to Prof. P. Rajesh). Teachers exclusively view & edit their assigned batch while remaining {unassignedLeadsCount.toLocaleString()} leads stay protected.</span>
             </p>
 
             {/* Allocated Batches Summary Chips */}
             <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
-              <div className="px-3 py-1.5 rounded-xl bg-indigo-100 border border-indigo-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">👤 P. Rajesh:</span>
-                <span className="text-black font-extrabold">100 Leads (#1 - #100)</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-xl bg-sky-100 border border-sky-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">👤 Dr. Arulmurugan:</span>
-                <span className="text-black font-extrabold">100 Leads (#101 - #200)</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-xl bg-pink-100 border border-pink-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">👤 Dr. Meenakshi:</span>
-                <span className="text-black font-extrabold">100 Leads (#201 - #300)</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-xl bg-purple-100 border border-purple-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">👤 Dr. Gayathri:</span>
-                <span className="text-black font-extrabold">100 Leads (#301 - #400)</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-xl bg-amber-100 border border-amber-300 flex items-center gap-1.5 font-black text-black shadow-sm">
-                <span className="text-black font-black">⏳ 600 Unassigned Leads</span>
-              </div>
+              {allocatedTeachers.map((tch, idx) => {
+                const colorClass = ALLOCATION_CHIP_PALETTES[idx % ALLOCATION_CHIP_PALETTES.length];
+                const rangeLabel = formatBatchRangeLabel(tch.assignedRangeText);
+                return (
+                  <div
+                    key={tch.id || tch.email || idx}
+                    className={`px-3 py-1.5 rounded-xl ${colorClass} border flex items-center gap-1.5 font-black text-black shadow-sm`}
+                  >
+                    <span className="text-black font-black">👤 {tch.name}:</span>
+                    <span className="text-black font-extrabold">
+                      {tch.assignedQuota || 100} Leads {rangeLabel}
+                    </span>
+                  </div>
+                );
+              })}
+              {unassignedLeadsCount > 0 ? (
+                <div className="px-3 py-1.5 rounded-xl bg-amber-100 border border-amber-300 flex items-center gap-1.5 font-black text-black shadow-sm">
+                  <span className="text-black font-black">⏳ {unassignedLeadsCount.toLocaleString()} Unassigned Leads</span>
+                </div>
+              ) : (
+                <div className="px-3 py-1.5 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center gap-1.5 font-black text-black shadow-sm">
+                  <span className="text-black font-black">✅ 0 Unassigned Leads (All Allocated)</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -2114,8 +2219,19 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                     max={1000}
                     value={splitStartNumber}
                     onChange={(e) => setSplitStartNumber(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2 text-xs font-bold focus:ring-2 focus:outline-none ${
+                      splitStartNumber < 1 || splitStartNumber > 1000
+                        ? "border-rose-500/80 text-rose-200 focus:ring-rose-500"
+                        : "border-white/20 text-white focus:ring-indigo-500"
+                    }`}
                   />
+                  {(splitStartNumber < 1 || splitStartNumber > 1000) && (
+                    <p className="text-[10px] text-rose-400 font-medium mt-1">
+                      {splitStartNumber > 1000
+                        ? "Out of bounds: Cannot exceed pool of 1000 contacts"
+                        : "Must be at least 1"}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -2126,23 +2242,77 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                     max={1000}
                     value={splitQuantity}
                     onChange={(e) => setSplitQuantity(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2 text-xs font-bold focus:ring-2 focus:outline-none ${
+                      splitQuantity < 1
+                        ? "border-rose-500/80 text-rose-200 focus:ring-rose-500"
+                        : "border-white/20 text-white focus:ring-indigo-500"
+                    }`}
                   />
+                  {splitQuantity < 1 && (
+                    <p className="text-[10px] text-rose-400 font-medium mt-1">
+                      Quantity must be at least 1
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Summary Banner */}
-              <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold space-y-1">
-                <div className="flex items-center justify-between">
-                  <span>Target Allocation Range:</span>
-                  <span className="text-emerald-400 font-black font-mono text-sm">
-                    #{splitStartNumber} to #{Math.min(1000, splitStartNumber + splitQuantity - 1)}
-                  </span>
+              {splitStartNumber < 1 || splitStartNumber > 1000 || splitQuantity < 1 ? (
+                <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span>Target Allocation Range:</span>
+                    <span className="text-rose-400 font-black font-mono text-sm">
+                      Unavailable (Out of bounds)
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-rose-300 font-normal">
+                    {splitStartNumber > 1000
+                      ? `⚠️ Start contact #${splitStartNumber} exceeds available contact pool (max #1000). Please enter a start contact between 1 and 1000.`
+                      : splitStartNumber < 1
+                      ? "⚠️ Start contact number must be at least 1 (pool range: #1 to #1000)."
+                      : "⚠️ Batch quantity must be at least 1 contact."}
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-400 font-normal">
-                  This batch will be exclusively assigned to {MOCK_TEACHERS.find(t => t.id === splitTargetTeacher)?.name || splitTargetTeacher}.
-                </p>
-              </div>
+              ) : splitConflict ? (
+                <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-bold space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-rose-400 font-black">
+                      <span>🚫</span>
+                      <span>Batch Overlap Conflict Detected</span>
+                    </span>
+                    <span className="text-rose-300 font-mono text-xs font-bold">
+                      Collides with #{splitConflict.range.start} - #{splitConflict.range.end}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-rose-300 font-normal leading-relaxed">
+                    Contacts #{splitStartNumber} to #{Math.min(1000, splitStartNumber + splitQuantity - 1)} overlap with <strong>{splitConflict.teacher.name}</strong> ({splitConflict.teacher.assignedRangeText}). Each faculty member must receive a strictly exclusive, non-overlapping batch.
+                  </p>
+                  {suggestedNextBatch && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSplitStartNumber(suggestedNextBatch.start);
+                        setSplitQuantity(suggestedNextBatch.end - suggestedNextBatch.start + 1);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+                    >
+                      <span>⚡ Auto-fill Next Free Batch: #{suggestedNextBatch.start} - #{suggestedNextBatch.end}</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span>Target Allocation Range:</span>
+                    <span className="text-emerald-400 font-black font-mono text-sm">
+                      #{splitStartNumber} to #{Math.min(1000, splitStartNumber + splitQuantity - 1)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    This batch will be exclusively assigned to {MOCK_TEACHERS.find(t => t.id === splitTargetTeacher)?.name || splitTargetTeacher}.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
@@ -2155,7 +2325,28 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               </button>
               <button
                 type="button"
+                disabled={splitStartNumber < 1 || splitStartNumber > 1000 || splitQuantity < 1 || splitConflict !== null}
                 onClick={() => {
+                  if (splitStartNumber < 1 || splitStartNumber > 1000 || splitQuantity < 1) {
+                    if (onTriggerToast) {
+                      onTriggerToast(
+                        splitStartNumber > 1000
+                          ? `⚠️ Start contact #${splitStartNumber} is out of bounds (1–1000).`
+                          : splitStartNumber < 1
+                          ? "⚠️ Start contact must be at least 1."
+                          : "⚠️ Batch quantity must be at least 1."
+                      );
+                    }
+                    return;
+                  }
+                  if (splitConflict) {
+                    if (onTriggerToast) {
+                      onTriggerToast(
+                        `🚫 Cannot allocate: Range overlaps with ${splitConflict.teacher.name}'s batch (${splitConflict.teacher.assignedRangeText}). Each batch must be exclusive.`
+                      );
+                    }
+                    return;
+                  }
                   const teacherObj = MOCK_TEACHERS.find(t => t.id === splitTargetTeacher);
                   const teacherName = teacherObj ? teacherObj.name : splitTargetTeacher;
                   const endNum = Math.min(1000, splitStartNumber + splitQuantity - 1);
@@ -2182,7 +2373,11 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
                   );
                   setIsSplitModalOpen(false);
                 }}
-                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 border border-indigo-300/40 flex items-center gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
+                className={`px-5 py-2.5 rounded-2xl font-black text-xs shadow-lg flex items-center gap-2 transition-all ${
+                  splitStartNumber < 1 || splitStartNumber > 1000 || splitQuantity < 1 || splitConflict !== null
+                    ? "bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60"
+                    : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-indigo-600/30 border border-indigo-300/40 cursor-pointer transform hover:scale-[1.02]"
+                }`}
               >
                 <span>Confirm Lead Allocation</span>
               </button>

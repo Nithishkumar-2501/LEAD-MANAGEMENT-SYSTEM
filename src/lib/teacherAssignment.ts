@@ -239,9 +239,12 @@ export function getTeacherCallStats(tch: {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const talked = parsed.filter((p: any) => p.isTalked).length;
-          const total = parsed.length;
-          return { talked, notTalked: Math.max(0, total - talked), total };
+          const expectedStartIdx = getTeacherStartIdx(tch.assignedRangeText, tch.email);
+          if (parsed[0]?.leadNumber === undefined || parsed[0]?.leadNumber === expectedStartIdx) {
+            const talked = parsed.filter((p: any) => p.isTalked).length;
+            const total = parsed.length;
+            return { talked, notTalked: Math.max(0, total - talked), total };
+          }
         }
       }
     }
@@ -262,4 +265,150 @@ export function getTeacherCallStats(tch: {
     }
   }
   return { talked, notTalked: Math.max(0, quota - talked), total: quota };
+}
+
+export interface BatchRange {
+  start: number;
+  end: number;
+}
+
+/**
+ * Extracts numerical [start, end] boundaries from an assignedRangeText string.
+ * Handles formats like: "Contacts #601 to #700", "Batch #1 - #100", "#101 to #200", "#1-#100".
+ */
+export function parseBatchRange(rangeText?: string): BatchRange | null {
+  if (!rangeText) return null;
+  const match = rangeText.match(/#(\d+)\s*(?:to|-)\s*#?(\d+)/i);
+  if (match) {
+    const s = parseInt(match[1], 10);
+    const e = parseInt(match[2], 10);
+    if (!isNaN(s) && !isNaN(e) && s > 0 && e >= s) {
+      return { start: s, end: e };
+    }
+  }
+  const single = rangeText.match(/#(\d+)/);
+  if (single) {
+    const s = parseInt(single[1], 10);
+    if (!isNaN(s) && s > 0) {
+      return { start: s, end: s + 99 };
+    }
+  }
+  return null;
+}
+
+/**
+ * Checks if two batch ranges overlap.
+ */
+export function doBatchRangesOverlap(a: BatchRange, b: BatchRange): boolean {
+  return Math.max(a.start, b.start) <= Math.min(a.end, b.end);
+}
+
+/**
+ * Finds the first available non-overlapping batch range of length `quota` in [1, maxTotalContacts].
+ */
+export function findNextAvailableBatchRange(
+  occupiedRanges: BatchRange[],
+  quota = 100,
+  maxTotalContacts = 1000
+): BatchRange | null {
+  const safeQuota = Math.max(1, quota);
+  for (let s = 1; s + safeQuota - 1 <= maxTotalContacts; s += safeQuota) {
+    const candidate: BatchRange = { start: s, end: s + safeQuota - 1 };
+    const hasOverlap = occupiedRanges.some((occ) => doBatchRangesOverlap(candidate, occ));
+    if (!hasOverlap) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+/**
+ * Finds if a proposed batch allocation for a teacher collides with any other teacher's active batch.
+ */
+export function findConflictingAllocatedTeacher<
+  T extends { id?: string; email?: string; name?: string; assignedQuota?: number; assignedRangeText?: string }
+>(
+  targetTeacherIdentifier: string,
+  startNumber: number,
+  quantity: number,
+  teachersList: T[]
+): { teacher: T; range: BatchRange } | null {
+  const targetEnd = startNumber + quantity - 1;
+  const targetRange: BatchRange = { start: startNumber, end: targetEnd };
+  const cleanTarget = (targetTeacherIdentifier || "").toLowerCase().trim();
+
+  for (const t of teachersList) {
+    const tId = (t.id || "").toLowerCase().trim();
+    const tEmail = (t.email || "").toLowerCase().trim();
+    if (tId === cleanTarget || tEmail === cleanTarget) continue;
+    if (!isFacultyBatchAllocated(t)) continue;
+
+    const existingRange = parseBatchRange(t.assignedRangeText);
+    if (!existingRange) continue;
+
+    if (doBatchRangesOverlap(targetRange, existingRange)) {
+      return { teacher: t, range: existingRange };
+    }
+  }
+  return null;
+}
+
+/**
+ * Reconciles and sanitizes an entire list of teachers so that NO TWO TEACHERS
+ * ever hold overlapping batches. If a collision is found (e.g. Sangeetha and
+ * Soundararajan both holding #601 to #700), the first teacher retains their batch
+ * and any subsequent colliding teacher is automatically reassigned to an exclusive,
+ * non-overlapping batch from the pool, preventing duplicate student allocations.
+ */
+export function reconcileOverlappingTeacherBatches<
+  T extends { id?: string; email?: string; name?: string; assignedQuota?: number; assignedRangeText?: string }
+>(
+  teachersList: T[],
+  maxTotalContacts = 1000
+): { reconciled: T[]; modified: T[] } {
+  if (!Array.isArray(teachersList)) return { reconciled: [], modified: [] };
+
+  const occupiedRanges: BatchRange[] = [];
+  const modified: T[] = [];
+
+  const reconciled = teachersList.map((tch) => {
+    if (!isFacultyBatchAllocated(tch)) {
+      return tch;
+    }
+
+    const range = parseBatchRange(tch.assignedRangeText);
+    const quota = tch.assignedQuota || (range ? range.end - range.start + 1 : 100);
+
+    // Check if this teacher's range collides with an already occupied range
+    const isColliding = !range || occupiedRanges.some((occ) => doBatchRangesOverlap(range, occ));
+
+    if (!isColliding && range) {
+      occupiedRanges.push(range);
+      return tch;
+    }
+
+    // Collision detected! Find next free non-overlapping batch
+    const freeBatch = findNextAvailableBatchRange(occupiedRanges, quota, maxTotalContacts);
+    if (freeBatch) {
+      occupiedRanges.push(freeBatch);
+      const updatedTeacher = {
+        ...tch,
+        assignedQuota: freeBatch.end - freeBatch.start + 1,
+        assignedRangeText: `Contacts #${freeBatch.start} to #${freeBatch.end}`,
+      };
+      modified.push(updatedTeacher);
+      return updatedTeacher;
+    } else {
+      // Pool exhausted: gracefully revert to general pool
+      const updatedTeacher = {
+        ...tch,
+        assignedQuota: 0,
+        assignedRangeText: "Unassigned (General Pool)",
+      };
+      modified.push(updatedTeacher);
+      return updatedTeacher;
+    }
+  });
+
+  return { reconciled, modified };
 }

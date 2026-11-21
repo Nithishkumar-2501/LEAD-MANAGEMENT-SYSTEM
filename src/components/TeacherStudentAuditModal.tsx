@@ -326,10 +326,20 @@ export default function TeacherStudentAuditModal({
       }
     } catch (e) {}
 
+    // Validate that cached records match current teacher batch start index
+    const startIdx = getTeacherStartIdx(teacher.assignedRangeText, teacher.email);
+    if (loaded && loaded.length > 0) {
+      if (loaded[0]?.leadNumber !== undefined && loaded[0]?.leadNumber !== startIdx) {
+        loaded = [];
+        try {
+          localStorage.removeItem(storageKey);
+        } catch (e) {}
+      }
+    }
+
     // Ensure legacy records in localStorage have cutoffMarks and campus populated
     if (loaded && loaded.length > 0) {
       let needsSave = false;
-      const startIdx = getTeacherStartIdx(teacher.assignedRangeText, teacher.email);
       const facultyCampus = (teacher.campus as "KARUR" | "COIMBATORE") || "KARUR";
       loaded = loaded.map((s, idx) => {
         let updated = s;
@@ -941,7 +951,7 @@ export default function TeacherStudentAuditModal({
               </div>
               <p className="text-base font-black text-white">No Leads Allocated to {teacher.name}</p>
               <p className="text-xs text-slate-400 max-w-md mx-auto">
-                This faculty member is in the general pool awaiting lead allocation. System Administrators can allocate a 100-lead batch from the 600 unassigned leads using the <strong>⚡ Split Contacts to Teacher</strong> tool in the Admin Controls.
+                This faculty member is in the general pool awaiting lead allocation. System Administrators can allocate a 100-lead batch from the unassigned leads using the <strong>⚡ Split Contacts to Teacher</strong> tool in the Admin Controls.
               </p>
             </div>
           ) : filteredStudents.length === 0 ? (

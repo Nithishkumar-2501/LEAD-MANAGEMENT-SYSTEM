@@ -33,6 +33,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { getWhatsAppUrl } from "@/lib/whatsappSender";
+import { resolveAcademicCourse } from "@/lib/csvParser";
 import {
   buildStudentFeeRecords,
   calculateStudentFeeMetrics,
@@ -328,7 +329,7 @@ export default function PaymentBillingModule({
               <tr>
                 <td>
                   <strong>${s.feeCategory}</strong><br/>
-                  <span style="color:#64748b; font-size:11px;">Degree & Branch: ${s.course}</span>
+                  <span style="color:#64748b; font-size:11px;">Degree & Branch: ${resolveAcademicCourse(s.course)}</span>
                 </td>
                 <td>2026 - 2027</td>
                 <td style="text-align: right; font-weight:800;">₹${s.totalFee.toLocaleString("en-IN")}.00</td>
@@ -395,11 +396,12 @@ export default function PaymentBillingModule({
       return;
     }
 
+    const resolvedBranch = resolveAcademicCourse(s.course);
     let text = "";
     if (s.status === "COMPLETED" && s.balanceDue === 0) {
-      text = `Dear ${s.studentName}, your college fee payment of ₹${s.amountPaid.toLocaleString("en-IN")} for ${s.course} at V.S.B. Engineering College has been verified and confirmed. Receipt No: ${s.transactionId || s.applicationNo}. Thank you!`;
+      text = `Dear ${s.studentName}, your college fee payment of ₹${s.amountPaid.toLocaleString("en-IN")} for ${resolvedBranch} at V.S.B. Engineering College has been verified and confirmed. Receipt No: ${s.transactionId || s.applicationNo}. Thank you!`;
     } else {
-      text = `Dear ${s.studentName}, your college admission fee payment for ${s.course} at V.S.B. Engineering College has an outstanding balance due of ₹${s.balanceDue.toLocaleString("en-IN")} (Amount Paid: ₹${s.amountPaid.toLocaleString("en-IN")}). Please complete your fee payment to secure your seat. Helpline: +91 98424 11223.`;
+      text = `Dear ${s.studentName}, your college admission fee payment for ${resolvedBranch} at V.S.B. Engineering College has an outstanding balance due of ₹${s.balanceDue.toLocaleString("en-IN")} (Amount Paid: ₹${s.amountPaid.toLocaleString("en-IN")}). Please complete your fee payment to secure your seat. Helpline: +91 98424 11223.`;
     }
 
     const url = getWhatsAppUrl(s.phone, text);
@@ -705,9 +707,9 @@ export default function PaymentBillingModule({
                     </td>
 
                     {/* Course */}
-                    <td className="py-3 px-3 max-w-[200px] truncate" title={s.course}>
+                    <td className="py-3 px-3 max-w-[200px] truncate" title={resolveAcademicCourse(s.course)}>
                       <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">
-                        {s.course}
+                        {resolveAcademicCourse(s.course)}
                       </span>
                     </td>
 

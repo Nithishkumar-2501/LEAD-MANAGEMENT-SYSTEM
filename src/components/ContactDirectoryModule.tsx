@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Lead, Application, CampusLocation, LeadStatus, VSB_DEPARTMENTS_COURSES, CallRecording } from "@/types/crm";
 import { parseCSVToLeads, downloadSampleLeadsCSV } from "@/lib/csvParser";
 import { TAMIL_NADU_DISTRICTS } from "@/lib/mockData";
@@ -146,15 +146,24 @@ export default function ContactDirectoryModule({
   onReloadLeads,
   onOpenNoraAi,
 }: ContactDirectoryModuleProps) {
-  const [contacts, setContacts] = useState(initialContacts);
+  const normalizeLeadContact = (c: Lead & { application?: Application | null }) => ({
+    ...c,
+    phone: c.phone && c.phone.trim() ? c.phone : "+91-6380270912",
+    source: c.source && c.source.trim() ? c.source : "Organic",
+  });
+
+  const [contacts, setContacts] = useState<(Lead & { application?: Application | null })[]>(() =>
+    (initialContacts || []).map(normalizeLeadContact)
+  );
   const [internalIsReloading, setInternalIsReloading] = useState(false);
   const isReloading = externalIsReloading ?? internalIsReloading;
   const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
 
   useEffect(() => {
-    const targetContacts =
+    const normalized: (Lead & { application?: Application | null })[] = (initialContacts || []).map(normalizeLeadContact);
+    const targetContacts: (Lead & { application?: Application | null })[] =
       currentUserRole === "TEACHER"
-        ? normalized.filter((c) =>
+        ? normalized.filter((c: Lead) =>
             isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus)
           )
         : normalized;
@@ -166,7 +175,7 @@ export default function ContactDirectoryModule({
           if (
             prev[i].id !== targetContacts[i].id ||
             prev[i].status !== targetContacts[i].status ||
-            prev[i].updatedAt !== targetContacts[i].updatedAt ||
+            (prev[i] as any).updatedAt !== (targetContacts[i] as any).updatedAt ||
             prev[i].name !== targetContacts[i].name
           ) {
             isIdentical = false;
@@ -1640,8 +1649,6 @@ export default function ContactDirectoryModule({
     leadOwnerFilter,
     campaignSourceFilter,
     trafficChannelFilter,
-    moreCourseFilter,
-    moreCampusFilter,
   ]);
 
   const sortedAndFilteredContacts = useMemo(() => {

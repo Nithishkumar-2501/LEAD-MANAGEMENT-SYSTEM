@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, UserPlus, Send, AlertTriangle } from "lucide-react";
 import { Lead, Application, AppStage, CampusLocation, VSB_DEPARTMENTS_COURSES } from "@/types/crm";
-import { saveStudentToFirebase } from "@/lib/firebaseSync";
+import { saveStudentToFirebase, saveApplicationToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { evaluateLeadQuota } from "@/lib/leadQuotaService";
@@ -85,6 +85,15 @@ export default function CreateApplicationModal({
       return;
     }
 
+    if ((formData.marks10th ?? 0) > 100 || (formData.marks10th ?? 0) < 0) {
+      setError("10th Marks (%) must be between 0% and 100%.");
+      return;
+    }
+    if ((formData.marks12th ?? 0) > 100 || (formData.marks12th ?? 0) < 0) {
+      setError("12th Cutoff Marks (%) must be between 0% and 100%.");
+      return;
+    }
+
     // Check if Creator has mandated QR Payment before submitting candidate lead
     const qrSettings = getCreatorQrSettings();
     if (qrSettings.isPaymentRequired) {
@@ -135,6 +144,30 @@ export default function CreateApplicationModal({
 
       // Real-time Firebase Database update
       await saveStudentToFirebase(createdLead);
+
+      // Sync to Firebase managed_applications collection so student also appears in Application Manager
+      try {
+        const campusPrefix = createdLead.campus === "COIMBATORE" ? "CTC" : "EC";
+        const appNo = `VSB${campusPrefix}/2026/${Math.floor(1000 + Math.random() * 9000)}`;
+        await saveApplicationToFirebase({
+          id: createdLead.id,
+          registeredName: createdLead.name,
+          applicationNo: appNo,
+          formName: `Application Form VSB ${createdLead.campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
+          registeredEmail: createdLead.email,
+          registeredMobile: createdLead.phone,
+          formStatus: "Complete",
+          paymentStatus: paymentRecord ? "Payment Approved" : "Payment Pending",
+          paymentMethod: paymentRecord ? "Online QR UPI" : "-",
+          applicationOwner: createdLead.campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh",
+          applicationStage: createdLead.application?.stage === "FEE_PAID" || paymentRecord ? "Admission Offered" : "Inquiry Stage",
+          campus: createdLead.campus || "KARUR",
+          createdAt: new Date().toISOString().split("T")[0],
+          updatedAt: new Date().toISOString().split("T")[0],
+        });
+      } catch (appErr) {
+        console.warn("Application sync notice:", appErr);
+      }
 
       onApplicationCreated(createdLead);
       resetForm();

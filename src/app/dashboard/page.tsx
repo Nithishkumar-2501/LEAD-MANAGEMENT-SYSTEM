@@ -64,6 +64,12 @@ import {
   StudentRecord,
 } from "@/lib/firebaseSync";
 import { isLeadAssignedToTeacher } from "@/lib/teacherAssignment";
+import {
+  sanitizeLeadFields,
+  resolveAcademicCourse,
+  KNOWN_CITIES,
+  COURSE_KEYWORDS,
+} from "@/lib/csvParser";
 
 import {
   User,
@@ -281,8 +287,8 @@ export default function DashboardPage() {
         // Fallback: any visible search input
         if (!searchInput || searchInput.offsetParent === null) {
           searchInput = (document.querySelector('input#header-candidate-search') ||
-                         document.querySelector('input.search__input') ||
-                         document.querySelector('input[placeholder*="Search" i]')) as HTMLInputElement | null;
+            document.querySelector('input.search__input') ||
+            document.querySelector('input[placeholder*="Search" i]')) as HTMLInputElement | null;
         }
 
         if (searchInput) {
@@ -354,7 +360,7 @@ export default function DashboardPage() {
         const updated = [...newLeads, ...prev];
         try {
           localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
-        } catch (e) {}
+        } catch (e) { }
         return updated;
       });
 
@@ -456,6 +462,17 @@ export default function DashboardPage() {
       activeFbLeads.forEach((fb) => {
         if (fb.id) {
           const existing = map.get(fb.id);
+          const sanitizedFb = sanitizeLeadFields(fb as any);
+          const existingCourse = existing?.courseInterest;
+          const isExistingValidCourse = Boolean(
+            existingCourse &&
+            COURSE_KEYWORDS.test(existingCourse) &&
+            !KNOWN_CITIES.has(existingCourse.trim().toLowerCase())
+          );
+          const resolvedCourse = isExistingValidCourse
+            ? (existingCourse as string)
+            : resolveAcademicCourse(sanitizedFb.courseInterest || (fb as any).courseInterest);
+
           const defaultApp: Application = {
             id: `app_${fb.id}`,
             leadId: fb.id,
@@ -467,12 +484,12 @@ export default function DashboardPage() {
           const app = (fb.application || existing?.application || defaultApp) as Application;
           map.set(fb.id, {
             ...existing,
-            ...fb,
+            ...sanitizedFb,
             id: fb.id,
             leadId: fb.id,
-            campus: fb.campus || "KARUR",
-            courseInterest: fb.courseInterest || "B.E. Computer Science and Engineering",
-            status: fb.status || "NEW",
+            campus: fb.campus || existing?.campus || "KARUR",
+            courseInterest: resolvedCourse,
+            status: fb.status || existing?.status || "NEW",
             application: app,
           } as Lead & { application: Application });
         }
@@ -490,7 +507,7 @@ export default function DashboardPage() {
       });
       try {
         localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
-      } catch (err) {}
+      } catch (err) { }
       return merged;
     });
   }, []);
@@ -503,10 +520,11 @@ export default function DashboardPage() {
         if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
           const dbLeads = (data.leads as (Lead & { application: Application })[])
             .filter((l) => !isLeadDeleted(l.id))
-            .map((l) => ({
+            .map((l) => sanitizeLeadFields({
               ...l,
               phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
               source: l.source && l.source.trim() ? l.source : "Organic",
+              courseInterest: resolveAcademicCourse(l.courseInterest),
             }));
           const map = new Map<string, Lead & { application: Application }>();
           dbLeads.forEach((item) => map.set(item.id, item));
@@ -514,7 +532,7 @@ export default function DashboardPage() {
           setApplicants(merged);
           try {
             localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
-          } catch (err) {}
+          } catch (err) { }
         }
       }
       const list = await fetchStudentsFromFirestore();
@@ -536,10 +554,11 @@ export default function DashboardPage() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           const validCached = parsed
             .filter((item) => !isLeadDeleted(item.id))
-            .map((l) => ({
+            .map((l) => sanitizeLeadFields({
               ...l,
               phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
               source: l.source && l.source.trim() ? l.source : "Organic",
+              courseInterest: resolveAcademicCourse(l.courseInterest),
             }));
           setApplicants(validCached);
         }
@@ -555,10 +574,11 @@ export default function DashboardPage() {
         if (data?.leads && Array.isArray(data.leads) && data.leads.length > 0) {
           const dbLeads = (data.leads as (Lead & { application: Application })[])
             .filter((l) => !isLeadDeleted(l.id))
-            .map((l) => ({
+            .map((l) => sanitizeLeadFields({
               ...l,
               phone: l.phone && l.phone.trim() ? l.phone : "+91-6380270912",
               source: l.source && l.source.trim() ? l.source : "Organic",
+              courseInterest: resolveAcademicCourse(l.courseInterest),
             }));
           setApplicants((prev) => {
             const map = new Map<string, Lead & { application: Application }>();
@@ -567,7 +587,7 @@ export default function DashboardPage() {
             const merged = Array.from(map.values());
             try {
               localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
-            } catch (err) {}
+            } catch (err) { }
             return merged;
           });
         } else {
@@ -741,7 +761,7 @@ export default function DashboardPage() {
       const user = sessionStorage.getItem("vsb_logged_in_user");
       const campus = sessionStorage.getItem("vsb_logged_in_campus") as "KARUR" | "COIMBATORE";
       if (role === "TEACHER" && user) {
-        updateTeacherOnlineStatus(user, campus, "ON_LEAVE").catch(() => {});
+        updateTeacherOnlineStatus(user, campus, "ON_LEAVE").catch(() => { });
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -764,7 +784,7 @@ export default function DashboardPage() {
         const fresh = await forceFetchLatestLicenseFromCloud();
         freshColleges = fresh?.colleges;
         freshGlobal = fresh?.globalLockout;
-      } catch (e) {}
+      } catch (e) { }
 
       const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(campus, freshColleges, freshGlobal);
       if (suspensionCheck.isSuspended) {
@@ -793,7 +813,7 @@ export default function DashboardPage() {
         localStorage.removeItem("vsb_logged_in_campus");
         localStorage.removeItem("vsb_remember_me");
       }
-    } catch (e) {}
+    } catch (e) { }
 
     setLoggedInCampus(campus);
     setCurrentUserRole(role);
@@ -846,8 +866,8 @@ export default function DashboardPage() {
       campus === "KARUR"
         ? "🏛️ Switched to V.S.B. Karur Campus"
         : campus === "COIMBATORE"
-        ? "🎓 Switched to V.S.B. Coimbatore Campus"
-        : "🌐 Showing All Campuses"
+          ? "🎓 Switched to V.S.B. Coimbatore Campus"
+          : "🌐 Showing All Campuses"
     );
   };
 
@@ -879,7 +899,7 @@ export default function DashboardPage() {
       localStorage.removeItem("vsb_logged_in_role");
       localStorage.removeItem("vsb_logged_in_user");
       localStorage.removeItem("vsb_remember_me");
-    } catch (e) {}
+    } catch (e) { }
     setIsAuthenticated(false);
     triggerToast(
       role === "TEACHER"
@@ -918,7 +938,7 @@ export default function DashboardPage() {
       const newList = prev.map((a) => (a.id === updated.id ? updated : a));
       try {
         localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(newList));
-      } catch (err) {}
+      } catch (err) { }
       return newList;
     });
     triggerToast(`Updated profile for ${updated.name}`);
@@ -971,7 +991,7 @@ export default function DashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskId, isCompleted: nextCompleted }),
       });
-    } catch (e) {}
+    } catch (e) { }
     triggerToast("Task status updated.");
   };
 
@@ -981,7 +1001,7 @@ export default function DashboardPage() {
       const newList = [newApp, ...prev.filter((a) => a.id !== newApp.id)];
       try {
         localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(newList));
-      } catch (err) {}
+      } catch (err) { }
       return newList;
     });
     setIsCreateModalOpen(false);
@@ -1025,7 +1045,7 @@ export default function DashboardPage() {
       const filtered = prev.filter((a) => a.id !== id);
       try {
         localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
-      } catch (e) {}
+      } catch (e) { }
       return filtered;
     });
     triggerToast(`🗑️ Permanently deleted "${name}"!`);
@@ -1206,206 +1226,204 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 p-3 sm:p-6 pb-28 sm:pb-6 w-full max-w-full space-y-4 sm:space-y-6 overflow-x-hidden">
-        {/* ADMISSIONS & ADMIN DASHBOARD MODULE (ADMIN ONLY) */}
-        {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && currentUserRole === "ADMIN" && (
-          <AdminDashboardView
-            metrics={dynamicMetrics}
-            statusCounts={dynamicStatusCounts}
-            applicants={filteredApplicants}
-            allApplicants={applicants}
-            payments={payments}
-            tasks={filteredTasks}
-            searchQuery={searchQuery}
-            selectedCampus={selectedCampus}
-            selectedStageFilter={selectedStageFilter}
-            onSelectStage={setSelectedStageFilter}
-            onSelectApplicant={handleSelectApplicant}
-            onActionTrigger={handleActionTrigger}
-            onOpenCreateModal={() => setIsCreateModalOpen(true)}
-            onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
-            onToggleTask={handleToggleTask}
-            onImportLeads={handleRequestCsvImport}
-            onDeleteApplicant={handleDeleteApplicant}
-          />
-        )}
+          {/* ADMISSIONS & ADMIN DASHBOARD MODULE (ADMIN ONLY) */}
+          {(activeTab === "ADMISSIONS" || activeTab === "ADMIN_DASHBOARD") && currentUserRole === "ADMIN" && (
+            <AdminDashboardView
+              metrics={dynamicMetrics}
+              statusCounts={dynamicStatusCounts}
+              applicants={filteredApplicants}
+              allApplicants={applicants}
+              payments={payments}
+              tasks={filteredTasks}
+              searchQuery={searchQuery}
+              selectedCampus={selectedCampus}
+              selectedStageFilter={selectedStageFilter}
+              onSelectStage={setSelectedStageFilter}
+              onSelectApplicant={handleSelectApplicant}
+              onActionTrigger={handleActionTrigger}
+              onOpenCreateModal={() => setIsCreateModalOpen(true)}
+              onOpenQuickLeadModal={() => setIsQuickLeadModalOpen(true)}
+              onToggleTask={handleToggleTask}
+              onImportLeads={handleRequestCsvImport}
+              onDeleteApplicant={handleDeleteApplicant}
+            />
+          )}
 
-        {/* LEAD DASHBOARD MODULE (TEACHER ONLY) */}
-        {activeTab === "USER_DASHBOARD" && currentUserRole === "TEACHER" && (
-          <UserDashboardView
-            loggedInUsername={loggedInUsername}
-            currentUserRole={currentUserRole}
-            applicants={filteredApplicants}
-            tasks={filteredTasks}
-            selectedCampus={selectedCampus}
-            onSelectApplicant={handleSelectApplicant}
-            onActionTrigger={handleActionTrigger}
-            onToggleTask={handleToggleTask}
-          />
-        )}
+          {/* LEAD DASHBOARD MODULE (TEACHER ONLY) */}
+          {activeTab === "USER_DASHBOARD" && currentUserRole === "TEACHER" && (
+            <UserDashboardView
+              loggedInUsername={loggedInUsername}
+              currentUserRole={currentUserRole}
+              applicants={filteredApplicants}
+              tasks={filteredTasks}
+              selectedCampus={selectedCampus}
+              onSelectApplicant={handleSelectApplicant}
+              onActionTrigger={handleActionTrigger}
+              onToggleTask={handleToggleTask}
+            />
+          )}
 
-        {/* MARKETING DASHBOARD MODULE */}
-        {activeTab === "MARKETING_DASHBOARD" && (
-          <MarketingDashboardView
-            loggedInCampus={selectedCampus}
-            onTriggerToast={triggerToast}
-            onNavigateTab={setActiveTab}
-            applicants={applicants}
-          />
-        )}
+          {/* MARKETING DASHBOARD MODULE */}
+          {activeTab === "MARKETING_DASHBOARD" && (
+            <MarketingDashboardView
+              loggedInCampus={selectedCampus}
+              onTriggerToast={triggerToast}
+              onNavigateTab={setActiveTab}
+            />
+          )}
 
-        {/* ECHO DASHBOARD MODULE */}
-        {activeTab === "ECHO_DASHBOARD" && (
-          <EchoDashboardView onTriggerToast={triggerToast} />
-        )}
+          {/* ECHO DASHBOARD MODULE */}
+          {activeTab === "ECHO_DASHBOARD" && (
+            <EchoDashboardView onTriggerToast={triggerToast} />
+          )}
 
-        {/* AI INTELLIGENCE SUITE MODULE */}
-        {activeTab === "AI_INTELLIGENCE" && (
-          <AiIntelligenceModule
-            applicants={applicants}
-            selectedCampus={selectedCampus}
-            onSelectApplicant={handleSelectApplicant}
-          />
-        )}
-
-        {/* LEAD MANAGER MODULE (MERGED CONTACT DIRECTORY & STUDENT APPLICATIONS) */}
-        {(activeTab === "CONTACTS" || activeTab === "STUDENTS" || (activeTab as string) === "CONTACT_DIRECTORY" || (activeTab as string) === "LEADS") && (
-          currentUserRole === "CREATOR" ? (
-            <CreatorLeadsSummaryView
+          {/* AI INTELLIGENCE SUITE MODULE */}
+          {activeTab === "AI_INTELLIGENCE" && (
+            <AiIntelligenceModule
               applicants={applicants}
               selectedCampus={selectedCampus}
-              onNavigateCreatorControl={() => setActiveTab("CREATOR_CONTROL")}
-              onImportLeads={handleRequestCsvImport}
-              onTriggerToast={triggerToast}
-            />
-          ) : (
-            <ContactDirectoryModule
-              initialContacts={filteredApplicants}
-              selectedCampus={selectedCampus}
-              currentUserRole={effectiveSubRole}
-              loggedInUsername={loggedInUsername}
-              loggedInCampus={loggedInCampus}
-              isKarurAdmin={isKarurAdmin}
-              onActionTrigger={handleActionTrigger}
-              onTriggerToast={triggerToast}
-              onSelectApplicant={handleSelectApplicant}
-              onImportLeads={handleRequestCsvImport}
-              onDeleteContact={handleDeleteApplicant}
-              onReloadLeads={handleReloadLeads}
-              onOpenNoraAi={handleOpenNora}
-            />
-          )
-        )}
-
-        {/* APPLICATION MANAGER MODULE (ADMIN ONLY) */}
-        {(activeTab === "APPLICATION_MANAGER" || activeTab === "APPLICATION_OFFLINE_LOGS") &&
-          currentUserRole === "ADMIN" && (
-          <ApplicationManagerModule
-            loggedInCampus={selectedCampus}
-            onTriggerToast={triggerToast}
-            subView={activeTab === "APPLICATION_OFFLINE_LOGS" ? "OFFLINE_LOGS" : "MANAGE"}
-            onNavigateSubView={(view) =>
-              setActiveTab(view === "OFFLINE_LOGS" ? "APPLICATION_OFFLINE_LOGS" : "APPLICATION_MANAGER")
-            }
-          />
-        )}
-
-        {/* TEACHER DIRECTORY MODULE (CREATOR GETS USAGE COUNT ONLY, ADMIN GETS FULL DIRECTORY) */}
-        {activeTab === "TEACHERS" && (
-          currentUserRole === "CREATOR" ? (
-            <CreatorTeachersSummaryView
-              selectedCampus={selectedCampus}
-              onNavigateCreatorControl={() => setActiveTab("CREATOR_CONTROL")}
-            />
-          ) : (
-            <TeacherModule
-              loggedInCampus={loggedInCampus}
-              currentUserRole={effectiveSubRole}
-              loggedInUsername={loggedInUsername}
-              onTriggerToast={triggerToast}
-              applicants={filteredApplicants}
               onSelectApplicant={handleSelectApplicant}
             />
-          )
-        )}
+          )}
 
-        {/* CAMPUS & COURSES MODULE */}
-        {activeTab === "CAMPUSES" && (
-          <CampusCourseModule
-            loggedInCampus={loggedInCampus}
-            selectedCampus={selectedCampus}
-            onCampusChange={handleCampusChange}
-            onTriggerToast={triggerToast}
-          />
-        )}
+          {/* LEAD MANAGER MODULE (MERGED CONTACT DIRECTORY & STUDENT APPLICATIONS) */}
+          {(activeTab === "CONTACTS" || activeTab === "STUDENTS" || (activeTab as string) === "CONTACT_DIRECTORY" || (activeTab as string) === "LEADS") && (
+            currentUserRole === "CREATOR" ? (
+              <CreatorLeadsSummaryView
+                applicants={applicants}
+                selectedCampus={selectedCampus}
+                onNavigateCreatorControl={() => setActiveTab("CREATOR_CONTROL")}
+                onImportLeads={handleRequestCsvImport}
+                onTriggerToast={triggerToast}
+              />
+            ) : (
+              <ContactDirectoryModule
+                initialContacts={filteredApplicants}
+                selectedCampus={selectedCampus}
+                currentUserRole={effectiveSubRole}
+                loggedInUsername={loggedInUsername}
+                loggedInCampus={loggedInCampus}
+                isKarurAdmin={isKarurAdmin}
+                onActionTrigger={handleActionTrigger}
+                onTriggerToast={triggerToast}
+                onSelectApplicant={handleSelectApplicant}
+                onImportLeads={handleRequestCsvImport}
+                onDeleteContact={handleDeleteApplicant}
+                onReloadLeads={handleReloadLeads}
+                onOpenNoraAi={handleOpenNora}
+              />
+            )
+          )}
 
-        {/* STUDENT FEE PAYMENTS MODULE (ADMIN ONLY) */}
-        {activeTab === "PAYMENTS" && currentUserRole !== "CREATOR" && (
-          <PaymentBillingModule
-            loggedInCampus={loggedInCampus}
-            onTriggerToast={triggerToast}
-            currentLeadsCount={applicants.length}
-            applicants={applicants}
-            payments={payments}
-            onPaymentsChange={setPayments}
-          />
-        )}
+          {/* APPLICATION MANAGER MODULE (ADMIN ONLY) */}
+          {(activeTab === "APPLICATION_MANAGER" || activeTab === "APPLICATION_OFFLINE_LOGS") &&
+            currentUserRole === "ADMIN" && (
+              <ApplicationManagerModule
+                loggedInCampus={selectedCampus}
+                onTriggerToast={triggerToast}
+                subView={activeTab === "APPLICATION_OFFLINE_LOGS" ? "OFFLINE_LOGS" : "MANAGE"}
+                onNavigateSubView={(view) =>
+                  setActiveTab(view === "OFFLINE_LOGS" ? "APPLICATION_OFFLINE_LOGS" : "APPLICATION_MANAGER")
+                }
+              />
+            )}
 
-        {/* ADMIN SETTINGS MODULE */}
-        {activeTab === "SETTINGS" && (
-          <AdminSettingsModule
-            loggedInCampus={loggedInCampus}
-            onTriggerToast={triggerToast}
-            theme={theme}
-            onThemeChange={handleThemeChange}
-          />
-        )}
+          {/* TEACHER DIRECTORY MODULE (CREATOR GETS USAGE COUNT ONLY, ADMIN GETS FULL DIRECTORY) */}
+          {activeTab === "TEACHERS" && (
+            currentUserRole === "CREATOR" ? (
+              <CreatorTeachersSummaryView
+                selectedCampus={selectedCampus}
+                onNavigateCreatorControl={() => setActiveTab("CREATOR_CONTROL")}
+              />
+            ) : (
+              <TeacherModule
+                loggedInCampus={loggedInCampus}
+                currentUserRole={effectiveSubRole}
+                loggedInUsername={loggedInUsername}
+                onTriggerToast={triggerToast}
+                applicants={filteredApplicants}
+                onSelectApplicant={handleSelectApplicant}
+              />
+            )
+          )}
 
-        {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible in Web for spherexnithish#) */}
-        {activeTab === "CREATOR_CONTROL" &&
-          currentUserRole === "CREATOR" &&
-          (loggedInUsername?.toLowerCase().trim() === "spherexnithish#" ||
-           sessionStorage.getItem("vsb_logged_in_user")?.toLowerCase().trim() === "spherexnithish#") &&
-          !isCapacitorNative() && (
-          <CreatorControlModule
-            onTriggerToast={triggerToast}
-            currentLeadsCount={applicants.length}
-            applicants={applicants}
-            onLogout={handleLogout}
-            onSwitchCampus={(c) => {
-              setSelectedCampus(c);
-              if (c !== "ALL") setLoggedInCampus(c);
-            }}
-            currentCampus={loggedInCampus}
-          />
-        )}
+          {/* CAMPUS & COURSES MODULE */}
+          {activeTab === "CAMPUSES" && (
+            <CampusCourseModule
+              loggedInCampus={loggedInCampus}
+              selectedCampus={selectedCampus}
+              onCampusChange={handleCampusChange}
+              onTriggerToast={triggerToast}
+            />
+          )}
 
-        {/* CONTACT & SOCIAL MEDIA PLATFORM MODULE */}
-        {(activeTab === "CONTACT_PLATFORM" ||
-          activeTab.startsWith("SOCIAL_")) && (
-          <SocialMediaPlatformModule
-            activeTab={activeTab}
-            loggedInCampus={selectedCampus}
-            onTriggerToast={triggerToast}
-            onNavigateTab={setActiveTab}
-            applicants={applicants}
-          />
-        )}
-      </main>
+          {/* STUDENT FEE PAYMENTS MODULE (ADMIN ONLY) */}
+          {activeTab === "PAYMENTS" && currentUserRole !== "CREATOR" && (
+            <PaymentBillingModule
+              loggedInCampus={loggedInCampus}
+              onTriggerToast={triggerToast}
+              currentLeadsCount={applicants.length}
+              applicants={applicants}
+              payments={payments}
+              onPaymentsChange={setPayments}
+            />
+          )}
 
-      {/* MODALS */}
-      <ErrorBoundary fallbackTitle="New Applicant Form Encountered an Issue" onReset={() => setIsCreateModalOpen(false)}>
-        {isCreateModalOpen && (
-          <CreateApplicationModal
-            isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            onApplicationCreated={handleCreateApplication}
-            existingLeads={applicants}
-            loggedInUsername={loggedInUsername}
-          />
-        )}
-      </ErrorBoundary>
+          {/* ADMIN SETTINGS MODULE */}
+          {activeTab === "SETTINGS" && (
+            <AdminSettingsModule
+              loggedInCampus={loggedInCampus}
+              onTriggerToast={triggerToast}
+              theme={theme}
+              onThemeChange={handleThemeChange}
+            />
+          )}
 
-      {isQuickLeadModalOpen && (
+          {/* EXCLUSIVE CREATOR CONTROL MODULE (Only accessible in Web for spherexnithish#) */}
+          {activeTab === "CREATOR_CONTROL" &&
+            currentUserRole === "CREATOR" &&
+            (loggedInUsername?.toLowerCase().trim() === "spherexnithish#" ||
+              sessionStorage.getItem("vsb_logged_in_user")?.toLowerCase().trim() === "spherexnithish#") &&
+            !isCapacitorNative() && (
+              <CreatorControlModule
+                onTriggerToast={triggerToast}
+                currentLeadsCount={applicants.length}
+                applicants={applicants}
+                onLogout={handleLogout}
+                onSwitchCampus={(c) => {
+                  setSelectedCampus(c);
+                  if (c !== "ALL") setLoggedInCampus(c);
+                }}
+                currentCampus={loggedInCampus}
+              />
+            )}
+
+          {/* CONTACT & SOCIAL MEDIA PLATFORM MODULE */}
+          {(activeTab === "CONTACT_PLATFORM" ||
+            activeTab.startsWith("SOCIAL_")) && (
+              <SocialMediaPlatformModule
+                activeTab={activeTab}
+                loggedInCampus={selectedCampus}
+                onTriggerToast={triggerToast}
+                onNavigateTab={setActiveTab}
+                applicants={applicants}
+              />
+            )}
+        </main>
+
+        {/* MODALS */}
+        <ErrorBoundary fallbackTitle="New Applicant Form Encountered an Issue" onReset={() => setIsCreateModalOpen(false)}>
+          {isCreateModalOpen && (
+            <CreateApplicationModal
+              isOpen={isCreateModalOpen}
+              onClose={() => setIsCreateModalOpen(false)}
+              onApplicationCreated={handleCreateApplication}
+              existingLeads={applicants}
+              loggedInUsername={loggedInUsername}
+            />
+          )}
+        </ErrorBoundary>
+
         <AddQuickLeadModal
           isOpen={isQuickLeadModalOpen}
           onClose={() => setIsQuickLeadModalOpen(false)}
@@ -1413,222 +1431,215 @@ export default function DashboardPage() {
           existingLeads={applicants}
           loggedInUsername={loggedInUsername}
         />
-      )}
 
-      {selectedApplicant && (
-        <ApplicantDetailModal
-          applicant={selectedApplicant}
-          currentUserRole={effectiveSubRole}
-          onClose={() => setSelectedApplicant(null)}
-          onActionTrigger={handleActionTrigger}
-          onSave={handleUpdateApplicant}
-          onStageChange={(updated) => {
-            setApplicants((prev) => {
-              const newList = prev.map((a) => (a.id === updated.id ? updated : a));
-              try {
-                localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(newList));
-              } catch (err) {}
-              return newList;
-            });
-            setSelectedApplicant(updated);
-          }}
-          existingLeads={applicants}
-        />
-      )}
-
-      {/* NORA AI DATABASE ANALYTICS & SEARCH MODAL */}
-      <NoraAiDatabaseModal
-        isOpen={isNoraModalOpen}
-        onClose={() => setIsNoraModalOpen(false)}
-        applicants={applicants}
-        selectedCampus={selectedCampus}
-        onSelectApplicant={handleSelectApplicant}
-        onApplyFilter={(query) => {
-          setSearchQuery(query);
-          triggerToast(`🔍 Filtered CRM table by: "${query}"`);
-        }}
-        onNavigateTab={(tab) => {
-          setActiveTab(tab);
-          triggerToast(`🚀 Navigated to ${tab.replace(/_/g, " ")}`);
-        }}
-        currentUserRole={effectiveSubRole}
-        initialQuery={noraInitialQuery}
-      />
-
-      {/* LEAD LIMIT OVERAGE CONFIRMATION MODAL */}
-      {quotaOverageModal && (
-        <LeadLimitOverageModal
-          isOpen={quotaOverageModal.isOpen}
-          onClose={() => setQuotaOverageModal(null)}
-          onConfirm={quotaOverageModal.onAuthorize}
-          quotaEvaluation={quotaOverageModal.evaluation}
-          candidateName={quotaOverageModal.candidateName}
-          incomingBatchCount={quotaOverageModal.incomingCount}
-        />
-      )}
-
-      {/* CSV LEADS FILE IMPORT MODAL (1,00,000 QUOTA CALCULATION & OVERAGE HANDLING) */}
-      {csvImportModal && (
-        <CsvLeadsImportModal
-          isOpen={csvImportModal.isOpen}
-          onClose={() => setCsvImportModal(null)}
-          onConfirm={handleConfirmCsvImport}
-          fileName={csvImportModal.fileName}
-          importedLeads={csvImportModal.leads}
-          currentTotalLeads={applicants.length}
-          isProcessing={isProcessingCsvImport}
-        />
-      )}
-
-      {/* REPORT BUG MODAL */}
-      <ReportBugModal
-        isOpen={isReportBugModalOpen}
-        onClose={() => setIsReportBugModalOpen(false)}
-        loggedInUsername={loggedInUsername}
-        currentUserRole={currentUserRole}
-        selectedCampus={selectedCampus}
-        onTriggerToast={triggerToast}
-      />
-
-      {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
-        <button
-          type="button"
-          onClick={() => setActiveTab(currentUserRole === "TEACHER" ? "USER_DASHBOARD" : "ADMIN_DASHBOARD")}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-            (currentUserRole === "TEACHER" ? activeTab === "USER_DASHBOARD" : (activeTab === "ADMIN_DASHBOARD" || activeTab === "ADMISSIONS"))
-              ? "text-sky-400 font-extrabold scale-105"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">{currentUserRole === "TEACHER" ? "Dashboard" : "Overview"}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("CONTACTS")}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-            activeTab === "CONTACTS" || activeTab === "STUDENTS"
-              ? "text-sky-400 font-extrabold scale-105"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <UserCheck className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">Leads</span>
-        </button>
-
-        {/* Floating Quick Action Button: + Lead */}
-        <button
-          type="button"
-          onClick={() => setIsQuickLeadModalOpen(true)}
-          className="flex flex-col items-center justify-center -mt-6 w-12 h-12 rounded-full bg-gradient-to-tr from-sky-400 via-blue-600 to-indigo-600 text-white shadow-xl shadow-sky-500/40 ring-4 ring-slate-950 active:scale-95 transition-transform"
-          title="Add Quick Lead"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
-
-        {currentUserRole === "CREATOR" && !isCapacitorNative() ? (
-          <button
-            type="button"
-            onClick={() => setActiveTab("CREATOR_CONTROL")}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              activeTab === "CREATOR_CONTROL"
-                ? "text-amber-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Crown className="w-5 h-5 text-amber-400" />
-            <span className="text-[10px] tracking-tight">Licensing</span>
-          </button>
-        ) : currentUserRole === "ADMIN" ? (
-          <button
-            type="button"
-            onClick={() => setActiveTab("TEACHERS")}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              activeTab === "TEACHERS"
-                ? "text-sky-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <BookOpen className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Faculty</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setActiveTab("AI_INTELLIGENCE")}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              activeTab === "AI_INTELLIGENCE"
-                ? "text-purple-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Sparkles className="w-5 h-5 text-purple-400" />
-            <span className="text-[10px] tracking-tight">Nora AI</span>
-          </button>
+        {selectedApplicant && (
+          <ApplicantDetailModal
+            applicant={selectedApplicant}
+            currentUserRole={effectiveSubRole}
+            onClose={() => setSelectedApplicant(null)}
+            onActionTrigger={handleActionTrigger}
+            onSave={handleUpdateApplicant}
+            onStageChange={(updated) => {
+              setApplicants((prev) => {
+                const newList = prev.map((a) => (a.id === updated.id ? updated : a));
+                try {
+                  localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(newList));
+                } catch (err) { }
+                return newList;
+              });
+              setSelectedApplicant(updated);
+            }}
+            existingLeads={applicants}
+          />
         )}
 
-        {/* 5th slot: Menu / Sidebar toggle for full module navigation (Application Manager, Contact Platform, etc.) */}
-        <button
-          type="button"
-          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-            isMobileSidebarOpen
+        {/* NORA AI DATABASE ANALYTICS & SEARCH MODAL */}
+        <NoraAiDatabaseModal
+          isOpen={isNoraModalOpen}
+          onClose={() => setIsNoraModalOpen(false)}
+          applicants={applicants}
+          selectedCampus={selectedCampus}
+          onSelectApplicant={handleSelectApplicant}
+          onApplyFilter={(query) => {
+            setSearchQuery(query);
+            triggerToast(`🔍 Filtered CRM table by: "${query}"`);
+          }}
+          onNavigateTab={(tab) => {
+            setActiveTab(tab);
+            triggerToast(`🚀 Navigated to ${tab.replace(/_/g, " ")}`);
+          }}
+          currentUserRole={effectiveSubRole}
+          initialQuery={noraInitialQuery}
+        />
+
+        {/* LEAD LIMIT OVERAGE CONFIRMATION MODAL */}
+        {quotaOverageModal && (
+          <LeadLimitOverageModal
+            isOpen={quotaOverageModal.isOpen}
+            onClose={() => setQuotaOverageModal(null)}
+            onConfirm={quotaOverageModal.onAuthorize}
+            quotaEvaluation={quotaOverageModal.evaluation}
+            candidateName={quotaOverageModal.candidateName}
+            incomingBatchCount={quotaOverageModal.incomingCount}
+          />
+        )}
+
+        {/* CSV LEADS FILE IMPORT MODAL (1,00,000 QUOTA CALCULATION & OVERAGE HANDLING) */}
+        {csvImportModal && (
+          <CsvLeadsImportModal
+            isOpen={csvImportModal.isOpen}
+            onClose={() => setCsvImportModal(null)}
+            onConfirm={handleConfirmCsvImport}
+            fileName={csvImportModal.fileName}
+            importedLeads={csvImportModal.leads}
+            currentTotalLeads={applicants.length}
+            isProcessing={isProcessingCsvImport}
+          />
+        )}
+
+        {/* REPORT BUG MODAL */}
+        <ReportBugModal
+          isOpen={isReportBugModalOpen}
+          onClose={() => setIsReportBugModalOpen(false)}
+          loggedInUsername={loggedInUsername}
+          currentUserRole={currentUserRole}
+          selectedCampus={selectedCampus}
+          onTriggerToast={triggerToast}
+        />
+
+        {/* NATIVE MOBILE BOTTOM NAVIGATION BAR */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-white/15 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-bottom select-none">
+          <button
+            type="button"
+            onClick={() => setActiveTab(currentUserRole === "TEACHER" ? "USER_DASHBOARD" : "ADMIN_DASHBOARD")}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${(currentUserRole === "TEACHER" ? activeTab === "USER_DASHBOARD" : (activeTab === "ADMIN_DASHBOARD" || activeTab === "ADMISSIONS"))
               ? "text-sky-400 font-extrabold scale-105"
               : "text-slate-400 hover:text-slate-200"
-          }`}
-          aria-label="Toggle Navigation Menu"
-          title="All Modules & Settings"
-        >
-          <Menu className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">Menu</span>
-        </button>
-      </nav>
+              }`}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">{currentUserRole === "TEACHER" ? "Dashboard" : "Overview"}</span>
+          </button>
 
-      {/* REAL-TIME LOCKOUT OVERLAY FOR ACTIVE DASHBOARD SESSIONS */}
-      {institutionSuspension.isSuspended && currentUserRole !== "CREATOR" && (
-        <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 select-none">
-          <div className="w-full max-w-lg bg-slate-900 border-2 border-rose-500 rounded-3xl p-6 sm:p-8 text-center text-white shadow-2xl shadow-rose-950/50 space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-500 mx-auto flex items-center justify-center shadow-lg shadow-rose-500/20">
-              <Lock className="w-8 h-8" />
-            </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("CONTACTS")}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${activeTab === "CONTACTS" || activeTab === "STUDENTS"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
+              }`}
+          >
+            <UserCheck className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Leads</span>
+          </button>
 
-            <div className="space-y-1">
-              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                {institutionSuspension.isGlobal ? "Emergency Global System Halt" : "Institutional Access Stopped"}
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-white mt-2">
-                {institutionSuspension.college ? institutionSuspension.college.collegeName : "SPHEREX CRM APPLICATION"}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-300">
-                {institutionSuspension.platform === "MOBILE" ? "Native Mobile App" : "Web Application"} access has been stopped by the Master Creator.
-              </p>
-            </div>
+          {/* Floating Quick Action Button: + Lead */}
+          <button
+            type="button"
+            onClick={() => setIsQuickLeadModalOpen(true)}
+            className="flex flex-col items-center justify-center -mt-6 w-12 h-12 rounded-full bg-gradient-to-tr from-sky-400 via-blue-600 to-indigo-600 text-white shadow-xl shadow-sky-500/40 ring-4 ring-slate-950 active:scale-95 transition-transform"
+            title="Add Quick Lead"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
 
-            <div className="bg-slate-950/80 rounded-2xl p-4 text-left text-xs space-y-2 border border-slate-800">
-              <div className="flex justify-between items-start gap-2">
-                <span className="text-slate-400 shrink-0">Lockout Reason:</span>
-                <span className="font-bold text-rose-400 text-right">{institutionSuspension.reason || "Application access stopped by Master Creator."}</span>
+          {currentUserRole === "CREATOR" && !isCapacitorNative() ? (
+            <button
+              type="button"
+              onClick={() => setActiveTab("CREATOR_CONTROL")}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${activeTab === "CREATOR_CONTROL"
+                ? "text-amber-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+                }`}
+            >
+              <Crown className="w-5 h-5 text-amber-400" />
+              <span className="text-[10px] tracking-tight">Licensing</span>
+            </button>
+          ) : currentUserRole === "ADMIN" ? (
+            <button
+              type="button"
+              onClick={() => setActiveTab("TEACHERS")}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${activeTab === "TEACHERS"
+                ? "text-sky-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+                }`}
+            >
+              <BookOpen className="w-5 h-5" />
+              <span className="text-[10px] tracking-tight">Faculty</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setActiveTab("AI_INTELLIGENCE")}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${activeTab === "AI_INTELLIGENCE"
+                ? "text-purple-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
+                }`}
+            >
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              <span className="text-[10px] tracking-tight">Nora AI</span>
+            </button>
+          )}
+
+          {/* 5th slot: Menu / Sidebar toggle for full module navigation (Application Manager, Contact Platform, etc.) */}
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${isMobileSidebarOpen
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
+              }`}
+            aria-label="Toggle Navigation Menu"
+            title="All Modules & Settings"
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Menu</span>
+          </button>
+        </nav>
+
+        {/* REAL-TIME LOCKOUT OVERLAY FOR ACTIVE DASHBOARD SESSIONS */}
+        {institutionSuspension.isSuspended && currentUserRole !== "CREATOR" && (
+          <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 select-none">
+            <div className="w-full max-w-lg bg-slate-900 border-2 border-rose-500 rounded-3xl p-6 sm:p-8 text-center text-white shadow-2xl shadow-rose-950/50 space-y-4 animate-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-500 mx-auto flex items-center justify-center shadow-lg shadow-rose-500/20">
+                <Lock className="w-8 h-8" />
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Platform Restricted:</span>
-                <span className="font-bold text-sky-400">{institutionSuspension.platform === "MOBILE" ? "📱 Native Mobile App" : "💻 Web Application"}</span>
-              </div>
-            </div>
 
-            <div className="pt-2 space-y-2.5">
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer transition-colors"
-              >
-                Log Out &amp; Return to Login
-              </button>
+              <div className="space-y-1">
+                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                  {institutionSuspension.isGlobal ? "Emergency Global System Halt" : "Institutional Access Stopped"}
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-white mt-2">
+                  {institutionSuspension.college ? institutionSuspension.college.collegeName : "SPHEREX CRM APPLICATION"}
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300">
+                  {institutionSuspension.platform === "MOBILE" ? "Native Mobile App" : "Web Application"} access has been stopped by the Master Creator.
+                </p>
+              </div>
+
+              <div className="bg-slate-950/80 rounded-2xl p-4 text-left text-xs space-y-2 border border-slate-800">
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-slate-400 shrink-0">Lockout Reason:</span>
+                  <span className="font-bold text-rose-400 text-right">{institutionSuspension.reason || "Application access stopped by Master Creator."}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Platform Restricted:</span>
+                  <span className="font-bold text-sky-400">{institutionSuspension.platform === "MOBILE" ? "📱 Native Mobile App" : "💻 Web Application"}</span>
+                </div>
+              </div>
+
+              <div className="pt-2 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer transition-colors"
+                >
+                  Log Out &amp; Return to Login
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

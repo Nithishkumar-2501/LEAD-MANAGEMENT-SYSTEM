@@ -36,6 +36,8 @@ import {
   Check,
   Building2,
   Flame,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { ActiveTab, CampusLocation, Lead, Application } from "@/types/crm";
 import {
@@ -791,6 +793,9 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
   const [urlInput, setUrlInput] = useState("");
   const [activeImageSourceTab, setActiveImageSourceTab] = useState<"UPLOAD" | "PRESETS" | "URL">("UPLOAD");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
 
   // Optimized file reader for uploaded college photos
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -840,16 +845,24 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
 
           setImageUrl(dataUrl);
           setImageCaption(file.name.replace(/\.[^/.]+$/, ""));
+          setImageLoadFailed(false);
+          setUrlError(null);
+          setErrorMessage(null);
         } catch (e) {
           // Fallback to raw base64
           setImageUrl(result);
           setImageCaption(file.name.replace(/\.[^/.]+$/, ""));
+          setImageLoadFailed(false);
+          setUrlError(null);
+          setErrorMessage(null);
         } finally {
           setIsUploading(false);
         }
       };
       img.onerror = () => {
         setImageUrl(result);
+        setImageLoadFailed(false);
+        setUrlError(null);
         setIsUploading(false);
       };
       img.src = result;
@@ -859,15 +872,58 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
   };
 
   const handleApplyUrl = () => {
-    if (!urlInput.trim()) return;
-    setImageUrl(urlInput.trim());
-    setImageCaption("College Web Visual Banner");
-    setUrlInput("");
+    const trimmed = urlInput.trim();
+    if (!trimmed) {
+      setUrlError("Please enter an image URL.");
+      setErrorMessage("Please enter an image URL before clicking Load Image.");
+      return;
+    }
+
+    try {
+      const parsed = new URL(trimmed);
+      if (!["http:", "https:", "data:"].includes(parsed.protocol)) {
+        setUrlError("Please enter a valid HTTP or HTTPS URL.");
+        setErrorMessage("Please enter a valid HTTP or HTTPS image URL.");
+        return;
+      }
+    } catch {
+      setUrlError("Invalid URL format. Please enter a complete web address.");
+      setErrorMessage("Invalid URL format. Please check the entered web link.");
+      return;
+    }
+
+    setIsLoadingUrl(true);
+    setUrlError(null);
+    setErrorMessage(null);
+
+    const testImg = new Image();
+    testImg.onload = () => {
+      setImageUrl(trimmed);
+      setImageCaption("College Web Visual Banner");
+      setImageLoadFailed(false);
+      setIsLoadingUrl(false);
+      setUrlError(null);
+      setErrorMessage(null);
+    };
+    testImg.onerror = () => {
+      setIsLoadingUrl(false);
+      setImageLoadFailed(true);
+      const failMsg = `Failed to load image from "${trimmed}". The URL is invalid, broken, or unreachable.`;
+      setUrlError(failMsg);
+      setErrorMessage(failMsg);
+      // Retain urlInput and point imageUrl to the attempted URL so the error state displays the failed link rather than an unrelated fallback
+      setImageUrl(trimmed);
+      setImageCaption("Invalid Image URL");
+    };
+    testImg.src = trimmed;
   };
 
   const handleSelectPreset = (preset: (typeof COLLEGE_IMAGE_PRESETS)[0]) => {
     setImageUrl(preset.url);
     setImageCaption(preset.title);
+    setImageLoadFailed(false);
+    setUrlError(null);
+    setErrorMessage(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -878,6 +934,10 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
     }
     if (!imageUrl) {
       setErrorMessage("Please select or upload an image about the college.");
+      return;
+    }
+    if (imageLoadFailed) {
+      setErrorMessage("Cannot save campaign with a broken or failed image. Please load a valid image or choose a preset.");
       return;
     }
 
@@ -1062,39 +1122,83 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
 
             {/* TAB CONTENT: Paste Image URL */}
             {activeImageSourceTab === "URL" && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="url"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="https://example.com/college-poster.jpg"
-                  className="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleApplyUrl}
-                  className="px-3 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 shrink-0 cursor-pointer"
-                >
-                  Load Image
-                </button>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={urlInput}
+                    onChange={(e) => {
+                      setUrlInput(e.target.value);
+                      if (urlError) setUrlError(null);
+                    }}
+                    placeholder="https://example.com/college-poster.jpg"
+                    className={`flex-1 bg-white dark:bg-slate-800 border rounded-xl px-3 py-2 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 ${
+                      urlError
+                        ? "border-rose-500 focus:ring-rose-500"
+                        : "border-slate-300 dark:border-slate-700 focus:ring-indigo-500"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyUrl}
+                    disabled={isLoadingUrl}
+                    className="px-3 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 shrink-0 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  >
+                    {isLoadingUrl ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Loading...</span>
+                      </>
+                    ) : (
+                      <span>Load Image</span>
+                    )}
+                  </button>
+                </div>
+                {urlError && (
+                  <p className="text-[11px] text-rose-500 dark:text-rose-400 font-semibold flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{urlError}</span>
+                  </p>
+                )}
               </div>
             )}
 
             {/* Active Image Live Preview Card */}
             {imageUrl && (
               <div className="relative rounded-xl overflow-hidden border border-slate-300 dark:border-white/10 bg-slate-950 aspect-[16/8] max-h-56 mt-2 group/preview">
-                <img
-                  src={imageUrl}
-                  alt={imageCaption || "Campaign Preview"}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "/login-hero.jpg";
-                  }}
-                />
-                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-white font-black text-[10px] border border-white/20 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Image Ready</span>
-                </div>
+                {imageLoadFailed ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-slate-900/90 border border-rose-500/30">
+                    <div className="p-3 rounded-full bg-rose-500/20 text-rose-400 mb-2 border border-rose-500/30">
+                      <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <p className="text-xs font-bold text-rose-300">Image Load Failed</p>
+                    <p className="text-[11px] text-slate-400 mt-1 max-w-md truncate">
+                      Unable to render: <span className="font-mono text-slate-300">{imageUrl}</span>
+                    </p>
+                    <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-rose-950/90 backdrop-blur-md text-rose-300 font-black text-[10px] border border-rose-500/40 flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Image Load Failed</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <img
+                      src={imageUrl}
+                      alt={imageCaption || "Campaign Preview"}
+                      className="w-full h-full object-cover"
+                      onError={() => {
+                        setImageLoadFailed(true);
+                        const failMsg = `Failed to load image from "${imageUrl}". Please verify the URL.`;
+                        setUrlError(failMsg);
+                        setErrorMessage(failMsg);
+                      }}
+                    />
+                    <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-white font-black text-[10px] border border-white/20 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Image Ready</span>
+                    </div>
+                  </>
+                )}
 
                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between bg-black/75 backdrop-blur-md p-2 rounded-xl text-white">
                   <div className="min-w-0 flex-1 mr-2">

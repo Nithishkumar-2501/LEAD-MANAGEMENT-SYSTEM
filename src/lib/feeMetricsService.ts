@@ -1,4 +1,5 @@
 import { Lead, Application, CampusLocation, Payment } from "@/types/crm";
+import { sanitizeLeadFields, resolveAcademicCourse } from "@/lib/csvParser";
 
 export interface StudentFeeSummaryItem {
   id: string;
@@ -42,7 +43,8 @@ export function buildStudentFeeRecords(
 
   // 1. Process admitted / enrolled applicants from CRM database
   applicants.forEach((app, idx) => {
-    const name = (app.name || "Student Applicant").trim();
+    const sanitizedApp = sanitizeLeadFields(app);
+    const name = (sanitizedApp.name || app.name || "Student Applicant").trim();
     processedStudentNames.add(name.toLowerCase());
 
     // Check if this student has a recorded payment in Firebase
@@ -80,14 +82,19 @@ export function buildStudentFeeRecords(
         ? "PARTIAL"
         : "PENDING";
 
+    const resolvedCourse = resolveAcademicCourse(
+      sanitizedApp.courseInterest || app.courseInterest,
+      "B.E. Computer Science and Engineering"
+    );
+
     list.push({
       id: app.id || `stud_${idx}`,
       studentName: name,
       applicationNo: (app.application as any)?.applicationNo || `VSB-2026-${String(idx + 1).padStart(4, "0")}`,
-      course: app.courseInterest || "B.E. Computer Science and Engineering",
-      campus: app.campus || fallbackCampus,
-      phone: app.phone || "",
-      email: app.email || "",
+      course: resolvedCourse,
+      campus: sanitizedApp.campus || app.campus || fallbackCampus,
+      phone: sanitizedApp.phone || app.phone || "",
+      email: sanitizedApp.email || app.email || "",
       feeCategory: "Tuition Fee",
       totalFee,
       amountPaid,
@@ -115,11 +122,16 @@ export function buildStudentFeeRecords(
           ? "PARTIAL"
           : "PENDING";
 
+      const resolvedCourse = resolveAcademicCourse(
+        p.course,
+        "B.E. Computer Science and Engineering"
+      );
+
       list.push({
         id: p.id || `pay_${idx}`,
         studentName: p.studentName,
         applicationNo: `VSB-PAY-${p.id.slice(-4)}`,
-        course: p.course || "B.E. Computer Science and Engineering",
+        course: resolvedCourse,
         campus: p.campus || fallbackCampus,
         phone: "",
         email: "",

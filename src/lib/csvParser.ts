@@ -1,15 +1,32 @@
 import { Lead, Application, CampusLocation, LeadStatus, Teacher } from "@/types/crm";
 import { formatPhoneWith91 } from "@/lib/phoneValidation";
 
-const KNOWN_CITIES = new Set([
-  "mumbai", "chennai", "kochi", "delhi", "coimbatore", "pune", "bengaluru",
+export const KNOWN_CITIES = new Set([
+  "mumbai", "chennai", "kochi", "delhi", "new delhi", "coimbatore", "pune", "bengaluru",
   "bangalore", "hyderabad", "madurai", "trichy", "salem", "erode", "tiruppur",
-  "dindigul", "karur", "thanjavur", "vellore", "kolkata"
+  "dindigul", "karur", "thanjavur", "vellore", "kolkata", "chandigarh",
+  "jaipur", "lucknow", "ahmedabad", "bhopal", "patna", "nagpur", "indore",
+  "visakhapatnam", "vijayawada", "mysore", "hubli", "kozhikode", "thrissur",
+  "tirunelveli", "noida", "gurgaon", "gurugram", "ghaziabad", "faridabad"
 ]);
 
-const COURSE_KEYWORDS = /(b\.e|b\.tech|m\.e|m\.tech|engineering|technology|science|computer|mechanical|civil|electrical|electronic|chemical|biomedical|biotech)/i;
-const SCHOOL_KEYWORDS = /(school|vidyalaya|bhavan|academy|college|hss|matric|higher secondary)/i;
-const STREET_KEYWORDS = /(road|street|cross|lane|avenue|nagar|salai|highway)/i;
+export const COURSE_KEYWORDS = /(b\.e|b\.tech|m\.e|m\.tech|b\.sc|m\.sc|b\.arch|mba|mca|b\.com|bba|engineering|technology|science|computer|mechanical|civil|electrical|electronic|chemical|biomedical|biotech|information technology|artificial intelligence|data science)/i;
+export const SCHOOL_KEYWORDS = /(school|vidyalaya|bhavan|academy|college|hss|matric|higher secondary)/i;
+export const STREET_KEYWORDS = /(road|street|cross|lane|avenue|nagar|salai|highway)/i;
+
+/**
+ * Validates whether a course string is a genuine degree or academic branch.
+ * If the string is a city name, empty, or lacks academic keywords, returns the fallback degree.
+ */
+export function resolveAcademicCourse(course?: string | null, fallback: string = "B.E. Computer Science and Engineering"): string {
+  if (!course || !course.trim()) return fallback;
+  const trimmed = course.trim();
+  const lower = trimmed.toLowerCase();
+  if (KNOWN_CITIES.has(lower) || !COURSE_KEYWORDS.test(trimmed)) {
+    return fallback;
+  }
+  return trimmed;
+}
 
 /**
  * Sanitizes and repairs lead fields if street, school, city, and course values were shifted during import.
@@ -20,7 +37,9 @@ export function sanitizeLeadFields<T extends { school?: string | null; district?
   const courseInterest = lead.courseInterest || "";
   const address = lead.address || "";
 
-  const isCourseActuallyCity = Boolean(courseInterest && KNOWN_CITIES.has(courseInterest.trim().toLowerCase()) && !COURSE_KEYWORDS.test(courseInterest));
+  const isCourseActuallyCity = Boolean(
+    courseInterest && (KNOWN_CITIES.has(courseInterest.trim().toLowerCase()) || !COURSE_KEYWORDS.test(courseInterest))
+  );
   const isDistrictActuallySchool = Boolean(district && SCHOOL_KEYWORDS.test(district));
   const isSchoolActuallyStreet = Boolean(school && STREET_KEYWORDS.test(school) && !SCHOOL_KEYWORDS.test(school));
 
