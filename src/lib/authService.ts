@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   User as FirebaseUser,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -21,12 +22,35 @@ export function formatFirebaseEmail(username: string): string {
   return `${cleanUser.replace(/[^a-z0-9]/g, "")}@vsbec.in`;
 }
 
+// Dispatch secure password reset request via Firebase Authentication
+export async function requestPasswordReset(identifier: string): Promise<{ success: boolean; message: string }> {
+  const cleanId = identifier.trim().toLowerCase();
+  if (!cleanId) {
+    throw new Error("Please enter your User ID or institutional email.");
+  }
+
+  const targetEmail = formatFirebaseEmail(cleanId);
+  try {
+    await sendPasswordResetEmail(auth, targetEmail);
+  } catch (e) {
+    // Avoid user enumeration: regardless of whether the email exists in Firebase,
+    // return a generic security confirmation to unauthenticated visitors
+    console.warn("Password reset dispatch notice:", e);
+  }
+
+  return {
+    success: true,
+    message: `If an account associated with "${identifier}" exists, password reset instructions have been dispatched.`,
+  };
+}
+
 // Real-time Firebase Authentication login handler
 export async function loginWithRealtimeAuth(
   username: string,
   pass: string,
   campus: "KARUR" | "COIMBATORE",
-  role: "ADMIN" | "TEACHER" | "CREATOR"
+  role: "ADMIN" | "TEACHER" | "CREATOR",
+  rememberMe: boolean = false
 ): Promise<AuthSession> {
   const firebaseEmail = formatFirebaseEmail(username);
   const password = pass.length >= 6 ? pass : `${pass}12345`; // Firebase requires min 6 chars
@@ -40,7 +64,7 @@ export async function loginWithRealtimeAuth(
       campus,
       firebaseUser: userCredential.user,
     };
-    saveLocalSession(session);
+    saveLocalSession(session, rememberMe);
     return session;
   } catch (err: any) {
     // If user account does not exist in Firebase yet, register in real time
@@ -57,35 +81,48 @@ export async function loginWithRealtimeAuth(
           campus,
           firebaseUser: newUserCredential.user,
         };
-        saveLocalSession(session);
+        saveLocalSession(session, rememberMe);
         return session;
       } catch (createErr) {
         // Fallback to local authenticated session if offline/network restricted
         const fallbackSession: AuthSession = { username, role, campus };
-        saveLocalSession(fallbackSession);
+        saveLocalSession(fallbackSession, rememberMe);
         return fallbackSession;
       }
     }
     
     // Fallback to authenticated session
     const fallbackSession: AuthSession = { username, role, campus };
-    saveLocalSession(fallbackSession);
+    saveLocalSession(fallbackSession, rememberMe);
     return fallbackSession;
   }
 }
 
-// Save authentication session for current browser window only
-function saveLocalSession(session: AuthSession) {
+// Save authentication session for current browser window and optionally localStorage if rememberMe is enabled
+function saveLocalSession(session: AuthSession, rememberMe: boolean = false) {
   if (typeof window === "undefined") return;
+  sessionStorage.setItem("vsb_admin_auth", "true");
   sessionStorage.setItem("vsb_logged_in_user", session.username);
   sessionStorage.setItem("vsb_logged_in_role", session.role);
   sessionStorage.setItem("vsb_logged_in_campus", session.campus);
   sessionStorage.setItem("vsb_auth_timestamp", new Date().toISOString());
+
   try {
-    localStorage.removeItem("vsb_admin_auth");
-    localStorage.removeItem("vsb_logged_in_user");
-    localStorage.removeItem("vsb_logged_in_role");
-    localStorage.removeItem("vsb_logged_in_campus");
+    if (rememberMe) {
+      localStorage.setItem("vsb_admin_auth", "true");
+      localStorage.setItem("vsb_logged_in_user", session.username);
+      localStorage.setItem("vsb_logged_in_role", session.role);
+      localStorage.setItem("vsb_logged_in_campus", session.campus);
+      localStorage.setItem("vsb_auth_timestamp", new Date().toISOString());
+      localStorage.setItem("vsb_remember_me", "true");
+    } else {
+      localStorage.removeItem("vsb_admin_auth");
+      localStorage.removeItem("vsb_logged_in_user");
+      localStorage.removeItem("vsb_logged_in_role");
+      localStorage.removeItem("vsb_logged_in_campus");
+      localStorage.removeItem("vsb_auth_timestamp");
+      localStorage.removeItem("vsb_remember_me");
+    }
   } catch (e) {}
 }
 
@@ -108,6 +145,7 @@ export async function logoutWithRealtimeAuth(): Promise<void> {
         localStorage.removeItem("vsb_logged_in_role");
         localStorage.removeItem("vsb_logged_in_campus");
         localStorage.removeItem("vsb_auth_timestamp");
+        localStorage.removeItem("vsb_remember_me");
       } catch (e) {}
     }
   }

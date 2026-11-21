@@ -182,10 +182,25 @@ export default function AdminDashboardView({
   }, [scopedApplicants]);
 
   const scopedPendingFeeAdmitted = useMemo(() => {
-    return scopedApplicants.filter(
-      (a) => a.status === "ADMITTED" && (!a.application?.paymentStatus || a.application?.paymentStatus !== "PAID")
-    );
-  }, [scopedApplicants]);
+    const admittedList = scopedApplicants.filter((a) => a.status === "ADMITTED");
+    const pending = admittedList.filter((a) => {
+      const payStatus = (a.application?.paymentStatus || "").toUpperCase().trim();
+      const stage = (a.application?.stage || "").toUpperCase().trim();
+      const isPaid =
+        payStatus === "PAID" ||
+        payStatus === "COMPLETED" ||
+        payStatus === "PAYMENT APPROVED" ||
+        payStatus === "APPROVED" ||
+        stage === "FEE_PAID";
+      return !isPaid;
+    });
+
+    const maxAdmitted = Math.max(0, statusCounts?.ADMITTED ?? admittedList.length);
+    if (pending.length > maxAdmitted) {
+      return pending.slice(0, maxAdmitted);
+    }
+    return pending;
+  }, [scopedApplicants, statusCounts?.ADMITTED]);
 
   const scopedCseAidsApplicants = useMemo(() => {
     return scopedApplicants.filter((a) =>
@@ -232,16 +247,22 @@ export default function AdminDashboardView({
     }
 
     if (scopedPendingFeeAdmitted.length > 0) {
+      const totalAdmittedInScope = Math.max(scopedPendingFeeAdmitted.length, statusCounts?.ADMITTED ?? 0);
+      const descText =
+        totalAdmittedInScope > scopedPendingFeeAdmitted.length
+          ? `${scopedPendingFeeAdmitted.length} of ${totalAdmittedInScope} admitted student${totalAdmittedInScope > 1 ? "s" : ""} pending payment lock.`
+          : `${scopedPendingFeeAdmitted.length} admitted student${scopedPendingFeeAdmitted.length > 1 ? "s" : ""} pending payment lock.`;
+
       actions.push({
         id: "fee-reminders",
         title: `Dispatch Tuition Fee Reminders`,
-        desc: `${scopedPendingFeeAdmitted.length} admitted student${scopedPendingFeeAdmitted.length > 1 ? "s" : ""} pending payment lock.`,
+        desc: descText,
         type: "FEE",
       });
     }
 
     return actions;
-  }, [scopedApplicants, scopedMeritAwaitingCall, scopedPendingMarksheets, scopedPendingFeeAdmitted]);
+  }, [scopedApplicants, scopedMeritAwaitingCall, scopedPendingMarksheets, scopedPendingFeeAdmitted, statusCounts?.ADMITTED]);
 
   // Cutoff Range Aggregation
   const cutoffBrackets = useMemo(() => {

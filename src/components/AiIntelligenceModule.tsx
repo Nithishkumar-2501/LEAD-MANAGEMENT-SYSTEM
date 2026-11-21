@@ -101,8 +101,15 @@ export default function AiIntelligenceModule({
   // Compute AI score for all leads
   const scoredApplicants = useMemo(() => {
     return campusApplicants.map((app) => {
+      const resolvedCutoff =
+        app.tneaCutoff ??
+        (app as any).cutoff ??
+        (app.application?.marks12th && app.application.marks12th > 0
+          ? Number((app.application.marks12th * 2).toFixed(2))
+          : undefined);
+
       const pred = predictStudentConversion({
-        tneaCutoff: app.tneaCutoff || (app.application ? app.application.marks12th * 2 : 160),
+        tneaCutoff: resolvedCutoff,
         community: app.community || "BC",
         district: app.district || "Karur",
         source: app.source || "TNEA Counselling",
@@ -113,9 +120,10 @@ export default function AiIntelligenceModule({
       });
       return {
         ...app,
+        tneaCutoff: pred.tneaCutoff,
+        cutoff: pred.tneaCutoff,
         aiScore: pred.conversionProbability,
         priorityTier: pred.priorityTier,
-        cutoff: pred.tneaCutoff,
         recommendedBranches: pred.recommendedBranches,
         action: pred.counselorActionRecommendation,
       };

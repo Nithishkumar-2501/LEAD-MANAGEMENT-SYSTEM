@@ -71,6 +71,13 @@ export default function ApplicationManagerModule({
   const [selectedFormStatus, setSelectedFormStatus] = useState("ALL");
   const [quickView, setQuickView] = useState("System Default View");
 
+  // Advanced Filter State
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [advFilterCampus, setAdvFilterCampus] = useState("ALL");
+  const [advFilterDateFrom, setAdvFilterDateFrom] = useState("");
+  const [advFilterDateTo, setAdvFilterDateTo] = useState("");
+  const [advFilterPaymentMethod, setAdvFilterPaymentMethod] = useState("ALL");
+
   // Selection & Pagination
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -136,13 +143,43 @@ export default function ApplicationManagerModule({
   // Filter & Search Logic
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
-      // Campus filter
-      if (loggedInCampus !== "ALL" && app.campus && app.campus !== loggedInCampus) {
+      // Campus filter:
+      // If user hasn't explicitly selected a specific form (or cross-campus form), scope to loggedInCampus.
+      // If user explicitly chooses a specific form (e.g. "Coimb" or "Karur"), allow records matching that form.
+      if (
+        selectedFormFilter === "ALL" &&
+        advFilterCampus === "ALL" &&
+        loggedInCampus !== "ALL" &&
+        app.campus &&
+        app.campus !== loggedInCampus
+      ) {
         return false;
       }
       // Form filter
       if (selectedFormFilter !== "ALL") {
-        if (!app.formName.toLowerCase().includes(selectedFormFilter.toLowerCase())) {
+        const formStr = (app.formName || "").toLowerCase();
+        const campusStr = (app.campus || "").toLowerCase();
+        const filterStr = selectedFormFilter.toLowerCase();
+        const matchesForm = formStr.includes(filterStr);
+        const matchesCampus =
+          (filterStr === "coimb" && campusStr.includes("coimb")) ||
+          (filterStr === "karur" && campusStr.includes("karur"));
+        if (!matchesForm && !matchesCampus) {
+          return false;
+        }
+      }
+      // Quick View filter
+      if (quickView === "Complete Applications") {
+        if ((app.formStatus || "").toLowerCase() !== "complete") {
+          return false;
+        }
+      } else if (quickView === "Pending Payment") {
+        if (!(app.paymentStatus || "").toLowerCase().includes("pending")) {
+          return false;
+        }
+      } else if (quickView === "Approved Payment") {
+        const pStatus = (app.paymentStatus || "").toLowerCase();
+        if (!pStatus.includes("approved") && !pStatus.includes("completed") && !pStatus.includes("success")) {
           return false;
         }
       }
@@ -160,6 +197,27 @@ export default function ApplicationManagerModule({
       }
       // Form status filter
       if (selectedFormStatus !== "ALL" && app.formStatus !== selectedFormStatus) {
+        return false;
+      }
+      // --- Advanced filters ---
+      // Campus (advanced – independent of loggedInCampus role scope)
+      if (advFilterCampus !== "ALL" && app.campus && app.campus !== advFilterCampus) {
+        return false;
+      }
+      // Date range – created at
+      if (advFilterDateFrom) {
+        const created = new Date(app.createdAt);
+        const from = new Date(advFilterDateFrom);
+        if (created < from) return false;
+      }
+      if (advFilterDateTo) {
+        const created = new Date(app.createdAt);
+        const to = new Date(advFilterDateTo);
+        to.setHours(23, 59, 59, 999);
+        if (created > to) return false;
+      }
+      // Payment method
+      if (advFilterPaymentMethod !== "ALL" && (app.paymentMethod || "Not Specified") !== advFilterPaymentMethod) {
         return false;
       }
       // Search query
@@ -185,7 +243,12 @@ export default function ApplicationManagerModule({
     selectedOwner,
     selectedStage,
     selectedFormStatus,
+    quickView,
     searchQuery,
+    advFilterCampus,
+    advFilterDateFrom,
+    advFilterDateTo,
+    advFilterPaymentMethod,
   ]);
 
   // Sorting
@@ -201,10 +264,18 @@ export default function ApplicationManagerModule({
 
   // Pagination
   const totalPages = Math.ceil(sortedApplications.length / rowsPerPage) || 1;
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
   const paginatedApplications = useMemo(() => {
-    const start = (currentPage - 1) * rowsPerPage;
+    const validPage = Math.min(Math.max(1, currentPage), totalPages);
+    const start = (validPage - 1) * rowsPerPage;
     return sortedApplications.slice(start, start + rowsPerPage);
-  }, [sortedApplications, currentPage, rowsPerPage]);
+  }, [sortedApplications, currentPage, rowsPerPage, totalPages]);
 
   const handleSort = (field: keyof ManagedApplication) => {
     if (sortField === field) {
@@ -352,17 +423,17 @@ export default function ApplicationManagerModule({
       "Created At"
     ];
     const rows = filteredApplications.map((a) => [
-      `"${a.registeredName}"`,
-      `"${a.applicationNo}"`,
-      `"${a.formName}"`,
-      `"${a.registeredEmail}"`,
-      `"${a.registeredMobile}"`,
-      `"${a.formStatus}"`,
-      `"${a.paymentStatus}"`,
+      `"${a.registeredName || ""}"`,
+      `"${a.applicationNo || ""}"`,
+      `"${a.formName || ""}"`,
+      `"${a.registeredEmail || ""}"`,
+      `"${a.registeredMobile || ""}"`,
+      `"${a.formStatus || ""}"`,
+      `"${a.paymentStatus || ""}"`,
       `"${a.paymentMethod || "-"}"`,
       `"${a.applicationOwner || "-"}"`,
       `"${a.campus || "-"}"`,
-      `"${a.createdAt}"`
+      `"${a.createdAt || ""}"`
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -481,7 +552,10 @@ export default function ApplicationManagerModule({
             <div className="relative">
               <select
                 value={selectedFormFilter}
-                onChange={(e) => setSelectedFormFilter(e.target.value)}
+                onChange={(e) => {
+                  setSelectedFormFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="appearance-none bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg pl-3 pr-7 py-1.5 text-xs sm:text-sm font-bold text-sky-700 dark:text-sky-300 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
               >
                 <option value="ALL">Select Form ▾</option>
@@ -495,8 +569,15 @@ export default function ApplicationManagerModule({
               <span className="text-xs sm:text-sm font-semibold">Quick View :</span>
               <select
                 value={quickView}
-                onChange={(e) => setQuickView(e.target.value)}
-                className="bg-transparent border-0 text-sky-700 dark:text-sky-400 font-bold hover:underline cursor-pointer focus:outline-none text-xs sm:text-sm pr-4 py-1"
+                onChange={(e) => {
+                  setQuickView(e.target.value);
+                  onTriggerToast(`⚡ Quick View: ${e.target.value}`);
+                }}
+                className={`bg-transparent border-0 font-bold hover:underline cursor-pointer focus:outline-none text-xs sm:text-sm pr-4 py-1 ${
+                  quickView !== "System Default View"
+                    ? "text-sky-600 dark:text-sky-400 font-extrabold"
+                    : "text-sky-700 dark:text-sky-400"
+                }`}
               >
                 <option value="System Default View">System Default View ▾</option>
                 <option value="Complete Applications">Complete Applications</option>
@@ -767,6 +848,11 @@ export default function ApplicationManagerModule({
                 selectedStage !== "ALL" ||
                 selectedFormStatus !== "ALL" ||
                 selectedFormFilter !== "ALL" ||
+                quickView !== "System Default View" ||
+                advFilterCampus !== "ALL" ||
+                advFilterDateFrom ||
+                advFilterDateTo ||
+                advFilterPaymentMethod !== "ALL" ||
                 searchQuery) && (
                 <button
                   onClick={() => {
@@ -775,7 +861,13 @@ export default function ApplicationManagerModule({
                     setSelectedStage("ALL");
                     setSelectedFormStatus("ALL");
                     setSelectedFormFilter("ALL");
+                    setQuickView("System Default View");
                     setSearchQuery("");
+                    setAdvFilterCampus("ALL");
+                    setAdvFilterDateFrom("");
+                    setAdvFilterDateTo("");
+                    setAdvFilterPaymentMethod("ALL");
+                    setShowAdvancedFilters(false);
                   }}
                   className="mt-3.5 px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold cursor-pointer transition-colors"
                 >
@@ -788,14 +880,102 @@ export default function ApplicationManagerModule({
             <div className="self-end md:self-center mt-2 md:mt-0">
               <button
                 type="button"
-                onClick={() => onTriggerToast("ℹ️ Filter presets applied to current table view.")}
-                className="px-3.5 py-2 rounded-lg border border-sky-300 dark:border-sky-500/40 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors cursor-pointer"
+                onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                className={`px-3.5 py-2 rounded-lg border font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors cursor-pointer ${
+                  showAdvancedFilters
+                    ? "border-sky-500 dark:border-sky-400 bg-sky-100 dark:bg-sky-900/80 text-sky-800 dark:text-sky-200 ring-1 ring-sky-400/50"
+                    : "border-sky-300 dark:border-sky-500/40 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300"
+                }`}
               >
                 <SlidersHorizontal className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                <span>Advanced Filter</span>
+                <span>{showAdvancedFilters ? "Hide Advanced" : "Advanced Filter"}</span>
+                {(advFilterCampus !== "ALL" || advFilterDateFrom || advFilterDateTo || advFilterPaymentMethod !== "ALL") && (
+                  <span className="ml-1 w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+                )}
               </button>
             </div>
           </div>
+
+          {/* ADVANCED FILTER PANEL (collapsible) */}
+          {showAdvancedFilters && (
+            <div className="px-3.5 py-3 bg-sky-50/80 dark:bg-sky-950/40 border-b border-sky-200 dark:border-sky-500/20 flex flex-col md:flex-row items-stretch md:items-end gap-3 text-xs sm:text-sm">
+              {/* Campus Filter */}
+              <div className="relative min-w-[130px]">
+                <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
+                  Campus
+                </label>
+                <select
+                  value={advFilterCampus}
+                  onChange={(e) => setAdvFilterCampus(e.target.value)}
+                  className="w-full appearance-none bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                >
+                  <option value="ALL">All Campuses</option>
+                  <option value="KARUR">Karur (612)</option>
+                  <option value="COIMBATORE">Coimbatore (714)</option>
+                </select>
+              </div>
+
+              {/* Date From */}
+              <div className="relative min-w-[140px]">
+                <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
+                  Created From
+                </label>
+                <input
+                  type="date"
+                  value={advFilterDateFrom}
+                  onChange={(e) => setAdvFilterDateFrom(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                />
+              </div>
+
+              {/* Date To */}
+              <div className="relative min-w-[140px]">
+                <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
+                  Created Until
+                </label>
+                <input
+                  type="date"
+                  value={advFilterDateTo}
+                  onChange={(e) => setAdvFilterDateTo(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                />
+              </div>
+
+              {/* Payment Method */}
+              <div className="relative min-w-[150px]">
+                <label className="text-xs font-bold text-sky-700 dark:text-sky-300 block uppercase tracking-wider mb-1">
+                  Payment Method
+                </label>
+                <select
+                  value={advFilterPaymentMethod}
+                  onChange={(e) => setAdvFilterPaymentMethod(e.target.value)}
+                  className="w-full appearance-none bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-600 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                >
+                  <option value="ALL">All Methods</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="DD">DD / Demand Draft</option>
+                  <option value="Online Transfer">Online Transfer</option>
+                  <option value="Not Specified">Not Specified</option>
+                </select>
+              </div>
+
+              {/* Reset Advanced Filters */}
+              {(advFilterCampus !== "ALL" || advFilterDateFrom || advFilterDateTo || advFilterPaymentMethod !== "ALL") && (
+                <button
+                  onClick={() => {
+                    setAdvFilterCampus("ALL");
+                    setAdvFilterDateFrom("");
+                    setAdvFilterDateTo("");
+                    setAdvFilterPaymentMethod("ALL");
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-sky-200 dark:bg-sky-800 hover:bg-sky-300 dark:hover:bg-sky-700 text-sky-800 dark:text-sky-200 text-xs font-bold cursor-pointer transition-colors self-end"
+                >
+                  Reset Advanced
+                </button>
+              )}
+            </div>
+          )}
 
           {/* DATA TABLE (Columns matching Image 2) */}
           <div className="overflow-x-auto">
@@ -902,8 +1082,32 @@ export default function ApplicationManagerModule({
                   </tr>
                 ) : paginatedApplications.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-10 text-slate-400 dark:text-slate-500 text-xs">
-                      No applications found matching the selected filters.
+                    <td colSpan={10} className="text-center py-12 text-slate-500 dark:text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto px-4">
+                        <FileSpreadsheet className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                        <p className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
+                          {selectedFormFilter !== "ALL"
+                            ? `No records found for ${selectedFormFilter === "Coimb" ? "Application Form VSB Coimbatore" : "Application Form VSB Karur"}`
+                            : "No applications found matching the selected filters"}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {selectedFormFilter === "Coimb"
+                            ? "There are currently no submitted applications under the Coimbatore form, or none match the active filters."
+                            : "Try clearing or adjusting your search filters to view records."}
+                        </p>
+                        {selectedFormFilter !== "ALL" && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedFormFilter("ALL");
+                              setCurrentPage(1);
+                            }}
+                            className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800 transition-colors cursor-pointer"
+                          >
+                            Reset Form Filter
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -932,7 +1136,7 @@ export default function ApplicationManagerModule({
                             className="text-left font-bold text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 hover:underline cursor-pointer flex items-center gap-1.5 text-sm"
                             title="Click to edit application data"
                           >
-                            <span>{app.registeredName}</span>
+                            <span>{app.registeredName || "Applicant"}</span>
                             {app.paymentStatus === "Payment Approved" && (
                               <span className="text-xs text-amber-500" title="Verified Admission">
                                 ✨
@@ -943,12 +1147,12 @@ export default function ApplicationManagerModule({
 
                         {/* Application No */}
                         <td className="p-3 whitespace-nowrap font-mono font-bold text-slate-700 dark:text-slate-300 text-sm">
-                          {app.applicationNo}
+                          {app.applicationNo || "-"}
                         </td>
 
                         {/* Form Name */}
-                        <td className="p-3 whitespace-nowrap text-slate-700 dark:text-slate-300 max-w-[200px] truncate text-sm font-medium" title={app.formName}>
-                          {app.formName}
+                        <td className="p-3 whitespace-nowrap text-slate-700 dark:text-slate-300 max-w-[200px] truncate text-sm font-medium" title={app.formName || "Application Form"}>
+                          {app.formName || "Application Form VSB (Engineering)"}
                         </td>
 
                         {/* Registered Email */}
@@ -1222,7 +1426,7 @@ export default function ApplicationManagerModule({
                       required
                       value={extractRaw10Digits(editingApp.registeredMobile)}
                       onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        const digits = extractRaw10Digits(e.target.value).slice(0, 10);
                         setEditingApp({ ...editingApp, registeredMobile: digits ? `+91-${digits}` : "" });
                       }}
                       placeholder="98765 43210"
@@ -1407,7 +1611,7 @@ export default function ApplicationManagerModule({
                       required
                       value={extractRaw10Digits(newApp.registeredMobile)}
                       onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        const digits = extractRaw10Digits(e.target.value).slice(0, 10);
                         setNewApp({ ...newApp, registeredMobile: digits ? `+91-${digits}` : "" });
                       }}
                       placeholder="98765 43210"

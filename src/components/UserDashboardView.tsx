@@ -823,13 +823,22 @@ export default function UserDashboardView({
 
   const filteredFeeds = useMemo(() => {
     if (!feedSearchFilter.trim()) return activityFeeds;
-    const q = feedSearchFilter.toLowerCase();
-    return activityFeeds.filter(
-      (f) =>
+    const q = feedSearchFilter.toLowerCase().trim();
+    const cleanQ = q.replace(/\D/g, "");
+
+    return activityFeeds.filter((f) => {
+      const phone = (f.phone || "").toLowerCase();
+      const cleanPhone = phone.replace(/\D/g, "");
+      const matchesPhone =
+        phone.includes(q) ||
+        (cleanQ.length > 0 && (cleanPhone.includes(cleanQ) || (cleanPhone.length >= 10 && cleanQ.includes(cleanPhone))));
+
+      return (
         f.title.toLowerCase().includes(q) ||
         f.studentName.toLowerCase().includes(q) ||
-        f.phone.includes(q)
-    );
+        matchesPhone
+      );
+    });
   }, [activityFeeds, feedSearchFilter]);
 
   // Calendar matrix

@@ -1173,7 +1173,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
               <div
                 key={tch.id}
                 onClick={() => setSelectedTeacherForAudit(tch)}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-indigo-400 dark:hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-1 hover:shadow-xl shadow-sm cursor-pointer group"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 hover:border-indigo-400 dark:hover:border-indigo-500/60 transition-all duration-300 space-y-3 transform hover:-translate-y-1 hover:shadow-xl shadow-sm cursor-pointer group"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -1264,26 +1264,26 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
                 <div className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
                   {/* Highlighted Faculty Profile ID */}
-                  <div className="flex justify-between items-center bg-indigo-50/80 dark:bg-indigo-950/60 px-2.5 py-1.5 rounded-lg border border-indigo-200/60 dark:border-indigo-800/60">
-                    <span className="font-extrabold text-indigo-700 dark:text-indigo-300 text-[11px] flex items-center gap-1">
+                  <div className="flex justify-between items-center gap-3 bg-indigo-50/80 dark:bg-indigo-950/60 px-2.5 py-1.5 rounded-lg border border-indigo-200/60 dark:border-indigo-800/60">
+                    <span className="font-extrabold text-indigo-700 dark:text-indigo-300 text-[11px] flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                       <ShieldCheck className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                       <span>Profile ID</span>
                     </span>
-                    <span className="font-mono font-black text-[11px] text-indigo-950 dark:text-indigo-200 select-all tracking-wide truncate max-w-[210px]">
+                    <span className="font-mono font-bold text-[11px] text-indigo-950 dark:text-indigo-200 select-all truncate text-right min-w-0">
                       {tch.id}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-600 dark:text-slate-300">Experience</span>
-                    <span className="font-black text-slate-900 dark:text-slate-100">{tch.experienceYears} Years</span>
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="font-bold text-slate-600 dark:text-slate-300 shrink-0">Experience</span>
+                    <span className="font-black text-slate-900 dark:text-slate-100 truncate text-right">{tch.experienceYears} Years</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-600 dark:text-slate-300">Email</span>
-                    <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-[11px]">{tch.email}</span>
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="font-bold text-slate-600 dark:text-slate-300 shrink-0">Email</span>
+                    <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-[11px] truncate text-right min-w-0">{tch.email}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-600 dark:text-slate-300">Phone</span>
-                    <span className="font-black text-slate-900 dark:text-slate-100 font-mono">{tch.phone}</span>
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="font-bold text-slate-600 dark:text-slate-300 shrink-0">Phone</span>
+                    <span className="font-black text-slate-900 dark:text-slate-100 font-mono truncate text-right">{tch.phone}</span>
                   </div>
                   <div className="flex justify-between items-start pt-2 border-t border-slate-200 dark:border-slate-800 font-bold">
                     <span className="text-sky-700 dark:text-sky-400 flex items-center gap-1 font-black">

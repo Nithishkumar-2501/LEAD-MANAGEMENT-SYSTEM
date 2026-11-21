@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic, Lock, AlertTriangle, ShieldAlert, Crown, Sparkles, Building2 } from "lucide-react";
+import { LayoutDashboard, UserCheck, Plus, BarChart3, BookOpen, ShieldCheck, Mic, Lock, AlertTriangle, ShieldAlert, Crown, Sparkles, Building2, Menu } from "lucide-react";
 import {
   isCollegeSuspendedForCurrentEnvironment,
   listenToCollegeLicenses,
@@ -688,13 +688,49 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    // Ensure lingering persistent auth is purged so reopening app always requires fresh login
+    // Check both sessionStorage and localStorage for an active authenticated session
     try {
-      localStorage.removeItem("vsb_admin_auth");
-      localStorage.removeItem("vsb_logged_in_user");
-      localStorage.removeItem("vsb_logged_in_role");
-      localStorage.removeItem("vsb_logged_in_campus");
-    } catch (e) {}
+      const isSessionAuth = sessionStorage.getItem("vsb_admin_auth") === "true";
+      const isLocalAuth = localStorage.getItem("vsb_admin_auth") === "true";
+
+      const sourceStorage = isSessionAuth ? sessionStorage : isLocalAuth ? localStorage : null;
+
+      if (sourceStorage) {
+        const savedRole = sourceStorage.getItem("vsb_logged_in_role") as "ADMIN" | "TEACHER" | "CREATOR" | null;
+        const savedUser = sourceStorage.getItem("vsb_logged_in_user");
+        const savedCampus = sourceStorage.getItem("vsb_logged_in_campus") as CampusLocation | null;
+
+        if (savedRole && savedUser && savedCampus && (savedCampus === "KARUR" || savedCampus === "COIMBATORE")) {
+          // If restored from persistent localStorage, ensure current sessionStorage is also synced
+          if (sourceStorage === localStorage) {
+            sessionStorage.setItem("vsb_admin_auth", "true");
+            sessionStorage.setItem("vsb_logged_in_campus", savedCampus);
+            sessionStorage.setItem("vsb_logged_in_role", savedRole);
+            sessionStorage.setItem("vsb_logged_in_user", savedUser);
+          }
+
+          setLoggedInCampus(savedCampus);
+          setCurrentUserRole(savedRole);
+          setLoggedInUsername(savedUser);
+          setSelectedCampus(savedCampus);
+          setIsKarurAdmin(savedRole === "ADMIN" && savedCampus === "KARUR");
+
+          if (savedRole === "CREATOR") {
+            setActiveTab("CREATOR_CONTROL");
+          } else if (savedRole === "TEACHER") {
+            setActiveTab("USER_DASHBOARD");
+          } else {
+            setActiveTab("ADMIN_DASHBOARD");
+          }
+
+          setIsAuthenticated(true);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Session restore notice:", e);
+    }
+
     setIsAuthenticated(false);
   }, []);
 
@@ -714,7 +750,12 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const handleLoginSuccess = async (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => {
+  const handleLoginSuccess = async (
+    campus: "KARUR" | "COIMBATORE",
+    role: "ADMIN" | "TEACHER" | "CREATOR",
+    username: string,
+    rememberMe: boolean = true
+  ) => {
     // Security check: non-creator users cannot log into a suspended college or host
     if (role !== "CREATOR") {
       let freshColleges: CollegeClientLicense[] | undefined;
@@ -737,12 +778,21 @@ export default function DashboardPage() {
     sessionStorage.setItem("vsb_logged_in_campus", campus);
     sessionStorage.setItem("vsb_logged_in_role", role);
     sessionStorage.setItem("vsb_logged_in_user", username);
-    // Explicitly do not persist to localStorage so closing and reopening always prompts for login!
+
     try {
-      localStorage.removeItem("vsb_admin_auth");
-      localStorage.removeItem("vsb_logged_in_user");
-      localStorage.removeItem("vsb_logged_in_role");
-      localStorage.removeItem("vsb_logged_in_campus");
+      if (rememberMe) {
+        localStorage.setItem("vsb_admin_auth", "true");
+        localStorage.setItem("vsb_logged_in_user", username);
+        localStorage.setItem("vsb_logged_in_role", role);
+        localStorage.setItem("vsb_logged_in_campus", campus);
+        localStorage.setItem("vsb_remember_me", "true");
+      } else {
+        localStorage.removeItem("vsb_admin_auth");
+        localStorage.removeItem("vsb_logged_in_user");
+        localStorage.removeItem("vsb_logged_in_role");
+        localStorage.removeItem("vsb_logged_in_campus");
+        localStorage.removeItem("vsb_remember_me");
+      }
     } catch (e) {}
 
     setLoggedInCampus(campus);
@@ -828,6 +878,7 @@ export default function DashboardPage() {
       localStorage.removeItem("vsb_logged_in_campus");
       localStorage.removeItem("vsb_logged_in_role");
       localStorage.removeItem("vsb_logged_in_user");
+      localStorage.removeItem("vsb_remember_me");
     } catch (e) {}
     setIsAuthenticated(false);
     triggerToast(
@@ -1488,15 +1539,15 @@ export default function DashboardPage() {
         ) : currentUserRole === "ADMIN" ? (
           <button
             type="button"
-            onClick={() => setActiveTab("ADMIN_DASHBOARD")}
+            onClick={() => setActiveTab("TEACHERS")}
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              activeTab === "ADMIN_DASHBOARD"
+              activeTab === "TEACHERS"
                 ? "text-sky-400 font-extrabold scale-105"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <ShieldCheck className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Admin</span>
+            <BookOpen className="w-5 h-5" />
+            <span className="text-[10px] tracking-tight">Faculty</span>
           </button>
         ) : (
           <button
@@ -1513,46 +1564,21 @@ export default function DashboardPage() {
           </button>
         )}
 
-        {currentUserRole === "CREATOR" ? (
-          <button
-            type="button"
-            onClick={() => setActiveTab("TEACHERS")}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              activeTab === "TEACHERS"
-                ? "text-purple-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <BookOpen className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Usage</span>
-          </button>
-        ) : currentUserRole === "ADMIN" ? (
-          <button
-            type="button"
-            onClick={() => setActiveTab("TEACHERS")}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              activeTab === "TEACHERS"
-                ? "text-sky-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <BookOpen className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Faculty</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setActiveTab("CAMPUSES")}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-              activeTab === "CAMPUSES"
-                ? "text-sky-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Building2 className="w-5 h-5" />
-            <span className="text-[10px] tracking-tight">Campuses</span>
-          </button>
-        )}
+        {/* 5th slot: Menu / Sidebar toggle for full module navigation (Application Manager, Contact Platform, etc.) */}
+        <button
+          type="button"
+          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+            isMobileSidebarOpen
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+          aria-label="Toggle Navigation Menu"
+          title="All Modules & Settings"
+        >
+          <Menu className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Menu</span>
+        </button>
       </nav>
 
       {/* REAL-TIME LOCKOUT OVERLAY FOR ACTIVE DASHBOARD SESSIONS */}

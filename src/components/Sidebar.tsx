@@ -404,6 +404,15 @@ export default function Sidebar({
       activeGlow: "shadow-purple-500/30",
     },
     {
+      id: "SOCIAL_CAMPAIGN" as ActiveTab,
+      label: "Admission Drive",
+      sublabel: "On-Ground Outreach & Expo",
+      icon: Sparkles,
+      color: "from-amber-500 to-orange-600",
+      activeBorder: "border-amber-400",
+      activeGlow: "shadow-amber-500/30",
+    },
+    {
       id: "SOCIAL_EXPO" as ActiveTab,
       label: "Project Expo",
       sublabel: "College Expo & Event Leads",

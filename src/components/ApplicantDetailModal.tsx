@@ -159,10 +159,14 @@ const getStageKeyForLead = (lead: (Lead & { application?: Application | null }) 
 
 export function getEffectiveCutoff(
   leadCutoff?: number,
-  marks12th?: number
+  marks12th?: number,
+  fallbackCutoff?: number
 ): number | undefined {
   if (leadCutoff !== undefined && leadCutoff !== null && leadCutoff > 0) {
     return leadCutoff;
+  }
+  if (fallbackCutoff !== undefined && fallbackCutoff !== null && fallbackCutoff > 0) {
+    return fallbackCutoff;
   }
   if (marks12th && marks12th > 0) {
     return Number((marks12th * 2).toFixed(2));
@@ -183,7 +187,11 @@ export default function ApplicantDetailModal({
 
   const getInitialFormData = (appLead: (Lead & { application: Application }) | null) => {
     if (!appLead) return null;
-    const effective = getEffectiveCutoff(appLead.tneaCutoff, appLead.application?.marks12th);
+    const effective = getEffectiveCutoff(
+      appLead.tneaCutoff,
+      appLead.application?.marks12th,
+      (appLead as any).cutoff
+    );
     const resolvedPhone = appLead.phone && appLead.phone.trim() ? appLead.phone : "+91-6380270912";
     const resolvedSource = appLead.source && appLead.source.trim() ? appLead.source : "Organic";
     if ((appLead.tneaCutoff === undefined || appLead.tneaCutoff === null || appLead.tneaCutoff === 0) && effective !== undefined) {
@@ -198,8 +206,12 @@ export default function ApplicantDetailModal({
   const [currentStageKey, setCurrentStageKey] = useState<string>(() => getStageKeyForLead(applicant));
 
   const effectiveCutoff = useMemo(() => {
-    return getEffectiveCutoff(formData?.tneaCutoff, formData?.application?.marks12th);
-  }, [formData?.tneaCutoff, formData?.application?.marks12th]);
+    return getEffectiveCutoff(
+      formData?.tneaCutoff,
+      formData?.application?.marks12th,
+      (formData as any)?.cutoff
+    );
+  }, [formData?.tneaCutoff, formData?.application?.marks12th, (formData as any)?.cutoff]);
 
   // Dynamic course options and active selection for degree course interest
   const detailCourseOptions = useMemo(() => {
@@ -772,7 +784,7 @@ export default function ApplicantDetailModal({
   const aiPrediction = useMemo(() => {
     if (!formData) return null;
     return predictStudentConversion({
-      tneaCutoff: effectiveCutoff || 165,
+      tneaCutoff: effectiveCutoff,
       community: formData.community || "BC",
       district: formData.district || "Karur",
       source: formData.source || "TNEA Counselling",
@@ -1153,7 +1165,7 @@ export default function ApplicantDetailModal({
                       </span>
                     )}
                     <span className="text-[11px] font-black text-indigo-800 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md">
-                      Cutoff: {effectiveCutoff || 165}/200
+                      Cutoff: {effectiveCutoff ?? aiPrediction?.tneaCutoff ?? 145}/200
                     </span>
                   </div>
                   <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 font-medium line-clamp-1">
@@ -2485,7 +2497,7 @@ export default function ApplicantDetailModal({
                             required
                             value={extractRaw10Digits(formData.phone || "+91-6380270912")}
                             onChange={(e) => {
-                              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                              const digits = extractRaw10Digits(e.target.value).slice(0, 10);
                               setFormData({ ...formData, phone: digits ? `+91-${digits}` : "" });
                             }}
                             placeholder="98765 43210"

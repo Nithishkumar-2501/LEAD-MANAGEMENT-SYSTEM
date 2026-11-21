@@ -11,6 +11,7 @@ import Tooltip from "@/components/Tooltip";
 import SpecularButton from "@/components/SpecularButton";
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
 import ApplicantDetailModal, { getEffectiveCutoff } from "@/components/ApplicantDetailModal";
+import { formatRegistrationDate, getLeadRegistrationDate } from "@/lib/dateUtils";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { getStudentLeadState } from "@/lib/studentLeadState";
 import {
@@ -285,9 +286,7 @@ export default function ContactDirectoryModule({
     if (col === "Address For communication") return c.address || "";
     if (col === "Community") return (c as any).community || "";
     if (col === "User Registration Date") {
-      if (!c.createdAt) return "";
-      const d = new Date(c.createdAt);
-      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      return formatRegistrationDate(c, false, "Date Unavailable");
     }
     if (col === "Lead Stage") return c.status || "";
     return "";
@@ -361,7 +360,7 @@ export default function ContactDirectoryModule({
       `"${(c.assignedTo || "").replace(/"/g, '""')}"`,
       `"${(c.source || "").replace(/"/g, '""')}"`,
       `"${c.status || ""}"`,
-      `"${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ""}"`
+      `"${formatRegistrationDate(c, false, "Date Unavailable")}"`
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -1249,9 +1248,15 @@ export default function ContactDirectoryModule({
       );
     }
     if (col === "User Registration Date") {
-      if (!contact.createdAt) return <span></span>;
-      const d = new Date(contact.createdAt);
-      const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+      const regDate = getLeadRegistrationDate(contact);
+      if (!regDate) {
+        return (
+          <span className="text-slate-400 dark:text-slate-500 font-medium text-[13px] italic whitespace-nowrap">
+            Date Unavailable
+          </span>
+        );
+      }
+      const formattedDate = formatRegistrationDate(regDate, true);
       return <span className="text-slate-800 dark:text-slate-200 font-mono text-[13px] font-medium whitespace-nowrap">{formattedDate}</span>;
     }
     if (col === "Lead Stage") {
@@ -1540,7 +1545,7 @@ export default function ContactDirectoryModule({
       ];
       const selectedMonth = monthLowerNames.find((m) => regDateFilter.toLowerCase().includes(m));
 
-      const leadDateObj = c.createdAt ? new Date(c.createdAt) : new Date(2026, 7, 12);
+      const leadDateObj = getLeadRegistrationDate(c) || new Date(2026, 7, 12);
       const leadYear = leadDateObj.getFullYear().toString();
       const leadMonth = monthLowerNames[leadDateObj.getMonth()];
 
@@ -2603,21 +2608,21 @@ export default function ContactDirectoryModule({
         </div>
 
         {/* One by One Icon Status Filter Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3 pt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-2.5 pt-1">
           <button
             onClick={() => setSelectedStatus("ALL")}
-            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${
+            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
               selectedStatus === "ALL"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl sm:text-2xl shrink-0">🌟</span>
+            <span className="text-lg sm:text-xl shrink-0">🌟</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className="block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words">
+              <span className="block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap">
                 {currentUserRole === "TEACHER" ? "Assigned Leads" : "All Leads"}
               </span>
-              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "ALL" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "ALL" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {currentUserRole === "TEACHER"
                   ? `${contacts.length.toLocaleString()} Assigned`
                   : `${contacts.length.toLocaleString()} / ${MAX_FREE_LEAD_LIMIT.toLocaleString()} (Live DB)`}
@@ -2627,18 +2632,18 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("HOT")}
-            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${
+            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-2.5 cursor-pointer min-w-0 ${
               selectedStatus === "HOT"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl sm:text-2xl shrink-0">🔥</span>
+            <span className="text-lg sm:text-xl shrink-0">🔥</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className={`block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words ${selectedStatus === "HOT" ? "text-white" : "text-rose-600 dark:text-rose-400"}`}>
+              <span className={`block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap ${selectedStatus === "HOT" ? "text-white" : "text-rose-600 dark:text-rose-400"}`}>
                 HOT (Admitted)
               </span>
-              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "HOT" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "HOT" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "HOT").length} Admitted
               </span>
             </div>
@@ -2646,18 +2651,18 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("WARM")}
-            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${
+            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
               selectedStatus === "WARM"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl sm:text-2xl shrink-0">⚡</span>
+            <span className="text-lg sm:text-xl shrink-0">⚡</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className={`block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words ${selectedStatus === "WARM" ? "text-white" : "text-amber-600 dark:text-amber-400"}`}>
+              <span className={`block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap ${selectedStatus === "WARM" ? "text-white" : "text-amber-600 dark:text-amber-400"}`}>
                 WARM (Ready)
               </span>
-              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "WARM" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "WARM" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "WARM").length} Ready
               </span>
             </div>
@@ -2665,18 +2670,18 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("COLD")}
-            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${
+            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
               selectedStatus === "COLD"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl sm:text-2xl shrink-0">❄️</span>
+            <span className="text-lg sm:text-xl shrink-0">❄️</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className={`block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words ${selectedStatus === "COLD" ? "text-white" : "text-sky-600 dark:text-sky-400"}`}>
+              <span className={`block text-xs sm:text-sm xl:text-[13px] font-bold break-normal leading-snug ${selectedStatus === "COLD" ? "text-white" : "text-sky-600 dark:text-sky-400"}`}>
                 COLD (Not Interested)
               </span>
-              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "COLD" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "COLD" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => getStudentLeadState(c).state === "COLD").length} Leads
               </span>
             </div>
@@ -2684,16 +2689,16 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("CONTACTED")}
-            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${
+            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
               selectedStatus === "CONTACTED"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl sm:text-2xl shrink-0">📞</span>
+            <span className="text-lg sm:text-xl shrink-0">📞</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className="block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words">Contacted</span>
-              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "CONTACTED" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className="block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap">Contacted</span>
+              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "CONTACTED" ? "text-white/90" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => c.status === "CONTACTED").length} Leads
               </span>
             </div>
@@ -2701,16 +2706,16 @@ export default function ContactDirectoryModule({
 
           <button
             onClick={() => setSelectedStatus("IN_REVIEW")}
-            className={`p-3 sm:p-3.5 xl:p-4 text-xs sm:text-sm font-bold transition-all flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 ${
+            className={`p-2.5 sm:p-3 xl:p-3 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0 ${
               selectedStatus === "IN_REVIEW"
                 ? "neu-card-item neu-card-active-blue font-black scale-[1.02]"
                 : "neu-card-item"
             }`}
           >
-            <span className="text-xl sm:text-2xl shrink-0">📊</span>
+            <span className="text-lg sm:text-xl shrink-0">📊</span>
             <div className="text-left leading-tight min-w-0 flex-1">
-              <span className="block text-xs sm:text-sm xl:text-[14.5px] font-bold whitespace-normal break-words">Cutoff Review</span>
-              <span className={`block text-[11.5px] sm:text-xs xl:text-[13px] font-medium mt-0.5 whitespace-normal break-words ${selectedStatus === "IN_REVIEW" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+              <span className="block text-xs sm:text-sm xl:text-[13px] font-bold break-normal whitespace-nowrap">Cutoff Review</span>
+              <span className={`block text-[11px] sm:text-xs font-medium mt-0.5 break-normal ${selectedStatus === "IN_REVIEW" ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
                 {contacts.filter(c => c.status === "IN_REVIEW").length} Leads
               </span>
             </div>
@@ -2883,11 +2888,11 @@ export default function ContactDirectoryModule({
         </div>
 
         {/* Right: Quick Search Dropdown & Field Search Input (Matching Meritto Screenshot) */}
-        <div className="flex items-center gap-2.5 ml-auto shrink-0">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto sm:ml-auto">
           {/* Combined Field Selector + Search Input Bar */}
-          <div className="relative flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-sky-500 transition-all min-h-[40px]">
+          <div className="relative flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/15 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-sky-500 transition-all min-h-[40px] w-full sm:w-auto flex-1 sm:flex-initial">
             {/* Field Dropdown Selector Button */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setIsSearchFieldDropdownOpen(!isSearchFieldDropdownOpen)}
@@ -2918,7 +2923,7 @@ export default function ContactDirectoryModule({
             </div>
 
             {/* Input Box */}
-            <div className="relative flex items-center w-52 sm:w-64">
+            <div className="relative flex items-center flex-1 min-w-[120px] sm:w-52 lg:w-64">
               <input
                 type="text"
                 value={searchQuery}
@@ -2941,31 +2946,33 @@ export default function ContactDirectoryModule({
             </div>
           </div>
 
-          {/* Grid Layout Toggle Icon */}
-          <button
-            onClick={() => setIsCustomizeColumnDrawerOpen(true)}
-            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-sm min-h-[40px] flex items-center justify-center"
-            title="Customize Grid Columns"
-          >
-            <div className="w-4 h-4 grid grid-cols-2 gap-0.5 items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
-              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
-              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
-              <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
-            </div>
-          </button>
+          <div className="flex items-center gap-2.5 ml-auto sm:ml-0 shrink-0">
+            {/* Grid Layout Toggle Icon */}
+            <button
+              onClick={() => setIsCustomizeColumnDrawerOpen(true)}
+              className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-sm min-h-[40px] flex items-center justify-center shrink-0"
+              title="Customize Grid Columns"
+            >
+              <div className="w-4 h-4 grid grid-cols-2 gap-0.5 items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+                <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+                <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+                <div className="w-1.5 h-1.5 bg-slate-500 rounded-sm" />
+              </div>
+            </button>
 
-          {/* Advanced Filter Funnel Button with Active Count Badge */}
-          <button
-            onClick={() => setIsFilterDrawerOpen(true)}
-            className="px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold flex items-center gap-2 transition-colors shadow-sm min-h-[40px]"
-          >
-            <Filter className="w-4 h-4 text-blue-600" />
-            <span className="text-[14px]">Advanced Filter</span>
-            <span className="bg-blue-600 text-white text-[12px] font-extrabold px-2 py-0.5 rounded-full">
-              {filterRules.length}
-            </span>
-          </button>
+            {/* Advanced Filter Funnel Button with Active Count Badge */}
+            <button
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className="px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold flex items-center gap-2 transition-colors shadow-sm min-h-[40px] shrink-0"
+            >
+              <Filter className="w-4 h-4 text-blue-600" />
+              <span className="text-[14px]">Advanced Filter</span>
+              <span className="bg-blue-600 text-white text-[12px] font-extrabold px-2 py-0.5 rounded-full">
+                {filterRules.length}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -3675,14 +3682,14 @@ export default function ContactDirectoryModule({
 
                     {/* Admin Teacher Assignment Dropdown */}
                     {currentUserRole === "ADMIN" && (
-                      <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px]">
+                      <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 text-[11px] min-w-0">
                         <span className="text-slate-400 font-bold flex items-center gap-1 shrink-0">
                           🧑‍🏫 Assign Faculty:
                         </span>
                         <select
                           value={contact.assignedTo || ""}
                           onChange={(e) => handleAssignTeacher(contact.id, e.target.value)}
-                          className="bg-slate-900 border border-white/20 text-sky-300 font-bold px-2 py-0.5 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
+                          className="w-full sm:w-auto sm:max-w-[180px] min-w-0 truncate bg-slate-900 border border-white/20 text-sky-300 font-bold px-2 py-1 sm:py-0.5 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-sky-400 cursor-pointer"
                         >
                           <option value="">-- Select Faculty ({contact.campus || "Same Campus"}) --</option>
                           {FACULTY_MEMBERS.filter((f) => !contact.campus || f.campus === contact.campus).map((f) => (
@@ -3956,7 +3963,7 @@ export default function ContactDirectoryModule({
                           required
                           value={extractRaw10Digits(newContact.phone)}
                           onChange={(e) => {
-                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            const digits = extractRaw10Digits(e.target.value).slice(0, 10);
                             setNewContact({ ...newContact, phone: digits ? `+91-${digits}` : "" });
                             if (addModalError) setAddModalError(null);
                           }}
@@ -4124,7 +4131,7 @@ export default function ContactDirectoryModule({
                           type="tel"
                           value={extractRaw10Digits(newContact.fatherMobile)}
                           onChange={(e) => {
-                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            const digits = extractRaw10Digits(e.target.value).slice(0, 10);
                             setNewContact({ ...newContact, fatherMobile: digits ? `+91-${digits}` : "" });
                           }}
                           placeholder="98765 11223"
@@ -4146,7 +4153,7 @@ export default function ContactDirectoryModule({
                           type="tel"
                           value={extractRaw10Digits(newContact.motherMobile)}
                           onChange={(e) => {
-                            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            const digits = extractRaw10Digits(e.target.value).slice(0, 10);
                             setNewContact({ ...newContact, motherMobile: digits ? `+91-${digits}` : "" });
                           }}
                           placeholder="98765 44556"
@@ -4486,7 +4493,7 @@ export default function ContactDirectoryModule({
                       required
                       value={extractRaw10Digits(editingContact.phone || "+91-6380270912")}
                       onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        const digits = extractRaw10Digits(e.target.value).slice(0, 10);
                         setEditingContact({ ...editingContact, phone: digits ? `+91-${digits}` : "" });
                       }}
                       placeholder="98765 43210"

@@ -17,8 +17,11 @@ import {
   Pause,
   Play,
   Sparkles,
+  KeyRound,
+  CheckCircle2,
+  Mail,
 } from "lucide-react";
-import { loginWithRealtimeAuth, type AuthSession } from "@/lib/authService";
+import { loginWithRealtimeAuth, requestPasswordReset, type AuthSession } from "@/lib/authService";
 import {
   isCollegeSuspendedForCurrentEnvironment,
   listenToCollegeLicenses,
@@ -164,7 +167,12 @@ export const PRODUCT_SPEC_SLIDES: ProductSpecSlide[] = [
 ];
 
 interface LoginModalProps {
-  onLoginSuccess: (campus: "KARUR" | "COIMBATORE", role: "ADMIN" | "TEACHER" | "CREATOR", username: string) => void;
+  onLoginSuccess: (
+    campus: "KARUR" | "COIMBATORE",
+    role: "ADMIN" | "TEACHER" | "CREATOR",
+    username: string,
+    rememberMe?: boolean
+  ) => void;
 }
 
 export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
@@ -196,6 +204,37 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
   const [isAuthError, setIsAuthError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotInput, setForgotInput] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSubmitted, setForgotSubmitted] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+
+  const handleOpenForgotModal = () => {
+    setForgotInput(username.trim());
+    setForgotLoading(false);
+    setForgotSubmitted(false);
+    setForgotError(null);
+    setShowForgotModal(true);
+  };
+
+  const handlePasswordResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = forgotInput.trim();
+    if (!clean) {
+      setForgotError("Please enter your User ID or institutional email.");
+      return;
+    }
+    setForgotError(null);
+    setForgotLoading(true);
+    try {
+      await requestPasswordReset(clean);
+      setForgotSubmitted(true);
+    } catch (err: any) {
+      setForgotError(err?.message || "Failed to process recovery request. Try again.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
   const [colleges, setColleges] = useState<CollegeClientLicense[]>(() => getAllCollegeLicenses());
   const [, setGlobalLockout] = useState<GlobalLockoutState>(() => getGlobalLockoutState());
   const [suspensionAlert, setSuspensionAlert] = useState<{
@@ -309,16 +348,27 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
       if (isCreatorPass) {
         setLoading(false);
-        // Save session strictly in sessionStorage so closing app requires login on next open
         try {
-          localStorage.removeItem("vsb_admin_auth");
+          if (rememberMe) {
+            localStorage.setItem("vsb_admin_auth", "true");
+            localStorage.setItem("vsb_logged_in_campus", "KARUR");
+            localStorage.setItem("vsb_logged_in_role", "CREATOR");
+            localStorage.setItem("vsb_logged_in_user", "spherexnithish#");
+            localStorage.setItem("vsb_remember_me", "true");
+          } else {
+            localStorage.removeItem("vsb_admin_auth");
+            localStorage.removeItem("vsb_logged_in_campus");
+            localStorage.removeItem("vsb_logged_in_role");
+            localStorage.removeItem("vsb_logged_in_user");
+            localStorage.removeItem("vsb_remember_me");
+          }
           sessionStorage.setItem("vsb_admin_auth", "true");
           sessionStorage.setItem("vsb_logged_in_campus", "KARUR");
           sessionStorage.setItem("vsb_logged_in_role", "CREATOR");
           sessionStorage.setItem("vsb_logged_in_user", "spherexnithish#");
         } catch (e) {}
         setSuspensionAlert(null);
-        onLoginSuccess("KARUR", "CREATOR", "spherexnithish#");
+        onLoginSuccess("KARUR", "CREATOR", "spherexnithish#", rememberMe);
         return;
       } else {
         setLoading(false);
@@ -330,8 +380,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     // Remember user preference
     if (rememberMe) {
       localStorage.setItem("spherex_saved_user", inputUser);
+      localStorage.setItem("vsb_remember_me", "true");
     } else {
       localStorage.removeItem("spherex_saved_user");
+      localStorage.removeItem("vsb_remember_me");
     }
 
     // Admin Credentials
@@ -481,15 +533,15 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     try {
       // Execute backend Firebase Realtime Auth function with 2.5s safe timeout
       const session = await Promise.race([
-        loginWithRealtimeAuth(inputUser, inputPass, targetCampus, targetRole),
+        loginWithRealtimeAuth(inputUser, inputPass, targetCampus, targetRole, rememberMe),
         new Promise<AuthSession>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500)),
       ]);
       setLoading(false);
-      onLoginSuccess(session.campus, session.role, session.username);
+      onLoginSuccess(session.campus, session.role, session.username, rememberMe);
     } catch (authErr: any) {
       setLoading(false);
       // Instant local fallback session if network or timeout
-      onLoginSuccess(targetCampus, targetRole, inputUser);
+      onLoginSuccess(targetCampus, targetRole, inputUser, rememberMe);
     }
   };
 
@@ -1084,7 +1136,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 </label>
                 <button
                   type="button"
-                  onClick={() => setShowForgotModal(true)}
+                  onClick={handleOpenForgotModal}
                   style={{
                     color: "#38bdf8",
                     fontSize: "11px",
@@ -1410,7 +1462,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
         </motion.div>
       </div>
 
-      {/* Forgot Password / Authorized Credentials Modal */}
+      {/* Forgot Password / Secure Password Recovery Modal */}
       {showForgotModal && (
         <div
           style={{
@@ -1431,77 +1483,253 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               border: "1px solid rgba(255, 255, 255, 0.16)",
               borderRadius: "24px",
               padding: "24px",
-              maxWidth: "380px",
+              maxWidth: "420px",
               width: "100%",
               color: "#ffffff",
               boxShadow: "0 20px 50px rgba(0, 0, 0, 0.8)",
             }}
           >
-            <h3
-              style={{
-                fontSize: "15px",
-                fontWeight: 700,
-                color: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginBottom: "8px",
-              }}
-            >
-              <Info style={{ width: "18px", height: "18px", color: "#38bdf8" }} />
-              Authorized Credentials
-            </h3>
-            <p
-              style={{
-                fontSize: "12px",
-                color: "rgba(255, 255, 255, 0.7)",
-                marginBottom: "16px",
-                lineHeight: 1.6,
-              }}
-            >
-              For security compliance, user accounts are provisioned by the Central Admissions Directorate. Use the authorized credentials below:
-            </p>
-
-            <div
-              style={{
-                fontSize: "12px",
-                fontFamily: "monospace",
-                backgroundColor: "#161b24",
-                padding: "14px",
-                borderRadius: "14px",
-                marginBottom: "16px",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                lineHeight: 1.8,
-              }}
-            >
-              <div>
-                <strong style={{ color: "#d8b4fe" }}>Admin Karur:</strong> adminkarur@123 / vsbec@123
-              </div>
-              <div>
-                <strong style={{ color: "#7dd3fc" }}>Admin Covai:</strong> admincovai@123 / vsbectc@1213
-              </div>
-              <div>
-                <strong style={{ color: "#6ee7b7" }}>Faculty:</strong> teacherkarur@123 / vsbteacher@123
-              </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  margin: 0,
+                }}
+              >
+                <KeyRound style={{ width: "18px", height: "18px", color: "#38bdf8" }} />
+                Password Recovery
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "rgba(255, 255, 255, 0.5)",
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  padding: "4px",
+                }}
+                title="Close"
+              >
+                ✕
+              </button>
             </div>
 
-            <button
-              onClick={() => setShowForgotModal(false)}
-              style={{
-                width: "100%",
-                padding: "12px",
-                backgroundColor: "#ffffff",
-                color: "#000000",
-                fontWeight: 700,
-                borderRadius: "9999px",
-                fontSize: "12px",
-                border: "none",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              Close &amp; Return to Login
-            </button>
+            {!forgotSubmitted ? (
+              <form onSubmit={handlePasswordResetSubmit}>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "rgba(255, 255, 255, 0.7)",
+                    marginBottom: "16px",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Enter your registered institutional User ID or faculty email. A secure single-use password recovery link will be sent to your institutional inbox.
+                </p>
+
+                {forgotError && (
+                  <div
+                    style={{
+                      backgroundColor: "rgba(239, 68, 68, 0.15)",
+                      border: "1px solid rgba(239, 68, 68, 0.4)",
+                      borderRadius: "12px",
+                      padding: "10px 12px",
+                      fontSize: "12px",
+                      color: "#fca5a5",
+                      marginBottom: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <AlertCircle style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+                    <span>{forgotError}</span>
+                  </div>
+                )}
+
+                <div style={{ marginBottom: "16px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "rgba(255, 255, 255, 0.8)",
+                      marginBottom: "6px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    User ID or Institutional Email
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <Mail
+                      style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        width: "16px",
+                        height: "16px",
+                        color: "rgba(255, 255, 255, 0.4)",
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={forgotInput}
+                      onChange={(e) => {
+                        setForgotInput(e.target.value);
+                        setForgotError(null);
+                      }}
+                      placeholder="e.g. adminkarur@123 or faculty@vsbec.in"
+                      style={{
+                        width: "100%",
+                        padding: "12px 12px 12px 38px",
+                        backgroundColor: "#161b24",
+                        border: "1px solid rgba(255, 255, 255, 0.15)",
+                        borderRadius: "14px",
+                        color: "#ffffff",
+                        fontSize: "13px",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: "rgba(56, 189, 248, 0.08)",
+                    border: "1px solid rgba(56, 189, 248, 0.2)",
+                    borderRadius: "12px",
+                    padding: "10px 12px",
+                    fontSize: "11px",
+                    color: "rgba(255, 255, 255, 0.65)",
+                    marginBottom: "18px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  🔒 For institutional security compliance, account passwords are never displayed in the browser. For immediate administrative support, contact the Admissions Directorate at <strong>helpdesk@vsbec.in</strong>.
+                </div>
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: "11px",
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      color: "#ffffff",
+                      fontWeight: 600,
+                      borderRadius: "12px",
+                      fontSize: "12px",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    style={{
+                      flex: 1.4,
+                      padding: "11px",
+                      backgroundColor: "#0284c7",
+                      color: "#ffffff",
+                      fontWeight: 700,
+                      borderRadius: "12px",
+                      fontSize: "12px",
+                      border: "none",
+                      cursor: forgotLoading ? "not-allowed" : "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      opacity: forgotLoading ? 0.7 : 1,
+                    }}
+                  >
+                    {forgotLoading ? (
+                      <>
+                        <Loader2 style={{ width: "14px", height: "14px", animation: "spin 1s linear infinite" }} />
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <span>Send Reset Link</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div style={{ textAlign: "center", padding: "8px 0" }}>
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(16, 185, 129, 0.15)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 14px auto",
+                  }}
+                >
+                  <CheckCircle2 style={{ width: "24px", height: "24px", color: "#34d399" }} />
+                </div>
+                <h4 style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff", marginBottom: "8px" }}>
+                  Reset Instructions Dispatched
+                </h4>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "rgba(255, 255, 255, 0.75)",
+                    marginBottom: "16px",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  If an active institutional profile exists for <strong>{forgotInput}</strong>, a password reset authorization link has been dispatched to the registered email address.
+                </p>
+                <div
+                  style={{
+                    backgroundColor: "#161b24",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "12px",
+                    padding: "10px 12px",
+                    fontSize: "11px",
+                    color: "rgba(255, 255, 255, 0.6)",
+                    marginBottom: "20px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Please inspect your institutional inbox and spam filters. For account lockouts or direct verification, consult your Campus Administrator.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    backgroundColor: "#ffffff",
+                    color: "#000000",
+                    fontWeight: 700,
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

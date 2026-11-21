@@ -50,7 +50,7 @@ import SpecularButton from "@/components/SpecularButton";
 export interface CollegeCampaign {
   id: string;
   title: string;
-  platform: "Google Ads" | "Facebook" | "Instagram" | "WhatsApp" | "SMS" | "E-mail" | "Project Expo";
+  platform: "Google Ads" | "Facebook" | "Instagram" | "WhatsApp" | "SMS" | "E-mail" | "Admission Drive" | "Project Expo";
   department: string;
   targetLeads: number;
   currentLeads: number;
@@ -94,7 +94,7 @@ const COLLEGE_IMAGE_PRESETS = [
   {
     id: "preset-counseling",
     title: "Admission 2026 Student Orientation",
-    url: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1000&q=80",
+    url: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1000&q=80",
     category: "Counseling & Admissions",
   },
   {
@@ -135,6 +135,8 @@ export default function SocialMediaPlatformModule({
       ? "EMAIL"
       : activeTab === "SOCIAL_SMS"
       ? "SMS"
+      : activeTab === "SOCIAL_CAMPAIGN"
+      ? "CAMPAIGN"
       : activeTab === "SOCIAL_EXPO"
       ? "EXPO"
       : "ALL"
@@ -148,6 +150,7 @@ export default function SocialMediaPlatformModule({
     else if (activeTab === "SOCIAL_WHATSAPP") setSelectedSubTab("WHATSAPP");
     else if (activeTab === "SOCIAL_EMAIL") setSelectedSubTab("EMAIL");
     else if (activeTab === "SOCIAL_SMS") setSelectedSubTab("SMS");
+    else if (activeTab === "SOCIAL_CAMPAIGN") setSelectedSubTab("CAMPAIGN");
     else if (activeTab === "SOCIAL_EXPO") setSelectedSubTab("EXPO");
   }, [activeTab]);
 
@@ -246,8 +249,18 @@ export default function SocialMediaPlatformModule({
     if (src.includes("whatsapp") || src.includes("wa")) return "WHATSAPP";
     if (src.includes("email") || src.includes("e-mail") || src.includes("mail")) return "EMAIL";
     if (src.includes("sms") || src.includes("message")) return "SMS";
-    if (src.includes("expo") || src.includes("fair") || src.includes("walkin")) return "EXPO";
-    if (src.includes("campaign")) return "ADS";
+    if (src.includes("expo") || src.includes("fair")) return "EXPO";
+    if (
+      src.includes("drive") ||
+      src.includes("outreach") ||
+      src.includes("walkin") ||
+      src.includes("walk-in") ||
+      src.includes("campaign") ||
+      src.includes("on-ground") ||
+      src.includes("direct")
+    ) {
+      return "CAMPAIGN";
+    }
     return "OTHER";
   };
 
@@ -261,6 +274,7 @@ export default function SocialMediaPlatformModule({
       WHATSAPP: 0,
       EMAIL: 0,
       SMS: 0,
+      CAMPAIGN: 0,
       EXPO: 0,
     };
 
@@ -326,6 +340,12 @@ export default function SocialMediaPlatformModule({
       count: `${channelCounts.SMS.toLocaleString()} ${channelCounts.SMS === 1 ? "Student" : "Students"}`,
     },
     {
+      id: "CAMPAIGN",
+      label: "Admission Drive Outreach",
+      icon: Sparkles,
+      count: `${channelCounts.CAMPAIGN.toLocaleString()} ${channelCounts.CAMPAIGN === 1 ? "Student" : "Students"}`,
+    },
+    {
       id: "EXPO",
       label: "Project Expo",
       icon: Award,
@@ -373,6 +393,10 @@ export default function SocialMediaPlatformModule({
           platform = "SMS";
           icon = MessageCircle;
           color = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+        } else if (ch === "CAMPAIGN") {
+          platform = "Admission Drive";
+          icon = Sparkles;
+          color = "bg-amber-500/20 text-amber-400 border-amber-500/30";
         } else if (ch === "EXPO") {
           platform = "Project Expo";
           icon = Award;
@@ -407,19 +431,29 @@ export default function SocialMediaPlatformModule({
   }, [firebaseStudents, loggedInCampus]);
 
   const filteredLeads = useMemo(() => {
-    const q = (searchQuery || "").toLowerCase();
+    const rawQ = searchQuery || "";
+    const q = rawQ.toLowerCase().trim();
+    const cleanQ = q.replace(/\D/g, "");
+
     return socialLeads.filter((item) => {
       const name = (item.name || "").toLowerCase();
       const email = (item.email || "").toLowerCase();
       const campaign = (item.campaign || "").toLowerCase();
+      const platform = (item.platform || "").toLowerCase();
       const phone = (item.phone || "").toLowerCase();
+      const cleanPhone = phone.replace(/\D/g, "");
+
+      const matchesPhone =
+        phone.includes(q) ||
+        (cleanQ.length > 0 && (cleanPhone.includes(cleanQ) || (cleanPhone.length >= 10 && cleanQ.includes(cleanPhone))));
 
       const matchesSearch =
         !q ||
         name.includes(q) ||
         email.includes(q) ||
         campaign.includes(q) ||
-        phone.includes(q);
+        platform.includes(q) ||
+        matchesPhone;
 
       const matchesChannel =
         selectedSubTab === "ALL" ||
@@ -558,6 +592,19 @@ export default function SocialMediaPlatformModule({
               key={ch.id}
               onClick={() => {
                 setSelectedSubTab(ch.id);
+                const tabMap: Record<string, ActiveTab> = {
+                  ADS: "SOCIAL_ADS",
+                  FACEBOOK: "SOCIAL_FACEBOOK",
+                  TWITTER: "SOCIAL_TWITTER",
+                  WHATSAPP: "SOCIAL_WHATSAPP",
+                  EMAIL: "SOCIAL_EMAIL",
+                  SMS: "SOCIAL_SMS",
+                  CAMPAIGN: "SOCIAL_CAMPAIGN",
+                  EXPO: "SOCIAL_EXPO",
+                };
+                if (tabMap[ch.id] && onNavigateTab) {
+                  onNavigateTab(tabMap[ch.id]);
+                }
                 onTriggerToast(`Viewing ${ch.label} Platform Details`);
               }}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
@@ -600,8 +647,18 @@ export default function SocialMediaPlatformModule({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search candidate, campaign, phone..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-8 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-0.5 transition-colors"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
             <button
@@ -667,7 +724,7 @@ export default function SocialMediaPlatformModule({
               ) : (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-slate-500 font-medium">
-                    No social media leads found matching search criteria.
+                    No student candidates found for {channels.find((c) => c.id === selectedSubTab)?.label || "this channel"}.
                   </td>
                 </tr>
               )}
@@ -999,6 +1056,9 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                           src={preset.url}
                           alt={preset.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/login-hero.jpg";
+                          }}
                         />
                         {isChosen && (
                           <div className="absolute top-1 right-1 p-1 rounded-full bg-indigo-600 text-white shadow-md">
@@ -1043,6 +1103,9 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                   src={imageUrl}
                   alt={imageCaption || "Campaign Preview"}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/login-hero.jpg";
+                  }}
                 />
                 <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-white font-black text-[10px] border border-white/20 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -1108,6 +1171,7 @@ function CampaignEditorModal({ campaign, onClose, onSave }: CampaignEditorModalP
                 <option value="WhatsApp">WhatsApp Business Broadcast</option>
                 <option value="SMS">SMS Gateway Direct Alert</option>
                 <option value="E-mail">E-mail Newsletter Portal</option>
+                <option value="Admission Drive">Admission Drive (On-Ground Outreach & Direct Expo)</option>
                 <option value="Project Expo">Project Expo & School Outreach</option>
               </select>
             </div>

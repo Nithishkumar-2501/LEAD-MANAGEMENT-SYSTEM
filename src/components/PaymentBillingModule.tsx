@@ -127,12 +127,19 @@ export default function PaymentBillingModule({
   // Filtered Student Fee List
   const filteredStudents = useMemo(() => {
     return campusScopedFeeRecords.filter((s) => {
-      const q = search.toLowerCase();
+      const q = search.toLowerCase().trim();
+      const cleanQ = q.replace(/\D/g, "");
+      const phone = (s.phone || "").toLowerCase();
+      const cleanPhone = phone.replace(/\D/g, "");
+      const matchesPhone =
+        phone.includes(q) ||
+        (cleanQ.length > 0 && (cleanPhone.includes(cleanQ) || (cleanPhone.length >= 10 && cleanQ.includes(cleanPhone))));
+
       const matchesSearch =
         s.studentName.toLowerCase().includes(q) ||
         s.applicationNo.toLowerCase().includes(q) ||
         s.course.toLowerCase().includes(q) ||
-        (s.phone && s.phone.includes(q)) ||
+        matchesPhone ||
         (s.transactionId && s.transactionId.toLowerCase().includes(q));
 
       const matchesStatus = statusFilter === "ALL" || s.status === statusFilter;
@@ -224,6 +231,23 @@ export default function PaymentBillingModule({
         ? "Pollachi Main Road, EAL, Coimbatore, Tamil Nadu 642109"
         : "NH-67, Kovai Road, Karur, Tamil Nadu 639111";
 
+    const isCompleted = s.balanceDue === 0 && s.status === "COMPLETED";
+    const isPending = s.amountPaid === 0 || s.status === "PENDING";
+
+    const paymentStatusColor = isCompleted ? "#059669" : isPending ? "#dc2626" : "#d97706";
+    const paymentStatusText = isCompleted
+      ? "✔ FEES FULLY PAID"
+      : isPending
+      ? `⏳ PAYMENT PENDING / UNPAID (BALANCE DUE: ₹${s.balanceDue.toLocaleString("en-IN")})`
+      : `⚠️ PARTIAL / TOKEN PAID (BALANCE DUE: ₹${s.balanceDue.toLocaleString("en-IN")})`;
+
+    const stampColor = isCompleted ? "#059669" : isPending ? "#dc2626" : "#d97706";
+    const stampText = isCompleted
+      ? "VERIFIED & CONFIRMED"
+      : isPending
+      ? "PAYMENT PENDING / UNPAID"
+      : "PARTIAL PAYMENT RECORDED";
+
     const receiptHtml = `
       <!DOCTYPE html>
       <html>
@@ -286,8 +310,8 @@ export default function PaymentBillingModule({
             </div>
             <div class="meta-item">
               <span class="meta-label">Fee Payment Status:</span>
-              <span class="meta-val" style="color:${s.balanceDue === 0 && s.status === "COMPLETED" ? "#059669" : "#d97706"};">
-                ${s.balanceDue === 0 && s.status === "COMPLETED" ? "✔ FEES FULLY PAID" : `⚠️ PARTIAL / TOKEN PAID (BALANCE DUE: ₹${s.balanceDue.toLocaleString("en-IN")})`}
+              <span class="meta-val" style="color: ${paymentStatusColor};">
+                ${paymentStatusText}
               </span>
             </div>
           </div>
@@ -338,8 +362,8 @@ export default function PaymentBillingModule({
 
           <div class="stamp-box">
             <div>
-              <div class="stamp" style="${s.balanceDue > 0 ? 'border-color: #d97706; color: #d97706;' : ''}">
-                ${s.balanceDue > 0 ? 'PARTIAL PAYMENT RECORDED' : 'VERIFIED & CONFIRMED'}
+              <div class="stamp" style="border-color: ${stampColor}; color: ${stampColor};">
+                ${stampText}
               </div>
               <p style="font-size: 10px; color: #64748b; margin-top: 5px;">VSB Central Treasury</p>
             </div>

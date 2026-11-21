@@ -26,6 +26,7 @@ import {
   CampusLocation,
 } from "@/types/crm";
 import { formatPhoneWith91 } from "@/lib/phoneValidation";
+import { parseSafeDate } from "@/lib/dateUtils";
 
 export type StudentRecord = Lead & { application?: Application | null };
 
@@ -46,6 +47,7 @@ export async function ensureFirebaseAuth() {
 // Remove undefined values recursively (Firestore rejects undefined)
 function sanitizeForFirebase(obj: any): any {
   if (obj === null || obj === undefined) return null;
+  if (obj instanceof Date) return isNaN(obj.getTime()) ? null : obj.toISOString();
   if (typeof obj !== "object") return obj;
   if (Array.isArray(obj)) return obj.map(sanitizeForFirebase);
 
@@ -243,10 +245,24 @@ export async function fetchStudentsFromFirestore(): Promise<StudentRecord[]> {
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data() as StudentRecord;
       const docId = docSnap.id;
+
+      // Recover invalid or empty object createdAt
+      let resolvedCreatedAt = data.createdAt;
+      const parsedCreated = parseSafeDate(data.createdAt);
+      if (!parsedCreated) {
+        const parsedUpdated = parseSafeDate((data as any).updatedAt);
+        if (parsedUpdated) {
+          resolvedCreatedAt = parsedUpdated.toISOString();
+        }
+      } else if (typeof data.createdAt !== "string") {
+        resolvedCreatedAt = parsedCreated.toISOString();
+      }
+
       list.push({
         ...data,
         id: docId,
         leadId: docId,
+        createdAt: resolvedCreatedAt,
         numericId: /^\d+$/.test(docId) ? Number(docId) : (data as any).numericId,
         phone: formatPhoneWith91(data.phone),
         fatherMobile: data.fatherMobile ? formatPhoneWith91(data.fatherMobile) : data.fatherMobile,
@@ -949,8 +965,12 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
     if (snap && !snap.empty) {
       snap.forEach((docSnap) => {
         const item = docSnap.data() as ManagedApplication;
+        const campus = item.campus || "KARUR";
         results.push({
           ...item,
+          formName:
+            item.formName ||
+            `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
           registeredMobile: formatPhoneWith91(item.registeredMobile),
         });
       });
@@ -966,10 +986,16 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
       if (snap && snap.exists()) {
         const val = snap.val();
         const raw = Object.values(val) as ManagedApplication[];
-        results = raw.map((a) => ({
-          ...a,
-          registeredMobile: formatPhoneWith91(a.registeredMobile),
-        }));
+        results = raw.map((a) => {
+          const campus = a.campus || "KARUR";
+          return {
+            ...a,
+            formName:
+              a.formName ||
+              `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
+            registeredMobile: formatPhoneWith91(a.registeredMobile),
+          };
+        });
       }
     } catch (e) {}
   }
@@ -1033,8 +1059,12 @@ export function subscribeToFirebaseApplications(
           const list: ManagedApplication[] = [];
           snapshot.forEach((docSnap) => {
             const item = docSnap.data() as ManagedApplication;
+            const campus = item.campus || "KARUR";
             list.push({
               ...item,
+              formName:
+                item.formName ||
+                `Application Form VSB ${campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
               registeredMobile: formatPhoneWith91(item.registeredMobile),
             });
           });

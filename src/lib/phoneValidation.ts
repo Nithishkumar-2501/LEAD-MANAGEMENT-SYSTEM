@@ -6,7 +6,11 @@ import { Lead } from "@/types/crm";
  */
 export function extractRaw10Digits(phone?: string | null): string {
   if (!phone) return "";
-  let digits = phone.replace(/\D/g, "");
+  let trimmed = phone.trim();
+  // Strip country code if explicitly prefixed with '+' (e.g. +91, +91-, +91.)
+  // or if followed by a separator (e.g. 91-, 91 )
+  trimmed = trimmed.replace(/^(\+91[\s-.]*|91[\s-.]+)/, "");
+  let digits = trimmed.replace(/\D/g, "");
   if (digits.length === 12 && digits.startsWith("91")) {
     digits = digits.slice(2);
   } else if (digits.length === 11 && digits.startsWith("0")) {

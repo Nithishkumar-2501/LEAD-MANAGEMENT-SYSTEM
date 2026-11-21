@@ -118,7 +118,7 @@ export default function MarketingDashboardView({
     },
     {
       title: "Admission Drive Outreach",
-      tab: "SOCIAL_ADS" as ActiveTab,
+      tab: "SOCIAL_CAMPAIGN" as ActiveTab,
       count: 390,
       cpl: "₹180",
       roi: "+310%",

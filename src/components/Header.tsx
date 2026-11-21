@@ -91,6 +91,11 @@ export default function Header({
             const name = (item.name || "").toLowerCase();
             const email = (item.email || "").toLowerCase();
             const phone = (item.phone || "").toLowerCase();
+            const cleanPhone = phone.replace(/\D/g, "");
+            const cleanQ = trimmedQuery.replace(/\D/g, "");
+            const matchesPhone =
+              phone.includes(trimmedQuery) ||
+              (cleanQ.length > 0 && (cleanPhone.includes(cleanQ) || (cleanPhone.length >= 10 && cleanQ.includes(cleanPhone))));
             const course = (item.courseInterest || "").toLowerCase();
             const campus = (item.campus || "").toLowerCase();
             const school = (item.school || "").toLowerCase();
@@ -102,7 +107,7 @@ export default function Header({
             return (
               name.includes(trimmedQuery) ||
               email.includes(trimmedQuery) ||
-              phone.includes(trimmedQuery) ||
+              matchesPhone ||
               course.includes(trimmedQuery) ||
               campus.includes(trimmedQuery) ||
               school.includes(trimmedQuery) ||
@@ -185,7 +190,7 @@ export default function Header({
         </div>
 
         {/* Right: Controls (Campus Selector, Ask Nora AI, Search, Logout) */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Master Creator Badge */}
           {currentUserRole === "CREATOR" && isMasterCreator && !isCapacitorNative() && (
             <Tooltip text={`Master Creator Account Active (${loggedInUsername || "spherexnithish#"})`}>
@@ -393,11 +398,11 @@ export default function Header({
             )}
           </div>
 
-          {/* Ask Nora AI Button */}
+          {/* Ask Nora AI Button — compact on mobile */}
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="press-spring flex items-center gap-1.5 2xl:gap-2 px-3 2xl:px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13.5px] 2xl:text-[14px] shadow-xs transition-all duration-150 cursor-pointer shrink-0"
+            className="press-spring flex items-center gap-1.5 2xl:gap-2 px-2 sm:px-3 2xl:px-4 py-1.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13px] sm:text-[13.5px] 2xl:text-[14px] shadow-xs transition-all duration-150 cursor-pointer shrink-0"
             title="Ask Nora AI to analyze the live student database (Shortcut: Ctrl + A)"
           >
             <img
@@ -405,21 +410,21 @@ export default function Header({
               alt="NORA AI Logo"
               width={20}
               height={20}
-              className="w-5 h-5 rounded-full object-cover shrink-0"
+              className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover shrink-0"
               style={{ width: "20px", height: "20px" }}
             />
-            <span className="text-[13.5px] 2xl:text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
+            <span className="hidden sm:inline text-[13.5px] 2xl:text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
             <kbd className="hidden 2xl:inline-flex items-center px-1.5 py-0.5 text-[12px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
               Ctrl+A
             </kbd>
           </button>
 
-          {/* Header Leads Counter: Assigned Contacts for TEACHER, Live DB Quota for ADMIN */}
+          {/* Header Leads Counter: Assigned Contacts for TEACHER, Live DB Quota for ADMIN (desktop/tablet only) */}
           {currentUserRole === "TEACHER" ? (
             <button
               type="button"
               onClick={() => onTabChange("CONTACTS")}
-              className="press-spring flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
+              className="press-spring hidden md:flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
               title={`My Assigned Contacts: ${visibleApplicants.length.toLocaleString("en-IN")} leads allocated by Admissions Admin. Click to view Lead Directory.`}
             >
               <span className="relative flex h-2 w-2 shrink-0">
@@ -445,7 +450,7 @@ export default function Header({
             <button
               type="button"
               onClick={() => onTabChange("CONTACTS")}
-              className={`press-spring flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-xs shrink-0 ${
+              className={`press-spring hidden md:flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-xs shrink-0 ${
                 isLimitReached
                   ? "bg-rose-500/10 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300"
                   : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:border-indigo-400"
@@ -479,7 +484,7 @@ export default function Header({
           {/* Search Icon — mobile/tablet */}
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            className="press-spring lg:hidden p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+            className="press-spring lg:hidden p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 flex items-center justify-center cursor-pointer"
             aria-label="Search"
             title="Search Candidate Applications (Shortcut: Ctrl + Z)"
           >
@@ -492,7 +497,7 @@ export default function Header({
               <button
                 type="button"
                 onClick={onOpenReportBug}
-                className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+                className="hidden sm:flex p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors shrink-0 items-center justify-center cursor-pointer"
                 aria-label="Report Bug"
               >
                 <Bug className="w-4 h-4" />
@@ -504,21 +509,21 @@ export default function Header({
           <Tooltip text="Logout of V.S.B. Portal">
             <button
               onClick={onLogout}
-              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+              className="hidden sm:flex p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors shrink-0 items-center justify-center cursor-pointer"
               aria-label="Logout"
             >
               <LogOut className="w-4 h-4" />
             </button>
           </Tooltip>
 
-          {/* Menu / Hamburger Icon */}
+          {/* Menu / Hamburger Icon — prominent, unclipped on mobile */}
           <button
             onClick={() => onToggleMobileSidebar ? onToggleMobileSidebar() : setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:text-blue-600 transition-colors flex items-center justify-center cursor-pointer shrink-0"
+            className="lg:hidden p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-sky-400 transition-colors flex items-center justify-center cursor-pointer shrink-0 shadow-xs"
             aria-label="Toggle navigation sidebar"
             title="Menu"
           >
-            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Menu className="w-5 h-5" />
           </button>
         </div>
       </div>
