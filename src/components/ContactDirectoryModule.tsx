@@ -164,8 +164,8 @@ export default function ContactDirectoryModule({
     const targetContacts: (Lead & { application?: Application | null })[] =
       currentUserRole === "TEACHER"
         ? normalized.filter((c: Lead) =>
-            isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus)
-          )
+          isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus)
+        )
         : normalized;
 
     setContacts((prev) => {
@@ -1381,254 +1381,254 @@ export default function ContactDirectoryModule({
     return contacts.filter((c) => {
       const stateInfo = getStudentLeadState(c);
       const matchesSearch = (() => {
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase().trim();
-      const numQuery = q.replace(/^(lead\s*#?|#)/i, "").trim();
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase().trim();
+        const numQuery = q.replace(/^(lead\s*#?|#)/i, "").trim();
 
-      const name = (c.name || "").toLowerCase();
-      const email = (c.email || "").toLowerCase();
-      const phone = (c.phone || "").toLowerCase();
-      const course = (c.courseInterest || "").toLowerCase();
-      const school = (c.school || "").toLowerCase();
-      const district = (c.district || "").toLowerCase();
-      const address = (c.address || "").toLowerCase();
-      const appNo = (c.counsellingAppNo || "").toLowerCase();
-      const leadId = String(c.id || "").toLowerCase();
+        const name = (c.name || "").toLowerCase();
+        const email = (c.email || "").toLowerCase();
+        const phone = (c.phone || "").toLowerCase();
+        const course = (c.courseInterest || "").toLowerCase();
+        const school = (c.school || "").toLowerCase();
+        const district = (c.district || "").toLowerCase();
+        const address = (c.address || "").toLowerCase();
+        const appNo = (c.counsellingAppNo || "").toLowerCase();
+        const leadId = String(c.id || "").toLowerCase();
+
+        return (
+          (numQuery && leadId === numQuery) ||
+          leadId.includes(numQuery || q) ||
+          appNo.includes(q) ||
+          name.includes(q) ||
+          email.includes(q) ||
+          phone.includes(q) ||
+          course.includes(q) ||
+          school.includes(q) ||
+          district.includes(q) ||
+          address.includes(q) ||
+          (stateInfo.detailedLabel || "").toLowerCase().includes(q) ||
+          (stateInfo.state || "").toLowerCase() === q
+        );
+      })();
+
+      const matchesCampus = selectedCampus === "ALL" || c.campus === selectedCampus;
+
+      const matchesDistrict =
+        selectedDistrict === "ALL" ||
+        (c.district && c.district.toLowerCase() === selectedDistrict.toLowerCase());
+
+      const matchesStatus = (() => {
+        if (selectedStatus === "ALL") return true;
+        if (selectedStatus === "HOT") return stateInfo.state === "HOT";
+        if (selectedStatus === "WARM") return stateInfo.state === "WARM";
+        if (selectedStatus === "COLD") return stateInfo.state === "COLD";
+        if (c.status === selectedStatus) return true;
+        if (selectedStatus === "ADMITTED" && stateInfo.state === "HOT") return true;
+        if (selectedStatus === "REJECTED" && stateInfo.state === "COLD") return true;
+        return false;
+      })();
+
+      const matchesCounselling =
+        counsellingFilter === "ALL"
+          ? true
+          : counsellingFilter === "COUNSELLING_ONLY"
+            ? c.appliedCounselling === true || c.source?.includes("TNEA")
+            : counsellingFilter === "GOVT_QUOTA"
+              ? c.counsellingCategory?.includes("7.5%")
+              : c.appliedCounselling === false || c.counsellingCategory?.includes("Management");
+
+      const matchesTeacherAssignment =
+        currentUserRole === "ADMIN"
+          ? true
+          : isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus);
+
+      const matchesDrawerRules =
+        filterRules.length === 0
+          ? true
+          : filterLogicMode === "ALL"
+            ? filterRules.every((r) => evaluateRule(c, r))
+            : filterRules.some((r) => evaluateRule(c, r));
+
+      const matchesColumnFilters = Object.entries(columnFilters).every(([col, filterVal]) => {
+        if (!filterVal || filterVal === "ALL") return true;
+        const actual = getFieldValueForCol(c, col).toLowerCase();
+        const filter = filterVal.toLowerCase().trim();
+        if (col === "Lead Stage") {
+          const rawStatus = (c.status || "").toUpperCase();
+          let normalizedStatus = "INQUIRY";
+          if (rawStatus === "ADMITTED" || rawStatus === "HOT") normalizedStatus = "ADMITTED";
+          else if (rawStatus === "NOT_INTERESTED" || rawStatus === "COLD" || rawStatus === "REJECTED") normalizedStatus = "NOT_INTERESTED";
+          else if (rawStatus === "INTERESTED" || rawStatus === "WARM" || rawStatus === "READY_TO_ADMIT" || rawStatus === "CONTACTED" || rawStatus === "IN_REVIEW") normalizedStatus = "INTERESTED";
+
+          if (filter === "inquiry") return normalizedStatus === "INQUIRY";
+          if (filter === "interested") return normalizedStatus === "INTERESTED";
+          if (filter === "admitted") return normalizedStatus === "ADMITTED";
+          if (filter === "not_interested") return normalizedStatus === "NOT_INTERESTED";
+
+          if (filter === "hot") return stateInfo.state === "HOT" || normalizedStatus === "ADMITTED";
+          if (filter === "warm") return stateInfo.state === "WARM" || normalizedStatus === "INTERESTED";
+          if (filter === "cold") return stateInfo.state === "COLD" || normalizedStatus === "NOT_INTERESTED";
+          return actual === filter || (c.status || "").toLowerCase() === filter || normalizedStatus.toLowerCase() === filter;
+        }
+        if (col === "Campus" || col === "Gender" || col === "Community" || col === "State") {
+          return actual === filter;
+        }
+        return actual.includes(filter);
+      });
+
+      const matchesRegDate = () => {
+        if (!regDateFilter || regDateFilter === "Select Here" || regDateFilter === "All Time") return true;
+        if (regDateFilter === "Today" || regDateFilter === "Yesterday" || regDateFilter === "Last 7 Days") return true;
+
+        const yearMatch = regDateFilter.match(/\b(2024|2025|2026|2027|2028|2029|2030)\b/);
+        const selectedYear = yearMatch ? yearMatch[1] : null;
+
+        const monthLowerNames = [
+          "january", "february", "march", "april", "may", "june",
+          "july", "august", "september", "october", "november", "december"
+        ];
+        const selectedMonth = monthLowerNames.find((m) => regDateFilter.toLowerCase().includes(m));
+
+        const leadDateObj = c.createdAt ? new Date(c.createdAt) : new Date(2026, 7, 12);
+        const leadYear = leadDateObj.getFullYear().toString();
+        const leadMonth = monthLowerNames[leadDateObj.getMonth()];
+
+        if (selectedYear && selectedMonth) {
+          return leadYear === selectedYear && leadMonth === selectedMonth;
+        }
+        if (selectedYear) {
+          return leadYear === selectedYear;
+        }
+        if (selectedMonth) {
+          return leadMonth === selectedMonth;
+        }
+        return true;
+      };
+
+      const matchesSelectedView = () => {
+        if (!selectedViewName || selectedViewName === "Default View" || selectedViewName === "All Leads" || selectedViewName === "All Enquiries") return true;
+        if (selectedViewName === "Fresh & Untouched" || selectedViewName === "Untouched Leads") {
+          return !c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY";
+        }
+        if (selectedViewName === "Today's Follow-ups" || selectedViewName === "Follow-ups Due") {
+          return c.status === "CONTACTED" || c.status === "IN_REVIEW";
+        }
+        if (selectedViewName === "Hot Prospects" || selectedViewName === "High Intent Leads") {
+          return stateInfo.state === "HOT";
+        }
+        if (selectedViewName === "Karur Intake View" || selectedViewName === "Karur Campus Intake") {
+          return (
+            c.campus === "KARUR" ||
+            (c.district && c.district.toLowerCase().includes("karur")) ||
+            (c.address && c.address.toLowerCase().includes("karur")) ||
+            (c.school && c.school.toLowerCase().includes("karur"))
+          );
+        }
+        if (selectedViewName === "Coimbatore Intake View" || selectedViewName === "Coimbatore Campus Intake") {
+          return c.campus === "COIMBATORE";
+        }
+        if (selectedViewName === "TNEA Candidates") {
+          return (
+            c.appliedCounselling === true ||
+            (c.counsellingCategory && c.counsellingCategory.toLowerCase().includes("tnea")) ||
+            (c.counsellingAppNo && c.counsellingAppNo.toLowerCase().includes("tnea")) ||
+            (c.source && c.source.toLowerCase().includes("tnea"))
+          );
+        }
+        if (selectedViewName === "High Cutoff Leads" || selectedViewName === "High Cutoff 180+") {
+          const cutoff = (c as any).tneaCutoff ?? (c as any).cutoff ?? 0;
+          return cutoff >= 170;
+        }
+        if (selectedViewName === "Admitted / Enrolled" || selectedViewName === "Admitted") {
+          return c.status === "ADMITTED" || c.application?.stage === "FEE_PAID";
+        }
+        return true;
+      };
+
+      const matchesAcquisitionChannel = () => {
+        if (!selectedAcquisitionChannel || selectedAcquisitionChannel === "ALL") return true;
+        const src = (c.source || "").toLowerCase();
+        if (selectedAcquisitionChannel === "Google/Web") return src.includes("google") || src.includes("web") || src.includes("site");
+        if (selectedAcquisitionChannel === "WhatsApp") return src.includes("whatsapp") || src.includes("chat");
+        if (selectedAcquisitionChannel === "Social Ads") return src.includes("social") || src.includes("ads") || src.includes("meta") || src.includes("instagram") || src.includes("facebook");
+        if (selectedAcquisitionChannel === "TNEA") return src.includes("tnea") || src.includes("counselling") || Boolean(c.appliedCounselling);
+        if (selectedAcquisitionChannel === "School Expo") return src.includes("school") || src.includes("expo") || src.includes("visit");
+        if (selectedAcquisitionChannel === "Walk-in") return src.includes("walk") || src.includes("direct");
+        return true;
+      };
+
+      const matchesLeadStage = () => {
+        if (!leadStageFilter || leadStageFilter === "Select Here" || leadStageFilter === "ALL") return true;
+        const statusUpper = (c.status || "").toUpperCase();
+        const valLower = leadStageFilter.toLowerCase();
+        const stateInfo = getStudentLeadState(c);
+
+        if (valLower.includes("hot") || valLower === "admitted") {
+          return stateInfo.state === "HOT";
+        }
+        if (valLower.includes("warm") || valLower.includes("ready")) {
+          return stateInfo.state === "WARM";
+        }
+        if (valLower.includes("cold") || valLower.includes("not interested") || valLower === "rejected") {
+          return stateInfo.state === "COLD";
+        }
+        if (valLower === "untouched") {
+          return statusUpper === "NEW" || statusUpper === "UNTOUCHED" || !c.assignedTo;
+        }
+        if (valLower === "new inquiry") {
+          return statusUpper === "NEW" || statusUpper === "INQUIRY" || statusUpper === "IN_REVIEW";
+        }
+        if (valLower === "contacted") {
+          return statusUpper === "CONTACTED";
+        }
+        if (valLower === "cutoff review") {
+          return statusUpper === "IN_REVIEW" || statusUpper === "CUTOFF_REVIEW" || ((c as any).tneaCutoff && (c as any).tneaCutoff > 0);
+        }
+        if (valLower === "admitted") {
+          return statusUpper === "ADMITTED";
+        }
+        return statusUpper.includes(valLower.toUpperCase());
+      };
+
+      const matchesLeadOwner = () => {
+        if (!leadOwnerFilter || leadOwnerFilter === "Select Here") return true;
+        const ownerLower = leadOwnerFilter.toLowerCase();
+        const assignedLower = (c.assignedTo || "").toLowerCase();
+        if (ownerLower.includes("karur")) return assignedLower.includes("karur") || c.campus === "KARUR";
+        if (ownerLower.includes("covai") || ownerLower.includes("coimbatore")) return assignedLower.includes("covai") || assignedLower.includes("coimbatore") || c.campus === "COIMBATORE";
+        return assignedLower.includes(ownerLower);
+      };
+
+      const matchesCampaignSource = () => {
+        if (!campaignSourceFilter || campaignSourceFilter === "Select Here") return true;
+        const srcLower = (c.source || "").toLowerCase();
+        const filterLower = campaignSourceFilter.toLowerCase();
+        return srcLower.includes(filterLower) || filterLower.includes(srcLower);
+      };
+
+      const matchesTrafficChannel = () => {
+        if (!trafficChannelFilter || trafficChannelFilter === "Select Here") return true;
+        return true;
+      };
 
       return (
-        (numQuery && leadId === numQuery) ||
-        leadId.includes(numQuery || q) ||
-        appNo.includes(q) ||
-        name.includes(q) ||
-        email.includes(q) ||
-        phone.includes(q) ||
-        course.includes(q) ||
-        school.includes(q) ||
-        district.includes(q) ||
-        address.includes(q) ||
-        (stateInfo.detailedLabel || "").toLowerCase().includes(q) ||
-        (stateInfo.state || "").toLowerCase() === q
+        matchesSearch &&
+        matchesCampus &&
+        matchesDistrict &&
+        matchesStatus &&
+        matchesCounselling &&
+        matchesTeacherAssignment &&
+        matchesDrawerRules &&
+        matchesColumnFilters &&
+        matchesRegDate() &&
+        matchesSelectedView() &&
+        matchesAcquisitionChannel() &&
+        matchesLeadStage() &&
+        matchesLeadOwner() &&
+        matchesCampaignSource() &&
+        matchesTrafficChannel()
       );
-    })();
-
-    const matchesCampus = selectedCampus === "ALL" || c.campus === selectedCampus;
-
-    const matchesDistrict =
-      selectedDistrict === "ALL" ||
-      (c.district && c.district.toLowerCase() === selectedDistrict.toLowerCase());
-
-    const matchesStatus = (() => {
-      if (selectedStatus === "ALL") return true;
-      if (selectedStatus === "HOT") return stateInfo.state === "HOT";
-      if (selectedStatus === "WARM") return stateInfo.state === "WARM";
-      if (selectedStatus === "COLD") return stateInfo.state === "COLD";
-      if (c.status === selectedStatus) return true;
-      if (selectedStatus === "ADMITTED" && stateInfo.state === "HOT") return true;
-      if (selectedStatus === "REJECTED" && stateInfo.state === "COLD") return true;
-      return false;
-    })();
-
-    const matchesCounselling =
-      counsellingFilter === "ALL"
-        ? true
-        : counsellingFilter === "COUNSELLING_ONLY"
-          ? c.appliedCounselling === true || c.source?.includes("TNEA")
-          : counsellingFilter === "GOVT_QUOTA"
-            ? c.counsellingCategory?.includes("7.5%")
-            : c.appliedCounselling === false || c.counsellingCategory?.includes("Management");
-
-    const matchesTeacherAssignment =
-      currentUserRole === "ADMIN"
-        ? true
-        : isLeadAssignedToTeacher(c, loggedInUsername, selectedCampus === "ALL" ? undefined : selectedCampus);
-
-    const matchesDrawerRules =
-      filterRules.length === 0
-        ? true
-        : filterLogicMode === "ALL"
-          ? filterRules.every((r) => evaluateRule(c, r))
-          : filterRules.some((r) => evaluateRule(c, r));
-
-    const matchesColumnFilters = Object.entries(columnFilters).every(([col, filterVal]) => {
-      if (!filterVal || filterVal === "ALL") return true;
-      const actual = getFieldValueForCol(c, col).toLowerCase();
-      const filter = filterVal.toLowerCase().trim();
-      if (col === "Lead Stage") {
-        const rawStatus = (c.status || "").toUpperCase();
-        let normalizedStatus = "INQUIRY";
-        if (rawStatus === "ADMITTED" || rawStatus === "HOT") normalizedStatus = "ADMITTED";
-        else if (rawStatus === "NOT_INTERESTED" || rawStatus === "COLD" || rawStatus === "REJECTED") normalizedStatus = "NOT_INTERESTED";
-        else if (rawStatus === "INTERESTED" || rawStatus === "WARM" || rawStatus === "READY_TO_ADMIT" || rawStatus === "CONTACTED" || rawStatus === "IN_REVIEW") normalizedStatus = "INTERESTED";
-
-        if (filter === "inquiry") return normalizedStatus === "INQUIRY";
-        if (filter === "interested") return normalizedStatus === "INTERESTED";
-        if (filter === "admitted") return normalizedStatus === "ADMITTED";
-        if (filter === "not_interested") return normalizedStatus === "NOT_INTERESTED";
-
-        if (filter === "hot") return stateInfo.state === "HOT" || normalizedStatus === "ADMITTED";
-        if (filter === "warm") return stateInfo.state === "WARM" || normalizedStatus === "INTERESTED";
-        if (filter === "cold") return stateInfo.state === "COLD" || normalizedStatus === "NOT_INTERESTED";
-        return actual === filter || (c.status || "").toLowerCase() === filter || normalizedStatus.toLowerCase() === filter;
-      }
-      if (col === "Campus" || col === "Gender" || col === "Community" || col === "State") {
-        return actual === filter;
-      }
-      return actual.includes(filter);
     });
-
-    const matchesRegDate = () => {
-      if (!regDateFilter || regDateFilter === "Select Here" || regDateFilter === "All Time") return true;
-      if (regDateFilter === "Today" || regDateFilter === "Yesterday" || regDateFilter === "Last 7 Days") return true;
-
-      const yearMatch = regDateFilter.match(/\b(2024|2025|2026|2027|2028|2029|2030)\b/);
-      const selectedYear = yearMatch ? yearMatch[1] : null;
-
-      const monthLowerNames = [
-        "january", "february", "march", "april", "may", "june",
-        "july", "august", "september", "october", "november", "december"
-      ];
-      const selectedMonth = monthLowerNames.find((m) => regDateFilter.toLowerCase().includes(m));
-
-      const leadDateObj = c.createdAt ? new Date(c.createdAt) : new Date(2026, 7, 12);
-      const leadYear = leadDateObj.getFullYear().toString();
-      const leadMonth = monthLowerNames[leadDateObj.getMonth()];
-
-      if (selectedYear && selectedMonth) {
-        return leadYear === selectedYear && leadMonth === selectedMonth;
-      }
-      if (selectedYear) {
-        return leadYear === selectedYear;
-      }
-      if (selectedMonth) {
-        return leadMonth === selectedMonth;
-      }
-      return true;
-    };
-
-    const matchesSelectedView = () => {
-      if (!selectedViewName || selectedViewName === "Default View" || selectedViewName === "All Leads" || selectedViewName === "All Enquiries") return true;
-      if (selectedViewName === "Fresh & Untouched" || selectedViewName === "Untouched Leads") {
-        return !c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY";
-      }
-      if (selectedViewName === "Today's Follow-ups" || selectedViewName === "Follow-ups Due") {
-        return c.status === "CONTACTED" || c.status === "IN_REVIEW";
-      }
-      if (selectedViewName === "Hot Prospects" || selectedViewName === "High Intent Leads") {
-        return stateInfo.state === "HOT";
-      }
-      if (selectedViewName === "Karur Intake View" || selectedViewName === "Karur Campus Intake") {
-        return (
-          c.campus === "KARUR" ||
-          (c.district && c.district.toLowerCase().includes("karur")) ||
-          (c.address && c.address.toLowerCase().includes("karur")) ||
-          (c.school && c.school.toLowerCase().includes("karur"))
-        );
-      }
-      if (selectedViewName === "Coimbatore Intake View" || selectedViewName === "Coimbatore Campus Intake") {
-        return c.campus === "COIMBATORE";
-      }
-      if (selectedViewName === "TNEA Candidates") {
-        return (
-          c.appliedCounselling === true ||
-          (c.counsellingCategory && c.counsellingCategory.toLowerCase().includes("tnea")) ||
-          (c.counsellingAppNo && c.counsellingAppNo.toLowerCase().includes("tnea")) ||
-          (c.source && c.source.toLowerCase().includes("tnea"))
-        );
-      }
-      if (selectedViewName === "High Cutoff Leads" || selectedViewName === "High Cutoff 180+") {
-        const cutoff = (c as any).tneaCutoff ?? (c as any).cutoff ?? 0;
-        return cutoff >= 170;
-      }
-      if (selectedViewName === "Admitted / Enrolled" || selectedViewName === "Admitted") {
-        return c.status === "ADMITTED" || c.application?.stage === "FEE_PAID";
-      }
-      return true;
-    };
-
-    const matchesAcquisitionChannel = () => {
-      if (!selectedAcquisitionChannel || selectedAcquisitionChannel === "ALL") return true;
-      const src = (c.source || "").toLowerCase();
-      if (selectedAcquisitionChannel === "Google/Web") return src.includes("google") || src.includes("web") || src.includes("site");
-      if (selectedAcquisitionChannel === "WhatsApp") return src.includes("whatsapp") || src.includes("chat");
-      if (selectedAcquisitionChannel === "Social Ads") return src.includes("social") || src.includes("ads") || src.includes("meta") || src.includes("instagram") || src.includes("facebook");
-      if (selectedAcquisitionChannel === "TNEA") return src.includes("tnea") || src.includes("counselling") || Boolean(c.appliedCounselling);
-      if (selectedAcquisitionChannel === "School Expo") return src.includes("school") || src.includes("expo") || src.includes("visit");
-      if (selectedAcquisitionChannel === "Walk-in") return src.includes("walk") || src.includes("direct");
-      return true;
-    };
-
-    const matchesLeadStage = () => {
-      if (!leadStageFilter || leadStageFilter === "Select Here" || leadStageFilter === "ALL") return true;
-      const statusUpper = (c.status || "").toUpperCase();
-      const valLower = leadStageFilter.toLowerCase();
-      const stateInfo = getStudentLeadState(c);
-
-      if (valLower.includes("hot") || valLower === "admitted") {
-        return stateInfo.state === "HOT";
-      }
-      if (valLower.includes("warm") || valLower.includes("ready")) {
-        return stateInfo.state === "WARM";
-      }
-      if (valLower.includes("cold") || valLower.includes("not interested") || valLower === "rejected") {
-        return stateInfo.state === "COLD";
-      }
-      if (valLower === "untouched") {
-        return statusUpper === "NEW" || statusUpper === "UNTOUCHED" || !c.assignedTo;
-      }
-      if (valLower === "new inquiry") {
-        return statusUpper === "NEW" || statusUpper === "INQUIRY" || statusUpper === "IN_REVIEW";
-      }
-      if (valLower === "contacted") {
-        return statusUpper === "CONTACTED";
-      }
-      if (valLower === "cutoff review") {
-        return statusUpper === "IN_REVIEW" || statusUpper === "CUTOFF_REVIEW" || ((c as any).tneaCutoff && (c as any).tneaCutoff > 0);
-      }
-      if (valLower === "admitted") {
-        return statusUpper === "ADMITTED";
-      }
-      return statusUpper.includes(valLower.toUpperCase());
-    };
-
-    const matchesLeadOwner = () => {
-      if (!leadOwnerFilter || leadOwnerFilter === "Select Here") return true;
-      const ownerLower = leadOwnerFilter.toLowerCase();
-      const assignedLower = (c.assignedTo || "").toLowerCase();
-      if (ownerLower.includes("karur")) return assignedLower.includes("karur") || c.campus === "KARUR";
-      if (ownerLower.includes("covai") || ownerLower.includes("coimbatore")) return assignedLower.includes("covai") || assignedLower.includes("coimbatore") || c.campus === "COIMBATORE";
-      return assignedLower.includes(ownerLower);
-    };
-
-    const matchesCampaignSource = () => {
-      if (!campaignSourceFilter || campaignSourceFilter === "Select Here") return true;
-      const srcLower = (c.source || "").toLowerCase();
-      const filterLower = campaignSourceFilter.toLowerCase();
-      return srcLower.includes(filterLower) || filterLower.includes(srcLower);
-    };
-
-    const matchesTrafficChannel = () => {
-      if (!trafficChannelFilter || trafficChannelFilter === "Select Here") return true;
-      return true;
-    };
-
-    return (
-      matchesSearch &&
-      matchesCampus &&
-      matchesDistrict &&
-      matchesStatus &&
-      matchesCounselling &&
-      matchesTeacherAssignment &&
-      matchesDrawerRules &&
-      matchesColumnFilters &&
-      matchesRegDate() &&
-      matchesSelectedView() &&
-      matchesAcquisitionChannel() &&
-      matchesLeadStage() &&
-      matchesLeadOwner() &&
-      matchesCampaignSource() &&
-      matchesTrafficChannel()
-    );
-  });
   }, [
     contacts,
     searchQuery,

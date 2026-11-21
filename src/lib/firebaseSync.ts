@@ -100,7 +100,7 @@ export async function getNextNumericLeadId(): Promise<string> {
         lastLeadId: nextId,
         updatedAt: new Date().toISOString(),
       }, { merge: true });
-    } catch (e) {}
+    } catch (e) { }
     return String(nextId);
   } catch (e) {
     if (typeof window !== "undefined") {
@@ -116,7 +116,7 @@ export async function getNextNumericLeadId(): Promise<string> {
             });
             return String(maxId + 1);
           }
-        } catch (err) {}
+        } catch (err) { }
       }
     }
     return String(Date.now() % 100000);
@@ -188,7 +188,7 @@ export async function saveStudentToFirebase(student: StudentRecord): Promise<boo
       }
       localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(currentList));
     }
-  } catch (err) {}
+  } catch (err) { }
 
   return firestoreSuccess;
 }
@@ -356,7 +356,7 @@ export function subscribeToFirebaseStudents(
     return unsubscribe;
   } catch (e) {
     console.warn("Snapshot setup error:", e);
-    return () => {};
+    return () => { };
   }
 }
 
@@ -395,7 +395,7 @@ export function markLeadAsDeleted(studentId: string): void {
       deletedList.push(studentId);
       localStorage.setItem(deletedKey, JSON.stringify(deletedList));
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // Permanently delete student record from Firebase Firestore with high-speed async execution
@@ -417,8 +417,8 @@ export async function deleteStudentFromFirebase(studentId: string): Promise<bool
   // 3. RTDB fire-and-forget in background (non-blocking)
   try {
     const rtdbRef = ref(rtdb, `students/${studentId}`);
-    remove(rtdbRef).catch(() => {});
-  } catch (e) {}
+    remove(rtdbRef).catch(() => { });
+  } catch (e) { }
 
   return true;
 }
@@ -432,7 +432,7 @@ export async function uploadTeacherProfilePhotoToFirebase(
 
   try {
     await ensureFirebaseAuth();
-  } catch (e) {}
+  } catch (e) { }
 
   const safeTeacherId = teacherId.replace(/[^a-zA-Z0-9_-]/g, "_");
 
@@ -447,7 +447,7 @@ export async function uploadTeacherProfilePhotoToFirebase(
       const docRef = doc(db, "teachers", safeTeacherId);
       await setDoc(docRef, { photoUrl: downloadUrl, updatedAt: new Date().toISOString() }, { merge: true });
       await update(ref(rtdb, `teachers/${safeTeacherId}`), { photoUrl: downloadUrl, updatedAt: new Date().toISOString() });
-    } catch (e) {}
+    } catch (e) { }
 
     console.log(`📸 [Firebase Storage] Teacher profile photo uploaded successfully: ${downloadUrl}`);
     return downloadUrl;
@@ -480,14 +480,14 @@ export async function saveTeacherToFirebase(teacher: Teacher): Promise<boolean> 
     coursesAssigned: Array.isArray(teacher.coursesAssigned)
       ? teacher.coursesAssigned
       : typeof teacher.coursesAssigned === "string"
-      ? JSON.parse(teacher.coursesAssigned)
-      : ["B.E. Computer Science"],
+        ? JSON.parse(teacher.coursesAssigned)
+        : ["B.E. Computer Science"],
     updatedAt: new Date().toISOString(),
   });
 
   try {
     await ensureFirebaseAuth();
-  } catch (e) {}
+  } catch (e) { }
 
   let firestoreSuccess = false;
 
@@ -504,8 +504,8 @@ export async function saveTeacherToFirebase(teacher: Teacher): Promise<boolean> 
   // 2. RTDB sync (non-blocking)
   try {
     const rtdbRef = ref(rtdb, `teachers/${safeTeacherId}`);
-    set(rtdbRef, cleanPayload).catch(() => {});
-  } catch (e) {}
+    set(rtdbRef, cleanPayload).catch(() => { });
+  } catch (e) { }
 
   // 3. LocalStorage update for instantaneous offline hydration
   try {
@@ -521,7 +521,7 @@ export async function saveTeacherToFirebase(teacher: Teacher): Promise<boolean> 
       }
       localStorage.setItem("vsb_crm_teachers", JSON.stringify(list));
     }
-  } catch (e) {}
+  } catch (e) { }
 
   return firestoreSuccess;
 }
@@ -533,7 +533,7 @@ export async function deleteTeacherFromFirebase(teacherId: string): Promise<bool
 
   try {
     await ensureFirebaseAuth();
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const docRef = doc(db, "teachers", safeTeacherId);
@@ -545,8 +545,8 @@ export async function deleteTeacherFromFirebase(teacherId: string): Promise<bool
 
   try {
     const rtdbRef = ref(rtdb, `teachers/${safeTeacherId}`);
-    remove(rtdbRef).catch(() => {});
-  } catch (e) {}
+    remove(rtdbRef).catch(() => { });
+  } catch (e) { }
 
   try {
     if (typeof window !== "undefined") {
@@ -559,7 +559,7 @@ export async function deleteTeacherFromFirebase(teacherId: string): Promise<bool
         }
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   return true;
 }
@@ -581,8 +581,8 @@ export async function fetchTeachersFromFirestore(): Promise<Teacher[]> {
         coursesAssigned: Array.isArray(data.coursesAssigned)
           ? data.coursesAssigned
           : typeof data.coursesAssigned === "string"
-          ? JSON.parse(data.coursesAssigned)
-          : ["B.E. Computer Science"],
+            ? JSON.parse(data.coursesAssigned)
+            : ["B.E. Computer Science"],
       });
     });
     return list;
@@ -608,8 +608,8 @@ export async function fetchTeachersFromRTDB(): Promise<Teacher[]> {
           coursesAssigned: Array.isArray(t.coursesAssigned)
             ? t.coursesAssigned
             : typeof t.coursesAssigned === "string"
-            ? JSON.parse(t.coursesAssigned)
-            : ["B.E. Computer Science"],
+              ? JSON.parse(t.coursesAssigned)
+              : ["B.E. Computer Science"],
         }));
       }
     }
@@ -665,7 +665,7 @@ export async function fetchTeachersFromFirebase(): Promise<Teacher[]> {
   if (typeof window !== "undefined" && results.length > 0) {
     try {
       localStorage.setItem("vsb_crm_teachers", JSON.stringify(results));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   return results;
@@ -693,8 +693,8 @@ export function subscribeToFirebaseTeachers(
                 coursesAssigned: Array.isArray(data.coursesAssigned)
                   ? data.coursesAssigned
                   : typeof data.coursesAssigned === "string"
-                  ? JSON.parse(data.coursesAssigned)
-                  : ["B.E. Computer Science"],
+                    ? JSON.parse(data.coursesAssigned)
+                    : ["B.E. Computer Science"],
               });
             });
             callback(liveList);
@@ -775,7 +775,7 @@ export async function updateTeacherOnlineStatus(
         try {
           const cached = localStorage.getItem("vsb_crm_teachers");
           if (cached) currentTeachers = JSON.parse(cached);
-        } catch (e) {}
+        } catch (e) { }
       }
     }
     if (!currentTeachers || currentTeachers.length === 0) {
@@ -817,7 +817,7 @@ export async function updateTeacherOnlineStatus(
           }
           localStorage.setItem("vsb_crm_teachers", JSON.stringify(list));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return updatedTeacher;
@@ -847,7 +847,7 @@ export async function redirectStudentLeadInFirebase(
 
   try {
     await ensureFirebaseAuth();
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const docRef = doc(db, "students", leadId);
@@ -863,7 +863,7 @@ export async function redirectStudentLeadInFirebase(
       ),
       2500
     );
-  } catch (err) {}
+  } catch (err) { }
 
   try {
     const rtdbRef = ref(rtdb, `students/${leadId}`);
@@ -871,8 +871,8 @@ export async function redirectStudentLeadInFirebase(
       assignedTo: toTeacherName,
       lastTransfer: transferLog,
       updatedAt: new Date().toISOString(),
-    }).catch(() => {});
-  } catch (e) {}
+    }).catch(() => { });
+  } catch (e) { }
 
   return true;
 }
@@ -907,7 +907,7 @@ export async function saveApplicationToFirebase(app: ManagedApplication): Promis
       }
       localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(list));
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // 2. Ensure auth & push to Firestore
   try {
@@ -921,8 +921,8 @@ export async function saveApplicationToFirebase(app: ManagedApplication): Promis
   // 3. Push to Realtime Database
   try {
     const rtdbRef = ref(rtdb, `managed_applications/${appId}`);
-    set(rtdbRef, cleanPayload).catch(() => {});
-  } catch (e) {}
+    set(rtdbRef, cleanPayload).catch(() => { });
+  } catch (e) { }
 
   return true;
 }
@@ -940,17 +940,17 @@ export async function deleteApplicationFromFirebase(appId: string): Promise<bool
         localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(list));
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // 2. Delete from Firestore & RTDB
   try {
     await ensureFirebaseAuth();
     await withTimeout(deleteDoc(doc(db, "managed_applications", appId)), 2000);
-  } catch (e) {}
+  } catch (e) { }
 
   try {
-    remove(ref(rtdb, `managed_applications/${appId}`)).catch(() => {});
-  } catch (e) {}
+    remove(ref(rtdb, `managed_applications/${appId}`)).catch(() => { });
+  } catch (e) { }
 
   return true;
 }
@@ -1044,8 +1044,8 @@ export function ensureCompleteApplicationIdentity(
     rawItem.paymentMethod && rawItem.paymentMethod !== "-"
       ? rawItem.paymentMethod
       : paymentStatus === "Payment Approved"
-      ? "Online UPI / NetBanking"
-      : "-";
+        ? "Online UPI / NetBanking"
+        : "-";
 
   let applicationOwner = rawItem.applicationOwner?.trim();
   if (!applicationOwner) {
@@ -1091,7 +1091,7 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem("vsb_managed_applications_cache");
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // Load students map for resolving incomplete / orphan application rows
@@ -1104,7 +1104,7 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
         if (s.leadId) studentsMap.set(String(s.leadId), s);
       });
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // 2. Query Firestore managed_applications
   try {
@@ -1122,7 +1122,7 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
 
         // Self-heal document in Firestore if incomplete fields were resolved
         if (wasHealed) {
-          setDoc(doc(db, "managed_applications", docSnap.id), sanitizeForFirebase(application), { merge: true }).catch(() => {});
+          setDoc(doc(db, "managed_applications", docSnap.id), sanitizeForFirebase(application), { merge: true }).catch(() => { });
         }
       });
     }
@@ -1142,7 +1142,7 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
           return application;
         });
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // 4. If still empty, load live students from Firestore and map them to ManagedApplication
@@ -1170,14 +1170,14 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
           updatedAt: "2026-09-12 10:00 AM",
         };
       });
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // 5. Update local cache with live data
   if (typeof window !== "undefined" && results.length > 0) {
     try {
       localStorage.setItem(LOCAL_STORAGE_APP_KEY, JSON.stringify(results));
-    } catch (e) {}
+    } catch (e) { }
   } else if (typeof window !== "undefined" && results.length === 0) {
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_APP_KEY);
@@ -1185,7 +1185,7 @@ export async function fetchApplicationsFromFirebase(): Promise<ManagedApplicatio
         const rawCached: ManagedApplication[] = JSON.parse(cached);
         results = rawCached.map((a, idx) => ensureCompleteApplicationIdentity(a, a.id || `app_${idx}`, studentsMap).application);
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   return results;
@@ -1209,7 +1209,7 @@ export function subscribeToFirebaseApplications(
             );
             list.push(application);
             if (wasHealed) {
-              setDoc(doc(db, "managed_applications", docSnap.id), sanitizeForFirebase(application), { merge: true }).catch(() => {});
+              setDoc(doc(db, "managed_applications", docSnap.id), sanitizeForFirebase(application), { merge: true }).catch(() => { });
             }
           });
           callback(list);
@@ -1221,7 +1221,7 @@ export function subscribeToFirebaseApplications(
     );
     return unsub;
   } catch (e) {
-    return () => {};
+    return () => { };
   }
 }
 
@@ -1279,10 +1279,10 @@ export async function normalizeAllFirebasePhones(): Promise<{
             await setDoc(doc(db, "students", docSnap.id), updates, { merge: true });
             try {
               await update(ref(rtdb, `students/${docSnap.id}`), updates);
-            } catch (e) {}
+            } catch (e) { }
             updatedStudents++;
             console.log(`🔥 [Firebase Migration] Converted student ${docSnap.id} phone to +91-:`, updates);
-          } catch (e) {}
+          } catch (e) { }
         }
       }
     }
@@ -1307,10 +1307,10 @@ export async function normalizeAllFirebasePhones(): Promise<{
             await setDoc(doc(db, "managed_applications", docSnap.id), sanitizeForFirebase(application), { merge: true });
             try {
               await update(ref(rtdb, `managed_applications/${docSnap.id}`), sanitizeForFirebase(application));
-            } catch (e) {}
+            } catch (e) { }
             updatedApplications++;
             console.log(`🔥 [Firebase Migration] Healed & normalized application ${docSnap.id} to:`, application);
-          } catch (e) {}
+          } catch (e) { }
         }
       }
     }
@@ -1332,9 +1332,9 @@ export async function normalizeAllFirebasePhones(): Promise<{
               await setDoc(doc(db, "teachers", docSnap.id), { phone: norm }, { merge: true });
               try {
                 await update(ref(rtdb, `teachers/${docSnap.id}`), { phone: norm });
-              } catch (e) {}
+              } catch (e) { }
               console.log(`🔥 [Firebase Migration] Converted teacher ${docSnap.id} phone to ${norm}`);
-            } catch (e) {}
+            } catch (e) { }
           }
         }
       }
@@ -1384,7 +1384,7 @@ export async function normalizeAllFirebasePhones(): Promise<{
         }
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   return { updatedStudents, updatedApplications, totalScanned };
 }
@@ -1395,7 +1395,7 @@ if (typeof window !== "undefined") {
   if (!hasRun) {
     sessionStorage.setItem("vsb_phones_migration_done", "true");
     setTimeout(() => {
-      normalizeAllFirebasePhones().catch(() => {});
+      normalizeAllFirebasePhones().catch(() => { });
     }, 6000);
   }
 }
@@ -1643,7 +1643,7 @@ export async function savePaymentToFirebase(payment: Payment): Promise<boolean> 
           },
           { merge: true }
         );
-      } catch (e) {}
+      } catch (e) { }
 
       try {
         // Fetch existing application or student to ensure full identity is preserved
@@ -1876,7 +1876,7 @@ export async function fetchAdminSettingsFromFirebase(): Promise<AdminSettingsRec
     if (snap && snap.exists()) {
       return { ...defaultSettings, ...(snap.data() as AdminSettingsRecord) };
     }
-  } catch (e) {}
+  } catch (e) { }
 
   return defaultSettings;
 }
@@ -1943,7 +1943,7 @@ export async function fetchOfflineUploadLogsFromFirebase(): Promise<OfflineUploa
         await setDoc(doc(db, "offline_upload_logs", l.id), sanitizeForFirebase(l), { merge: true });
       })
     );
-  } catch (e) {}
+  } catch (e) { }
 
   return demoLogs;
 }

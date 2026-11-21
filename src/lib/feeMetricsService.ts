@@ -71,16 +71,16 @@ export function buildStudentFeeRecords(
     const amountPaid = matchingPayment
       ? matchingPayment.amount
       : isCompleted
-      ? 85000
-      : 0;
+        ? 85000
+        : 0;
     const balanceDue = Math.max(0, totalFee - amountPaid);
 
     const status: "COMPLETED" | "PENDING" | "PARTIAL" =
       balanceDue === 0 && amountPaid >= totalFee && !hasPartialPayment
         ? "COMPLETED"
         : amountPaid > 0
-        ? "PARTIAL"
-        : "PENDING";
+          ? "PARTIAL"
+          : "PENDING";
 
     const resolvedCourse = resolveAcademicCourse(
       sanitizedApp.courseInterest || app.courseInterest,
@@ -119,8 +119,8 @@ export function buildStudentFeeRecords(
         balanceDue === 0 && amountPaid >= totalFee && p.status !== "PARTIAL"
           ? "COMPLETED"
           : amountPaid > 0
-          ? "PARTIAL"
-          : "PENDING";
+            ? "PARTIAL"
+            : "PENDING";
 
       const resolvedCourse = resolveAcademicCourse(
         p.course,
