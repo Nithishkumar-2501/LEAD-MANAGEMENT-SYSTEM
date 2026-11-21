@@ -86,6 +86,7 @@ import {
   formatSmsNumber,
 } from "@/lib/smsSender";
 import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
+import { getTeacherDisplayName } from "@/lib/teacherAssignment";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -476,12 +477,12 @@ export default function ApplicantDetailModal({
   const [newNote, setNewNote] = useState("");
   const [notesList, setNotesList] = useState<
     { id: string; text: string; date: string; author: string }[]
-  >([
+  >(() => [
     {
       id: "1",
       text: "Student inquired about B.Tech AI & DS fee structure and TNEA cutoffs.",
       date: "25 Aug 2026 06:30 PM",
-      author: "Dr Dhanabal M",
+      author: applicant?.assignedTo ? getTeacherDisplayName(applicant.assignedTo) : "Admissions Team",
     },
   ]);
 
@@ -499,17 +500,7 @@ export default function ApplicantDetailModal({
       }
     } catch (e) {}
 
-    return [
-      {
-        id: `act_${applicant.id}_2`,
-        leadId: applicant.id,
-        type: "REASSIGNED",
-        title: "Lead Re-assigned via Automation",
-        timestamp: "25 Aug 2026 06:29 PM",
-        rawDate: "2026-08-25",
-        description: `Lead re-assigned to ${applicant.assignedTo || "Dr Dhanabal M Assistant Professor MECH"} via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.`,
-        authorName: "System Automation",
-      },
+    const defaultActivities: TimelineActivity[] = [
       {
         id: `act_${applicant.id}_1`,
         leadId: applicant.id,
@@ -522,6 +513,21 @@ export default function ApplicantDetailModal({
         authorName: applicant.name,
       },
     ];
+
+    if (applicant.assignedTo) {
+      defaultActivities.unshift({
+        id: `act_${applicant.id}_2`,
+        leadId: applicant.id,
+        type: "REASSIGNED",
+        title: "Lead Re-assigned via Automation",
+        timestamp: "25 Aug 2026 06:29 PM",
+        rawDate: "2026-08-25",
+        description: `Lead re-assigned to ${getTeacherDisplayName(applicant.assignedTo)} via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.`,
+        authorName: "System Automation",
+      });
+    }
+
+    return defaultActivities;
   });
 
   // Sync timeline activities when applicant changes
@@ -538,17 +544,7 @@ export default function ApplicantDetailModal({
       }
     } catch (e) {}
 
-    setTimelineActivities([
-      {
-        id: `act_${applicant.id}_2`,
-        leadId: applicant.id,
-        type: "REASSIGNED",
-        title: "Lead Re-assigned via Automation",
-        timestamp: "25 Aug 2026 06:29 PM",
-        rawDate: "2026-08-25",
-        description: `Lead re-assigned to ${applicant.assignedTo || "Dr Dhanabal M Assistant Professor MECH"} via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.`,
-        authorName: "System Automation",
-      },
+    const defaultActivities: TimelineActivity[] = [
       {
         id: `act_${applicant.id}_1`,
         leadId: applicant.id,
@@ -560,7 +556,22 @@ export default function ApplicantDetailModal({
         description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified.`,
         authorName: applicant.name,
       },
-    ]);
+    ];
+
+    if (applicant.assignedTo) {
+      defaultActivities.unshift({
+        id: `act_${applicant.id}_2`,
+        leadId: applicant.id,
+        type: "REASSIGNED",
+        title: "Lead Re-assigned via Automation",
+        timestamp: "25 Aug 2026 06:29 PM",
+        rawDate: "2026-08-25",
+        description: `Lead re-assigned to ${getTeacherDisplayName(applicant.assignedTo)} via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.`,
+        authorName: "System Automation",
+      });
+    }
+
+    setTimelineActivities(defaultActivities);
   }, [applicant?.id]);
 
   // Live Call & Audio Recording State
@@ -688,7 +699,7 @@ export default function ApplicantDetailModal({
     const fullTimestamp = `${formattedDate} ${formattedTime}`;
     const rawDateStr = callDateObj.toISOString().split("T")[0];
 
-    const facultyName = currentUserRole === "ADMIN" ? "Admissions Admin" : (formData?.assignedTo || "Dr Dhanabal M Assistant Professor MECH");
+    const facultyName = currentUserRole === "ADMIN" ? "Admissions Admin" : (formData?.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Admissions Team");
     const facultyId = (formData as any)?.counselorId || "FAC-KARUR-01";
 
     const newRecording: CallRecording = {
@@ -953,7 +964,7 @@ export default function ApplicantDetailModal({
           minute: "2-digit",
           hour12: true,
         }),
-        author: currentUserRole === "ADMIN" ? "Admin" : "Dr Dhanabal M",
+        author: currentUserRole === "ADMIN" ? "Admin" : (formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Admissions Team"),
       },
       ...notesList,
     ]);
@@ -1532,7 +1543,7 @@ export default function ApplicantDetailModal({
                       Assigned Owner
                     </span>
                     <span className="font-black text-slate-950 dark:text-slate-100 block">
-                      {formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
+                      {formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Unassigned"}
                     </span>
                   </div>
                   <div>
@@ -2133,7 +2144,7 @@ export default function ApplicantDetailModal({
                           leadName: formData.name,
                           leadPhone: formData.phone,
                           teacherId: formData.assignedTo || "teacher_rajesh@123",
-                          teacherName: currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? "Prof. P. Rajesh" : "Faculty Lead"),
+                          teacherName: currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Admissions Team"),
                           recordingDate: new Date().toISOString().split("T")[0],
                           timestamp: "10:45 AM",
                           durationSeconds: 45,
@@ -3018,13 +3029,14 @@ export default function ApplicantDetailModal({
                           Assigned Counselor / Owner {currentUserRole === "TEACHER" && "(Locked)"}
                         </label>
                         <select
-                          value={formData.assignedTo || COUNSELOR_OPTIONS[0]}
+                          value={formData.assignedTo || ""}
                           onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
                           disabled={currentUserRole === "TEACHER"}
                           className={`w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 ${
                             currentUserRole === "TEACHER" ? "opacity-70 cursor-not-allowed bg-slate-100 dark:bg-slate-900" : "cursor-pointer"
                           }`}
                         >
+                          <option value="">Unassigned</option>
                           {COUNSELOR_OPTIONS.map((counselor) => (
                             <option key={counselor} value={counselor}>
                               {counselor}
@@ -3212,7 +3224,7 @@ export default function ApplicantDetailModal({
                 Course: <strong className="text-white">{formData.courseInterest || "B.E Computer Science"}</strong> • Campus: <strong className="text-white">{formData.campus || "KARUR"}</strong>
               </p>
               <p className="text-[11px] text-emerald-400 font-bold">
-                Counselor: {currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo || "Dr Dhanabal M (FAC-KARUR-01)")}
+                Counselor: {currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Unassigned")}
               </p>
             </div>
 
