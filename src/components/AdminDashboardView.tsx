@@ -137,6 +137,7 @@ export default function AdminDashboardView({
   const feePaidStudentsCount = feeMetrics.paidStudentsCount;
   const totalAdmittedStudents = feeMetrics.totalStudentsCount;
   const feePendingStudentsCount = feeMetrics.pendingStudentsCount;
+  const feePartialStudentsCount = feeMetrics.partialStudentsCount;
   const feePaidPercentage = feeMetrics.paidPercentage;
 
   // Time-based greeting
@@ -657,7 +658,10 @@ export default function AdminDashboardView({
             title: "STUDENTS PAID FEES",
             value: `${feePaidStudentsCount.toLocaleString("en-IN")} / ${totalAdmittedStudents.toLocaleString("en-IN")}`,
             trend: `${feePaidPercentage}% Paid`,
-            subtitle: `${feePendingStudentsCount.toLocaleString("en-IN")} students pending fees`,
+            subtitle:
+              feePartialStudentsCount > 0
+                ? `${feePendingStudentsCount.toLocaleString("en-IN")} pending • ${feePartialStudentsCount.toLocaleString("en-IN")} partial`
+                : `${feePendingStudentsCount.toLocaleString("en-IN")} students pending fees`,
             icon: CreditCard,
             color: "from-emerald-500 to-teal-600",
             iconBg: "bg-emerald-500",
