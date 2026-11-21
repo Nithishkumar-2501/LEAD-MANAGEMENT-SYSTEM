@@ -154,9 +154,9 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 px-3 sm:px-6 py-2.5 flex flex-col gap-2 sm:gap-3 shadow-xs">
+    <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 px-3 sm:px-4 xl:px-6 py-2.5 flex flex-col gap-2 sm:gap-3 shadow-xs">
       {/* Top Bar: Brand, Campus Selector & Right Navigation Controls */}
-      <div className="flex items-center justify-between gap-1.5 sm:gap-4 min-w-0">
+      <div className="flex items-center justify-between gap-1.5 sm:gap-3 xl:gap-4 min-w-0">
         {/* Left: Official College Brand */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
           {/* Official V.S.B. Engineering College Logo Emblem */}
@@ -173,7 +173,7 @@ export default function Header({
             <h1 className="font-black text-[16px] sm:text-[17px] md:text-[18px] text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5 truncate">
               <span className="truncate text-slate-900 dark:text-white font-black hidden sm:inline">V.S.B. ENGINEERING COLLEGE</span>
               <span className="truncate text-slate-900 dark:text-white font-black sm:hidden">V.S.B. COLLEGE</span>
-              <span className="hidden md:inline-flex items-center text-[12.5px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-2.5 py-0.5 rounded-md shrink-0">
+              <span className="hidden 2xl:inline-flex items-center text-[12.5px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-2.5 py-0.5 rounded-md shrink-0">
                 SPHEREX CRM
               </span>
             </h1>
@@ -222,7 +222,7 @@ export default function Header({
           )}
 
           {/* Clean Segmented Campus Selector */}
-          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[14px] sm:text-[14.5px] shrink-0">
+          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[13.5px] sm:text-[14px] 2xl:text-[14.5px] shrink-0">
             {currentUserRole === "TEACHER" ? (
               <>
                 {/* Karur Campus for Teacher */}
@@ -230,10 +230,10 @@ export default function Header({
                   <Tooltip text="Active Session: V.S.B. Karur Campus (Faculty Profile)">
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[14px] sm:text-[14.5px]"
+                      className="flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[13.5px] sm:text-[14px] 2xl:text-[14.5px]"
                     >
-                      <Building2 className="w-4 h-4" />
-                      <span>Karur Campus</span>
+                      <Building2 className="w-4 h-4 shrink-0" />
+                      <span>Karur<span className="hidden 2xl:inline"> Campus</span></span>
                     </button>
                   </Tooltip>
                 ) : (
@@ -243,7 +243,7 @@ export default function Header({
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
                       disabled
                     >
-                      <Lock className="w-3.5 h-3.5" />
+                      <Lock className="w-3.5 h-3.5 shrink-0" />
                       <span>Karur</span>
                     </button>
                   </Tooltip>
@@ -254,10 +254,10 @@ export default function Header({
                   <Tooltip text="Active Session: V.S.B. Coimbatore Campus (Faculty Profile)">
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[14px] sm:text-[14.5px]"
+                      className="flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-1.5 rounded-md bg-blue-600 text-white font-bold shadow-xs transition-all cursor-default text-[13.5px] sm:text-[14px] 2xl:text-[14.5px]"
                     >
-                      <GraduationCap className="w-4 h-4" />
-                      <span>Coimbatore Campus</span>
+                      <GraduationCap className="w-4 h-4 shrink-0" />
+                      <span>Coimbatore<span className="hidden 2xl:inline"> Campus</span></span>
                     </button>
                   </Tooltip>
                 ) : (
@@ -267,7 +267,7 @@ export default function Header({
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed opacity-60 text-[13px]"
                       disabled
                     >
-                      <Lock className="w-3.5 h-3.5" />
+                      <Lock className="w-3.5 h-3.5 shrink-0" />
                       <span>Coimbatore</span>
                     </button>
                   </Tooltip>
@@ -281,14 +281,14 @@ export default function Header({
                   <button
                     type="button"
                     onClick={() => onCampusChange("KARUR")}
-                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[14px] sm:text-[14.5px] transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-1.5 rounded-md text-[13.5px] sm:text-[14px] 2xl:text-[14.5px] transition-all cursor-pointer ${
                       selectedCampus === "KARUR"
                         ? "bg-blue-600 text-white font-bold shadow-xs"
                         : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60 font-semibold"
                     }`}
                   >
-                    <Building2 className="w-4 h-4" />
-                    <span>Karur Campus</span>
+                    <Building2 className="w-4 h-4 shrink-0" />
+                    <span>Karur<span className="hidden 2xl:inline"> Campus</span></span>
                   </button>
                 </Tooltip>
 
@@ -297,14 +297,14 @@ export default function Header({
                   <button
                     type="button"
                     onClick={() => onCampusChange("COIMBATORE")}
-                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[14px] sm:text-[14.5px] transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-1.5 rounded-md text-[13.5px] sm:text-[14px] 2xl:text-[14.5px] transition-all cursor-pointer ${
                       selectedCampus === "COIMBATORE"
                         ? "bg-blue-600 text-white font-bold shadow-xs"
                         : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60 font-semibold"
                     }`}
                   >
-                    <GraduationCap className="w-4 h-4" />
-                    <span>Coimbatore Campus</span>
+                    <GraduationCap className="w-4 h-4 shrink-0" />
+                    <span>Coimbatore<span className="hidden 2xl:inline"> Campus</span></span>
                   </button>
                 </Tooltip>
               </>
@@ -312,7 +312,7 @@ export default function Header({
           </div>
 
           {/* Search bar — desktop */}
-          <div className="relative hidden lg:block w-72 shrink-0">
+          <div className="relative hidden lg:block w-36 lg:w-44 xl:w-48 2xl:w-72 shrink-0 transition-all">
             <VoiceSearchBar
               id="header-candidate-search"
               value={searchQuery}
@@ -322,7 +322,7 @@ export default function Header({
               }}
               onFocus={() => setShowSearchResults(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search candidate applications... (Ctrl+Z)"
+              placeholder="Search candidates... (Ctrl+Z)"
               onClear={() => {
                 onSearchChange("");
                 setShowSearchResults(false);
@@ -397,7 +397,7 @@ export default function Header({
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
-            className="press-spring flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[14px] sm:text-[14.5px] shadow-xs transition-all duration-150 cursor-pointer shrink-0"
+            className="press-spring flex items-center gap-1.5 2xl:gap-2 px-3 2xl:px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13.5px] 2xl:text-[14px] shadow-xs transition-all duration-150 cursor-pointer shrink-0"
             title="Ask Nora AI to analyze the live student database (Shortcut: Ctrl + A)"
           >
             <img
@@ -408,8 +408,8 @@ export default function Header({
               className="w-5 h-5 rounded-full object-cover shrink-0"
               style={{ width: "20px", height: "20px" }}
             />
-            <span className="text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[12px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
+            <span className="text-[13.5px] 2xl:text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
+            <kbd className="hidden 2xl:inline-flex items-center px-1.5 py-0.5 text-[12px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
               Ctrl+A
             </kbd>
           </button>
@@ -419,22 +419,25 @@ export default function Header({
             <button
               type="button"
               onClick={() => onTabChange("CONTACTS")}
-              className="press-spring flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
+              className="press-spring flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all cursor-pointer shadow-xs shrink-0 hover:border-indigo-400"
               title={`My Assigned Contacts: ${visibleApplicants.length.toLocaleString("en-IN")} leads allocated by Admissions Admin. Click to view Lead Directory.`}
             >
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-indigo-400" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
               </span>
-              <div className="flex items-center gap-1.5 text-[13.5px] font-black">
-                <span className="text-[13px] text-indigo-600 dark:text-indigo-400 hidden xl:inline font-semibold">
+              <div className="flex items-center gap-1.5 text-[13px] 2xl:text-[13.5px] font-black">
+                <span className="text-[13px] text-indigo-600 dark:text-indigo-400 hidden 2xl:inline font-semibold">
                   📌 Assigned:
                 </span>
-                <span className="font-mono text-indigo-600 dark:text-indigo-300 font-black text-[14.5px]">
+                <span className="text-[12.5px] text-indigo-600 dark:text-indigo-400 hidden sm:inline 2xl:hidden font-semibold">
+                  Assigned:
+                </span>
+                <span className="font-mono text-indigo-600 dark:text-indigo-300 font-black text-[13.5px] 2xl:text-[14.5px]">
                   {visibleApplicants.length.toLocaleString("en-IN")}
                 </span>
               </div>
-              <span className="text-[12px] px-2 py-0.5 rounded-md bg-indigo-200/70 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold hidden sm:inline">
+              <span className="text-[12px] px-2 py-0.5 rounded-md bg-indigo-200/70 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold hidden 2xl:inline">
                 Leads
               </span>
             </button>
@@ -442,7 +445,7 @@ export default function Header({
             <button
               type="button"
               onClick={() => onTabChange("CONTACTS")}
-              className={`press-spring flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-xs shrink-0 ${
+              className={`press-spring flex items-center gap-1.5 2xl:gap-2 px-2.5 2xl:px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-xs shrink-0 ${
                 isLimitReached
                   ? "bg-rose-500/10 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300"
                   : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:border-indigo-400"
@@ -453,18 +456,21 @@ export default function Header({
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLimitReached ? "bg-rose-400" : "bg-emerald-400"}`} />
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${isLimitReached ? "bg-rose-500" : "bg-emerald-500"}`} />
               </span>
-              <div className="flex items-center gap-1.5 text-[13.5px] font-black">
-                <span className="text-[13px] text-slate-500 dark:text-slate-400 hidden xl:inline font-semibold">
+              <div className="flex items-center gap-1.5 text-[13px] 2xl:text-[13.5px] font-black">
+                <span className="text-[13px] text-slate-500 dark:text-slate-400 hidden 2xl:inline font-semibold">
                   🔥 Live DB:
                 </span>
-                <span className={`font-mono ${isLimitReached ? "text-rose-600 dark:text-rose-400 font-black text-[14.5px]" : "text-emerald-600 dark:text-emerald-400 font-black text-[14.5px]"}`}>
+                <span className="text-[12.5px] text-slate-500 dark:text-slate-400 hidden sm:inline 2xl:hidden font-semibold">
+                  DB:
+                </span>
+                <span className={`font-mono ${isLimitReached ? "text-rose-600 dark:text-rose-400 font-black text-[13.5px] 2xl:text-[14.5px]" : "text-emerald-600 dark:text-emerald-400 font-black text-[13.5px] 2xl:text-[14.5px]"}`}>
                   {liveLeadCount.toLocaleString("en-IN")}
                 </span>
                 <span className="text-[12px] text-slate-400 dark:text-slate-500 font-normal">
                   / {MAX_FREE_LEAD_LIMIT.toLocaleString("en-IN")}
                 </span>
               </div>
-              <span className="text-[12px] px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hidden sm:inline">
+              <span className="text-[12px] px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hidden 2xl:inline">
                 Leads
               </span>
             </button>
