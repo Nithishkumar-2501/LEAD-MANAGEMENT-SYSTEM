@@ -598,10 +598,10 @@ export default function AdminDashboardView({
 
           <div className="h-60 w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cutoffBrackets} margin={{ top: 8, right: 8, left: -20, bottom: 8 }} barCategoryGap="20%">
+              <BarChart data={cutoffBrackets} margin={{ top: 8, right: 12, left: 0, bottom: 8 }} barCategoryGap="20%">
                 <CartesianGrid vertical={false} stroke="rgba(148, 163, 184, 0.15)" strokeDasharray="3 3" />
                 <XAxis dataKey="shortLabel" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={36} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={42} allowDecimals={false} />
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
@@ -658,7 +658,7 @@ export default function AdminDashboardView({
 
           <div className="h-60 w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={leadVelocityTrend} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
+              <AreaChart data={leadVelocityTrend} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="leadsGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.6} />
@@ -671,7 +671,7 @@ export default function AdminDashboardView({
                 </defs>
                 <CartesianGrid vertical={false} stroke="rgba(148, 163, 184, 0.15)" strokeDasharray="3 3" />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={36} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={42} allowDecimals={false} />
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
