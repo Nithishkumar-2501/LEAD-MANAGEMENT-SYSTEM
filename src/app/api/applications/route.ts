@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { AppStage, LeadStatus, CampusLocation } from "@/types/crm";
 import { saveStudentToFirebase } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber } from "@/lib/phoneValidation";
+import { sanitizeLeadFields } from "@/lib/csvParser";
 
 
 
@@ -16,7 +17,7 @@ export async function GET() {
         createdAt: "desc",
       },
     });
-    return NextResponse.json({ leads }, { status: 200 });
+    return NextResponse.json({ leads: leads.map(sanitizeLeadFields) }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ leads: [] }, { status: 200 });
   }

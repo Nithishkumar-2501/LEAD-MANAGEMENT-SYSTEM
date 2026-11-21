@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Lead, Application } from "@/types/crm";
 import { saveStudentToFirebase, deleteStudentFromFirebase, getNextNumericLeadId } from "@/lib/firebaseSync";
 import { validateLeadPhoneNumber, formatPhoneWith91 } from "@/lib/phoneValidation";
+import { sanitizeLeadFields } from "@/lib/csvParser";
 
 
 
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
         include: { application: true },
         orderBy: { createdAt: "desc" },
       });
-      leads = dbLeads as unknown as (Lead & { application: Application })[];
+      leads = (dbLeads as unknown as (Lead & { application: Application })[]).map(sanitizeLeadFields);
     } catch (e) {
       leads = [];
     }

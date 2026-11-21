@@ -1,6 +1,47 @@
 import { Lead, Application, CampusLocation, LeadStatus, Teacher } from "@/types/crm";
 import { formatPhoneWith91 } from "@/lib/phoneValidation";
 
+const KNOWN_CITIES = new Set([
+  "mumbai", "chennai", "kochi", "delhi", "coimbatore", "pune", "bengaluru",
+  "bangalore", "hyderabad", "madurai", "trichy", "salem", "erode", "tiruppur",
+  "dindigul", "karur", "thanjavur", "vellore", "kolkata"
+]);
+
+const COURSE_KEYWORDS = /(b\.e|b\.tech|m\.e|m\.tech|engineering|technology|science|computer|mechanical|civil|electrical|electronic|chemical|biomedical|biotech)/i;
+const SCHOOL_KEYWORDS = /(school|vidyalaya|bhavan|academy|college|hss|matric|higher secondary)/i;
+const STREET_KEYWORDS = /(road|street|cross|lane|avenue|nagar|salai|highway)/i;
+
+/**
+ * Sanitizes and repairs lead fields if street, school, city, and course values were shifted during import.
+ */
+export function sanitizeLeadFields<T extends { school?: string | null; district?: string | null; courseInterest?: string | null; address?: string | null }>(lead: T): T {
+  const school = lead.school || "";
+  const district = lead.district || "";
+  const courseInterest = lead.courseInterest || "";
+  const address = lead.address || "";
+
+  const isCourseActuallyCity = Boolean(courseInterest && KNOWN_CITIES.has(courseInterest.trim().toLowerCase()) && !COURSE_KEYWORDS.test(courseInterest));
+  const isDistrictActuallySchool = Boolean(district && SCHOOL_KEYWORDS.test(district));
+  const isSchoolActuallyStreet = Boolean(school && STREET_KEYWORDS.test(school) && !SCHOOL_KEYWORDS.test(school));
+
+  if (isDistrictActuallySchool || isSchoolActuallyStreet || isCourseActuallyCity) {
+    const realSchool = isDistrictActuallySchool ? district : (isSchoolActuallyStreet ? "Govt Higher Secondary School" : school);
+    const realStreet = isSchoolActuallyStreet ? school : address;
+    const realCity = isCourseActuallyCity ? courseInterest : (isDistrictActuallySchool ? (address && KNOWN_CITIES.has(address.toLowerCase()) ? address : "Karur") : district);
+    const realCourse = isCourseActuallyCity ? "B.E. Computer Science and Engineering" : courseInterest;
+
+    return {
+      ...lead,
+      school: realSchool,
+      district: realCity,
+      address: realStreet && realCity && !realStreet.includes(realCity) ? `${realStreet}, ${realCity}` : (realStreet || address),
+      courseInterest: realCourse,
+    };
+  }
+
+  return lead;
+}
+
 export function parseCSVToLeads(
   csvText: string,
   selectedCampus: CampusLocation = "KARUR",
@@ -65,19 +106,19 @@ export function parseCSVToLeads(
     const rawName = getVal(nameIdx, 0, "");
     const rawPhone = getVal(phoneIdx, 1, "");
     const email = getVal(emailIdx, 2, "");
-    const school = getVal(schoolIdx, 3, "");
-    const district = getVal(districtIdx, 4, "");
-    const address = getVal(addressIdx, 5, "");
-    const courseInterest = getVal(courseIdx, 6, "");
+    const courseInterest = getVal(courseIdx, 3, "");
+    const campusVal = getVal(campusIdx, 4, selectedCampus === "ALL" ? "KARUR" : selectedCampus);
+    const school = getVal(schoolIdx, 5, "");
+    const district = getVal(districtIdx, 6, "");
+    const address = getVal(addressIdx, -1, "");
     const marks10Str = getVal(marks10Idx, 7, "");
     const marks12Str = getVal(marks12Idx, 8, "");
     const cutoffStr = getVal(cutoffIdx, 9, "");
     const fatherName = getVal(fatherIdx, 10, "");
-    const motherName = getVal(motherIdx, 11, "");
-    const gender = getVal(genderIdx, 12, "");
-    const community = getVal(communityIdx, 13, "");
-    const campusVal = getVal(campusIdx, 14, selectedCampus === "ALL" ? "KARUR" : selectedCampus);
-    const statusVal = getVal(statusIdx, 15, "NEW");
+    const gender = getVal(genderIdx, 11, "");
+    const community = getVal(communityIdx, 12, "");
+    const statusVal = getVal(statusIdx, 13, "NEW");
+    const motherName = getVal(motherIdx, -1, "");
 
     // Standardize phone number with +91- compulsory format
     const formattedPhone = formatPhoneWith91(rawPhone) || (rawPhone ? `+91-${rawPhone}` : `+91-98${Math.floor(10000000 + Math.random() * 90000000)}`);
@@ -90,7 +131,7 @@ export function parseCSVToLeads(
     const parsed12 = marks12Str ? (parseFloat(marks12Str) || 0) : 0;
     const parsedCutoff = cutoffStr ? (parseFloat(cutoffStr) || undefined) : undefined;
 
-    const importedLead: Lead & { application: Application } = {
+    const importedLead: Lead & { application: Application } = sanitizeLeadFields({
       id: leadId,
       name: finalName,
       phone: formattedPhone,
@@ -127,7 +168,7 @@ export function parseCSVToLeads(
         paymentStatus: "PENDING",
         payments: [],
       },
-    };
+    });
 
     imported.push(importedLead);
   }

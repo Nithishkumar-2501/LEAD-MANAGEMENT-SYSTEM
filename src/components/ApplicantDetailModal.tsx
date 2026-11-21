@@ -87,6 +87,7 @@ import {
 } from "@/lib/smsSender";
 import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
 import { getTeacherDisplayName } from "@/lib/teacherAssignment";
+import { sanitizeLeadFields } from "@/lib/csvParser";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -188,17 +189,18 @@ export default function ApplicantDetailModal({
 
   const getInitialFormData = (appLead: (Lead & { application: Application }) | null) => {
     if (!appLead) return null;
+    const sanitized = sanitizeLeadFields(appLead);
     const effective = getEffectiveCutoff(
-      appLead.tneaCutoff,
-      appLead.application?.marks12th,
-      (appLead as any).cutoff
+      sanitized.tneaCutoff,
+      sanitized.application?.marks12th,
+      (sanitized as any).cutoff
     );
-    const resolvedPhone = appLead.phone && appLead.phone.trim() ? appLead.phone : "+91-6380270912";
-    const resolvedSource = appLead.source && appLead.source.trim() ? appLead.source : "Organic";
-    if ((appLead.tneaCutoff === undefined || appLead.tneaCutoff === null || appLead.tneaCutoff === 0) && effective !== undefined) {
-      return { ...appLead, phone: resolvedPhone, source: resolvedSource, tneaCutoff: effective };
+    const resolvedPhone = sanitized.phone && sanitized.phone.trim() ? sanitized.phone : "+91-6380270912";
+    const resolvedSource = sanitized.source && sanitized.source.trim() ? sanitized.source : "Organic";
+    if ((sanitized.tneaCutoff === undefined || sanitized.tneaCutoff === null || sanitized.tneaCutoff === 0) && effective !== undefined) {
+      return { ...sanitized, phone: resolvedPhone, source: resolvedSource, tneaCutoff: effective };
     }
-    return { ...appLead, phone: resolvedPhone, source: resolvedSource };
+    return { ...sanitized, phone: resolvedPhone, source: resolvedSource };
   };
 
   const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(() =>

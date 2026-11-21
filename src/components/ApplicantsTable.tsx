@@ -22,7 +22,7 @@ import {
   Download,
 } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
-import { parseCSVToLeads, downloadSampleLeadsCSV } from "@/lib/csvParser";
+import { parseCSVToLeads, downloadSampleLeadsCSV, sanitizeLeadFields } from "@/lib/csvParser";
 import { getStudentLeadState } from "@/lib/studentLeadState";
 
 import InPortalCommunicationModals, { ContactTarget } from "@/components/InPortalCommunicationModals";
@@ -91,7 +91,7 @@ export default function ApplicantsTable({
 
   // Filter Applicants
   const filteredApplicants = useMemo(() => {
-    return applicants.filter((item) => {
+    return applicants.map(sanitizeLeadFields).filter((item) => {
       const q = (searchQuery || "").toLowerCase().trim();
       const numQ = q.replace(/^(lead\s*#?|#)/i, "").trim();
       const matchesSearch =
