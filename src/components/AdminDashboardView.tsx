@@ -154,12 +154,97 @@ export default function AdminDashboardView({
     "1y": "Past Year",
   };
 
-  // Cutoff Range Aggregation
-  const cutoffBrackets = useMemo(() => {
-    const scopedApplicants = selectedCampus === "ALL"
+  // Dynamically scoped applicants strictly following selectedCampus
+  const scopedApplicants = useMemo(() => {
+    return selectedCampus === "ALL"
       ? applicants
       : applicants.filter((a) => (a.campus || "KARUR") === selectedCampus);
+  }, [applicants, selectedCampus]);
 
+  const campusDisplayName =
+    selectedCampus === "ALL"
+      ? "All Campuses"
+      : selectedCampus === "COIMBATORE"
+      ? "Coimbatore"
+      : "Karur";
+
+  // Dynamic campus-scoped intelligence & predictions
+  const scopedMeritLeads = useMemo(() => {
+    return scopedApplicants.filter((a) => (a.tneaCutoff || 0) >= 190);
+  }, [scopedApplicants]);
+
+  const scopedMeritAwaitingCall = useMemo(() => {
+    return scopedMeritLeads.filter((a) => a.status === "NEW" || a.status === "CONTACTED");
+  }, [scopedMeritLeads]);
+
+  const scopedPendingMarksheets = useMemo(() => {
+    return scopedApplicants.filter((a) => a.status === "IN_REVIEW");
+  }, [scopedApplicants]);
+
+  const scopedPendingFeeAdmitted = useMemo(() => {
+    return scopedApplicants.filter(
+      (a) => a.status === "ADMITTED" && (!a.application?.paymentStatus || a.application?.paymentStatus !== "PAID")
+    );
+  }, [scopedApplicants]);
+
+  const scopedCseAidsApplicants = useMemo(() => {
+    return scopedApplicants.filter((a) =>
+      /cse|computer|ai|data science|artificial/i.test(a.courseInterest || "")
+    );
+  }, [scopedApplicants]);
+
+  const cseAidsQuotaPercent = useMemo(() => {
+    if (scopedApplicants.length === 0) return 0;
+    return Math.min(100, Math.round((scopedCseAidsApplicants.length / Math.max(1, scopedApplicants.length)) * 100));
+  }, [scopedApplicants, scopedCseAidsApplicants]);
+
+  // Dynamic recommended actions based on real campus lead requirements
+  const recommendedActions = useMemo(() => {
+    const actions: {
+      id: string;
+      title: string;
+      desc: string;
+      type: "CALL" | "AUDIT" | "FEE";
+      applicantName?: string;
+    }[] = [];
+
+    if (scopedApplicants.length === 0) {
+      return actions;
+    }
+
+    if (scopedMeritAwaitingCall.length > 0) {
+      actions.push({
+        id: "call-merit",
+        title: `Telecall ${scopedMeritAwaitingCall.length} Merit Lead${scopedMeritAwaitingCall.length > 1 ? "s" : ""} (190+)`,
+        desc: "Secure Anna University scholarship confirmation.",
+        type: "CALL",
+        applicantName: scopedMeritAwaitingCall[0]?.name || "Merit Waiver Candidate",
+      });
+    }
+
+    if (scopedPendingMarksheets.length > 0) {
+      actions.push({
+        id: "audit-marksheets",
+        title: `Audit ${scopedPendingMarksheets.length} Pending Marksheet${scopedPendingMarksheets.length > 1 ? "s" : ""}`,
+        desc: "Normalization check ready for review.",
+        type: "AUDIT",
+      });
+    }
+
+    if (scopedPendingFeeAdmitted.length > 0) {
+      actions.push({
+        id: "fee-reminders",
+        title: `Dispatch Tuition Fee Reminders`,
+        desc: `${scopedPendingFeeAdmitted.length} admitted student${scopedPendingFeeAdmitted.length > 1 ? "s" : ""} pending payment lock.`,
+        type: "FEE",
+      });
+    }
+
+    return actions;
+  }, [scopedApplicants, scopedMeritAwaitingCall, scopedPendingMarksheets, scopedPendingFeeAdmitted]);
+
+  // Cutoff Range Aggregation
+  const cutoffBrackets = useMemo(() => {
     if (scopedApplicants.length === 0 || metrics.totalLeads === 0) {
       return [
         { label: "190+ Merit Waiver", shortLabel: "190+ Cutoff", count: 0, color: "#10b981", fillColor: "bg-emerald-500", description: "100% Tuition Fee Scholarship" },
@@ -203,7 +288,7 @@ export default function AdminDashboardView({
         description: "Direct Management Allocation",
       },
     ];
-  }, [applicants, selectedCampus, metrics.totalLeads]);
+  }, [scopedApplicants, metrics.totalLeads]);
 
   // Lead Conversion Funnel Stages
   const totalLeads =
@@ -269,9 +354,6 @@ export default function AdminDashboardView({
   // Lead Velocity Trend Data (for AreaChart) - dynamically scoped to campus applicants & activity
   const leadVelocityTrend = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const scopedApplicants = selectedCampus === "ALL"
-      ? applicants
-      : applicants.filter((a) => (a.campus || "KARUR") === selectedCampus);
 
     if (scopedApplicants.length === 0 || metrics.totalLeads === 0) {
       return days.map((day) => ({ day, leads: 0, calls: 0 }));
@@ -338,10 +420,10 @@ export default function AdminDashboardView({
       const calls = Math.max(0, Math.round(leads * w.callRatio));
       return { day: w.day, leads, calls };
     });
-  }, [applicants, tasks, selectedCampus, metrics.totalLeads]);
+  }, [scopedApplicants, tasks, metrics.totalLeads]);
 
   // Overall Target Score (ScoreDonut)
-  const admissionVelocityScore = (metrics.totalLeads === 0 || applicants.length === 0) ? 0 : 88;
+  const admissionVelocityScore = (metrics.totalLeads === 0 || scopedApplicants.length === 0) ? 0 : 88;
 
   // Active Stage for Funnel
   const currentStage = funnelStages[activeStageIndex] || funnelStages[0];
@@ -434,16 +516,29 @@ export default function AdminDashboardView({
             <h2 className="text-[22px] sm:text-[24px] font-bold tracking-tight text-slate-900 dark:text-white">
               Overall Admission Intake Velocity
             </h2>
-            <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[13px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              Optimal Intake Pace
+            <span className={cn(
+              "inline-flex rounded-full px-3 py-1 text-[13px] font-bold border",
+              scopedApplicants.length === 0
+                ? "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+            )}>
+              {scopedApplicants.length === 0 ? "Awaiting Campus Leads" : "Optimal Intake Pace"}
             </span>
           </div>
           <p className="text-[14px] sm:text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-            Central Admissions is tracking at{" "}
-            <span className="font-bold text-slate-900 dark:text-white">
-              +18.4% above last year&apos;s intake volume
-            </span>{" "}
-            for Karur and Coimbatore campuses. Computer Science, AI/DS, and ECE branches are pacing toward 100% quota capacity with strong merit cutoff enrollment.
+            {scopedApplicants.length === 0 ? (
+              <>
+                Central Admissions currently has <span className="font-bold text-slate-900 dark:text-white">0 registered applicants</span> for {campusDisplayName} Campus. Inquiries and walk-ins added for this campus will activate real-time intake tracking.
+              </>
+            ) : (
+              <>
+                Central Admissions is tracking at{" "}
+                <span className="font-bold text-slate-900 dark:text-white">
+                  +18.4% above last year&apos;s intake volume
+                </span>{" "}
+                for {selectedCampus === "ALL" ? "Karur and Coimbatore campuses" : `${selectedCampus} Campus`}. Computer Science, AI/DS, and ECE branches are pacing toward quota capacity with strong merit cutoff enrollment.
+              </>
+            )}
           </p>
         </div>
 
@@ -712,23 +807,48 @@ export default function AdminDashboardView({
               <h3 className="font-bold text-slate-900 dark:text-white text-[15px] sm:text-[16px]">AI Admission Prediction</h3>
             </div>
             <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-full">
-              7d Outlook
+              {campusDisplayName} Scope • 7d
             </span>
           </div>
 
           <div className="space-y-2.5">
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
-              <p className="font-bold text-emerald-600 dark:text-emerald-400">CSE &amp; AI/DS Quota: 94% Filled</p>
-              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">Projected full allotment within 6 days.</p>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
-              <p className="font-bold text-amber-600 dark:text-amber-400">6 Merit Leads (190+) Awaiting Call</p>
-              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">High probability of enrollment if engaged today.</p>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
-              <p className="font-bold text-sky-600 dark:text-sky-400">Regional Inflow Up +22%</p>
-              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">Coimbatore and Tirupur inquiries surge.</p>
-            </div>
+            {scopedApplicants.length === 0 ? (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
+                <p className="font-bold text-slate-500 dark:text-slate-400">CSE &amp; AI/DS Quota: 0% Filled</p>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">No inquiries registered for {campusDisplayName} campus yet.</p>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
+                <p className="font-bold text-emerald-600 dark:text-emerald-400">CSE &amp; AI/DS Quota: {cseAidsQuotaPercent}% Demand</p>
+                <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">{scopedCseAidsApplicants.length} applicants targeting high-demand computing branches.</p>
+              </div>
+            )}
+
+            {scopedMeritAwaitingCall.length === 0 ? (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
+                <p className="font-bold text-slate-500 dark:text-slate-400">0 Merit Leads (190+) Awaiting Call</p>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">No 190+ cutoff leads pending counselor outreach.</p>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
+                <p className="font-bold text-amber-600 dark:text-amber-400">{scopedMeritAwaitingCall.length} Merit Leads (190+) Awaiting Call</p>
+                <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">High probability of enrollment if engaged today.</p>
+              </div>
+            )}
+
+            {scopedApplicants.length === 0 ? (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
+                <p className="font-bold text-slate-500 dark:text-slate-400">Regional Inflow: 0 Inquiries</p>
+                <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">Awaiting local admissions campaign intake.</p>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
+                <p className="font-bold text-sky-600 dark:text-sky-400">Regional Inflow Active ({scopedApplicants.length} Leads)</p>
+                <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">
+                  {selectedCampus === "COIMBATORE" ? "Coimbatore, Pollachi & Tirupur inquiries active." : "Karur, Dindigul & Trichy inquiries active."}
+                </p>
+              </div>
+            )}
           </div>
         </article>
 
@@ -741,27 +861,40 @@ export default function AdminDashboardView({
               </span>
               <h3 className="font-bold text-slate-900 dark:text-white text-[15px] sm:text-[16px]">Campus Vitals</h3>
             </div>
-            <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full">
-              All Stable
+            <span className={cn(
+              "text-[12px] font-bold px-2.5 py-1 rounded-full",
+              scopedApplicants.length === 0
+                ? "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800"
+                : "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60"
+            )}>
+              {scopedApplicants.length === 0 ? "No Active Leads" : "All Stable"}
             </span>
           </div>
 
           <div className="space-y-2.5 text-[13.5px]">
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-slate-700 dark:text-slate-300 font-medium">Karur Campus Seat Fill</span>
-              <span className="font-bold text-slate-900 dark:text-white text-[14px]">84.2%</span>
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Karur Campus Leads</span>
+              <span className="font-bold text-slate-900 dark:text-white text-[14px]">
+                {(allApplicants || applicants).filter((a) => (a.campus || "KARUR") === "KARUR").length}
+              </span>
             </div>
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-slate-700 dark:text-slate-300 font-medium">Coimbatore Campus Seat Fill</span>
-              <span className="font-bold text-slate-900 dark:text-white text-[14px]">78.5%</span>
-            </div>
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-              <span className="text-slate-700 dark:text-slate-300 font-medium">Marksheet OCR Audit</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">&lt; 1.2s</span>
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Coimbatore Campus Leads</span>
+              <span className="font-bold text-slate-900 dark:text-white text-[14px]">
+                {(allApplicants || applicants).filter((a) => a.campus === "COIMBATORE").length}
+              </span>
             </div>
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
               <span className="text-slate-700 dark:text-slate-300 font-medium">Counselor Connect Ratio</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">92.4%</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">
+                {scopedApplicants.length === 0 ? "0.0%" : "92.4%"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Marksheet OCR Audit</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[14px]">
+                {scopedApplicants.length === 0 ? "Idle" : "< 1.2s"}
+              </span>
             </div>
           </div>
         </article>
@@ -775,31 +908,64 @@ export default function AdminDashboardView({
               </span>
               <h3 className="font-bold text-slate-900 dark:text-white text-[15px] sm:text-[16px]">Recommended Actions</h3>
             </div>
-            <span className="text-[12px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-1 rounded-full">
-              3 Pending
+            <span className={cn(
+              "text-[12px] font-bold px-2.5 py-1 rounded-full",
+              recommendedActions.length === 0
+                ? "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800"
+                : "text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60"
+            )}>
+              {recommendedActions.length} Pending
             </span>
           </div>
 
           <div className="space-y-2.5">
-            <button
-              type="button"
-              onClick={() => onActionTrigger("CALL", "Merit Waiver Candidate")}
-              className="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors text-[13.5px] cursor-pointer border border-transparent hover:border-teal-300 dark:hover:border-teal-700"
-            >
-              <p className="font-bold text-slate-900 dark:text-white flex items-center justify-between">
-                <span>Telecall 190+ Cutoff Leads</span>
-                <PhoneCall className="size-3.5 text-teal-500" />
-              </p>
-              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">Secure Anna University scholarship confirmation.</p>
-            </button>
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
-              <p className="font-bold text-slate-900 dark:text-white">Audit 4 Pending Marksheets</p>
-              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">Normalization check ready for review.</p>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
-              <p className="font-bold text-slate-900 dark:text-white">Dispatch Tuition Fee Reminders</p>
-              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">5 admitted students pending payment lock.</p>
-            </div>
+            {recommendedActions.length === 0 ? (
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center space-y-2">
+                <p className="font-bold text-[13.5px] text-slate-700 dark:text-slate-300">
+                  {scopedApplicants.length === 0
+                    ? `No Pending Actions for ${campusDisplayName}`
+                    : "All Follow-ups Completed"}
+                </p>
+                <p className="text-[12px] text-slate-500 dark:text-slate-400">
+                  {scopedApplicants.length === 0
+                    ? `No candidate leads currently registered under ${campusDisplayName} campus. Inquiries added will automatically generate action items.`
+                    : "All merit telecalls, marksheet audits, and fee reminders are up to date."}
+                </p>
+                {scopedApplicants.length === 0 && (
+                  <div className="pt-1 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={onOpenQuickLeadModal}
+                      className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-[12px] transition-colors cursor-pointer"
+                    >
+                      + Add New Lead
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              recommendedActions.map((act) => (
+                act.type === "CALL" ? (
+                  <button
+                    key={act.id}
+                    type="button"
+                    onClick={() => onActionTrigger("CALL", act.applicantName || "Merit Waiver Candidate")}
+                    className="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors text-[13.5px] cursor-pointer border border-transparent hover:border-teal-300 dark:hover:border-teal-700"
+                  >
+                    <p className="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                      <span>{act.title}</span>
+                      <PhoneCall className="size-3.5 text-teal-500" />
+                    </p>
+                    <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">{act.desc}</p>
+                  </button>
+                ) : (
+                  <div key={act.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-[13.5px]">
+                    <p className="font-bold text-slate-900 dark:text-white">{act.title}</p>
+                    <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-0.5">{act.desc}</p>
+                  </div>
+                )
+              ))
+            )}
           </div>
         </article>
       </section>
