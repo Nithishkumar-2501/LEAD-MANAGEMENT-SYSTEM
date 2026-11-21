@@ -35,6 +35,7 @@ import {
   ArrowRightLeft,
   Users,
   Image as ImageIcon,
+  TrendingUp,
 } from "lucide-react";
 
 export interface StudentCallRecord {
@@ -138,6 +139,7 @@ export default function TeacherStudentAuditModal({
   const [customInterestStatus, setCustomInterestStatus] = useState<StudentCallRecord["interestStatus"]>("INTERESTED");
   const [customDurationText, setCustomDurationText] = useState("03:45");
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [showKpiMetrics, setShowKpiMetrics] = useState(true);
 
   // Teacher Profile Photo State & Ref
   const [currentTeacherPhoto, setCurrentTeacherPhoto] = useState<string>(teacher?.photoUrl || "");
@@ -651,16 +653,16 @@ export default function TeacherStudentAuditModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-in fade-in">
-      <div className="bg-slate-900 border border-indigo-500/40 rounded-3xl w-full max-w-5xl max-h-[94vh] flex flex-col shadow-2xl text-slate-100 overflow-hidden my-auto">
+      <div className="bg-slate-900 border border-indigo-500/40 rounded-2xl sm:rounded-3xl w-full max-w-5xl h-[94vh] sm:h-auto sm:max-h-[94vh] flex flex-col shadow-2xl text-slate-100 overflow-hidden my-auto">
         {/* ================================================================= */}
         {/* MODAL HEADER: TEACHER PROFILE & QUICK ACTIONS                    */}
         {/* ================================================================= */}
-        <div className="p-4 sm:p-6 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 border-b border-white/10 shrink-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5 min-w-0">
+        <div className="p-3.5 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 border-b border-white/10 shrink-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0">
               <div className="relative group/photo shrink-0">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-xl shrink-0 overflow-hidden">
-                  <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-white font-black text-lg overflow-hidden">
+                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-xl shrink-0 overflow-hidden">
+                  <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-white font-black text-base sm:text-lg overflow-hidden">
                     {currentTeacherPhoto ? (
                       <img src={currentTeacherPhoto} alt={teacher.name} className="w-full h-full object-cover" />
                     ) : (
@@ -672,10 +674,10 @@ export default function TeacherStudentAuditModal({
                   <button
                     type="button"
                     onClick={() => photoInputRef.current?.click()}
-                    className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-slate-900 cursor-pointer active:scale-95 transition-all"
+                    className="absolute -bottom-1 -right-1 p-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-slate-900 cursor-pointer active:scale-95 transition-all"
                     title="Upload Profile Photo to Firebase (Admin Only)"
                   >
-                    <Camera className="w-3.5 h-3.5" />
+                    <Camera className="w-3 h-3" />
                   </button>
                 )}
                 <input
@@ -688,15 +690,15 @@ export default function TeacherStudentAuditModal({
               </div>
 
               <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-lg sm:text-xl font-black text-white tracking-tight truncate">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <h2 className="text-base sm:text-xl font-black text-white tracking-tight truncate">
                     {teacher.name}
                   </h2>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
                     {teacher.campus} CAMPUS
                   </span>
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                       teacher.status === "ACTIVE"
                         ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
                         : "bg-amber-500/20 text-amber-300 border-amber-400/40"
@@ -704,15 +706,15 @@ export default function TeacherStudentAuditModal({
                   >
                     {teacher.status === "ACTIVE" ? "🟢 ACTIVE" : "🟡 ON LEAVE"}
                   </span>
-                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 font-mono flex items-center gap-1 shadow-xs">
+                  <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 font-mono flex items-center gap-1 shadow-xs">
                     <ShieldCheck className="w-3 h-3 text-indigo-300" />
                     ID: {teacher.id}
                   </span>
                 </div>
-                <p className="text-xs text-indigo-300 font-semibold mt-0.5">
+                <p className="text-[11px] sm:text-xs text-indigo-300 font-semibold mt-0.5 truncate">
                   {teacher.department} • {teacher.experienceYears} Yrs Experience • Phone: {teacher.phone}
                 </p>
-                <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
                   <span>🎯 Allocated Batch:</span>
                   <strong className={`font-mono font-bold ${isFacultyBatchAllocated(teacher) ? "text-emerald-400" : "text-amber-400"}`}>
                     {isFacultyBatchAllocated(teacher)
@@ -724,12 +726,21 @@ export default function TeacherStudentAuditModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-
-
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowKpiMetrics((v) => !v)}
+                className="px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] sm:text-xs font-bold border border-slate-700/80 flex items-center gap-1 transition-colors cursor-pointer"
+                title="Toggle Summary Metrics"
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden sm:inline">{showKpiMetrics ? "Hide Summary" : "Show Summary"}</span>
+                <span className="sm:hidden">{showKpiMetrics ? "Stats" : "Stats"}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showKpiMetrics ? "rotate-180" : ""}`} />
+              </button>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-700/80 transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-700/80 transition-colors cursor-pointer"
                 title="Close"
               >
                 <X className="w-5 h-5" />
@@ -739,184 +750,190 @@ export default function TeacherStudentAuditModal({
         </div>
 
         {/* ================================================================= */}
-        {/* KPI METRIC CARDS: TALKED VS NOT TALKED CALL PERFORMANCE           */}
+        {/* SCROLLABLE AUDIT MODAL CONTENT CONTAINER                          */}
         {/* ================================================================= */}
-        <div className="p-4 sm:p-6 bg-slate-950/60 border-b border-white/5 space-y-4 shrink-0">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {/* Total Assigned */}
-            <div className="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm">
-              <div className="flex items-center justify-between text-slate-400 text-xs font-bold">
-                <span>Total Assigned</span>
-                <GraduationCap className="w-4 h-4 text-indigo-400" />
+        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+          {/* ================================================================= */}
+          {/* KPI METRIC CARDS: TALKED VS NOT TALKED CALL PERFORMANCE           */}
+          {/* ================================================================= */}
+          {showKpiMetrics && (
+            <div className="p-3.5 sm:p-5 bg-slate-950/60 border-b border-white/5 space-y-3 sm:space-y-4 shrink-0 transition-all">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                {/* Total Assigned */}
+                <div className="bg-slate-900/90 border border-slate-800 p-2.5 sm:p-3.5 rounded-2xl shadow-sm">
+                  <div className="flex items-center justify-between text-slate-400 text-[11px] sm:text-xs font-bold">
+                    <span>Total Assigned</span>
+                    <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" />
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1.5 sm:gap-2">
+                    <span className="text-xl sm:text-2xl font-black text-white">{totalCount}</span>
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">Students</span>
+                  </div>
+                  <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold mt-1">100% of Faculty Allocation</p>
+                </div>
+
+                {/* Talked To Students (Green) */}
+                <div className="bg-emerald-950/30 border border-emerald-500/40 p-2.5 sm:p-3.5 rounded-2xl shadow-sm">
+                  <div className="flex items-center justify-between text-emerald-300 text-[11px] sm:text-xs font-bold">
+                    <span>Talked to Students</span>
+                    <PhoneCall className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1.5 sm:gap-2">
+                    <span className="text-xl sm:text-2xl font-black text-emerald-300">{talkedCount}</span>
+                    <span className="text-[10px] sm:text-[11px] text-emerald-400/80 font-bold">({talkedPercentage}%)</span>
+                  </div>
+                  <p className="text-[9px] sm:text-[10px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Outreach completed
+                  </p>
+                </div>
+
+                {/* Not Talked / Pending (Amber) */}
+                <div className="bg-amber-950/30 border border-amber-500/40 p-2.5 sm:p-3.5 rounded-2xl shadow-sm">
+                  <div className="flex items-center justify-between text-amber-300 text-[11px] sm:text-xs font-bold">
+                    <span>Not Talked / Pending</span>
+                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1.5 sm:gap-2">
+                    <span className="text-xl sm:text-2xl font-black text-amber-300">{notTalkedCount}</span>
+                    <span className="text-[10px] sm:text-[11px] text-amber-400/80 font-bold">({notTalkedPercentage}%)</span>
+                  </div>
+                  <p className="text-[9px] sm:text-[10px] text-amber-400 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> Needs calling outreach
+                  </p>
+                </div>
+
+                {/* Admitted & Interested */}
+                <div className="bg-sky-950/30 border border-sky-500/40 p-2.5 sm:p-3.5 rounded-2xl shadow-sm">
+                  <div className="flex items-center justify-between text-sky-300 text-[11px] sm:text-xs font-bold">
+                    <span>Admitted & High Interest</span>
+                    <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400" />
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1.5 sm:gap-2">
+                    <span className="text-xl sm:text-2xl font-black text-sky-300">{admittedCount + interestedCount}</span>
+                    <span className="text-[10px] sm:text-[11px] text-sky-400/80 font-bold">
+                      ({admittedCount} Adm • {interestedCount} Int)
+                    </span>
+                  </div>
+                  <p className="text-[9px] sm:text-[10px] text-sky-400 font-semibold mt-1">Direct conversion from calls</p>
+                </div>
               </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-black text-white">{totalCount}</span>
-                <span className="text-[11px] text-slate-400 font-medium">Students</span>
+
+              {/* Visual Segmented Progress Bar */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-extrabold">
+                  <span className="text-slate-300 flex items-center gap-1.5">
+                    <span>Calling Outreach Progress:</span>
+                    <span className="text-emerald-400 font-mono">{talkedPercentage}% Talked</span>
+                  </span>
+                  <span className="text-slate-400 text-[11px] font-mono">
+                    {talkedCount} Contacted / {notTalkedCount} Pending Calls
+                  </span>
+                </div>
+                <div className="w-full h-2.5 sm:h-3 rounded-full bg-slate-800 overflow-hidden flex border border-white/10 shadow-inner">
+                  <div
+                    style={{ width: `${talkedPercentage}%` }}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 relative group"
+                    title={`${talkedCount} Talked (${talkedPercentage}%)`}
+                  />
+                  <div
+                    style={{ width: `${notTalkedPercentage}%` }}
+                    className="bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-500 relative group"
+                    title={`${notTalkedCount} Not Talked (${notTalkedPercentage}%)`}
+                  />
+                </div>
               </div>
-              <p className="text-[10px] text-slate-500 font-semibold mt-1">100% of Faculty Allocation</p>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* FILTER CONTROLS & SEARCH BAR                                      */}
+          {/* ================================================================= */}
+          <div className="sticky top-0 z-20 p-2.5 sm:p-4 bg-slate-900/95 backdrop-blur-md border-b border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 shrink-0 shadow-md">
+            {/* Active Status Tabs */}
+            <div className="flex items-center p-1 bg-slate-950 rounded-xl border border-slate-800 gap-1 overflow-x-auto text-xs font-bold">
+              <button
+                onClick={() => setActiveFilter("ALL")}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  activeFilter === "ALL"
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                All Students ({totalCount})
+              </button>
+              <button
+                onClick={() => setActiveFilter("TALKED")}
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                  activeFilter === "TALKED"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "text-emerald-400 hover:text-emerald-300"
+                }`}
+              >
+                <span>🟢 Talked to ({talkedCount})</span>
+              </button>
+              <button
+                onClick={() => setActiveFilter("NOT_TALKED")}
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                  activeFilter === "NOT_TALKED"
+                    ? "bg-amber-600 text-white shadow-sm"
+                    : "text-amber-400 hover:text-amber-300"
+                }`}
+              >
+                <span>🟡 Not Talked ({notTalkedCount})</span>
+              </button>
+              <button
+                onClick={() => setActiveFilter("REDIRECTED")}
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                  activeFilter === "REDIRECTED"
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-purple-400 hover:text-purple-300"
+                }`}
+              >
+                <PhoneForwarded className="w-3.5 h-3.5" />
+                <span>🔀 Redirected ({redirectedCount})</span>
+              </button>
             </div>
 
-            {/* Talked To Students (Green) */}
-            <div className="bg-emerald-950/30 border border-emerald-500/40 p-3.5 rounded-2xl shadow-sm">
-              <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
-                <span>Talked to Students</span>
-                <PhoneCall className="w-4 h-4 text-emerald-400" />
+            {/* Search & District Selector */}
+            <div className="flex items-center gap-2 flex-1 sm:max-w-md">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search name, phone, school, cutoff..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-black text-emerald-300">{talkedCount}</span>
-                <span className="text-[11px] text-emerald-400/80 font-bold">({talkedPercentage}%)</span>
-              </div>
-              <p className="text-[10px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Outreach completed
-              </p>
-            </div>
 
-            {/* Not Talked / Pending (Amber) */}
-            <div className="bg-amber-950/30 border border-amber-500/40 p-3.5 rounded-2xl shadow-sm">
-              <div className="flex items-center justify-between text-amber-300 text-xs font-bold">
-                <span>Not Talked / Pending</span>
-                <Clock className="w-4 h-4 text-amber-400" />
-              </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-black text-amber-300">{notTalkedCount}</span>
-                <span className="text-[11px] text-amber-400/80 font-bold">({notTalkedPercentage}%)</span>
-              </div>
-              <p className="text-[10px] text-amber-400 font-semibold mt-1 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> Needs calling outreach
-              </p>
-            </div>
-
-            {/* Admitted & Interested */}
-            <div className="bg-sky-950/30 border border-sky-500/40 p-3.5 rounded-2xl shadow-sm">
-              <div className="flex items-center justify-between text-sky-300 text-xs font-bold">
-                <span>Admitted & High Interest</span>
-                <Award className="w-4 h-4 text-sky-400" />
-              </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-black text-sky-300">{admittedCount + interestedCount}</span>
-                <span className="text-[11px] text-sky-400/80 font-bold">
-                  ({admittedCount} Admitted • {interestedCount} Int.)
-                </span>
-              </div>
-              <p className="text-[10px] text-sky-400 font-semibold mt-1">Direct conversion from calls</p>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => setSelectedDistrict(e.target.value)}
+                className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 font-bold focus:outline-none focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="ALL">All Districts</option>
+                {TN_DISTRICTS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          {/* Visual Segmented Progress Bar */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-extrabold">
-              <span className="text-slate-300 flex items-center gap-1.5">
-                <span>Calling Outreach Progress:</span>
-                <span className="text-emerald-400 font-mono">{talkedPercentage}% Talked</span>
-              </span>
-              <span className="text-slate-400 text-[11px] font-mono">
-                {talkedCount} Contacted / {notTalkedCount} Pending Calls
-              </span>
-            </div>
-            <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex border border-white/10 shadow-inner">
-              <div
-                style={{ width: `${talkedPercentage}%` }}
-                className="bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 relative group"
-                title={`${talkedCount} Talked (${talkedPercentage}%)`}
-              />
-              <div
-                style={{ width: `${notTalkedPercentage}%` }}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-500 relative group"
-                title={`${notTalkedCount} Not Talked (${notTalkedPercentage}%)`}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* ================================================================= */}
-        {/* FILTER CONTROLS & SEARCH BAR                                      */}
-        {/* ================================================================= */}
-        <div className="p-3 sm:p-4 bg-slate-900 border-b border-white/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
-          {/* Active Status Tabs */}
-          <div className="flex items-center p-1 bg-slate-950 rounded-xl border border-slate-800 gap-1 overflow-x-auto text-xs font-bold">
-            <button
-              onClick={() => setActiveFilter("ALL")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                activeFilter === "ALL"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              All Students ({totalCount})
-            </button>
-            <button
-              onClick={() => setActiveFilter("TALKED")}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-                activeFilter === "TALKED"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-emerald-400 hover:text-emerald-300"
-              }`}
-            >
-              <span>🟢 Talked to ({talkedCount})</span>
-            </button>
-            <button
-              onClick={() => setActiveFilter("NOT_TALKED")}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-                activeFilter === "NOT_TALKED"
-                  ? "bg-amber-600 text-white shadow-sm"
-                  : "text-amber-400 hover:text-amber-300"
-              }`}
-            >
-              <span>🟡 Not Talked ({notTalkedCount})</span>
-            </button>
-            <button
-              onClick={() => setActiveFilter("REDIRECTED")}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
-                activeFilter === "REDIRECTED"
-                  ? "bg-purple-600 text-white shadow-sm"
-                  : "text-purple-400 hover:text-purple-300"
-              }`}
-            >
-              <PhoneForwarded className="w-3.5 h-3.5" />
-              <span>🔀 Redirected ({redirectedCount})</span>
-            </button>
-          </div>
-
-          {/* Search & District Selector */}
-          <div className="flex items-center gap-2 flex-1 sm:max-w-md">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search name, phone, school, cutoff..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            <select
-              value={selectedDistrict}
-              onChange={(e) => setSelectedDistrict(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 font-bold focus:outline-none focus:border-indigo-500 cursor-pointer"
-            >
-              <option value="ALL">All Districts</option>
-              {TN_DISTRICTS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* ================================================================= */}
-        {/* STUDENT AUDIT LIST                                                */}
-        {/* ================================================================= */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
+          {/* ================================================================= */}
+          {/* STUDENT AUDIT LIST                                                */}
+          {/* ================================================================= */}
+          <div className="flex-1 p-3 sm:p-6 space-y-3">
           {!isFacultyBatchAllocated(teacher) ? (
             <div className="py-16 text-center text-slate-400 bg-slate-950/40 rounded-2xl border border-slate-800 space-y-3 px-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto">
@@ -1150,22 +1167,26 @@ export default function TeacherStudentAuditModal({
               );
             })
           )}
+          </div>
         </div>
 
         {/* ================================================================= */}
         {/* MODAL FOOTER                                                      */}
         {/* ================================================================= */}
-        <div className="p-4 bg-slate-950 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-xs">
-          <div className="text-slate-400 font-medium text-center sm:text-left">
+        <div className="p-3 sm:p-4 bg-slate-950 border-t border-white/10 flex items-center justify-between gap-3 shrink-0 text-xs">
+          <div className="text-slate-400 font-medium text-left hidden sm:block">
             <span>Admin Supervision Privilege: All teacher-student calls are tracked with timestamps and notes.</span>
+          </div>
+          <div className="text-slate-400 font-medium text-left sm:hidden text-[11px]">
+            <span>{totalCount} Total Allocated Students</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold cursor-pointer transition-all"
+              className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold cursor-pointer transition-all"
             >
-              Close Audit Modal
+              Close
             </button>
           </div>
         </div>
