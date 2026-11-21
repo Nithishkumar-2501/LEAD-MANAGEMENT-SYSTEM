@@ -1564,6 +1564,7 @@ export default function ContactDirectoryModule({
     const matchesSelectedView = () => {
       if (!selectedViewName || selectedViewName === "Default View" || selectedViewName === "All Leads" || selectedViewName === "All Enquiries") return true;
       if (selectedViewName === "Fresh & Untouched" || selectedViewName === "Untouched Leads") {
+        if (c.status === "CONTACTED" || c.status === "ADMITTED" || c.status === "REJECTED") return false;
         return !c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY";
       }
       if (selectedViewName === "Today's Follow-ups" || selectedViewName === "Follow-ups Due") {
@@ -1629,7 +1630,10 @@ export default function ContactDirectoryModule({
         return stateInfo.state === "COLD";
       }
       if (valLower === "untouched") {
-        return statusUpper === "NEW" || statusUpper === "UNTOUCHED" || !c.assignedTo;
+        if (statusUpper === "CONTACTED" || statusUpper === "ADMITTED" || statusUpper === "REJECTED") {
+          return false;
+        }
+        return statusUpper === "NEW" || statusUpper === "UNTOUCHED";
       }
       if (valLower === "new inquiry") {
         return statusUpper === "NEW" || statusUpper === "INQUIRY" || statusUpper === "IN_REVIEW";
@@ -2086,7 +2090,7 @@ export default function ContactDirectoryModule({
 
   // Real-time Lead Funnel KPI Calculations (Meritto Education CRM Architecture)
   const totalLeadsCount = contacts.length;
-  const freshLeadsCount = contacts.filter((c) => !c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY").length;
+  const freshLeadsCount = contacts.filter((c) => c.status !== "CONTACTED" && c.status !== "ADMITTED" && c.status !== "REJECTED" && (!c.assignedTo || c.status === "NEW" || c.application?.stage === "INQUIRY")).length;
   const followUpsDueCount = contacts.filter((c) => c.status === "CONTACTED" || c.status === "IN_REVIEW").length;
   const hotLeadsCount = contacts.filter((c) => getStudentLeadState(c).state === "HOT").length;
   const verifiedLeadsCount = contacts.filter((c) => c.phone && c.phone.length >= 10).length;
