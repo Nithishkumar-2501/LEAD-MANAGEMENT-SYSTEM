@@ -48,7 +48,7 @@ export interface NoraChatMessage {
   sender: "USER" | "NORA";
   text: string;
   specificData?: {
-    type: "SINGLE_STUDENT" | "STUDENT_LIST" | "METRICS" | "DASHBOARD_NAV" | "TEXT_ONLY";
+    type: "SINGLE_STUDENT" | "STUDENT_LIST" | "METRICS" | "DASHBOARD_NAV" | "TEXT_ONLY" | "DELETE_CONFIRMATION" | "FILE_UPLOAD_PROMPT";
     student?: Lead & { application: Application; aiScore?: number; priorityTier?: string; computedCutoff?: number };
     studentsList?: (Lead & { application: Application; aiScore?: number; priorityTier?: string; computedCutoff?: number })[];
     stats?: Record<string, any>;
@@ -101,6 +101,104 @@ export function processNoraChatQuery(
       computedCutoff: pred.tneaCutoff || (a.application ? a.application.marks12th * 2 : 160),
     };
   });
+
+  // -------------------------------------------------------------
+  // 0. DELETE CONTACT / STUDENT FROM DATABASE INTENT
+  // -------------------------------------------------------------
+  const isDeleteIntent =
+    /^(delete|remove|erase|drop|purge)\b/i.test(q) ||
+    (/\b(delete|remove|erase|purge)\b/i.test(q) && /\b(contact|student|lead|candidate|record|data|contect)\b/i.test(q));
+
+  if (isDeleteIntent) {
+    const cleanTarget = q
+      .replace(/^(delete|remove|erase|drop|purge)\s+/i, "")
+      .replace(/\b(the|this|contact|contect|student|lead|candidate|record|data|from database|from the database|in database|in the database)\b/gi, "")
+      .trim();
+
+    if (!cleanTarget) {
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `🗑️ **Delete Contact from Database**:\n\nPlease specify the student's **Name**, **Phone Number**, or **ID** that you would like to delete.\n\n*Examples:* \n• \`delete contact Gunal\`\n• \`delete student 9894283561\`\n• \`delete lead 12\``,
+        suggestedQueries: [
+          "Show all leads",
+          "Highest Cutoff",
+          "Add data to database",
+        ],
+        timestamp,
+      };
+    }
+
+    const targetDigits = cleanTarget.replace(/\D/g, "");
+    const matchedToDelete = enrichedApplicants.filter((a) => {
+      if (a.id.toLowerCase() === cleanTarget.toLowerCase()) return true;
+      if (targetDigits.length >= 6 && ((a.phone || "").replace(/\D/g, "").includes(targetDigits) || (a.alternatePhone || "").replace(/\D/g, "").includes(targetDigits))) return true;
+      if (a.name.toLowerCase().includes(cleanTarget.toLowerCase())) return true;
+      return false;
+    });
+
+    if (matchedToDelete.length === 0) {
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `❌ Could not find any student record matching **"${cleanTarget}"** in the database to delete.\n\nPlease verify the student name, phone number, or ID and try again.`,
+        suggestedQueries: ["Show all leads", "Add data to database"],
+        timestamp,
+      };
+    }
+
+    if (matchedToDelete.length === 1) {
+      const s = matchedToDelete[0];
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text: `⚠️ **Confirm Permanent Deletion from Database**:\n\nDo you want to permanently delete this contact record?\n\n• **Student Name**: **${s.name}**\n• 📞 **Mobile**: \`${s.phone}\`\n• 📍 **District**: ${s.district || "Karur"}\n• 🎓 **Course**: ${s.courseInterest}\n• 🆔 **Lead ID**: \`${s.id}\`\n\nClick **Confirm Delete** below to erase this record from the database and Firebase:`,
+        specificData: {
+          type: "DELETE_CONFIRMATION",
+          student: s,
+        },
+        suggestedQueries: [
+          `Confirm delete ${s.name}`,
+          "Cancel",
+        ],
+        timestamp,
+      };
+    }
+
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `Found **${matchedToDelete.length} candidates** matching **"${cleanTarget}"**. Click **Delete** on the specific student you wish to remove from the database:`,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: matchedToDelete,
+      },
+      suggestedQueries: matchedToDelete.slice(0, 3).map((s) => `delete contact ${s.name}`),
+      timestamp,
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 0.1 ADD DATA / FILE UPLOAD INTENT
+  // -------------------------------------------------------------
+  const isUploadIntent =
+    /\b(add data|upload file|upload csv|upload excel|import leads|import data|add file|insert file|upload to database|add to database|add student file|import contacts)\b/i.test(q);
+
+  if (isUploadIntent) {
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: `📂 **Add Data to Database via File Upload**:\n\nYou can upload a **CSV, Excel (.xlsx/.xls), or JSON** file directly into NORA Chatbot to instantly ingest and add contacts to the database!\n\n• **Supported Formats**: CSV, TSV, TXT, JSON, Excel\n• **Auto Detection**: Maps \`Name\`, \`Phone\`, \`Email\`, \`District\`, \`Course\`, \`Cutoff\`, \`Marks12th\`, \`School\`\n• **Live Sync**: Instantly saves into Prisma SQLite & Firebase Firestore\n\nClick the **Choose & Upload File** button below or use the **📎 Paperclip** icon in the chat bar:`,
+      specificData: {
+        type: "FILE_UPLOAD_PROMPT",
+      },
+      suggestedQueries: [
+        "Show all leads",
+        "How many admitted?",
+      ],
+      timestamp,
+    };
+  }
 
   // -------------------------------------------------------------
   // 1. MOBILE NUMBER / PHONE SEARCH (any query containing 6+ digits)

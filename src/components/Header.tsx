@@ -399,22 +399,22 @@ export default function Header({
             )}
           </div>
 
-          {/* Ask Nora AI Button — compact on mobile and tablet */}
+          {/* Ask NORA Chatbot Button — compact on mobile and tablet */}
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
             className="press-spring flex items-center gap-1.5 2xl:gap-2 px-2 sm:px-2.5 xl:px-3 2xl:px-4 py-1.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[13px] sm:text-[13.5px] 2xl:text-[14px] shadow-xs transition-all duration-150 cursor-pointer shrink-0"
-            title="Ask Nora AI to analyze the live student database (Shortcut: Ctrl + A)"
+            title="Ask NORA Chatbot to analyze the live student database (Shortcut: Ctrl + A)"
           >
             <img
               src="/nora-logo.png"
-              alt="NORA AI Logo"
+              alt="NORA Chatbot Logo"
               width={20}
               height={20}
               className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover shrink-0"
               style={{ width: "20px", height: "20px" }}
             />
-            <span className="hidden xl:inline text-[13.5px] 2xl:text-[14px] font-bold whitespace-nowrap">Ask Nora AI</span>
+            <span className="hidden xl:inline text-[13.5px] 2xl:text-[14px] font-bold whitespace-nowrap">Ask NORA Chatbot</span>
             <kbd className="hidden 2xl:inline-flex items-center px-1.5 py-0.5 text-[12px] font-mono font-bold bg-white/20 text-white rounded border border-white/30 ml-0.5">
               Ctrl+A
             </kbd>

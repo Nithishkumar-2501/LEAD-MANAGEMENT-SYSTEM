@@ -1458,13 +1458,33 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* NORA AI DATABASE ANALYTICS & SEARCH MODAL */}
+        {/* NORA CHATBOT DATABASE ANALYTICS, DELETION & FILE IMPORT MODAL */}
         <NoraAiDatabaseModal
           isOpen={isNoraModalOpen}
           onClose={() => setIsNoraModalOpen(false)}
           applicants={applicants}
           selectedCampus={selectedCampus}
           onSelectApplicant={handleSelectApplicant}
+          onDeleteApplicant={(id, name) => {
+            setApplicants((prev) => {
+              const filtered = prev.filter((a) => a.id !== id);
+              try {
+                localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
+              } catch (e) { }
+              return filtered;
+            });
+            triggerToast(`🗑️ NORA Chatbot deleted "${name}" from database!`);
+          }}
+          onAddApplicants={(newLeads) => {
+            setApplicants((prev) => {
+              const updated = [...newLeads, ...prev];
+              try {
+                localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
+              } catch (e) { }
+              return updated;
+            });
+            triggerToast(`📥 NORA Chatbot added ${newLeads.length} student(s) to the database!`);
+          }}
           onApplyFilter={(query) => {
             setSearchQuery(query);
             triggerToast(`🔍 Filtered CRM table by: "${query}"`);

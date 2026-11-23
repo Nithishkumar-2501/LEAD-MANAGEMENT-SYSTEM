@@ -1925,12 +1925,12 @@ export default function Sidebar({
                 <button
                   type="button"
                   onClick={() => onOpenNoraAi?.()}
-                  title="Open NORA AI Engine (Shortcut: Ctrl + A)"
+                  title="Open NORA Chatbot (Shortcut: Ctrl + A)"
                   className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-white font-bold text-[14px] shadow-xs hover:brightness-105 active:scale-98 transition-all cursor-pointer"
                 >
                   <span className="flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-                    <span>NORA AI Engine</span>
+                    <span>NORA Chatbot</span>
                   </span>
                   <div className="flex items-center gap-1">
                     <kbd className="text-[12px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">

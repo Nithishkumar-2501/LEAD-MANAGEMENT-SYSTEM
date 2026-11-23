@@ -1112,7 +1112,7 @@ export default function ContactDirectoryModule({
                   }
                 }}
                 className="p-1 rounded-full text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 transition-all cursor-pointer hover:scale-110 shrink-0"
-                title={`Ask Nora AI to analyze ${contact.name}'s database record`}
+                title={`Ask NORA Chatbot to analyze ${contact.name}'s database record`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
               </button>
@@ -2225,15 +2225,15 @@ export default function ContactDirectoryModule({
             <span className="hidden sm:inline">Template</span>
           </button>
 
-          {/* Ask Nora AI Intelligence Button */}
+          {/* Ask NORA Chatbot Intelligence Button */}
           <button
             type="button"
             onClick={() => onOpenNoraAi?.()}
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-sm shadow-md shadow-indigo-600/30 border border-indigo-300/30 flex items-center gap-1.5 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer"
-            title="Ask Nora AI for intelligence analysis"
+            title="Ask NORA Chatbot for intelligence analysis"
           >
             <Sparkles className="w-4 h-4 text-yellow-300" />
-            <span>Ask Nora AI</span>
+            <span>Ask NORA Chatbot</span>
           </button>
 
           {/* + Add Lead Primary CTA */}
