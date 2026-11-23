@@ -376,7 +376,11 @@ export function parseCSVToTeachers(
     const phone = getVal(phoneIdx, 2, "+91 98765 00000");
     const department = getVal(deptIdx, 3, "Computer Science & Engineering");
     const campusStr = getVal(campusIdx, 4, defaultCampus);
-    const campus: CampusLocation = campusStr.toUpperCase().includes("COIMBATORE") ? "COIMBATORE" : defaultCampus;
+    const campus: CampusLocation = campusStr.toUpperCase().includes("COIMBATORE")
+      ? "COIMBATORE"
+      : campusStr.toUpperCase().includes("KARUR")
+      ? "KARUR"
+      : defaultCampus;
     const coursesStr = getVal(coursesIdx, 5, "B.E. Computer Science");
     const coursesAssigned = coursesStr.split(/[,;|]/).map((s) => s.trim()).filter(Boolean);
     const expStr = getVal(expIdx, 6, "5");

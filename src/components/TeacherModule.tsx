@@ -34,6 +34,7 @@ import {
 
 interface TeacherModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
+  selectedCampus?: CampusLocation;
   currentUserRole: "ADMIN" | "TEACHER";
   loggedInUsername?: string;
   onTriggerToast: (msg: string) => void;
@@ -244,7 +245,15 @@ export function formatBatchRangeLabel(rangeText?: string): string {
   return `(${rangeText.replace(/^(?:Contacts|Batch)\s*/i, "").trim()})`;
 }
 
-export default function TeacherModule({ loggedInCampus, currentUserRole, loggedInUsername, onTriggerToast, applicants = [], onSelectApplicant }: TeacherModuleProps) {
+export default function TeacherModule({
+  loggedInCampus,
+  selectedCampus,
+  currentUserRole,
+  loggedInUsername,
+  onTriggerToast,
+  applicants = [],
+  onSelectApplicant,
+}: TeacherModuleProps) {
   const [teachers, setTeachers] = useState<Teacher[]>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -275,7 +284,15 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
   const [search, setSearch] = useState("");
   // Default to Mechanical Engineering so the user immediately gets their requested department view
   const [selectedDept, setSelectedDept] = useState("Mechanical Engineering");
-  const [selectedCampusFilter, setSelectedCampusFilter] = useState<"ALL" | "KARUR" | "COIMBATORE">("ALL");
+  const [selectedCampusFilter, setSelectedCampusFilter] = useState<"ALL" | "KARUR" | "COIMBATORE">(
+    () => (selectedCampus && selectedCampus !== "ALL" ? selectedCampus : "ALL")
+  );
+
+  useEffect(() => {
+    if (selectedCampus && selectedCampus !== "ALL") {
+      setSelectedCampusFilter(selectedCampus);
+    }
+  }, [selectedCampus]);
   const [facultyScope, setFacultyScope] = useState<"ALL" | "MINE">("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
@@ -544,14 +561,15 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
     email: "",
     phone: "+91-",
     department: VSB_DEPARTMENTS_COURSES[0] as string,
-    campus: loggedInCampus as CampusLocation,
+    campus: (selectedCampus && selectedCampus !== "ALL" ? selectedCampus : loggedInCampus) as CampusLocation,
     courses: VSB_DEPARTMENTS_COURSES[0] as string,
     experienceYears: 5,
   });
 
   useEffect(() => {
-    setNewTeacher((prev) => ({ ...prev, campus: loggedInCampus }));
-  }, [loggedInCampus]);
+    const targetCampus = (selectedCampus && selectedCampus !== "ALL" ? selectedCampus : loggedInCampus) as CampusLocation;
+    setNewTeacher((prev) => ({ ...prev, campus: targetCampus }));
+  }, [loggedInCampus, selectedCampus]);
 
   // Dynamically extract all unique academic departments present across faculty records (Mechanical Engineering prioritized)
   const departments = useMemo(() => {
@@ -683,13 +701,17 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
 
     const formattedPhone = formatPhoneWith91(newTeacher.phone || "+91-9876500000");
 
+    const effectiveTeacherCampus =
+      (newTeacher.campus as "KARUR" | "COIMBATORE") ||
+      (selectedCampus && selectedCampus !== "ALL" ? selectedCampus : loggedInCampus);
+
     const teacherToAdd: Teacher = {
       id: `tch_${Date.now()}`,
       name: newTeacher.name,
       email: newTeacher.email,
       phone: formattedPhone,
       department: newTeacher.department,
-      campus: loggedInCampus,
+      campus: effectiveTeacherCampus,
       coursesAssigned: [newTeacher.courses],
       experienceYears: Number(newTeacher.experienceYears) || 3,
       status: "ACTIVE",
@@ -705,7 +727,7 @@ export default function TeacherModule({ loggedInCampus, currentUserRole, loggedI
       email: "",
       phone: "",
       department: "Computer Science & Engineering",
-      campus: loggedInCampus,
+      campus: effectiveTeacherCampus,
       courses: "B.E. Computer Science",
       experienceYears: 5,
     });

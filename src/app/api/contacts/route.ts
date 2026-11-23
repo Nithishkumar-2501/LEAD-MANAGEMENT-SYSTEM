@@ -26,7 +26,9 @@ export async function GET(request: Request) {
 
     let filtered = leads;
     if (campus && campus !== "ALL") {
-      filtered = filtered.filter((l) => l.campus === campus);
+      filtered = filtered.filter(
+        (l) => (l.campus || "KARUR").toUpperCase() === campus.toUpperCase()
+      );
     }
     if (district && district !== "ALL") {
       filtered = filtered.filter(

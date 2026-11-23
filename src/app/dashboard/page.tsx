@@ -674,7 +674,7 @@ export default function DashboardPage() {
     }
     if (!lead) return true;
     if (selectedCampus === "ALL") return true;
-    return lead.campus === selectedCampus;
+    return (lead.campus || "KARUR").toUpperCase() === selectedCampus.toUpperCase();
   });
 
   // Modals
@@ -1338,6 +1338,7 @@ export default function DashboardPage() {
             ) : (
               <TeacherModule
                 loggedInCampus={loggedInCampus}
+                selectedCampus={selectedCampus}
                 currentUserRole={effectiveSubRole}
                 loggedInUsername={loggedInUsername}
                 onTriggerToast={triggerToast}
@@ -1361,6 +1362,7 @@ export default function DashboardPage() {
           {activeTab === "PAYMENTS" && currentUserRole !== "CREATOR" && (
             <PaymentBillingModule
               loggedInCampus={loggedInCampus}
+              selectedCampus={selectedCampus}
               onTriggerToast={triggerToast}
               currentLeadsCount={applicants.length}
               applicants={applicants}
@@ -1420,6 +1422,7 @@ export default function DashboardPage() {
               onApplicationCreated={handleCreateApplication}
               existingLeads={applicants}
               loggedInUsername={loggedInUsername}
+              defaultCampus={selectedCampus === "COIMBATORE" ? "COIMBATORE" : "KARUR"}
             />
           )}
         </ErrorBoundary>
@@ -1430,6 +1433,7 @@ export default function DashboardPage() {
           onLeadAdded={handleCreateApplication}
           existingLeads={applicants}
           loggedInUsername={loggedInUsername}
+          defaultCampus={selectedCampus === "COIMBATORE" ? "COIMBATORE" : "KARUR"}
         />
 
         {selectedApplicant && (

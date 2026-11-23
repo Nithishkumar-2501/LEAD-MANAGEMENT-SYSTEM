@@ -44,6 +44,7 @@ export type StudentFeeItem = StudentFeeSummaryItem;
 
 interface PaymentBillingModuleProps {
   loggedInCampus: "KARUR" | "COIMBATORE";
+  selectedCampus?: CampusLocation;
   onTriggerToast: (msg: string) => void;
   currentLeadsCount?: number;
   applicants?: (Lead & { application: Application })[];
@@ -53,6 +54,7 @@ interface PaymentBillingModuleProps {
 
 export default function PaymentBillingModule({
   loggedInCampus,
+  selectedCampus,
   onTriggerToast,
   currentLeadsCount = 0,
   applicants = [],
@@ -65,7 +67,16 @@ export default function PaymentBillingModule({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "COMPLETED" | "PENDING" | "PARTIAL">("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
-  const [campusFilter, setCampusFilter] = useState<string>("ALL");
+  const [campusFilter, setCampusFilter] = useState<string>(() =>
+    selectedCampus && selectedCampus !== "ALL" ? selectedCampus : "ALL"
+  );
+
+  // Sync campus filter when selectedCampus prop changes
+  useEffect(() => {
+    if (selectedCampus && selectedCampus !== "ALL") {
+      setCampusFilter(selectedCampus);
+    }
+  }, [selectedCampus]);
 
   // Modals state
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
@@ -75,13 +86,18 @@ export default function PaymentBillingModule({
   const [newPayment, setNewPayment] = useState({
     studentName: "",
     course: "B.E. Computer Science and Engineering",
-    campus: loggedInCampus,
+    campus: (selectedCampus && selectedCampus !== "ALL" ? selectedCampus : loggedInCampus) as "KARUR" | "COIMBATORE",
     amount: 85000,
     feeCategory: "Tuition Fee" as "Tuition Fee" | "Seat Allotment Deposit" | "Hostel & Mess Fee" | "Transport Fee",
     status: "COMPLETED" as "COMPLETED" | "PENDING" | "PARTIAL",
     paymentMethod: "Online UPI / NetBanking",
     transactionId: `VSB_TXN_${Date.now().toString().slice(-6)}`,
   });
+
+  useEffect(() => {
+    const targetCampus = (selectedCampus && selectedCampus !== "ALL" ? selectedCampus : loggedInCampus) as "KARUR" | "COIMBATORE";
+    setNewPayment((prev) => ({ ...prev, campus: targetCampus }));
+  }, [selectedCampus, loggedInCampus]);
 
   // Load live payments from Firebase if not passed by parent
   const loadPayments = async () => {
@@ -420,7 +436,7 @@ export default function PaymentBillingModule({
               Student Fee Console
             </span>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              V.S.B. {loggedInCampus} Campus Intake
+              V.S.B. {campusFilter === "ALL" ? (selectedCampus && selectedCampus !== "ALL" ? selectedCampus : "Dual (Karur & Coimbatore)") : campusFilter} Campus Intake
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2">

@@ -78,7 +78,7 @@ export function processNoraChatQuery(
 
   // Scope to campus if selected
   const scopeApplicants = applicants.filter((a) => {
-    if (currentCampus !== "ALL" && a.campus !== currentCampus) return false;
+    if (currentCampus !== "ALL" && (a.campus || "KARUR").toUpperCase() !== currentCampus.toUpperCase()) return false;
     return true;
   });
 

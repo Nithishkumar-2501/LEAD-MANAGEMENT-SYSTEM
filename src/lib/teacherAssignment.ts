@@ -59,7 +59,7 @@ export function isLeadAssignedToTeacher(
 
   // Strict campus isolation: A teacher can NEVER access leads from a different campus
   // 1. Check explicit teacherCampus argument
-  if (teacherCampus && lead.campus && lead.campus !== teacherCampus) {
+  if (teacherCampus && lead.campus && lead.campus.toUpperCase() !== teacherCampus.toUpperCase()) {
     return false;
   }
 
@@ -67,7 +67,7 @@ export function isLeadAssignedToTeacher(
   const registeredFaculty = FACULTY_DIRECTORY.find(
     (f) => f.id.toLowerCase().trim() === cleanUser || f.name.toLowerCase().trim() === cleanUser
   );
-  if (registeredFaculty && lead.campus && lead.campus !== registeredFaculty.campus) {
+  if (registeredFaculty && lead.campus && lead.campus.toUpperCase() !== registeredFaculty.campus.toUpperCase()) {
     return false;
   }
 

@@ -16,9 +16,10 @@ interface CreateApplicationModalProps {
   onApplicationCreated: (newLead: Lead & { application: Application }) => void;
   existingLeads?: Lead[];
   loggedInUsername?: string;
+  defaultCampus?: CampusLocation;
 }
 
-const INITIAL_FORM_DATA = {
+const getInitialFormData = (defaultCampus: CampusLocation = "KARUR") => ({
   name: "",
   email: "",
   phone: "",
@@ -31,12 +32,14 @@ const INITIAL_FORM_DATA = {
   address: "",
   school: "",
   courseInterest: VSB_DEPARTMENTS_COURSES[0] as string,
-  campus: "KARUR" as CampusLocation,
+  campus: (defaultCampus === "COIMBATORE" ? "COIMBATORE" : "KARUR") as CampusLocation,
+  district: defaultCampus === "COIMBATORE" ? "Coimbatore" : "Karur",
+  state: "Tamil Nadu",
   source: "TNEA Counselling",
   marks10th: 0,
   marks12th: 0,
   stage: "INQUIRY" as AppStage,
-};
+});
 
 export default function CreateApplicationModal({
   isOpen,
@@ -44,16 +47,17 @@ export default function CreateApplicationModal({
   onApplicationCreated,
   existingLeads = [],
   loggedInUsername = "Admin",
+  defaultCampus = "KARUR",
 }: CreateApplicationModalProps) {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [formData, setFormData] = useState(() => getInitialFormData(defaultCampus));
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const quotaEval = evaluateLeadQuota(existingLeads.length, 1);
 
   const resetForm = () => {
-    setFormData(INITIAL_FORM_DATA);
+    setFormData(getInitialFormData(defaultCampus));
     setError(null);
     setIsQrModalOpen(false);
   };
@@ -390,7 +394,14 @@ export default function CreateApplicationModal({
               <label className="block text-xs font-semibold text-slate-300 mb-1">Target V.S.B. Campus *</label>
               <select
                 value={formData.campus}
-                onChange={(e) => setFormData({ ...formData, campus: e.target.value as CampusLocation })}
+                onChange={(e) => {
+                  const newCamp = e.target.value as CampusLocation;
+                  setFormData({
+                    ...formData,
+                    campus: newCamp,
+                    district: newCamp === "COIMBATORE" ? "Coimbatore" : "Karur",
+                  });
+                }}
                 className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="KARUR">V.S.B. Karur Campus</option>

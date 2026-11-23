@@ -1437,6 +1437,22 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               >
                 🧑‍🏫 Faculty (Karur)
               </button>
+              <button
+                type="button"
+                onClick={() => autoFill("teachercovai@123", "vsbteacher@1213")}
+                style={{
+                  backgroundColor: "rgba(16, 185, 129, 0.12)",
+                  border: "1px solid rgba(16, 185, 129, 0.35)",
+                  color: "#a7f3d0",
+                  borderRadius: "9999px",
+                  padding: "6px 14px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                🎓 Faculty (Coimbatore)
+              </button>
             </div>
           </motion.div>
 

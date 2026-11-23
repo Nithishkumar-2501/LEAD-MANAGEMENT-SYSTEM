@@ -17,17 +17,19 @@ interface AddQuickLeadModalProps {
   onLeadAdded: (newLead: Lead & { application: Application }) => void;
   existingLeads?: Lead[];
   loggedInUsername?: string;
+  defaultCampus?: CampusLocation;
 }
 
-const getInitialQuickLeadData = () => ({
+const getInitialQuickLeadData = (defaultCampus: CampusLocation = "KARUR") => ({
   // Core Lead Details
   formInterested: VSB_DEPARTMENTS_COURSES[0],
+  campus: (defaultCampus === "COIMBATORE" ? "COIMBATORE" : "KARUR") as CampusLocation,
   name: "",
   email: "",
   gender: "Male",
   phone: "",
   state: "Tamil Nadu",
-  city: "Karur",
+  city: defaultCampus === "COIMBATORE" ? "Coimbatore" : "Karur",
 
   // Additional Details
   fatherName: "",
@@ -57,6 +59,7 @@ export default function AddQuickLeadModal({
   onLeadAdded,
   existingLeads = [],
   loggedInUsername = "Admin",
+  defaultCampus = "KARUR",
 }: AddQuickLeadModalProps) {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [pendingSaveAndNew, setPendingSaveAndNew] = useState(false);
@@ -65,10 +68,10 @@ export default function AddQuickLeadModal({
   const [error, setError] = useState<string | null>(null);
   const quotaEval = evaluateLeadQuota(existingLeads.length, 1);
 
-  const [formData, setFormData] = useState(getInitialQuickLeadData());
+  const [formData, setFormData] = useState(() => getInitialQuickLeadData(defaultCampus));
 
   const resetForm = () => {
-    setFormData(getInitialQuickLeadData());
+    setFormData(getInitialQuickLeadData(defaultCampus));
     setUploadVia("EMAIL");
     setError(null);
     setActiveTab("LEAD");
@@ -174,11 +177,11 @@ export default function AddQuickLeadModal({
           community: formData.community,
           address: formData.address,
           school: formData.school,
-          district: formData.city || "Karur",
+          district: formData.city || (formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"),
           state: formData.state || "Tamil Nadu",
           source: finalSource,
           courseInterest: formData.formInterested,
-          campus: "KARUR",
+          campus: formData.campus || defaultCampus || "KARUR",
           marks10th: Number(formData.marks10th) || 85,
           marks12th: Number(formData.marks12th) || 88,
           tneaCutoff: Number(formData.tneaCutoff) || 178.5,
@@ -211,9 +214,9 @@ export default function AddQuickLeadModal({
         school: formData.school,
         source: finalSource,
         courseInterest: formData.formInterested,
-        campus: "KARUR" as CampusLocation,
+        campus: (formData.campus || defaultCampus || "KARUR") as CampusLocation,
         state: formData.state,
-        district: formData.city,
+        district: formData.city || (formData.campus === "COIMBATORE" ? "Coimbatore" : "Karur"),
         gender: formData.gender,
         tneaCutoff: Number(formData.tneaCutoff) || 178.5,
         status: "NEW",
@@ -241,32 +244,7 @@ export default function AddQuickLeadModal({
     setIsQrModalOpen(false);
 
     if (saveAndNew) {
-      setFormData({
-        formInterested: VSB_DEPARTMENTS_COURSES[0],
-        name: "",
-        email: "",
-        gender: "Male",
-        phone: "",
-        state: "Tamil Nadu",
-        city: "Karur",
-        fatherName: "",
-        motherName: "",
-        bloodGroup: "O+",
-        physicallyDisabled: "No",
-        community: "BC",
-        address: "",
-        school: "",
-        marks10th: "85",
-        marks12th: "88",
-        tneaCutoff: "178.5",
-        fbLeadId: `fb_lead_${Date.now().toString().slice(-6)}`,
-        fbCampaign: "VSB_Admissions_2026_TN_Engineering",
-        fbAdSet: "TN_Higher_Secondary_Aspirants_Direct",
-        fbAdName: "BTech_AI_Admissions_Banner_2026",
-        fbFormName: "Direct_Admission_Form_2026",
-        fbPageName: "V.S.B. Engineering College Official",
-        fbPlatform: "Meta Ads (Facebook & Instagram)",
-      });
+      setFormData(getInitialQuickLeadData((formData.campus as CampusLocation) || defaultCampus));
       setError(null);
       setActiveTab("LEAD");
     } else {
@@ -424,6 +402,28 @@ export default function AddQuickLeadModal({
                         {course}
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                {/* Target V.S.B. Campus */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Target V.S.B. Campus *
+                  </label>
+                  <select
+                    value={formData.campus}
+                    onChange={(e) => {
+                      const newCampus = e.target.value as CampusLocation;
+                      setFormData({
+                        ...formData,
+                        campus: newCampus,
+                        city: newCampus === "COIMBATORE" ? "Coimbatore" : "Karur",
+                      });
+                    }}
+                    className="w-full border border-slate-300 dark:border-white/15 rounded-lg p-2.5 text-xs text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 font-bold"
+                  >
+                    <option value="KARUR">V.S.B. Karur Campus</option>
+                    <option value="COIMBATORE">V.S.B. Coimbatore Campus</option>
                   </select>
                 </div>
 
@@ -931,7 +931,7 @@ export default function AddQuickLeadModal({
           candidateName={formData.name}
           candidatePhone={formData.phone}
           courseInterest={formData.formInterested}
-          campus="KARUR"
+          campus={formData.campus || defaultCampus || "KARUR"}
           submittedBy={loggedInUsername || "Admin"}
           onPaymentVerified={async (record) => {
             await executeSaveLead(pendingSaveAndNew, record);
