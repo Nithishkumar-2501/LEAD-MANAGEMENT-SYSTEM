@@ -458,91 +458,59 @@ export default function Sidebar({
   const isAppManagerActive = activeTab === "APPLICATION_MANAGER" || activeTab === "APPLICATION_OFFLINE_LOGS";
   const isAdmissionActive = filteredSubItems.some((item) => item.id === activeTab) || (!isDashboardActive && !isSocialActive && !isAppManagerActive);
 
-  const [isDashboardOpen, setIsDashboardOpen] = useState(isDashboardActive);
-  const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(isAdmissionActive);
-  const [isSocialPlatformOpen, setIsSocialPlatformOpen] = useState(isSocialActive);
-  const [isAppManagerOpen, setIsAppManagerOpen] = useState(isAppManagerActive);
+  // All dropdown accordions default to CLOSED on initial load and login
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [isAdmissionCrmOpen, setIsAdmissionCrmOpen] = useState(false);
+  const [isSocialPlatformOpen, setIsSocialPlatformOpen] = useState(false);
+  const [isAppManagerOpen, setIsAppManagerOpen] = useState(false);
 
-  // Auto-sync open states with activeTab whenever activeTab changes anywhere in the app
-  useEffect(() => {
-    if (dashboardSubItems.some((item) => item.id === activeTab)) {
-      setIsDashboardOpen(true);
-      setIsAdmissionCrmOpen(false);
-      setIsSocialPlatformOpen(false);
-      setIsAppManagerOpen(false);
-    } else if (filteredSubItems.some((item) => item.id === activeTab)) {
-      setIsAdmissionCrmOpen(true);
-      setIsDashboardOpen(false);
-      setIsSocialPlatformOpen(false);
-      setIsAppManagerOpen(false);
-    } else if (socialPlatformSubItems.some((item) => item.id === activeTab)) {
-      setIsSocialPlatformOpen(true);
-      setIsDashboardOpen(false);
-      setIsAdmissionCrmOpen(false);
-      setIsAppManagerOpen(false);
-    } else if (activeTab === "APPLICATION_MANAGER" || activeTab === "APPLICATION_OFFLINE_LOGS") {
-      setIsAppManagerOpen(true);
-      setIsDashboardOpen(false);
-      setIsAdmissionCrmOpen(false);
-      setIsSocialPlatformOpen(false);
-    }
-  }, [activeTab]);
-
-  const toggleDashboardMenu = () => {
+  const toggleDashboardMenu = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setIsDashboardOpen((prev) => {
       const next = !prev;
       if (next) {
         setIsAdmissionCrmOpen(false);
         setIsSocialPlatformOpen(false);
         setIsAppManagerOpen(false);
-        if (!dashboardSubItems.some((item) => item.id === activeTab)) {
-          onTabChange(currentUserRole === "TEACHER" ? "USER_DASHBOARD" : "ADMIN_DASHBOARD");
-        }
       }
       return next;
     });
   };
 
-  const toggleAdmissionMenu = () => {
+  const toggleAdmissionMenu = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setIsAdmissionCrmOpen((prev) => {
       const next = !prev;
       if (next) {
         setIsDashboardOpen(false);
         setIsSocialPlatformOpen(false);
         setIsAppManagerOpen(false);
-        if (!filteredSubItems.some((item) => item.id === activeTab)) {
-          onTabChange("CONTACTS");
-        }
       }
       return next;
     });
   };
 
-  const toggleSocialPlatformMenu = () => {
+  const toggleSocialPlatformMenu = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setIsSocialPlatformOpen((prev) => {
       const next = !prev;
       if (next) {
         setIsDashboardOpen(false);
         setIsAdmissionCrmOpen(false);
         setIsAppManagerOpen(false);
-        if (!socialPlatformSubItems.some((item) => item.id === activeTab)) {
-          onTabChange("CONTACT_PLATFORM");
-        }
       }
       return next;
     });
   };
 
-  const toggleAppManagerMenu = () => {
+  const toggleAppManagerMenu = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setIsAppManagerOpen((prev) => {
       const next = !prev;
       if (next) {
         setIsDashboardOpen(false);
         setIsAdmissionCrmOpen(false);
         setIsSocialPlatformOpen(false);
-        if (activeTab !== "APPLICATION_MANAGER" && activeTab !== "APPLICATION_OFFLINE_LOGS") {
-          onTabChange("APPLICATION_MANAGER");
-        }
       }
       return next;
     });

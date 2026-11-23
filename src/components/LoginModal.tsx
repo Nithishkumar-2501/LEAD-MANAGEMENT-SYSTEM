@@ -274,10 +274,45 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       localStorage.setItem("vsb_teacher_coimbatore_pw", "vsbteacher@1213");
     }
 
-    // Load saved username only once on initial component mount
+    // Load saved username and auto-pair corresponding password on initial component mount
     const savedUser = localStorage.getItem("spherex_saved_user");
     if (savedUser) {
       setUsername(savedUser);
+      const sLower = savedUser.toLowerCase().trim();
+      const sPrefix = sLower.split("@")[0];
+      if (sLower === "adminkarur@123" || sLower === "adminkarur" || sLower === "admin.karur@vsbec.in") {
+        setPassword(localStorage.getItem("vsb_admin_karur_pw") || "vsbec@123");
+      } else if (
+        sLower === "admincovai@123" ||
+        sLower === "admincovai" ||
+        sLower === "admincoimbatore@123" ||
+        sLower === "admin.covai@vsbec.in"
+      ) {
+        setPassword(localStorage.getItem("vsb_admin_coimbatore_pw") || "vsbectc@1213");
+      } else if (
+        sLower === "teacherkarur@123" ||
+        sLower === "teacherkarur" ||
+        sLower === "teacher.karur@vsbec.in"
+      ) {
+        setPassword(localStorage.getItem("vsb_teacher_karur_pw") || "vsbteacher@123");
+      } else if (
+        sLower === "teachercovai@123" ||
+        sLower === "teachercovai" ||
+        sLower === "teacher.covai@vsbec.in" ||
+        sLower === "teachercoimbatore@123"
+      ) {
+        setPassword(localStorage.getItem("vsb_teacher_coimbatore_pw") || "vsbteacher@1213");
+      } else if (sLower.includes("spherexnithish")) {
+        setPassword("spherex#2501");
+      } else {
+        const facKey = Object.keys(FACULTY_ACCOUNTS).find((k) => {
+          const kLower = k.toLowerCase().trim();
+          return kLower === sLower || kLower.split("@")[0] === sPrefix;
+        });
+        if (facKey && FACULTY_ACCOUNTS[facKey]) {
+          setPassword(FACULTY_ACCOUNTS[facKey].pass);
+        }
+      }
     }
 
     // Subscribe to live cloud license and global lockout updates (Sub-100ms listener)
@@ -314,6 +349,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     if (!inputUser || !inputPass) {
       setLoading(false);
       setIsAuthError(true);
+      setError("Please enter both Email / User ID and Password.");
       return;
     }
 
@@ -332,6 +368,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       if (isCapacitorNative()) {
         setLoading(false);
         setIsAuthError(true);
+        setError("Master Creator root access is restricted strictly to the Web Portal.");
         return;
       }
 
@@ -373,6 +410,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       } else {
         setLoading(false);
         setIsAuthError(true);
+        setError("Invalid Master Creator security credentials.");
         return;
       }
     }
@@ -418,6 +456,7 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       cleanUser === "admincovai@123" ||
       cleanUser === "admincoimbatore@123" ||
       cleanUser === "admin.covai@vsbec.in" ||
+      cleanUser === "admin.coimbatore@vsbec.in" ||
       cleanUser === "admincovai" ||
       cleanUser === "admincoimbatore" ||
       cleanUser === covaiUser.toLowerCase();
@@ -433,7 +472,11 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     // 3. Faculty / Teacher Validation
     const isTeacherKarurId =
       cleanUser === "teacherkarur@123" ||
+      cleanUser === "teacherkarur" ||
+      cleanUser === "teacher.karur@vsbec.in" ||
+      cleanUser === "teacher_karur@123" ||
       cleanUser === "teacher_rajesh@123" ||
+      cleanUser === "karurteacher" ||
       cleanUser === (localStorage.getItem("vsb_teacher_karur_id") || "teacherkarur@123").toLowerCase().trim();
 
     const isTeacherKarurPass =
@@ -444,6 +487,13 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
     const isTeacherCovaiId =
       cleanUser === "teachercovai@123" ||
+      cleanUser === "teachercovai" ||
+      cleanUser === "teachercoimbatore@123" ||
+      cleanUser === "teachercoimbatore" ||
+      cleanUser === "teacher.covai@vsbec.in" ||
+      cleanUser === "teacher.coimbatore@vsbec.in" ||
+      cleanUser === "covaiteacher" ||
+      cleanUser === "teachercovai@1213" ||
       cleanUser === (localStorage.getItem("vsb_teacher_coimbatore_id") || "teachercovai@123").toLowerCase().trim();
 
     const isTeacherCovaiPass =
@@ -466,10 +516,12 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
       targetCampus = "COIMBATORE";
       targetRole = "TEACHER";
     } else {
-      // Check FACULTY_ACCOUNTS with case-insensitive username match
-      const matchingFacultyKey = Object.keys(FACULTY_ACCOUNTS).find(
-        (k) => k.toLowerCase().trim() === cleanUser
-      );
+      // Check FACULTY_ACCOUNTS with case-insensitive username or email prefix match
+      const userPrefix = cleanUser.split("@")[0];
+      const matchingFacultyKey = Object.keys(FACULTY_ACCOUNTS).find((k) => {
+        const kLower = k.toLowerCase().trim();
+        return kLower === cleanUser || kLower.split("@")[0] === userPrefix || kLower.split("@")[0] === cleanUser;
+      });
       if (matchingFacultyKey) {
         const fac = FACULTY_ACCOUNTS[matchingFacultyKey];
         if (
@@ -488,17 +540,17 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     if (!targetCampus || !targetRole) {
       setLoading(false);
       setIsAuthError(true);
+      setError("Invalid credentials. Please verify your Email/User ID and Password.");
       return;
     }
 
     // Force real-time fetch directly from Cloud Firestore with safe 1.5s timeout
-    // Force real-time fetch directly from Cloud Firestore / API with safe timeout
     let freshColleges = colleges;
     let freshGlobal = getGlobalLockoutState();
     try {
       const freshCloud = await Promise.race([
         forceFetchLatestLicenseFromCloud(),
-        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000)),
+        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500)),
       ]);
       if (freshCloud?.colleges && freshCloud?.globalLockout) {
         freshColleges = freshCloud.colleges;
@@ -531,10 +583,10 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
     }
 
     try {
-      // Execute backend Firebase Realtime Auth function with 2.5s safe timeout
+      // Execute backend Firebase Realtime Auth function with 1.5s safe timeout
       const session = await Promise.race([
         loginWithRealtimeAuth(inputUser, inputPass, targetCampus, targetRole, rememberMe),
-        new Promise<AuthSession>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500)),
+        new Promise<AuthSession>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500)),
       ]);
       setLoading(false);
       onLoginSuccess(session.campus, session.role, session.username, rememberMe);
@@ -1005,29 +1057,30 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
 
 
 
-          {/* Quick Role Profile Select Tabs (Karur / Covai / Faculty) */}
+          {/* Quick Role Profile Select Tabs (Admin & Faculty for Karur and Coimbatore) */}
           <motion.div
             variants={itemVariants}
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
-              gap: "6px",
+              gap: "8px",
               marginBottom: "16px",
             }}
           >
-
             <button
               type="button"
               onClick={() => autoFill("adminkarur@123", "vsbec@123")}
               style={{
                 padding: "8px 10px",
                 borderRadius: "10px",
-                backgroundColor: username === "adminkarur@123"
-                  ? "rgba(168, 85, 247, 0.3)"
-                  : "rgba(255, 255, 255, 0.05)",
-                border: username === "adminkarur@123"
-                  ? "1.5px solid #c084fc"
-                  : "1px solid rgba(255, 255, 255, 0.1)",
+                backgroundColor:
+                  username.toLowerCase().includes("adminkarur")
+                    ? "rgba(168, 85, 247, 0.25)"
+                    : "rgba(255, 255, 255, 0.05)",
+                border:
+                  username.toLowerCase().includes("adminkarur")
+                    ? "1.5px solid #c084fc"
+                    : "1px solid rgba(255, 255, 255, 0.1)",
                 color: "#e9d5ff",
                 fontSize: "11px",
                 fontWeight: 700,
@@ -1035,10 +1088,11 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "4px",
+                gap: "5px",
+                transition: "all 0.2s ease",
               }}
             >
-              <span>🏛️ Karur</span>
+              <span>👑 Admin (Karur)</span>
             </button>
 
             <button
@@ -1047,12 +1101,16 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
               style={{
                 padding: "8px 10px",
                 borderRadius: "10px",
-                backgroundColor: username === "admincovai@123"
-                  ? "rgba(56, 189, 248, 0.3)"
-                  : "rgba(255, 255, 255, 0.05)",
-                border: username === "admincovai@123"
-                  ? "1.5px solid #38bdf8"
-                  : "1px solid rgba(255, 255, 255, 0.1)",
+                backgroundColor:
+                  username.toLowerCase().includes("admincovai") ||
+                  username.toLowerCase().includes("admincoimbatore")
+                    ? "rgba(56, 189, 248, 0.25)"
+                    : "rgba(255, 255, 255, 0.05)",
+                border:
+                  username.toLowerCase().includes("admincovai") ||
+                  username.toLowerCase().includes("admincoimbatore")
+                    ? "1.5px solid #38bdf8"
+                    : "1px solid rgba(255, 255, 255, 0.1)",
                 color: "#bae6fd",
                 fontSize: "11px",
                 fontWeight: 700,
@@ -1060,14 +1118,69 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "4px",
+                gap: "5px",
+                transition: "all 0.2s ease",
               }}
             >
-              <span>🏛️ Covai</span>
+              <span>🏛️ Admin (Covai)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => autoFill("teacherkarur@123", "vsbteacher@123")}
+              style={{
+                padding: "8px 10px",
+                borderRadius: "10px",
+                backgroundColor:
+                  username.toLowerCase().includes("teacherkarur")
+                    ? "rgba(52, 211, 153, 0.25)"
+                    : "rgba(255, 255, 255, 0.05)",
+                border:
+                  username.toLowerCase().includes("teacherkarur")
+                    ? "1.5px solid #34d399"
+                    : "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#a7f3d0",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "5px",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <span>🧑‍🏫 Faculty (Karur)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => autoFill("teachercovai@123", "vsbteacher@1213")}
+              style={{
+                padding: "8px 10px",
+                borderRadius: "10px",
+                backgroundColor:
+                  username.toLowerCase().includes("teachercovai")
+                    ? "rgba(251, 191, 36, 0.25)"
+                    : "rgba(255, 255, 255, 0.05)",
+                border:
+                  username.toLowerCase().includes("teachercovai")
+                    ? "1.5px solid #fbbf24"
+                    : "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#fde68a",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "5px",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <span>🎓 Faculty (Covai)</span>
             </button>
           </motion.div>
-
-
 
           {/* Form */}
           <motion.form
@@ -1076,6 +1189,29 @@ export default function LoginModal({ onLoginSuccess }: LoginModalProps) {
             transition={{ duration: 0.4, ease: "easeInOut" }}
             style={{ display: "flex", flexDirection: "column", gap: "16px" }}
           >
+            {/* Error Notification Alert */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "10px 14px",
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                  color: "#fca5a5",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  lineHeight: 1.4,
+                }}
+              >
+                <AlertCircle style={{ width: "16px", height: "16px", color: "#f87171", flexShrink: 0 }} />
+                <span>{error}</span>
+              </motion.div>
+            )}
             {/* Email / User ID */}
             <motion.div variants={itemVariants} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <label

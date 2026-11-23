@@ -18,7 +18,10 @@ export interface AuthSession {
 // Convert username to a valid Firebase email format
 export function formatFirebaseEmail(username: string): string {
   const cleanUser = username.trim().toLowerCase();
-  if (cleanUser.includes("@")) return cleanUser;
+  // Valid email check (has @, has valid domain with at least 2 chars after dot, not dummy @123)
+  if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(cleanUser)) {
+    return cleanUser;
+  }
   return `${cleanUser.replace(/[^a-z0-9]/g, "")}@vsbec.in`;
 }
 

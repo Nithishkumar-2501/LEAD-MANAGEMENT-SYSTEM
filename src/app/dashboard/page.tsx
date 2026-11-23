@@ -778,20 +778,21 @@ export default function DashboardPage() {
   ) => {
     // Security check: non-creator users cannot log into a suspended college or host
     if (role !== "CREATOR") {
-      let freshColleges: CollegeClientLicense[] | undefined;
-      let freshGlobal: GlobalLockoutState | undefined;
-      try {
-        const fresh = await forceFetchLatestLicenseFromCloud();
-        freshColleges = fresh?.colleges;
-        freshGlobal = fresh?.globalLockout;
-      } catch (e) { }
-
-      const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(campus, freshColleges, freshGlobal);
+      const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(campus);
       if (suspensionCheck.isSuspended) {
         setInstitutionSuspension(suspensionCheck);
         triggerToast("🛑 Application access has been stopped by Master Creator.");
         return;
       }
+      // Re-verify latest cloud status asynchronously in background without blocking immediate login transition
+      forceFetchLatestLicenseFromCloud().then((fresh) => {
+        if (fresh) {
+          const freshCheck = isCollegeSuspendedForCurrentEnvironment(campus, fresh.colleges, fresh.globalLockout);
+          if (freshCheck.isSuspended) {
+            setInstitutionSuspension(freshCheck);
+          }
+        }
+      }).catch(() => { });
     }
 
     sessionStorage.setItem("vsb_admin_auth", "true");
