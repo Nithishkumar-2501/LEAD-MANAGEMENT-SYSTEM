@@ -56,18 +56,122 @@ export const CRM_COURSES = [
   { key: "aero", name: "Aeronautical Engineering" },
 ];
 
-export const CRM_SOURCE_KEYWORDS = [
-  { key: "ads", label: "Google & Social Ads", match: ["ads", "google ads", "social ads", "ad campaign", "newspaper ad"] },
-  { key: "whatsapp", label: "WhatsApp Direct", match: ["whatsapp", "wa", "whatsapp messenger", "whatsapp campaign"] },
-  { key: "facebook", label: "Facebook / Meta", match: ["facebook", "fasebook", "fb", "meta", "messenger"] },
-  { key: "x", label: "X (Twitter)", match: ["x", "twitter", "tweet", "broadcasts"] },
-  { key: "email", label: "E-mail", match: ["email", "e-mail", "mail", "portal", "automated email"] },
-  { key: "sms", label: "SMS", match: ["sms", "sms gateway", "text message", "alerts"] },
-  { key: "campaign", label: "Marketing Campaign", match: ["campaign", "omnichannel", "marketing campaign"] },
-  { key: "expo", label: "Project Expo", match: ["project expo", "expo", "college expo", "event leads", "fair"] },
-  { key: "tnea", label: "TNEA Counselling", match: ["tnea", "counselling", "general counselling", "quota", "merit quota"] },
-  { key: "walkin", label: "Direct Walk-in", match: ["walkin", "walk-in", "walk in", "direct visit", "in-person", "campus visit"] },
+export interface SourceKeyword {
+  key: string;
+  label: string;
+  icon: string;
+  match: string[];
+}
+
+export const CRM_SOURCE_KEYWORDS: SourceKeyword[] = [
+  {
+    key: "ads",
+    label: "Google & Social Media Ads",
+    icon: "📢",
+    match: [
+      "google & social media",
+      "google & social",
+      "google and social media",
+      "google and social",
+      "google ads",
+      "social media ads",
+      "social ads",
+      "ads",
+      "google search",
+      "ad campaign",
+      "newspaper ad",
+      "google",
+    ],
+  },
+  {
+    key: "facebook",
+    label: "Facebook / Meta",
+    icon: "👥",
+    match: ["facebook", "fasebook", "fb", "meta", "messenger", "facebook ads"],
+  },
+  {
+    key: "sms",
+    label: "SMS Gateway",
+    icon: "💬",
+    match: ["sms", "sms gateway", "text message", "alerts", "sms alerts"],
+  },
+  {
+    key: "whatsapp",
+    label: "WhatsApp Direct",
+    icon: "📱",
+    match: ["whatsapp", "wa", "whatsapp messenger", "whatsapp campaign", "whatsapp direct"],
+  },
+  {
+    key: "x",
+    label: "X (Twitter)",
+    icon: "🐦",
+    match: ["x", "twitter", "tweet", "broadcasts"],
+  },
+  {
+    key: "email",
+    label: "E-mail Outreach",
+    icon: "📧",
+    match: ["email", "e-mail", "e mail", "mail", "portal", "automated email", "email campaign"],
+  },
+  {
+    key: "campaign",
+    label: "Admission Drive / Campaign",
+    icon: "🚀",
+    match: [
+      "admission drive",
+      "admission derive",
+      "admission campaign",
+      "campus drive",
+      "drive",
+      "campaign",
+      "omnichannel",
+      "marketing campaign",
+    ],
+  },
+  {
+    key: "expo",
+    label: "Project Expo & Fairs",
+    icon: "🏛️",
+    match: [
+      "project expo",
+      "college expo",
+      "expo",
+      "education fair",
+      "college expo salem",
+      "fair",
+      "science expo",
+    ],
+  },
+  {
+    key: "tnea",
+    label: "TNEA Counselling",
+    icon: "🎯",
+    match: ["tnea", "counselling", "general counselling", "quota", "merit quota", "referral", "tnea referral"],
+  },
+  {
+    key: "walkin",
+    label: "Direct Walk-in & Portal",
+    icon: "🚶",
+    match: ["walkin", "walk-in", "walk in", "direct visit", "in-person", "campus visit", "portal", "official vsb portal"],
+  },
 ];
+
+export function doesLeadMatchSource(a: Lead, src: SourceKeyword): boolean {
+  const leadSrc = (a.source || "").toLowerCase().trim();
+  if (!leadSrc) return false;
+  if (src.key === "tnea" && a.appliedCounselling) return true;
+
+  return src.match.some((m) => {
+    const cleanM = m.toLowerCase().trim();
+    if (cleanM === "x") {
+      return leadSrc === "x" || leadSrc.startsWith("x ") || leadSrc.includes("x (twitter)") || leadSrc.includes("twitter");
+    }
+    if (cleanM === "ads") {
+      return leadSrc === "ads" || leadSrc.includes("ads") || leadSrc.includes("ad campaign") || leadSrc.includes("google");
+    }
+    return leadSrc.includes(cleanM) || cleanM.includes(leadSrc);
+  });
+}
 
 export interface NoraChatMessage {
   id: string;
@@ -98,7 +202,7 @@ export function getFacultyList(): Teacher[] {
           return parsed;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }
   return MOCK_TEACHERS;
 }
@@ -172,6 +276,8 @@ export function processNoraChatQuery(
     .replace(/\bmobil\b|\bmob\b|\bphno\b|\bcellphone\b/g, "mobile")
     .replace(/\bcoures\b|\bcourses\b|\bcourse\b/g, "course")
     .replace(/\bcontected\b|\bcontacted\b/g, "contacted")
+    .replace(/\badmission derive\b|\badmissions derive\b|\badmission dirve\b/g, "admission drive")
+    .replace(/\bgoogle\s*&\s*social\s*media\b|\bgoogle\s*and\s*social\s*media\b/g, "google & social media")
     .replace(/\badmission crm\b|\bcrm system\b|\badmission system\b/g, "crm");
 
   const q = normalizedQuery;
@@ -396,7 +502,7 @@ export function processNoraChatQuery(
     const t = teacherIdentMatch;
     const stats = getTeacherCallStats(t);
     const assignedLeads = enrichedApplicants.filter((a) =>
-      isLeadAssignedToTeacher(a, t.id, t.campus === "ALL" ? undefined : t.campus) ||
+      isLeadAssignedToTeacher(a, t.id, t.campus) ||
       (a.assignedTo || "").toLowerCase().includes(t.name.toLowerCase()) ||
       (a.counselorId || "").toLowerCase().includes(t.id.toLowerCase())
     );
@@ -530,7 +636,7 @@ export function processNoraChatQuery(
     const matchedByApp = enrichedApplicants.find((a) => {
       const aAppId = (a.application?.id || "").toLowerCase();
       const aLeadId = (a.id || "").toLowerCase();
-      const aCounselling = (a.counsellingAppNo || "").toLowerCase();
+      const aCounselling = (a.application?.counsellingAppNo || a.counsellingAppNo || "").toLowerCase();
 
       if (aAppId === rawTarget || aAppId === `app_${rawTarget}` || aAppId.includes(rawTarget)) return true;
       if (aLeadId === rawTarget || aLeadId.includes(rawTarget)) return true;
@@ -547,7 +653,7 @@ export function processNoraChatQuery(
         text: `📑 **Application Record Found for Application ID \`${s.application?.id || s.id}\`**:\n\n` +
           `• **Candidate Name**: **${s.name}**\n` +
           `• 🆔 **Application ID**: \`${s.application?.id || "app_" + s.id}\` (Lead ID: \`${s.id}\`)\n` +
-          `• 🏛️ **Counselling App No**: \`${s.counsellingAppNo || "TNEA-2026-" + s.id}\`\n` +
+          `• 🏛️ **Counselling App No**: \`${s.application?.counsellingAppNo || s.counsellingAppNo || "TNEA-2026-" + s.id}\`\n` +
           `• 📞 **Mobile Number**: \`${s.phone}\`\n` +
           `• 📧 **E-mail Address**: \`${s.email || "student@vsbec.in"}\`\n` +
           `• 🎯 **TNEA Cutoff**: **${cutoff}/200** (12th Marks: **${s.application?.marks12th || 480}**, 10th Marks: **${s.application?.marks10th || 420}**)\n` +
@@ -575,7 +681,7 @@ export function processNoraChatQuery(
       id: Date.now().toString(),
       sender: "NORA",
       text: `📑 **Live Application Numbers Directory** (${enrichedApplicants.length} registered candidate applications):\n\n` +
-        enrichedApplicants.slice(0, 10).map((s) => `• **App ID: \`${s.application?.id || "app_" + s.id}\`** — **${s.name}** (Counselling: \`${s.counsellingAppNo || "TNEA-" + s.id}\` • ${s.courseInterest} • Stage: **${s.application?.stage || "INQUIRY"}**)`).join("\n") +
+        enrichedApplicants.slice(0, 10).map((s) => `• **App ID: \`${s.application?.id || "app_" + s.id}\`** — **${s.name}** (Counselling: \`${s.application?.counsellingAppNo || "TNEA-" + s.id}\` • ${s.courseInterest} • Stage: **${s.application?.stage || "INQUIRY"}**)`).join("\n") +
         (enrichedApplicants.length > 10 ? `\n\n*...and ${enrichedApplicants.length - 10} more application records in live database.*` : ""),
       specificData: {
         type: "STUDENT_LIST",
@@ -588,6 +694,166 @@ export function processNoraChatQuery(
       ],
       timestamp,
     };
+  }
+
+  // -------------------------------------------------------------
+  // 5.5 OMNICHANNEL MARKETING & SOCIAL MEDIA CHANNELS (COUNT & STUDENT DETAILS)
+  // Handles: Google & Social Media, Facebook, SMS, WhatsApp, X, E-mail, Admission Drive, Project Expo
+  // -------------------------------------------------------------
+  const userRequestedChannels = CRM_SOURCE_KEYWORDS.filter((src) => {
+    return src.match.some((m) => {
+      const cleanM = m.toLowerCase().trim();
+      if (cleanM === "x") {
+        return /\b(?:from x|on x|x leads?|x channel|x count)\b/i.test(q) || q.includes("twitter") || (/\bx\b/i.test(q) && (q.includes("channel") || q.includes("count") || q.includes("lead") || q.includes("student") || q.includes("facebook") || q.includes("whatsapp")));
+      }
+      if (cleanM === "ads") {
+        return /\b(?:ads|google ads|social ads|google & social|google & social media|google and social media)\b/i.test(q);
+      }
+      if (cleanM === "google") {
+        return /\b(?:google & social media|google ads|google search|google)\b/i.test(q);
+      }
+      if (cleanM === "drive" || cleanM === "campaign") {
+        return /\b(?:admission drive|admission derive|campaign|campus drive)\b/i.test(q);
+      }
+      if (cleanM === "expo") {
+        return /\b(?:project expo|college expo|expo|education fair)\b/i.test(q);
+      }
+      if (cleanM === "sms") {
+        return /\bsms\b/i.test(q);
+      }
+      if (cleanM === "email" || cleanM === "e-mail" || cleanM === "e mail") {
+        return (/\b(?:e-?mail|e\s+mail)\b/i.test(q) && (q.includes("channel") || q.includes("from email") || q.includes("count") || q.includes("lead") || q.includes("student") || q.includes("facebook") || q.includes("whatsapp") || q.includes("sms") || q.includes("drive") || q.includes("expo")));
+      }
+      return q.includes(cleanM);
+    });
+  });
+
+  const isOmnichannelMultiQuery =
+    userRequestedChannels.length >= 2 ||
+    q.includes("google & social media") ||
+    q.includes("social media") ||
+    q.includes("all channels") ||
+    q.includes("lead sources") ||
+    q.includes("acquisition channels") ||
+    (q.includes("count of") && (q.includes("facebook") || q.includes("whatsapp") || q.includes("sms") || q.includes("expo") || q.includes("drive") || q.includes("derive")));
+
+  if (isOmnichannelMultiQuery) {
+    const targetChannels = userRequestedChannels.length >= 2
+      ? userRequestedChannels
+      : CRM_SOURCE_KEYWORDS.filter((s) => ["ads", "whatsapp", "facebook", "sms", "x", "email", "campaign", "expo"].includes(s.key));
+
+    const allMatchedLeads: (Lead & { application: Application; aiScore?: number; priorityTier?: string; computedCutoff?: number })[] = [];
+    let report = `🌐 **Omnichannel Lead Acquisition Channels — Count & Student Details**:\n\n`;
+    report += `• 📊 **Evaluated Platforms**: **${targetChannels.length} outreach channels**\n`;
+    report += `• 👥 **Total Student Candidates in Scope**: **${enrichedApplicants.length} leads**\n\n`;
+
+    targetChannels.forEach((src) => {
+      const channelLeads = enrichedApplicants.filter((a) => doesLeadMatchSource(a, src));
+      channelLeads.forEach((l) => {
+        if (!allMatchedLeads.some((ex) => ex.id === l.id)) {
+          allMatchedLeads.push(l);
+        }
+      });
+      const pct = enrichedApplicants.length > 0 ? Math.round((channelLeads.length / enrichedApplicants.length) * 100) : 0;
+
+      report += `### ${src.icon} **${src.label}** — **${channelLeads.length} student(s)** (${pct}% of database):\n`;
+      if (channelLeads.length > 0) {
+        channelLeads.forEach((s) => {
+          const cutoff = s.computedCutoff || s.tneaCutoff || 160;
+          const tierIcon = s.priorityTier === "HOT" ? "🔥 HOT" : s.priorityTier === "WARM" ? "⚡ WARM" : "❄️ COLD";
+          report += `• **${s.name}** | 📞 \`${s.phone}\` | Cutoff: **${cutoff}/200** | 📍 ${s.district || "Karur"} | 🎓 ${s.courseInterest} | 📊 **${s.status}** (${tierIcon})\n`;
+        });
+      } else {
+        report += `*No student records currently found under this channel filter.*\n`;
+      }
+      report += `\n`;
+    });
+
+    report += `*Click on any student record below in the table to edit details, view marksheet, call, WhatsApp, or delete.*`;
+
+    return {
+      id: Date.now().toString(),
+      sender: "NORA",
+      text: report,
+      specificData: {
+        type: "STUDENT_LIST",
+        studentsList: allMatchedLeads,
+      },
+      suggestedQueries: [
+        "How many from WhatsApp?",
+        "How many from Ads?",
+        "How many from Facebook?",
+        "How many admitted?",
+      ],
+      timestamp,
+    };
+  }
+
+  // Single-channel query with "count", "show", "details", "from", "lead", "student", "find"
+  if (userRequestedChannels.length === 1) {
+    const src = userRequestedChannels[0];
+    const isChannelIntent =
+      q.includes("count") ||
+      q.includes("show") ||
+      q.includes("find") ||
+      q.includes("detail") ||
+      q.includes("details") ||
+      q.includes("how many") ||
+      q.includes("from") ||
+      q.includes("lead") ||
+      q.includes("leads") ||
+      q.includes("student") ||
+      q.includes("students") ||
+      q.includes("channel") ||
+      q.includes("source");
+
+    if (isChannelIntent) {
+      const channelLeads = enrichedApplicants.filter((a) => doesLeadMatchSource(a, src));
+      const pct = enrichedApplicants.length > 0 ? Math.round((channelLeads.length / enrichedApplicants.length) * 100) : 0;
+      const totalScore = channelLeads.reduce((sum, a) => sum + (a.computedCutoff || a.tneaCutoff || 160), 0);
+      const avgCutoff = channelLeads.length > 0 ? (totalScore / channelLeads.length).toFixed(1) : "N/A";
+      const courses = Array.from(new Set(channelLeads.map((m) => m.courseInterest))).join(", ") || "Engineering Programs";
+
+      let text = `📊 **${src.icon} ${src.label} — Count & Student Details Overview**:\n\n`;
+      text += `• 👥 **Total Leads Count**: **${channelLeads.length} student(s)** (**${pct}% of total database**)\n`;
+      text += `• 🎯 **Average TNEA Cutoff**: **${avgCutoff}/200**\n`;
+      text += `• 🎓 **Interested Courses**: ${courses}\n\n`;
+
+      if (channelLeads.length > 0) {
+        text += `**Full Student Details Acquired via ${src.label} (${channelLeads.length})**:\n\n`;
+        channelLeads.forEach((s) => {
+          const cutoff = s.computedCutoff || s.tneaCutoff || 160;
+          const tierIcon = s.priorityTier === "HOT" ? "🔥 HOT (Admitted/High)" : s.priorityTier === "WARM" ? "⚡ WARM (Ready)" : "❄️ COLD (Inquiry)";
+          text += `👤 **${s.name}**\n`;
+          text += `• 📞 **Primary Mobile**: \`${s.phone}\`` + (s.alternatePhone ? ` (Alt: \`${s.alternatePhone}\`)` : "") + `\n`;
+          text += `• 📧 **Email**: \`${s.email || "student@vsbec.in"}\`\n`;
+          text += `• 🎯 **TNEA Cutoff**: **${cutoff}/200**` + (s.application ? ` (12th Marks: ${s.application.marks12th}, 10th Marks: ${s.application.marks10th})` : "") + `\n`;
+          text += `• 🎓 **Interested Course**: **${s.courseInterest}** (${s.campus} Campus)\n`;
+          text += `• 📍 **District & Location**: **${s.district || "Karur"}**, ${s.state || "Tamil Nadu"}\n`;
+          text += `• 📊 **Admission Status**: **${s.status}** (${s.subStage || "Active"})\n`;
+          text += `• 🏷️ **AI Conversion Tier**: **${tierIcon}** (${s.aiScore || 75}% Probability)\n\n`;
+        });
+      } else {
+        text += `*There are currently no candidate records recorded under ${src.label} in the live database.*`;
+      }
+
+      return {
+        id: Date.now().toString(),
+        sender: "NORA",
+        text,
+        specificData: {
+          type: "STUDENT_LIST",
+          studentsList: channelLeads,
+        },
+        suggestedQueries: [
+          "Show all social media channels",
+          "How many from WhatsApp?",
+          "How many from Ads?",
+          "How many admitted?",
+        ],
+        timestamp,
+      };
+    }
   }
 
   // -------------------------------------------------------------
@@ -645,7 +911,21 @@ export function processNoraChatQuery(
     }
   }
 
+  const isChannelContext =
+    q.includes("facebook") ||
+    q.includes("whatsapp") ||
+    q.includes("sms") ||
+    q.includes("expo") ||
+    q.includes("google") ||
+    q.includes("drive") ||
+    q.includes("derive") ||
+    q.includes("count of") ||
+    q.includes("channel") ||
+    q.includes("social media") ||
+    q.includes("lead sources");
+
   const isGenericEmailQuery =
+    !isChannelContext &&
     (q.includes("email") || q.includes("e.mail") || q.includes("e-mail") || q.includes("mail address")) &&
     (q.includes("list") || q.includes("show") || q.includes("all") || q.includes("student") || q.includes("directory") || q === "email" || q === "e.mail");
 
@@ -1298,9 +1578,8 @@ export function processNoraChatQuery(
     return {
       id: Date.now().toString(),
       sender: "NORA",
-      text: `🎯 Here are the **${matched.length} ${targetTier} leads** (Conversion Probability ${
-        targetTier === "HOT" ? "≥ 72%" : targetTier === "WARM" ? "45–71%" : "< 45%"
-      }):`,
+      text: `🎯 Here are the **${matched.length} ${targetTier} leads** (Conversion Probability ${targetTier === "HOT" ? "≥ 72%" : targetTier === "WARM" ? "45–71%" : "< 45%"
+        }):`,
       specificData: {
         type: "STUDENT_LIST",
         studentsList: matched,
@@ -1436,83 +1715,7 @@ export function processNoraChatQuery(
     };
   }
 
-  // -------------------------------------------------------------
-  // 16. SOCIAL MEDIA & LEAD SOURCES
-  // (e.g. "social media", "channels", "whatsapp", "facebook", "ads", "x", "sms", "email", "expo", "walkin")
-  // -------------------------------------------------------------
-  const isGeneralSocialMediaQuery =
-    q === "social media" || q === "social media channels" || q === "channels" || q === "lead sources" || q.includes("marketing channels") || q.includes("acquisition channels");
 
-  if (isGeneralSocialMediaQuery) {
-    const channelCounts: Record<string, number> = {};
-    CRM_SOURCE_KEYWORDS.forEach((src) => {
-      const count = enrichedApplicants.filter((a) => {
-        const leadSrc = (a.source || "").toLowerCase();
-        return src.match.some((m) => leadSrc.includes(m)) || (src.key === "tnea" && a.appliedCounselling);
-      }).length;
-      channelCounts[src.label] = count;
-    });
-
-    return {
-      id: Date.now().toString(),
-      sender: "NORA",
-      text: `🌐 **Social Media & Lead Acquisition Channels Breakdown**:\n\n` +
-        Object.entries(channelCounts).map(([label, count]) => {
-          const pct = enrichedApplicants.length > 0 ? Math.round((count / enrichedApplicants.length) * 100) : 0;
-          return `• **${label}**: **${count} leads** (${pct}%)`;
-        }).join("\n"),
-      specificData: {
-        type: "DASHBOARD_NAV",
-        targetTab: "CONTACT_PLATFORM",
-        targetTabTitle: "Open Omnichannel Contact Platform",
-      },
-      suggestedQueries: [
-        "How many from WhatsApp?",
-        "How many from Ads?",
-        "How many from Facebook?",
-      ],
-      timestamp,
-    };
-  }
-
-  for (const src of CRM_SOURCE_KEYWORDS) {
-    const isMatched = src.match.some((m) => {
-      const regex = new RegExp(`\\b${m}\\b`, "i");
-      return regex.test(q) || (m === "x" && /\b(?:from x|on x|x leads|x channel)\b/i.test(q));
-    });
-
-    if (isMatched && (q.includes("how many") || q.includes("from") || q.includes("lead") || q.includes("student") || q.includes("show") || q.includes("list") || q.includes("count") || q.includes("channel"))) {
-      const matchedLeads = enrichedApplicants.filter((a) => {
-        const leadSrc = (a.source || "").toLowerCase();
-        return src.match.some((m) => leadSrc.includes(m)) ||
-          (src.key === "tnea" && a.appliedCounselling);
-      });
-
-      const pct = enrichedApplicants.length > 0
-        ? Math.round((matchedLeads.length / enrichedApplicants.length) * 100)
-        : 0;
-
-      return {
-        id: Date.now().toString(),
-        sender: "NORA",
-        text: `📊 Found **${matchedLeads.length} student leads** (${pct}% of total database) acquired through **${src.label}**:\n\n` +
-          `• Channel: **${src.label}**\n` +
-          `• Matched Records: **${matchedLeads.length} candidates**\n` +
-          (matchedLeads.length > 0 ? `• Top interested courses: **${Array.from(new Set(matchedLeads.map(m => m.courseInterest))).slice(0, 3).join(", ")}**` : `No records found under this specific source filter.`),
-        specificData: {
-          type: "STUDENT_LIST",
-          studentsList: matchedLeads,
-        },
-        suggestedQueries: [
-          `Show hot leads from ${src.label}`,
-          "How many from WhatsApp?",
-          "How many from Facebook?",
-          "Show untouched inquiries",
-        ],
-        timestamp,
-      };
-    }
-  }
 
   // -------------------------------------------------------------
   // 17. TOTAL COUNT & EXECUTIVE DATABASE METRICS
