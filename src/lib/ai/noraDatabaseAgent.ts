@@ -502,7 +502,7 @@ export function processNoraChatQuery(
     const t = teacherIdentMatch;
     const stats = getTeacherCallStats(t);
     const assignedLeads = enrichedApplicants.filter((a) =>
-      isLeadAssignedToTeacher(a, t.id, t.campus) ||
+      isLeadAssignedToTeacher(a, t.id, t.campus === "ALL" ? undefined : t.campus) ||
       (a.assignedTo || "").toLowerCase().includes(t.name.toLowerCase()) ||
       (a.counselorId || "").toLowerCase().includes(t.id.toLowerCase())
     );
@@ -636,7 +636,7 @@ export function processNoraChatQuery(
     const matchedByApp = enrichedApplicants.find((a) => {
       const aAppId = (a.application?.id || "").toLowerCase();
       const aLeadId = (a.id || "").toLowerCase();
-      const aCounselling = (a.application?.counsellingAppNo || a.counsellingAppNo || "").toLowerCase();
+      const aCounselling = ((a.application as any)?.counsellingAppNo || a.counsellingAppNo || "").toLowerCase();
 
       if (aAppId === rawTarget || aAppId === `app_${rawTarget}` || aAppId.includes(rawTarget)) return true;
       if (aLeadId === rawTarget || aLeadId.includes(rawTarget)) return true;
@@ -653,7 +653,7 @@ export function processNoraChatQuery(
         text: `📑 **Application Record Found for Application ID \`${s.application?.id || s.id}\`**:\n\n` +
           `• **Candidate Name**: **${s.name}**\n` +
           `• 🆔 **Application ID**: \`${s.application?.id || "app_" + s.id}\` (Lead ID: \`${s.id}\`)\n` +
-          `• 🏛️ **Counselling App No**: \`${s.application?.counsellingAppNo || s.counsellingAppNo || "TNEA-2026-" + s.id}\`\n` +
+          `• 🏛️ **Counselling App No**: \`${(s.application as any)?.counsellingAppNo || s.counsellingAppNo || "TNEA-2026-" + s.id}\`\n` +
           `• 📞 **Mobile Number**: \`${s.phone}\`\n` +
           `• 📧 **E-mail Address**: \`${s.email || "student@vsbec.in"}\`\n` +
           `• 🎯 **TNEA Cutoff**: **${cutoff}/200** (12th Marks: **${s.application?.marks12th || 480}**, 10th Marks: **${s.application?.marks10th || 420}**)\n` +
@@ -681,7 +681,7 @@ export function processNoraChatQuery(
       id: Date.now().toString(),
       sender: "NORA",
       text: `📑 **Live Application Numbers Directory** (${enrichedApplicants.length} registered candidate applications):\n\n` +
-        enrichedApplicants.slice(0, 10).map((s) => `• **App ID: \`${s.application?.id || "app_" + s.id}\`** — **${s.name}** (Counselling: \`${s.application?.counsellingAppNo || "TNEA-" + s.id}\` • ${s.courseInterest} • Stage: **${s.application?.stage || "INQUIRY"}**)`).join("\n") +
+        enrichedApplicants.slice(0, 10).map((s) => `• **App ID: \`${s.application?.id || "app_" + s.id}\`** — **${s.name}** (Counselling: \`${(s.application as any)?.counsellingAppNo || s.counsellingAppNo || "TNEA-" + s.id}\` • ${s.courseInterest} • Stage: **${s.application?.stage || "INQUIRY"}**)`).join("\n") +
         (enrichedApplicants.length > 10 ? `\n\n*...and ${enrichedApplicants.length - 10} more application records in live database.*` : ""),
       specificData: {
         type: "STUDENT_LIST",

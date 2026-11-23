@@ -116,6 +116,8 @@ export interface Lead {
   createdAt: string;
   application?: Application | null;
   documents?: Record<string, StudentDocument>;
+  timelineActivities?: TimelineActivity[];
+  callRecordings?: CallRecording[];
 }
 
 export interface Application {

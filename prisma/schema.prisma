@@ -107,3 +107,25 @@ model Teacher {
   contactedCount  Int      @default(0)
   createdAt       DateTime @default(now())
 }
+
+model TimelineEvent {
+  id              String   @id @default(uuid())
+  leadId          String
+  type            String   @default("CALL")
+  title           String
+  timestamp       String
+  rawDate         String
+  durationText    String?
+  durationSeconds Int?
+  description     String
+  authorName      String
+  authorId        String?
+  authorRole      String?
+  status          String?  @default("CONNECTED")
+  scoreDelta      Int?
+  studentInterest String?
+  teacherNotes    String?
+  callTranscript  String?
+  audioUrl        String?
+  createdAt       DateTime @default(now())
+}

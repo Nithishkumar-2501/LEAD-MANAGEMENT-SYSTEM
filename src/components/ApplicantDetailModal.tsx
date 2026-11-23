@@ -59,6 +59,7 @@ import {
   Paperclip,
   AlertTriangle,
   FileCheck,
+  PhoneOff,
 } from "lucide-react";
 import { Lead, Application, LeadStatus, AppStage, VSB_DEPARTMENTS_COURSES, CallRecording, TimelineActivity, StudentDocument } from "@/types/crm";
 import { predictStudentConversion, calculateTneaCutoff } from "@/lib/ai/leadScoringEngine";
@@ -511,6 +512,27 @@ export default function ApplicantDetailModal({
     document.body.removeChild(a);
   };
 
+  // Real-time Dynamic Date & Time helper (No hardcoded mock dates)
+  const formatLiveDateTime = (isoOrDate?: string | Date) => {
+    const dateObj = isoOrDate ? new Date(isoOrDate) : new Date();
+    const validDate = isNaN(dateObj.getTime()) ? new Date() : dateObj;
+    const formattedDate = validDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    const formattedTime = validDate.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return {
+      fullTimestamp: `${formattedDate} ${formattedTime}`,
+      rawDate: validDate.toISOString().split("T")[0],
+      time: formattedTime,
+    };
+  };
+
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [newNote, setNewNote] = useState("");
@@ -520,7 +542,7 @@ export default function ApplicantDetailModal({
     {
       id: "1",
       text: "Student inquired about B.Tech AI & DS fee structure and TNEA cutoffs.",
-      date: "25 Aug 2026 06:30 PM",
+      date: formatLiveDateTime(applicant?.createdAt).fullTimestamp,
       author: applicant?.assignedTo ? getTeacherDisplayName(applicant.assignedTo) : "Admissions Team",
     },
   ]);
@@ -528,7 +550,7 @@ export default function ApplicantDetailModal({
   const [timelineFilterAction, setTimelineFilterAction] = useState("ALL");
   const [timelineFilterDate, setTimelineFilterDate] = useState("");
 
-  // Dynamic & Persistent Timeline Activities
+  // Dynamic & Persistent Timeline Activities (Stored in SQLite Database + Firebase + LocalStorage)
   const [timelineActivities, setTimelineActivities] = useState<TimelineActivity[]>(() => {
     if (!applicant) return [];
     try {
@@ -539,29 +561,31 @@ export default function ApplicantDetailModal({
       }
     } catch (e) {}
 
+    const regTime = formatLiveDateTime(applicant.createdAt);
     const defaultActivities: TimelineActivity[] = [
       {
         id: `act_${applicant.id}_1`,
         leadId: applicant.id,
         type: "REGISTERED",
         title: "Candidate Registration",
-        timestamp: "25 Aug 2026 06:25 PM",
-        rawDate: "2026-08-25",
+        timestamp: regTime.fullTimestamp,
+        rawDate: regTime.rawDate,
         scoreDelta: 10,
-        description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified.`,
+        description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified at ${regTime.time}.`,
         authorName: applicant.name,
       },
     ];
 
     if (applicant.assignedTo) {
+      const assignedTime = formatLiveDateTime(new Date(new Date(applicant.createdAt || new Date()).getTime() + 4 * 60 * 1000));
       defaultActivities.unshift({
         id: `act_${applicant.id}_2`,
         leadId: applicant.id,
         type: "REASSIGNED",
         title: "Lead Re-assigned via Automation",
-        timestamp: "25 Aug 2026 06:29 PM",
-        rawDate: "2026-08-25",
-        description: `Lead re-assigned to ${getTeacherDisplayName(applicant.assignedTo)} via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.`,
+        timestamp: assignedTime.fullTimestamp,
+        rawDate: assignedTime.rawDate,
+        description: `Lead re-assigned to ${getTeacherDisplayName(applicant.assignedTo)} via System Automation at ${assignedTime.fullTimestamp}.`,
         authorName: "System Automation",
       });
     }
@@ -569,7 +593,7 @@ export default function ApplicantDetailModal({
     return defaultActivities;
   });
 
-  // Sync timeline activities when applicant changes
+  // Sync timeline activities when applicant changes & fetch from SQLite database
   useEffect(() => {
     if (!applicant) return;
     try {
@@ -578,39 +602,71 @@ export default function ApplicantDetailModal({
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setTimelineActivities(parsed);
-          return;
         }
       }
     } catch (e) {}
 
+    const regTime = formatLiveDateTime(applicant.createdAt);
     const defaultActivities: TimelineActivity[] = [
       {
         id: `act_${applicant.id}_1`,
         leadId: applicant.id,
         type: "REGISTERED",
         title: "Candidate Registration",
-        timestamp: "25 Aug 2026 06:25 PM",
-        rawDate: "2026-08-25",
+        timestamp: regTime.fullTimestamp,
+        rawDate: regTime.rawDate,
         scoreDelta: 10,
-        description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified.`,
+        description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified at ${regTime.time}.`,
         authorName: applicant.name,
       },
     ];
 
     if (applicant.assignedTo) {
+      const assignedTime = formatLiveDateTime(new Date(new Date(applicant.createdAt || new Date()).getTime() + 4 * 60 * 1000));
       defaultActivities.unshift({
         id: `act_${applicant.id}_2`,
         leadId: applicant.id,
         type: "REASSIGNED",
         title: "Lead Re-assigned via Automation",
-        timestamp: "25 Aug 2026 06:29 PM",
-        rawDate: "2026-08-25",
-        description: `Lead re-assigned to ${getTeacherDisplayName(applicant.assignedTo)} via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.`,
+        timestamp: assignedTime.fullTimestamp,
+        rawDate: assignedTime.rawDate,
+        description: `Lead re-assigned to ${getTeacherDisplayName(applicant.assignedTo)} via System Automation at ${assignedTime.fullTimestamp}.`,
         authorName: "System Automation",
       });
     }
 
-    setTimelineActivities(defaultActivities);
+    let isMounted = true;
+    const fetchDbTimeline = async () => {
+      try {
+        const res = await fetch(`/api/timeline?leadId=${applicant.id}`);
+        if (res.ok) {
+          const dbEvents = await res.json();
+          if (Array.isArray(dbEvents) && dbEvents.length > 0 && isMounted) {
+            setTimelineActivities((prev) => {
+              const currentList = prev.length > 0 ? prev : defaultActivities;
+              const existingIds = new Set(currentList.map((a) => a.id));
+              const newItems = dbEvents.filter((d: any) => !existingIds.has(d.id));
+              const merged = [...newItems, ...currentList];
+              try {
+                localStorage.setItem(`vsb_timeline_activities_${applicant.id}`, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Notice fetching timeline from SQLite DB:", err);
+      }
+      if (isMounted) {
+        setTimelineActivities((prev) => (prev.length > 0 ? prev : defaultActivities));
+      }
+    };
+    fetchDbTimeline();
+
+    return () => {
+      isMounted = false;
+    };
   }, [applicant?.id]);
 
   // Live Call & Audio Recording State
@@ -779,6 +835,36 @@ export default function ApplicantDetailModal({
     const updatedActivities = [newActivity, ...timelineActivities];
     setTimelineActivities(updatedActivities);
 
+    // 1. Save to SQLite Database (Dev.db via /api/timeline)
+    try {
+      if (formData?.id) {
+        fetch("/api/timeline", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            leadId: formData.id,
+            type: "CALL",
+            title: newActivity.title,
+            timestamp: fullTimestamp,
+            rawDate: rawDateStr,
+            durationText: durationLabel,
+            durationSeconds: durationSec,
+            description: newActivity.description,
+            authorName: facultyName,
+            authorId: facultyId,
+            status: "CONNECTED",
+            studentInterest: liveInterestStatus,
+            teacherNotes: newRecording.teacherNotes,
+            callTranscript: newRecording.callTranscript,
+            audioUrl: newRecording.audioUrl,
+          }),
+        }).catch((e) => console.warn("Failed SQLite timeline sync:", e));
+      }
+    } catch (dbErr) {
+      console.warn("Prisma SQLite timeline post warning:", dbErr);
+    }
+
+    // 2. Save to Local Storage Cache
     try {
       if (formData?.id) {
         localStorage.setItem(`vsb_timeline_activities_${formData.id}`, JSON.stringify(updatedActivities));
@@ -790,11 +876,13 @@ export default function ApplicantDetailModal({
       console.warn("localStorage persistence error:", e);
     }
 
+    // 3. Save to Firebase Cloud Firestore & Realtime DB
     if (formData) {
       const updatedLead: Lead & { application: Application } = {
         ...formData,
         status: liveInterestStatus === "ADMITTED" ? "ADMITTED" : (formData.status === "NEW" ? "CONTACTED" : formData.status),
-        ...( { callRecordings: [newRecording] } as any ),
+        callRecordings: [newRecording, ...(formData.callRecordings || [])],
+        timelineActivities: updatedActivities,
       };
       setFormData(updatedLead);
       saveStudentToFirebase(updatedLead);
@@ -1650,7 +1738,7 @@ export default function ApplicantDetailModal({
                   <div>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px] block font-extrabold">Last Active</span>
                     <span className="font-mono text-slate-950 dark:text-slate-100 font-bold block">
-                      25 Aug 2026 06:30 PM
+                      {timelineActivities[0]?.timestamp || formatLiveDateTime(formData.createdAt).fullTimestamp}
                     </span>
                   </div>
                   <div>
@@ -1659,10 +1747,10 @@ export default function ApplicantDetailModal({
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-slate-950 dark:text-slate-100 font-bold">
-                        25 Aug 2026 06:25 PM
+                        {formatLiveDateTime(formData.createdAt).fullTimestamp}
                       </span>
-                      <span className="px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 text-[10px] font-black border border-sky-300 dark:border-sky-700">
-                        0d
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-black border border-emerald-300 dark:border-emerald-700">
+                        Live
                       </span>
                     </div>
                   </div>
@@ -1804,19 +1892,40 @@ export default function ApplicantDetailModal({
                       <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
                         {filteredTimelineActivities.length} Events
                       </span>
+                      {isLiveCallOpen && (
+                        <span className="relative flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500 text-emerald-600 dark:text-emerald-400 text-[10px] font-black animate-pulse">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                          Live Call Active
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      {/* Start Call & Live Recording CTA */}
-                      <button
-                        type="button"
-                        onClick={startLiveCall}
-                        className="press-spring flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                        title="Initiate live conversation and record call audio"
-                      >
-                        <PhoneCall className="w-3.5 h-3.5 animate-pulse" />
-                        <span>Start Call & Record</span>
-                      </button>
+                      {/* Start Call / End Call CTA */}
+                      {!isLiveCallOpen ? (
+                        <button
+                          type="button"
+                          onClick={startLiveCall}
+                          className="press-spring flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                          title="Initiate live conversation and record call audio"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5 animate-pulse" />
+                          <span>Start Call & Record</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={endLiveCallAndSave}
+                          className="press-spring flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                          title="End live call and persist talk time to SQLite database"
+                        >
+                          <PhoneOff className="w-3.5 h-3.5 animate-pulse" />
+                          <span>End & Save ({formatClockTimer(liveCallSeconds)})</span>
+                        </button>
+                      )}
 
                       <select
                         value={timelineFilterAction}
@@ -1852,6 +1961,97 @@ export default function ApplicantDetailModal({
                       )}
                     </div>
                   </div>
+
+                  {/* 🔴 LIVE CALL TALKING MONITOR IN TIMELINE (Monitored in real-time) */}
+                  {isLiveCallOpen && (
+                    <div className="rounded-xl border-2 border-emerald-500 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-sky-500/10 p-4 space-y-3.5 shadow-md">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/25 pb-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                          </span>
+                          <div>
+                            <h5 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                              <Radio className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" /> Live Call Monitor Active
+                            </h5>
+                            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                              {liveCallStatus === "CONNECTING" ? "Connecting call with student..." : "Live talk time monitored & recorded in real-time"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Live Running Talk Time Timer */}
+                        <div className="flex items-center gap-2">
+                          <div className="px-3 py-1 rounded-lg bg-slate-900 border border-emerald-500/40 text-emerald-400 font-mono text-sm font-black flex items-center gap-2 shadow-inner">
+                            <Clock className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                            <span>Talk Time: {formatClockTimer(liveCallSeconds)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 space-y-1">
+                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 block">
+                            Student / Candidate
+                          </span>
+                          <p className="font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                            {formData.name} ({formData.phone})
+                          </p>
+                        </div>
+
+                        <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 space-y-1">
+                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 block">
+                            Calling Faculty / Teacher
+                          </span>
+                          <p className="font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                            <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                            {currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Faculty Mentor")}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Live Status & Notes During Call */}
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <label className="text-[11px] font-black text-slate-700 dark:text-slate-300">
+                            Student Interest:
+                          </label>
+                          <select
+                            value={liveInterestStatus}
+                            onChange={(e) => setLiveInterestStatus(e.target.value as any)}
+                            className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs font-black text-slate-900 dark:text-slate-100"
+                          >
+                            <option value="INTERESTED">Interested in V.S.B. ⭐</option>
+                            <option value="ADMITTED">Admitted / Confirmed 🎉</option>
+                            <option value="REVIEWING">Reviewing / Call Back Later ⏳</option>
+                            <option value="NOT_INTERESTED">Not Interested ❌</option>
+                            <option value="NO_ANSWER">No Answer / Busy 📵</option>
+                          </select>
+                        </div>
+
+                        <input
+                          type="text"
+                          placeholder="Type live call notes here (e.g. Cutoff verified, willing to join B.Tech AI & DS)..."
+                          value={liveCallNotes}
+                          onChange={(e) => setLiveCallNotes(e.target.value)}
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                        />
+                      </div>
+
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={endLiveCallAndSave}
+                          className="press-spring flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-md transition-all cursor-pointer"
+                        >
+                          <PhoneOff className="w-4 h-4" />
+                          <span>End Call & Save Live Talk Time to Database</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Activity List Container */}
                   <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-300 dark:before:bg-slate-700 text-xs">
