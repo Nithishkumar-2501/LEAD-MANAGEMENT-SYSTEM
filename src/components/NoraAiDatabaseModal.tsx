@@ -72,15 +72,29 @@ export default function NoraAiDatabaseModal({
   const initialWelcomeMessage: NoraChatMessage = {
     id: "welcome-1",
     sender: "NORA",
-    text: `👋 Hello! I am **NORA Chatbot**, your specialized admissions neural database assistant.\n\nAsk me anything across the student database and CRM modules:\n• 🗑️ **Delete Data**: *"delete contact Gunal"*, *"remove lead 9894283561"*\n• 📂 **Add Data**: Click the **📎 Paperclip** icon to upload CSV/Excel/JSON files\n• 📞 **Mobile Numbers**: *"Find 9551082291"*, *"Who has phone 9894283561?"*\n• 📍 **Districts & Names**: *"Leads from Salem"*, *"What is Gunal's cutoff?"*\n• 🌐 **Channels & Ads**: *"How many from WhatsApp?"*, *"How many from Ads?"*, *"Facebook leads"*\n• 🎯 **Cutoffs & Statuses**: *"Cutoff > 175"*, *"Highest cutoff"*, *"How many admitted?"*\n\nI will query and update the live database in real time.`,
+    text: `👋 Hello! I am **NORA Chatbot**, your comprehensive admissions & faculty intelligence assistant.
+
+Ask or command me across ANY parameter in the database:
+• 👨‍🏫 **Teacher Outreach & Monitoring**: *"How many lead are contacted by the teacher?"*, *"Teacher Rajesh activity"*
+• 📱 **Teacher & Student Mobiles**: *"Teacher mobile numbers"*, *"Find 9842411223"*, *"What is Gunal's mobile number?"*
+• 🎓 **Admitted vs Non-Admitted**: *"How many admitted?"*, *"Show non admitted leads"*
+• 📑 **Application Numbers**: *"Application app_1"*, *"Show application numbers"*
+• 🎯 **TNEA Cutoff**: *"Cutoff > 175"*, *"Cutoff between 160 and 180"*, *"Average cutoff"*
+• 📍 **Cities & Districts**: *"Leads from Salem"*, *"Candidates from Coimbatore"*
+• 📚 **Courses & Streams**: *"Show CSE leads"*, *"Show AIDS leads"*, *"List courses"*
+• 🌐 **Social Media Channels**: *"How many from WhatsApp?"*, *"How many from Ads?"*
+• 📊 **Total Count & Overview**: *"Total leads count"*, *"Database overview"*
+• 🗑️ **Delete Record**: *"delete contact Gunal"*, *"remove student 12"*
+• 📂 **Add Data**: Click the **📎 Paperclip** icon to upload CSV/Excel/JSON files directly into the database!`,
     suggestedQueries: [
-      "Add data to database",
-      "delete contact",
-      "How many from WhatsApp?",
-      "How many from Ads?",
-      "Leads from Salem",
-      "Cutoff > 175",
+      "How many lead are contacted by the teacher",
+      "Teacher mobile numbers",
       "How many admitted?",
+      "Show non admitted leads",
+      "Application app_1",
+      "Cutoff > 175",
+      "Leads from Salem",
+      "Total leads count",
     ],
     timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
   };

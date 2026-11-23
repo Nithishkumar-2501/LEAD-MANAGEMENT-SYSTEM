@@ -1,14 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "SPHEREX | College Admission CRM",
@@ -34,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable}`} suppressHydrationWarning>
-      <body className={`${inter.className} bg-slate-50 text-slate-900 dark:bg-[#070a14] dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden font-sans transition-colors duration-200`}>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="bg-slate-50 text-slate-900 dark:bg-[#070a14] dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden font-sans transition-colors duration-200">
         {children}
         <SpeedInsights />
       </body>
