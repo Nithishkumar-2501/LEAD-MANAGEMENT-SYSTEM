@@ -84,6 +84,8 @@ const INDIAN_STATES = [
   "Other State",
 ];
 
+const TNEA_ONLINE_URL = "https://www.tneaonline.org/";
+
 const COMMUNITY_OPTIONS = ["BC", "MBC", "BCM", "SC", "SCA", "ST", "OC", "Other"];
 const RELIGION_OPTIONS = ["Hindu", "Christian", "Muslim", "Jain", "Sikh", "Buddhist", "Other"];
 const PARENT_OCCUPATIONS = [
@@ -1029,9 +1031,9 @@ export default function ContactDirectoryModule({
       updatedAppliedCounselling = true;
       const prevCat = contact.counsellingCategory;
       updatedCounsellingCategory =
-        prevCat && !prevCat.toLowerCase().includes("management")
+        prevCat && !prevCat.toLowerCase().includes("management") && prevCat !== "Apply for Counselling"
           ? prevCat
-          : "Apply for Counselling";
+          : "TNEA";
     }
 
     const updatedContact = {
@@ -1097,7 +1099,7 @@ export default function ContactDirectoryModule({
           }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   // Handler for Apply for Counselling Dropdown Category Change
@@ -1124,7 +1126,7 @@ export default function ContactDirectoryModule({
     // 2. Sync to Firebase
     try {
       await saveStudentToFirebase(updatedContact as any);
-    } catch (fbErr) {}
+    } catch (fbErr) { }
 
     // 3. Sync to API
     try {
@@ -1138,7 +1140,7 @@ export default function ContactDirectoryModule({
           counsellingCategory: newCategory,
         }),
       });
-    } catch (e) {}
+    } catch (e) { }
 
     // 4. Update LocalStorage Cache
     try {
@@ -1153,7 +1155,7 @@ export default function ContactDirectoryModule({
           }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   // Column min-widths ensuring table layout never compresses candidate name, mobile, etc.
@@ -1487,42 +1489,58 @@ export default function ContactDirectoryModule({
               </button>
             </div>
 
-            {/* Apply for Counselling Dropdown */}
-            <div className="relative">
-              <select
-                value={currentCategory}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  handleCounsellingCategoryChange(contact, e.target.value);
-                }}
-                className="w-full appearance-none cursor-pointer pl-3 pr-8 py-1.5 rounded-xl text-[12.5px] font-bold border border-teal-400 dark:border-teal-600 bg-teal-50/60 dark:bg-slate-900 text-teal-900 dark:text-teal-200 shadow-2xs outline-none focus:ring-2 focus:ring-teal-500 min-h-[34px]"
-                title="Apply for Counselling options"
-              >
-                <option value="Apply for Counselling" className="bg-slate-900 text-teal-300 font-bold">
-                  🎓 Apply for Counselling
-                </option>
-                <option value="TNEA General Counselling (Academic)" className="bg-slate-900 text-white font-medium">
-                  🏛️ TNEA General Counselling (Academic)
-                </option>
-                <option value="TNEA Govt School 7.5% Quota" className="bg-slate-900 text-white font-medium">
-                  ⭐ TNEA Govt School 7.5% Quota
-                </option>
-                <option value="TNEA Vocational Counselling" className="bg-slate-900 text-white font-medium">
-                  🔧 TNEA Vocational Counselling
-                </option>
-                <option value="TNEA Sports / Special Quota" className="bg-slate-900 text-white font-medium">
-                  🏅 TNEA Sports / Special Quota
-                </option>
-                <option value="Counselling Applied (App No Pending)" className="bg-slate-900 text-amber-300 font-bold">
-                  ⏳ Counselling Applied (App No Pending)
-                </option>
-                <option value="Seat Allotted via Counselling" className="bg-slate-900 text-emerald-300 font-black">
-                  ✅ Seat Allotted via Counselling
-                </option>
-              </select>
-              <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-teal-600 dark:text-teal-400">
-                <ChevronDown className="w-3.5 h-3.5" />
+            {/* TNEA Selection & Direct Apply for Counselling Redirect */}
+            <div className="flex items-center gap-1.5">
+              <div className="relative flex-1">
+                <select
+                  value="TNEA"
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const val = e.target.value;
+                    if (val === "APPLY_COUNSELLING" || val === "Apply for Counselling") {
+                      window.open(TNEA_ONLINE_URL, "_blank", "noopener,noreferrer");
+                      if (onTriggerToast) {
+                        onTriggerToast(`🌐 Opening official TNEA Counselling portal (tneaonline.org)...`);
+                      }
+                      // Keep state on TNEA
+                      e.target.value = "TNEA";
+                      return;
+                    }
+                    handleCounsellingCategoryChange(contact, val);
+                  }}
+                  className="w-full appearance-none cursor-pointer pl-3 pr-8 py-1.5 rounded-xl text-[12.5px] font-bold border border-teal-400 dark:border-teal-600 bg-teal-50/70 dark:bg-slate-900 text-teal-900 dark:text-teal-200 shadow-2xs outline-none focus:ring-2 focus:ring-teal-500 min-h-[34px]"
+                  title="TNEA Counselling Quota"
+                >
+                  <option value="TNEA" className="bg-slate-900 text-teal-300 font-bold">
+                    🏛️ TNEA
+                  </option>
+                  <option value="APPLY_COUNSELLING" className="bg-slate-900 text-emerald-300 font-bold">
+                    🎓 Apply for Counselling ↗
+                  </option>
+                </select>
+                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-teal-600 dark:text-teal-400">
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </div>
               </div>
+
+              {/* Direct 1-Click Action Button to Redirect to TNEA Portal */}
+              <a
+                href={TNEA_ONLINE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onTriggerToast) {
+                    onTriggerToast(`🌐 Opening official TNEA Counselling portal (tneaonline.org)...`);
+                  }
+                }}
+                className="press-spring inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-2xs hover:shadow transition-all shrink-0 cursor-pointer"
+                title="Apply for Counselling (Opens www.tneaonline.org in new tab)"
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-teal-100" />
+                <span>Apply</span>
+                <ExternalLink className="w-3 h-3 text-teal-200" />
+              </a>
             </div>
 
             {contact.counsellingAppNo && (
@@ -3815,34 +3833,34 @@ export default function ContactDirectoryModule({
                     {contact.admissionQuota !== "MANAGEMENT" &&
                       !contact.counsellingCategory?.toLowerCase().includes("management") &&
                       (contact.counsellingAppNo || contact.tneaCutoff) && (
-                      <div className="pt-2 border-t border-white/10 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <GraduationCap className="w-3 h-3 text-sky-400" /> TNEA Counselling:
-                          </span>
-                          {contact.counsellingAppNo ? (
-                            <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                              ✅ Applied ({contact.counsellingAppNo})
+                        <div className="pt-2 border-t border-white/10 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                              <GraduationCap className="w-3 h-3 text-sky-400" /> TNEA Counselling:
                             </span>
-                          ) : (
-                            <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
-                              ⏳ Direct Intake
-                            </span>
+                            {contact.counsellingAppNo ? (
+                              <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                                ✅ Applied ({contact.counsellingAppNo})
+                              </span>
+                            ) : (
+                              <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                                ⏳ Direct Intake
+                              </span>
+                            )}
+                          </div>
+
+                          {contact.tneaCutoff && (
+                            <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
+                              <span className="text-slate-300">
+                                Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff} / 200</strong>
+                              </span>
+                              <span className="text-indigo-300 text-[10px]">
+                                {contact.counsellingCategory || ""}
+                              </span>
+                            </div>
                           )}
                         </div>
-
-                        {contact.tneaCutoff && (
-                          <div className="flex items-center justify-between text-[11px] font-semibold bg-slate-900/80 px-2.5 py-1 rounded-lg border border-white/10">
-                            <span className="text-slate-300">
-                              Cutoff: <strong className="text-sky-300 font-mono font-bold">{contact.tneaCutoff} / 200</strong>
-                            </span>
-                            <span className="text-indigo-300 text-[10px]">
-                              {contact.counsellingCategory || ""}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      )}
 
                     {/* Admin Teacher Assignment Dropdown */}
                     {currentUserRole === "ADMIN" && (
