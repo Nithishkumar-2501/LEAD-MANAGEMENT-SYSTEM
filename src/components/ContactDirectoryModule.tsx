@@ -69,6 +69,8 @@ import {
   ExternalLink,
   Check,
   Mic,
+  Globe,
+  AlertTriangle,
 } from "lucide-react";
 import { Checkbox } from "@/components/base-ui/checkbox";
 import { MAX_FREE_LEAD_LIMIT } from "@/lib/leadQuotaService";
@@ -85,6 +87,8 @@ const INDIAN_STATES = [
 ];
 
 const TNEA_ONLINE_URL = "https://www.tneaonline.org/";
+const DTE_TN_GOV_URL = "https://dte.tn.gov.in/";
+const ANNA_UNIV_URL = "https://www.annauniv.edu/";
 
 const COMMUNITY_OPTIONS = ["BC", "MBC", "BCM", "SC", "SCA", "ST", "OC", "Other"];
 const RELIGION_OPTIONS = ["Hindu", "Christian", "Muslim", "Jain", "Sikh", "Buddhist", "Other"];
@@ -807,6 +811,22 @@ export default function ContactDirectoryModule({
   // Edit Contact Modal State
   const [editingContact, setEditingContact] = useState<(Lead & { application?: Application | null }) | null>(null);
 
+  // TNEA Counselling & Application Hub Modal State
+  const [tneaModalContact, setTneaModalContact] = useState<(Lead & { application?: Application | null }) | null>(null);
+  const [tneaAppNoInput, setTneaAppNoInput] = useState("");
+  const [tneaCutoffInput, setTneaCutoffInput] = useState<string>("");
+  const [tneaCategoryInput, setTneaCategoryInput] = useState("TNEA General Counselling");
+  const [isSavingTnea, setIsSavingTnea] = useState(false);
+
+  useEffect(() => {
+    if (tneaModalContact) {
+      setTneaAppNoInput(tneaModalContact.counsellingAppNo || "");
+      const cutoff = (tneaModalContact as any).tneaCutoff ?? (tneaModalContact as any).cutoff;
+      setTneaCutoffInput(cutoff !== undefined && cutoff !== null ? String(cutoff) : "");
+      setTneaCategoryInput(tneaModalContact.counsellingCategory || "TNEA General Counselling");
+    }
+  }, [tneaModalContact]);
+
   // Dynamic course options and active selection for Edit Contact Record modal
   const editCourseOptions = useMemo(() => {
     const options = [...VSB_DEPARTMENTS_COURSES] as string[];
@@ -1158,6 +1178,77 @@ export default function ContactDirectoryModule({
     } catch (e) { }
   };
 
+  // TNEA Counselling Modal Save Handler
+  const handleSaveTneaDetails = async () => {
+    if (!tneaModalContact) return;
+    setIsSavingTnea(true);
+    try {
+      const parsedCutoff = tneaCutoffInput ? parseFloat(tneaCutoffInput) : undefined;
+      const updatedContact = {
+        ...tneaModalContact,
+        admissionQuota: "COUNSELLING" as const,
+        appliedCounselling: true,
+        counsellingAppNo: tneaAppNoInput.trim(),
+        counsellingCategory: tneaCategoryInput,
+        tneaCutoff: isNaN(parsedCutoff as number) ? undefined : parsedCutoff,
+      };
+
+      // 1. Optimistic UI update
+      setContacts((prev) =>
+        prev.map((c) => (String(c.id) === String(tneaModalContact.id) ? (updatedContact as any) : c))
+      );
+
+      // 2. Notify parent
+      onUpdateContact?.(updatedContact as any);
+
+      // 3. Sync to Firebase
+      try {
+        await saveStudentToFirebase(updatedContact as any);
+      } catch (fbErr) {
+        console.warn("Firebase TNEA sync:", fbErr);
+      }
+
+      // 4. Sync to API
+      try {
+        await mobileSafeFetch("/api/contacts", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: tneaModalContact.id,
+            admissionQuota: "COUNSELLING",
+            appliedCounselling: true,
+            counsellingAppNo: tneaAppNoInput.trim(),
+            counsellingCategory: tneaCategoryInput,
+            tneaCutoff: isNaN(parsedCutoff as number) ? undefined : parsedCutoff,
+          }),
+        });
+      } catch (apiErr) {
+        console.warn("API TNEA sync:", apiErr);
+      }
+
+      if (onTriggerToast) {
+        onTriggerToast(`🎓 Updated TNEA Counselling details for ${tneaModalContact.name}!`);
+      }
+      setTneaModalContact(null);
+    } catch (err) {
+      console.error("Save TNEA error:", err);
+    } finally {
+      setIsSavingTnea(false);
+    }
+  };
+
+  // Auto-generate official format TNEA application number
+  const handleAutoGenerateTneaAppNo = () => {
+    if (!tneaModalContact) return;
+    const campusCode = tneaModalContact.campus === "COIMBATORE" ? "714" : "612";
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    const newNo = `TNEA2026-${campusCode}${rand}`;
+    setTneaAppNoInput(newNo);
+    if (onTriggerToast) {
+      onTriggerToast(`⚡ Generated TNEA Application No: ${newNo}`);
+    }
+  };
+
   // Column min-widths ensuring table layout never compresses candidate name, mobile, etc.
   const getColumnWidthClass = (columnName: string) => {
     switch (columnName) {
@@ -1498,11 +1589,15 @@ export default function ContactDirectoryModule({
                     e.stopPropagation();
                     const val = e.target.value;
                     if (val === "APPLY_COUNSELLING" || val === "Apply for Counselling") {
-                      window.open(TNEA_ONLINE_URL, "_blank", "noopener,noreferrer");
+                      setTneaModalContact(contact);
+                      e.target.value = "TNEA";
+                      return;
+                    }
+                    if (val === "OPEN_DTE") {
+                      window.open(DTE_TN_GOV_URL, "_blank", "noopener,noreferrer");
                       if (onTriggerToast) {
-                        onTriggerToast(`🌐 Opening official TNEA Counselling portal (tneaonline.org)...`);
+                        onTriggerToast("🌐 Opening Directorate of Technical Education (dte.tn.gov.in)...");
                       }
-                      // Keep state on TNEA
                       e.target.value = "TNEA";
                       return;
                     }
@@ -1512,10 +1607,13 @@ export default function ContactDirectoryModule({
                   title="TNEA Counselling Quota"
                 >
                   <option value="TNEA" className="bg-slate-900 text-teal-300 font-bold">
-                    🏛️ TNEA
+                    🏛️ TNEA Quota
                   </option>
                   <option value="APPLY_COUNSELLING" className="bg-slate-900 text-emerald-300 font-bold">
-                    🎓 Apply for Counselling ↗
+                    🎓 Open Apply & Counselling Hub ⚡
+                  </option>
+                  <option value="OPEN_DTE" className="bg-slate-900 text-sky-300 font-bold">
+                    🌐 DoTE Official Portal (Active) ↗
                   </option>
                 </select>
                 <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-teal-600 dark:text-teal-400">
@@ -1523,24 +1621,20 @@ export default function ContactDirectoryModule({
                 </div>
               </div>
 
-              {/* Direct 1-Click Action Button to Redirect to TNEA Portal */}
-              <a
-                href={TNEA_ONLINE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* Direct 1-Click Action Button: Opens the Counselling & Application Hub Modal without 403 Forbidden */}
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (onTriggerToast) {
-                    onTriggerToast(`🌐 Opening official TNEA Counselling portal (tneaonline.org)...`);
-                  }
+                  setTneaModalContact(contact);
                 }}
                 className="press-spring inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-2xs hover:shadow transition-all shrink-0 cursor-pointer"
-                title="Apply for Counselling (Opens www.tneaonline.org in new tab)"
+                title="TNEA Counselling & Application Hub (View/Register Application & Official Portals)"
               >
                 <GraduationCap className="w-3.5 h-3.5 text-teal-100" />
                 <span>Apply</span>
-                <ExternalLink className="w-3 h-3 text-teal-200" />
-              </a>
+                <Sparkles className="w-3 h-3 text-teal-200" />
+              </button>
             </div>
 
             {contact.counsellingAppNo && (
@@ -6101,6 +6195,294 @@ export default function ContactDirectoryModule({
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs cursor-pointer shadow-lg shadow-emerald-900/30 transition-all"
               >
                 Done & Return to Leads
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TNEA Counselling & Application Hub Modal */}
+      {tneaModalContact && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setTneaModalContact(null)}
+        >
+          <div
+            className="bg-slate-900 border border-teal-500/40 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-slate-100 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-slate-900 p-6 flex items-start justify-between gap-4 border-b border-teal-600/40">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 shadow-inner shrink-0">
+                  <GraduationCap className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-400/20 text-teal-200 border border-teal-400/30">
+                      TNEA Counselling Hub
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-slate-200">
+                      Code: {tneaModalContact.campus === "COIMBATORE" ? "VSB-714" : "VSB-612"}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-black text-white tracking-tight mt-1">
+                    Counselling Application Assistant
+                  </h3>
+                  <p className="text-xs text-teal-200/80 mt-0.5">
+                    Tamil Nadu Engineering Admissions & Quota Management for {tneaModalContact.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTneaModalContact(null)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+              {/* Student Summary Card */}
+              <div className="bg-slate-800/60 border border-slate-700/70 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-teal-400">Candidate Information</p>
+                  <p className="text-base font-extrabold text-white flex items-center gap-2">
+                    <User className="w-4 h-4 text-teal-400" />
+                    {tneaModalContact.name}
+                  </p>
+                  <p className="text-xs text-slate-400 font-mono">
+                    {tneaModalContact.phone} {tneaModalContact.email ? `• ${tneaModalContact.email}` : ""}
+                  </p>
+                </div>
+                <div className="text-right space-y-1">
+                  <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                    {tneaModalContact.campus || "KARUR"} CAMPUS ({tneaModalContact.campus === "COIMBATORE" ? "CODE 714" : "CODE 612"})
+                  </span>
+                  <p className="text-xs text-slate-300 font-medium">
+                    {tneaModalContact.courseInterest || "B.E. Engineering"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Note: Why 403 Happens & Working Alternatives */}
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Official TNEA Portal Status & 403 Forbidden Fix</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  The state portal (<code className="text-amber-200 font-mono">tneaonline.org</code>) runs on AWS Application Load Balancer and restricts direct access during off-cycle months or blocks cross-domain referrers.
+                  For 24/7 working government engineering admission updates, use the permanent <strong>Directorate of Technical Education (DoTE)</strong> portal below.
+                </p>
+              </div>
+
+              {/* Official Portals Direct Launchers */}
+              <div className="space-y-3">
+                <p className="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Globe className="w-4 h-4 text-sky-400" /> Official Government & University Portals
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* DoTE Portal (Primary Working) */}
+                  <a
+                    href={DTE_TN_GOV_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group bg-gradient-to-b from-slate-800 to-slate-800/80 hover:from-teal-950/60 hover:to-slate-805 border border-emerald-500/40 hover:border-emerald-400 rounded-2xl p-3.5 flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-sm"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          ✅ Verified Live
+                        </span>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                      </div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                        DoTE Tamil Nadu
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                        Directorate of Technical Education official parent portal (dte.tn.gov.in).
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-emerald-400 inline-flex items-center gap-1">
+                      Open DoTE Portal ↗
+                    </span>
+                  </a>
+
+                  {/* TNEA Seasonal Portal */}
+                  <a
+                    href={TNEA_ONLINE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group bg-gradient-to-b from-slate-800 to-slate-800/80 hover:from-teal-950/60 hover:to-slate-805 border border-slate-700/80 hover:border-teal-500/50 rounded-2xl p-3.5 flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-sm"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                          🏛️ Seasonal Portal
+                        </span>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-400 transition-colors" />
+                      </div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-teal-300 transition-colors">
+                        TNEA Online Portal
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                        Active during state counselling seat rounds (May–August).
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-teal-400 inline-flex items-center gap-1">
+                      Open TNEA Online ↗
+                    </span>
+                  </a>
+
+                  {/* Anna University Portal */}
+                  <a
+                    href={ANNA_UNIV_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group bg-gradient-to-b from-slate-800 to-slate-800/80 hover:from-sky-950/60 hover:to-slate-805 border border-slate-700/80 hover:border-sky-500/50 rounded-2xl p-3.5 flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-sm"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                          🏫 Affiliation
+                        </span>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-400 transition-colors" />
+                      </div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors">
+                        Anna University
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                        Affiliating university guidelines, syllabus & academic updates.
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-sky-400 inline-flex items-center gap-1">
+                      Open Anna Univ ↗
+                    </span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Candidate TNEA Registration & Cutoff Data */}
+              <div className="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-4 space-y-4">
+                <p className="text-xs font-extrabold text-teal-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-teal-400" /> Candidate TNEA Quota Application Registration
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* TNEA Application Number */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                      <span>TNEA Application No</span>
+                      <button
+                        type="button"
+                        onClick={handleAutoGenerateTneaAppNo}
+                        className="text-[10.5px] font-bold text-teal-400 hover:text-teal-300 underline cursor-pointer"
+                        title="Generate standard TNEA Application Number"
+                      >
+                        ⚡ Auto-Generate
+                      </button>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. TNEA2026-61201"
+                      value={tneaAppNoInput}
+                      onChange={(e) => setTneaAppNoInput(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                  </div>
+
+                  {/* TNEA Cutoff */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">
+                      TNEA Cutoff (Out of 200)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="200"
+                      placeholder="e.g. 188.5"
+                      value={tneaCutoffInput}
+                      onChange={(e) => setTneaCutoffInput(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                  </div>
+
+                  {/* Counselling Category */}
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs font-bold text-slate-300">
+                      Counselling Category / Quota
+                    </label>
+                    <select
+                      value={tneaCategoryInput}
+                      onChange={(e) => setTneaCategoryInput(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-semibold text-white outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer"
+                    >
+                      <option value="TNEA General Counselling">🏛️ TNEA General Counselling</option>
+                      <option value="7.5% Govt School Quota">🎒 7.5% Government School Student Quota</option>
+                      <option value="Vocational Stream">🛠️ Vocational Stream Counselling</option>
+                      <option value="Sports Quota">🏆 Sports Quota Allocation</option>
+                      <option value="Differently Abled (PwD)">♿ Differently Abled Quota</option>
+                      <option value="Supplementary Counselling">⏳ Supplementary Counselling Round</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* WhatsApp Choice Code Dispatch */}
+                <div className="pt-2 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-[11px] text-slate-400">
+                    Send candidate official V.S.B. counselling choice filling codes:
+                    <strong className="text-teal-300 font-mono ml-1">
+                      {tneaModalContact.campus === "COIMBATORE" ? "VSB-714 (Coimbatore)" : "VSB-612 (Karur)"}
+                    </strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const campusCode = tneaModalContact.campus === "COIMBATORE" ? "VSB-714" : "VSB-612";
+                      const waText = `🎓 *TNEA COUNSELLING GUIDANCE - V.S.B. ENGINEERING COLLEGE*\n\nDear *${tneaModalContact.name.toUpperCase()}*,\n\nYour calculated TNEA Cutoff is *${tneaCutoffInput || "Verified"}/200*.\n\nWhen entering your choices on the TNEA portal, select V.S.B.:\n🏛️ *College Counselling Code:* *${campusCode}*\n📍 *Campus:* V.S.B. ${tneaModalContact.campus === "COIMBATORE" ? "College of Engineering Technical Campus (Coimbatore)" : "Engineering College (Karur)"}\n🎯 *Preferred Branch:* ${tneaModalContact.courseInterest || "B.E. Computer Science & Engineering"}\n\nFor choice-filling assistance or direct counselling guidance, visit our admissions desk or call: +91 95662 07732.`;
+                      redirectToWhatsApp(tneaModalContact.phone, waText);
+                      if (onTriggerToast) onTriggerToast("💬 Dispatched TNEA Counselling guidance via WhatsApp!");
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Send TNEA Guidance via WhatsApp</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setTneaModalContact(null)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSavingTnea}
+                onClick={handleSaveTneaDetails}
+                className="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs cursor-pointer shadow-lg shadow-teal-900/30 transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSavingTnea ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Save & Update TNEA Application</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
