@@ -214,7 +214,7 @@ export async function PUT(request: Request) {
 
     try {
       const updated = await prisma.lead.update({
-        where: { id },
+        where: { id: String(id) },
         data: {
           name,
           email,
@@ -236,10 +236,22 @@ export async function PUT(request: Request) {
         include: { application: true },
       });
 
-      return NextResponse.json(updated);
+      const responseData = {
+        ...updated,
+        ...(admissionQuota !== undefined ? { admissionQuota } : {}),
+        ...(appliedCounselling !== undefined ? { appliedCounselling } : {}),
+        ...(counsellingCategory !== undefined ? { counsellingCategory } : {}),
+        ...(counsellingAppNo !== undefined ? { counsellingAppNo } : {}),
+      };
+
+      try {
+        await saveStudentToFirebase(responseData as any);
+      } catch (fbErr) {}
+
+      return NextResponse.json(responseData);
     } catch (e) {
-      return NextResponse.json({
-        id,
+      const fallbackData = {
+        id: String(id),
         name,
         email,
         phone,
@@ -260,7 +272,7 @@ export async function PUT(request: Request) {
         createdAt: new Date().toISOString(),
         application: {
           id: `app_${id}`,
-          leadId: id,
+          leadId: String(id),
           stage: "INQUIRY" as const,
           marks10th: 0,
           marks12th: 0,
@@ -270,7 +282,13 @@ export async function PUT(request: Request) {
         appliedCounselling,
         counsellingCategory,
         counsellingAppNo,
-      });
+      };
+
+      try {
+        await saveStudentToFirebase(fallbackData as any);
+      } catch (fbErr) {}
+
+      return NextResponse.json(fallbackData);
     }
   } catch (error) {
     return NextResponse.json({ error: "Failed to update contact" }, { status: 500 });
