@@ -505,11 +505,9 @@ export default function DashboardPage() {
         if (!isNaN(numB)) return 1;
         return a.name.localeCompare(b.name);
       });
-      setTimeout(() => {
-        try {
-          localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
-        } catch (err) { }
-      }, 100);
+      try {
+        localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
+      } catch (err) { }
       return merged;
     });
   }, []);
@@ -532,11 +530,9 @@ export default function DashboardPage() {
           dbLeads.forEach((item) => map.set(item.id, item));
           const merged = Array.from(map.values());
           setApplicants(merged);
-          setTimeout(() => {
-            try {
-              localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
-            } catch (err) { }
-          }, 100);
+          try {
+            localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
+          } catch (err) { }
         }
       }
       const list = await fetchStudentsFromFirestore();
@@ -589,11 +585,9 @@ export default function DashboardPage() {
             prev.filter((p) => !isLeadDeleted(p.id)).forEach((item) => map.set(item.id, item));
             dbLeads.forEach((item) => map.set(item.id, item));
             const merged = Array.from(map.values());
-            setTimeout(() => {
-              try {
-                localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
-              } catch (err) { }
-            }, 100);
+            try {
+              localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(merged));
+            } catch (err) { }
             return merged;
           });
         } else {
@@ -648,13 +642,10 @@ export default function DashboardPage() {
   const roleScopedLeads = currentUserRole === "TEACHER" ? teacherAssignedLeads : applicants;
 
   // Dynamic calculations based on selected campus
-  const activeCampusLeads = useMemo(() => {
-    return roleScopedLeads.filter((item) => selectedCampus === "ALL" || !item.campus || item.campus === selectedCampus);
-  }, [roleScopedLeads, selectedCampus]);
-
+  const activeCampusLeads = roleScopedLeads.filter((item) => selectedCampus === "ALL" || !item.campus || item.campus === selectedCampus);
   const totalLeadCount = activeCampusLeads.length;
 
-  const dynamicMetrics: SummaryMetrics = useMemo(() => ({
+  const dynamicMetrics: SummaryMetrics = {
     totalLeads: totalLeadCount,
     leadsTrend: 14.2,
     applicationsVerified: activeCampusLeads.filter(a => a.status === "ADMITTED" || a.status === "IN_REVIEW").length,
@@ -663,30 +654,28 @@ export default function DashboardPage() {
     seatsFilledTrend: 18.0,
     totalRevenue: (activeCampusLeads.filter(a => a.status === "ADMITTED").length) * 95000,
     revenueTrend: 12.4,
-  }), [activeCampusLeads, totalLeadCount]);
+  };
 
-  const dynamicStatusCounts: LeadStatusCounts = useMemo(() => ({
+  const dynamicStatusCounts: LeadStatusCounts = {
     NEW: activeCampusLeads.filter(c => c.status === "NEW").length,
     CONTACTED: activeCampusLeads.filter(c => c.status === "CONTACTED").length,
     IN_REVIEW: activeCampusLeads.filter(c => c.status === "IN_REVIEW").length,
     ADMITTED: activeCampusLeads.filter(c => c.status === "ADMITTED").length,
     REJECTED: activeCampusLeads.filter(c => c.status === "REJECTED").length,
-  }), [activeCampusLeads]);
+  };
 
   // Filter tasks dynamically based on campus of the associated lead and teacher ownership
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((t) => {
-      const lead = applicants.find((l) => l.id === t.leadId);
-      if (currentUserRole === "TEACHER") {
-        if (!lead || !isLeadAssignedToTeacher(lead, loggedInUsername, loggedInCampus)) {
-          return false;
-        }
+  const filteredTasks = tasks.filter((t) => {
+    const lead = applicants.find((l) => l.id === t.leadId);
+    if (currentUserRole === "TEACHER") {
+      if (!lead || !isLeadAssignedToTeacher(lead, loggedInUsername, loggedInCampus)) {
+        return false;
       }
-      if (!lead) return true;
-      if (selectedCampus === "ALL") return true;
-      return lead.campus === selectedCampus;
-    });
-  }, [tasks, applicants, currentUserRole, loggedInUsername, loggedInCampus, selectedCampus]);
+    }
+    if (!lead) return true;
+    if (selectedCampus === "ALL") return true;
+    return (lead.campus || "KARUR").toUpperCase() === selectedCampus.toUpperCase();
+  });
 
   // Modals
   const [selectedApplicant, setSelectedApplicant] = useState<(Lead & { application: Application }) | null>(null);
@@ -789,20 +778,21 @@ export default function DashboardPage() {
   ) => {
     // Security check: non-creator users cannot log into a suspended college or host
     if (role !== "CREATOR") {
-      let freshColleges: CollegeClientLicense[] | undefined;
-      let freshGlobal: GlobalLockoutState | undefined;
-      try {
-        const fresh = await forceFetchLatestLicenseFromCloud();
-        freshColleges = fresh?.colleges;
-        freshGlobal = fresh?.globalLockout;
-      } catch (e) { }
-
-      const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(campus, freshColleges, freshGlobal);
+      const suspensionCheck = isCollegeSuspendedForCurrentEnvironment(campus);
       if (suspensionCheck.isSuspended) {
         setInstitutionSuspension(suspensionCheck);
         triggerToast("🛑 Application access has been stopped by Master Creator.");
         return;
       }
+      // Re-verify latest cloud status asynchronously in background without blocking immediate login transition
+      forceFetchLatestLicenseFromCloud().then((fresh) => {
+        if (fresh) {
+          const freshCheck = isCollegeSuspendedForCurrentEnvironment(campus, fresh.colleges, fresh.globalLockout);
+          if (freshCheck.isSuspended) {
+            setInstitutionSuspension(freshCheck);
+          }
+        }
+      }).catch(() => { });
     }
 
     sessionStorage.setItem("vsb_admin_auth", "true");
@@ -1163,23 +1153,21 @@ export default function DashboardPage() {
   }
 
   // Filter applicants by selected campus and stage filter (strictly scoped to current teacher for TEACHER role)
-  const filteredApplicants = useMemo(() => {
-    return applicants.filter((item) => {
-      if (currentUserRole === "TEACHER") {
-        if (!isLeadAssignedToTeacher(item, loggedInUsername, loggedInCampus)) {
-          return false;
-        }
-      }
-      const itemCampus = item.campus || "KARUR";
-      if (selectedCampus !== "ALL" && itemCampus !== selectedCampus) {
+  const filteredApplicants = applicants.filter((item) => {
+    if (currentUserRole === "TEACHER") {
+      if (!isLeadAssignedToTeacher(item, loggedInUsername, loggedInCampus)) {
         return false;
       }
-      if (selectedStageFilter && item.status !== selectedStageFilter) {
-        return false;
-      }
-      return true;
-    });
-  }, [applicants, currentUserRole, loggedInUsername, loggedInCampus, selectedCampus, selectedStageFilter]);
+    }
+    const itemCampus = item.campus || "KARUR";
+    if (selectedCampus !== "ALL" && itemCampus !== selectedCampus) {
+      return false;
+    }
+    if (selectedStageFilter && item.status !== selectedStageFilter) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen flex font-sans bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 w-full max-w-full overflow-x-hidden relative transition-colors duration-200">
@@ -1282,7 +1270,6 @@ export default function DashboardPage() {
               loggedInCampus={selectedCampus}
               onTriggerToast={triggerToast}
               onNavigateTab={setActiveTab}
-              applicants={applicants}
             />
           )}
 
@@ -1352,6 +1339,7 @@ export default function DashboardPage() {
             ) : (
               <TeacherModule
                 loggedInCampus={loggedInCampus}
+                selectedCampus={selectedCampus}
                 currentUserRole={effectiveSubRole}
                 loggedInUsername={loggedInUsername}
                 onTriggerToast={triggerToast}
@@ -1375,6 +1363,7 @@ export default function DashboardPage() {
           {activeTab === "PAYMENTS" && currentUserRole !== "CREATOR" && (
             <PaymentBillingModule
               loggedInCampus={loggedInCampus}
+              selectedCampus={selectedCampus}
               onTriggerToast={triggerToast}
               currentLeadsCount={applicants.length}
               applicants={applicants}
@@ -1434,19 +1423,19 @@ export default function DashboardPage() {
               onApplicationCreated={handleCreateApplication}
               existingLeads={applicants}
               loggedInUsername={loggedInUsername}
+              defaultCampus={selectedCampus === "COIMBATORE" ? "COIMBATORE" : "KARUR"}
             />
           )}
         </ErrorBoundary>
 
-        {isQuickLeadModalOpen && (
-          <AddQuickLeadModal
-            isOpen={isQuickLeadModalOpen}
-            onClose={() => setIsQuickLeadModalOpen(false)}
-            onLeadAdded={handleCreateApplication}
-            existingLeads={applicants}
-            loggedInUsername={loggedInUsername}
-          />
-        )}
+        <AddQuickLeadModal
+          isOpen={isQuickLeadModalOpen}
+          onClose={() => setIsQuickLeadModalOpen(false)}
+          onLeadAdded={handleCreateApplication}
+          existingLeads={applicants}
+          loggedInUsername={loggedInUsername}
+          defaultCampus={selectedCampus === "COIMBATORE" ? "COIMBATORE" : "KARUR"}
+        />
 
         {selectedApplicant && (
           <ApplicantDetailModal
@@ -1469,13 +1458,33 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* NORA AI DATABASE ANALYTICS & SEARCH MODAL */}
+        {/* NORA CHATBOT DATABASE ANALYTICS, DELETION & FILE IMPORT MODAL */}
         <NoraAiDatabaseModal
           isOpen={isNoraModalOpen}
           onClose={() => setIsNoraModalOpen(false)}
           applicants={applicants}
           selectedCampus={selectedCampus}
           onSelectApplicant={handleSelectApplicant}
+          onDeleteApplicant={(id, name) => {
+            setApplicants((prev) => {
+              const filtered = prev.filter((a) => a.id !== id);
+              try {
+                localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(filtered));
+              } catch (e) { }
+              return filtered;
+            });
+            triggerToast(`🗑️ NORA Chatbot deleted "${name}" from database!`);
+          }}
+          onAddApplicants={(newLeads) => {
+            setApplicants((prev) => {
+              const updated = [...newLeads, ...prev];
+              try {
+                localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(updated));
+              } catch (e) { }
+              return updated;
+            });
+            triggerToast(`📥 NORA Chatbot added ${newLeads.length} student(s) to the database!`);
+          }}
           onApplyFilter={(query) => {
             setSearchQuery(query);
             triggerToast(`🔍 Filtered CRM table by: "${query}"`);
@@ -1529,8 +1538,8 @@ export default function DashboardPage() {
             type="button"
             onClick={() => setActiveTab(currentUserRole === "TEACHER" ? "USER_DASHBOARD" : "ADMIN_DASHBOARD")}
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${(currentUserRole === "TEACHER" ? activeTab === "USER_DASHBOARD" : (activeTab === "ADMIN_DASHBOARD" || activeTab === "ADMISSIONS"))
-                ? "text-sky-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
               }`}
           >
             <LayoutDashboard className="w-5 h-5" />
@@ -1541,8 +1550,8 @@ export default function DashboardPage() {
             type="button"
             onClick={() => setActiveTab("CONTACTS")}
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${activeTab === "CONTACTS" || activeTab === "STUDENTS"
-                ? "text-sky-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
               }`}
           >
             <UserCheck className="w-5 h-5" />
@@ -1564,8 +1573,8 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setActiveTab("CREATOR_CONTROL")}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${activeTab === "CREATOR_CONTROL"
-                  ? "text-amber-400 font-extrabold scale-105"
-                  : "text-slate-400 hover:text-slate-200"
+                ? "text-amber-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               <Crown className="w-5 h-5 text-amber-400" />
@@ -1576,8 +1585,8 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setActiveTab("TEACHERS")}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${activeTab === "TEACHERS"
-                  ? "text-sky-400 font-extrabold scale-105"
-                  : "text-slate-400 hover:text-slate-200"
+                ? "text-sky-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               <BookOpen className="w-5 h-5" />
@@ -1588,8 +1597,8 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setActiveTab("AI_INTELLIGENCE")}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${activeTab === "AI_INTELLIGENCE"
-                  ? "text-purple-400 font-extrabold scale-105"
-                  : "text-slate-400 hover:text-slate-200"
+                ? "text-purple-400 font-extrabold scale-105"
+                : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               <Sparkles className="w-5 h-5 text-purple-400" />
@@ -1602,8 +1611,8 @@ export default function DashboardPage() {
             type="button"
             onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
             className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${isMobileSidebarOpen
-                ? "text-sky-400 font-extrabold scale-105"
-                : "text-slate-400 hover:text-slate-200"
+              ? "text-sky-400 font-extrabold scale-105"
+              : "text-slate-400 hover:text-slate-200"
               }`}
             aria-label="Toggle Navigation Menu"
             title="All Modules & Settings"
