@@ -1312,6 +1312,17 @@ export default function DashboardPage() {
                 onDeleteContact={handleDeleteApplicant}
                 onReloadLeads={handleReloadLeads}
                 onOpenNoraAi={handleOpenNora}
+                onUpdateContact={(updated) => {
+                  setApplicants((prev) => {
+                    const newList = prev.map((a) =>
+                      String(a.id) === String(updated.id) ? ({ ...a, ...updated } as any) : a
+                    );
+                    try {
+                      localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(newList));
+                    } catch (err) {}
+                    return newList;
+                  });
+                }}
               />
             )
           )}

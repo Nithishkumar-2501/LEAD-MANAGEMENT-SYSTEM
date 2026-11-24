@@ -128,6 +128,7 @@ interface ContactDirectoryModuleProps {
   isReloading?: boolean;
   onReloadLeads?: () => Promise<void> | void;
   onOpenNoraAi?: (initialQuery?: string) => void;
+  onUpdateContact?: (contact: Lead & { application?: Application | null }) => void;
 }
 
 export default function ContactDirectoryModule({
@@ -145,6 +146,7 @@ export default function ContactDirectoryModule({
   isReloading: externalIsReloading,
   onReloadLeads,
   onOpenNoraAi,
+  onUpdateContact,
 }: ContactDirectoryModuleProps) {
   const normalizeLeadContact = (c: Lead & { application?: Application | null }) => ({
     ...c,
@@ -1025,9 +1027,10 @@ export default function ContactDirectoryModule({
     } else if (quota === "COUNSELLING") {
       updatedQuota = "COUNSELLING";
       updatedAppliedCounselling = true;
+      const prevCat = contact.counsellingCategory;
       updatedCounsellingCategory =
-        contact.counsellingCategory && !contact.counsellingCategory.toLowerCase().includes("management")
-          ? contact.counsellingCategory
+        prevCat && !prevCat.toLowerCase().includes("management")
+          ? prevCat
           : "Apply for Counselling";
     }
 
@@ -1036,18 +1039,22 @@ export default function ContactDirectoryModule({
       admissionQuota: updatedQuota,
       appliedCounselling: updatedAppliedCounselling,
       counsellingCategory: updatedCounsellingCategory,
+      ...(quota === "MANAGEMENT" ? { counsellingAppNo: "" } : {}),
     };
 
     // 1. Optimistic UI update
     setContacts((prev) =>
-      prev.map((c) => (c.id === contact.id ? (updatedContact as any) : c))
+      prev.map((c) => (String(c.id) === String(contact.id) ? (updatedContact as any) : c))
     );
+
+    // Notify parent dashboard state to avoid re-render sync clobbering
+    onUpdateContact?.(updatedContact as any);
 
     if (onTriggerToast) {
       if (quota === "MANAGEMENT") {
-        onTriggerToast(`🏢 ${contact.name} assigned to Management Quota (Direct Admission)`);
+        onTriggerToast(`🏢 ${contact.name} switched to Management Quota (Counselling removed)`);
       } else if (quota === "COUNSELLING") {
-        onTriggerToast(`🏛️ ${contact.name} set to Counselling Quota (Apply for Counselling active)`);
+        onTriggerToast(`🏛️ ${contact.name} set to Counselling Quota (TNEA active)`);
       } else {
         onTriggerToast(`Reset admission quota for ${contact.name}`);
       }
@@ -1066,10 +1073,11 @@ export default function ContactDirectoryModule({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: contact.id,
+          id: String(contact.id),
           admissionQuota: updatedQuota,
           appliedCounselling: updatedAppliedCounselling,
           counsellingCategory: updatedCounsellingCategory,
+          counsellingAppNo: quota === "MANAGEMENT" ? "" : (contact.counsellingAppNo || ""),
         }),
       });
     } catch (apiErr) {
@@ -1185,7 +1193,10 @@ export default function ContactDirectoryModule({
       const stateInfo = getStudentLeadState(contact);
       const isVerified = Boolean(contact.phone && contact.phone.length >= 10);
       const getDisplayCandidateId = (c: typeof contact) => {
-        if (c.counsellingAppNo) return c.counsellingAppNo;
+        const isMgmt =
+          c.admissionQuota === "MANAGEMENT" ||
+          (c.counsellingCategory && c.counsellingCategory.toLowerCase().includes("management"));
+        if (!isMgmt && c.counsellingAppNo) return c.counsellingAppNo;
         const idStr = String(c.id || "").trim();
         if (/^\d+$/.test(idStr)) return `Lead #${idStr}`;
         if (idStr.startsWith("lead_")) {
@@ -1440,30 +1451,17 @@ export default function ContactDirectoryModule({
               <Building className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <span>Management Quota</span>
             </span>
-
-            {/* Subtle switch button if teacher wants to change to Counselling */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleQuotaChange(contact, "COUNSELLING");
-              }}
-              className="p-1 rounded-lg text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Change to Counselling Quota"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
           </div>
         );
       }
 
       // CASE 2: Teacher selected COUNSELLING
-      // "other wise the teacher select the counselling i need the dropdown as apply for counselling for that student"
       if (isCounselling) {
+        const rawCat = contact.counsellingCategory;
         const currentCategory =
-          contact.counsellingCategory && !contact.counsellingCategory.toLowerCase().includes("management")
-            ? contact.counsellingCategory
-            : "Apply for Counselling";
+          rawCat && !rawCat.toLowerCase().includes("management") && rawCat !== "Apply for Counselling"
+            ? rawCat
+            : "TNEA";
 
         return (
           <div
@@ -1551,7 +1549,7 @@ export default function ContactDirectoryModule({
               handleQuotaChange(contact, "COUNSELLING");
             }}
             className="press-spring inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/50 dark:hover:bg-teal-900/60 text-teal-700 dark:text-teal-300 border border-teal-300 dark:border-teal-700/60 font-black text-xs shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            title="Select Counselling Quota (Opens Apply for Counselling dropdown)"
+            title="Select Counselling Quota (TNEA Counselling)"
           >
             <GraduationCap className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             <span>Counselling</span>
@@ -3814,7 +3812,9 @@ export default function ContactDirectoryModule({
                     )}
 
                     {/* TNEA Counselling Details Box */}
-                    {(contact.counsellingAppNo || contact.tneaCutoff) && (
+                    {contact.admissionQuota !== "MANAGEMENT" &&
+                      !contact.counsellingCategory?.toLowerCase().includes("management") &&
+                      (contact.counsellingAppNo || contact.tneaCutoff) && (
                       <div className="pt-2 border-t border-white/10 space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
