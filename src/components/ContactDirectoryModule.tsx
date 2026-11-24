@@ -303,6 +303,11 @@ export default function ContactDirectoryModule({
       const d = new Date(c.createdAt);
       return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
+    if (col === "Admission Quota") {
+      if (c.admissionQuota === "MANAGEMENT" || c.counsellingCategory?.toLowerCase().includes("management")) return "MANAGEMENT";
+      if (c.admissionQuota === "COUNSELLING" || c.appliedCounselling || (c.counsellingCategory && !c.counsellingCategory.toLowerCase().includes("management"))) return "COUNSELLING";
+      return "UNSELECTED";
+    }
     if (col === "Lead Stage") return c.status || "";
     return "";
   };
@@ -524,6 +529,7 @@ export default function ContactDirectoryModule({
     "City",
     "Lead Stage",
     "User Registration Date",
+    "Admission Quota",
   ]);
 
   const allAvailableColumns = [
@@ -551,6 +557,7 @@ export default function ContactDirectoryModule({
     "Community",
     "How Known / Source",
     "User Registration Date",
+    "Admission Quota",
   ];
 
   // Visibility Controls States
@@ -1002,6 +1009,145 @@ export default function ContactDirectoryModule({
     }
   };
 
+  // Handler for Admission Quota Selection (Counselling vs Management Quota)
+  const handleQuotaChange = async (
+    contact: Lead & { application?: Application | null },
+    quota: "COUNSELLING" | "MANAGEMENT" | "UNSELECTED"
+  ) => {
+    let updatedQuota: "COUNSELLING" | "MANAGEMENT" | undefined = undefined;
+    let updatedAppliedCounselling = false;
+    let updatedCounsellingCategory = "";
+
+    if (quota === "MANAGEMENT") {
+      updatedQuota = "MANAGEMENT";
+      updatedAppliedCounselling = false;
+      updatedCounsellingCategory = "Management Quota Direct";
+    } else if (quota === "COUNSELLING") {
+      updatedQuota = "COUNSELLING";
+      updatedAppliedCounselling = true;
+      updatedCounsellingCategory =
+        contact.counsellingCategory && !contact.counsellingCategory.toLowerCase().includes("management")
+          ? contact.counsellingCategory
+          : "Apply for Counselling";
+    }
+
+    const updatedContact = {
+      ...contact,
+      admissionQuota: updatedQuota,
+      appliedCounselling: updatedAppliedCounselling,
+      counsellingCategory: updatedCounsellingCategory,
+    };
+
+    // 1. Optimistic UI update
+    setContacts((prev) =>
+      prev.map((c) => (c.id === contact.id ? (updatedContact as any) : c))
+    );
+
+    if (onTriggerToast) {
+      if (quota === "MANAGEMENT") {
+        onTriggerToast(`🏢 ${contact.name} assigned to Management Quota (Direct Admission)`);
+      } else if (quota === "COUNSELLING") {
+        onTriggerToast(`🏛️ ${contact.name} set to Counselling Quota (Apply for Counselling active)`);
+      } else {
+        onTriggerToast(`Reset admission quota for ${contact.name}`);
+      }
+    }
+
+    // 2. Sync to Firebase
+    try {
+      await saveStudentToFirebase(updatedContact as any);
+    } catch (fbErr) {
+      console.warn("Firebase sync quota notice:", fbErr);
+    }
+
+    // 3. Sync to API
+    try {
+      await mobileSafeFetch("/api/contacts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: contact.id,
+          admissionQuota: updatedQuota,
+          appliedCounselling: updatedAppliedCounselling,
+          counsellingCategory: updatedCounsellingCategory,
+        }),
+      });
+    } catch (apiErr) {
+      console.warn("API sync quota notice:", apiErr);
+    }
+
+    // 4. Update LocalStorage Cache
+    try {
+      const cached = localStorage.getItem("vsb_firebase_leads_cache");
+      if (cached) {
+        const list = JSON.parse(cached);
+        if (Array.isArray(list)) {
+          const idx = list.findIndex((x: any) => String(x.id) === String(contact.id));
+          if (idx >= 0) {
+            list[idx] = { ...list[idx], ...updatedContact };
+            localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(list));
+          }
+        }
+      }
+    } catch (e) {}
+  };
+
+  // Handler for Apply for Counselling Dropdown Category Change
+  const handleCounsellingCategoryChange = async (
+    contact: Lead & { application?: Application | null },
+    newCategory: string
+  ) => {
+    const updatedContact = {
+      ...contact,
+      admissionQuota: "COUNSELLING" as const,
+      appliedCounselling: true,
+      counsellingCategory: newCategory,
+    };
+
+    // 1. Optimistic UI update
+    setContacts((prev) =>
+      prev.map((c) => (c.id === contact.id ? (updatedContact as any) : c))
+    );
+
+    if (onTriggerToast) {
+      onTriggerToast(`Updated ${contact.name}'s Counselling: ${newCategory}`);
+    }
+
+    // 2. Sync to Firebase
+    try {
+      await saveStudentToFirebase(updatedContact as any);
+    } catch (fbErr) {}
+
+    // 3. Sync to API
+    try {
+      await mobileSafeFetch("/api/contacts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: contact.id,
+          admissionQuota: "COUNSELLING",
+          appliedCounselling: true,
+          counsellingCategory: newCategory,
+        }),
+      });
+    } catch (e) {}
+
+    // 4. Update LocalStorage Cache
+    try {
+      const cached = localStorage.getItem("vsb_firebase_leads_cache");
+      if (cached) {
+        const list = JSON.parse(cached);
+        if (Array.isArray(list)) {
+          const idx = list.findIndex((x: any) => String(x.id) === String(contact.id));
+          if (idx >= 0) {
+            list[idx] = { ...list[idx], ...updatedContact };
+            localStorage.setItem("vsb_firebase_leads_cache", JSON.stringify(list));
+          }
+        }
+      }
+    } catch (e) {}
+  };
+
   // Column min-widths ensuring table layout never compresses candidate name, mobile, etc.
   const getColumnWidthClass = (columnName: string) => {
     switch (columnName) {
@@ -1015,6 +1161,8 @@ export default function ContactDirectoryModule({
         return "min-w-[210px]";
       case "Lead Stage":
         return "min-w-[220px]";
+      case "Admission Quota":
+        return "min-w-[280px]";
       case "City":
         return "min-w-[150px]";
       case "Campus":
@@ -1264,6 +1412,167 @@ export default function ContactDirectoryModule({
       const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
       return <span className="text-slate-800 dark:text-slate-200 font-mono text-[13px] font-medium whitespace-nowrap">{formattedDate}</span>;
     }
+    if (col === "Admission Quota") {
+      const isManagement =
+        contact.admissionQuota === "MANAGEMENT" ||
+        (contact.counsellingCategory && contact.counsellingCategory.toLowerCase().includes("management"));
+
+      const isCounselling =
+        contact.admissionQuota === "COUNSELLING" ||
+        (!isManagement &&
+          (contact.appliedCounselling === true ||
+            (contact.counsellingCategory && !contact.counsellingCategory.toLowerCase().includes("management"))));
+
+      // CASE 1: Teacher selected MANAGEMENT
+      // "and the teacher if he select the management button no dropdown is need"
+      // "if there is management is selected noneed to show the counselling option in the student"
+      if (isManagement) {
+        return (
+          <div
+            className="inline-flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 font-bold text-[13px] shadow-2xs"
+              title="Management Quota Direct Admission (Direct Seat - No Counselling dropdown needed)"
+            >
+              <Building className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span>Management Quota</span>
+            </span>
+
+            {/* Subtle switch button if teacher wants to change to Counselling */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleQuotaChange(contact, "COUNSELLING");
+              }}
+              className="p-1 rounded-lg text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Change to Counselling Quota"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      }
+
+      // CASE 2: Teacher selected COUNSELLING
+      // "other wise the teacher select the counselling i need the dropdown as apply for counselling for that student"
+      if (isCounselling) {
+        const currentCategory =
+          contact.counsellingCategory && !contact.counsellingCategory.toLowerCase().includes("management")
+            ? contact.counsellingCategory
+            : "Apply for Counselling";
+
+        return (
+          <div
+            className="flex flex-col gap-1.5 min-w-[240px] max-w-[290px]"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-300 dark:border-teal-700/60 font-black text-[11px] uppercase tracking-wider">
+                <GraduationCap className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                <span>Counselling</span>
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuotaChange(contact, "MANAGEMENT");
+                }}
+                className="text-[11px] font-bold text-slate-500 hover:text-purple-600 dark:hover:text-purple-400 underline cursor-pointer"
+                title="Switch to Management Quota"
+              >
+                Switch to Management
+              </button>
+            </div>
+
+            {/* Apply for Counselling Dropdown */}
+            <div className="relative">
+              <select
+                value={currentCategory}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  handleCounsellingCategoryChange(contact, e.target.value);
+                }}
+                className="w-full appearance-none cursor-pointer pl-3 pr-8 py-1.5 rounded-xl text-[12.5px] font-bold border border-teal-400 dark:border-teal-600 bg-teal-50/60 dark:bg-slate-900 text-teal-900 dark:text-teal-200 shadow-2xs outline-none focus:ring-2 focus:ring-teal-500 min-h-[34px]"
+                title="Apply for Counselling options"
+              >
+                <option value="Apply for Counselling" className="bg-slate-900 text-teal-300 font-bold">
+                  🎓 Apply for Counselling
+                </option>
+                <option value="TNEA General Counselling (Academic)" className="bg-slate-900 text-white font-medium">
+                  🏛️ TNEA General Counselling (Academic)
+                </option>
+                <option value="TNEA Govt School 7.5% Quota" className="bg-slate-900 text-white font-medium">
+                  ⭐ TNEA Govt School 7.5% Quota
+                </option>
+                <option value="TNEA Vocational Counselling" className="bg-slate-900 text-white font-medium">
+                  🔧 TNEA Vocational Counselling
+                </option>
+                <option value="TNEA Sports / Special Quota" className="bg-slate-900 text-white font-medium">
+                  🏅 TNEA Sports / Special Quota
+                </option>
+                <option value="Counselling Applied (App No Pending)" className="bg-slate-900 text-amber-300 font-bold">
+                  ⏳ Counselling Applied (App No Pending)
+                </option>
+                <option value="Seat Allotted via Counselling" className="bg-slate-900 text-emerald-300 font-black">
+                  ✅ Seat Allotted via Counselling
+                </option>
+              </select>
+              <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-teal-600 dark:text-teal-400">
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {contact.counsellingAppNo && (
+              <span className="text-[10.5px] font-mono font-bold text-teal-700 dark:text-teal-300">
+                App No: <strong>{contact.counsellingAppNo}</strong>
+              </span>
+            )}
+          </div>
+        );
+      }
+
+      // CASE 3: UNSELECTED (Neither selected yet - Teacher chooses Counselling or Management)
+      return (
+        <div
+          className="flex items-center gap-2"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {/* Counselling Button with Icon */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleQuotaChange(contact, "COUNSELLING");
+            }}
+            className="press-spring inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/50 dark:hover:bg-teal-900/60 text-teal-700 dark:text-teal-300 border border-teal-300 dark:border-teal-700/60 font-black text-xs shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            title="Select Counselling Quota (Opens Apply for Counselling dropdown)"
+          >
+            <GraduationCap className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <span>Counselling</span>
+          </button>
+
+          {/* Management Button with Icon */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleQuotaChange(contact, "MANAGEMENT");
+            }}
+            className="press-spring inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 font-black text-xs shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            title="Select Management Quota (Direct Admission, no dropdown needed)"
+          >
+            <Building className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <span>Management</span>
+          </button>
+        </div>
+      );
+    }
     if (col === "Lead Stage") {
       const rawStatus = (contact.status || "").toUpperCase();
       let currentVal: "INQUIRY" | "INTERESTED" | "ADMITTED" | "NOT_INTERESTED" = "INQUIRY";
@@ -1470,7 +1779,7 @@ export default function ContactDirectoryModule({
           if (filter === "cold") return stateInfo.state === "COLD" || normalizedStatus === "NOT_INTERESTED";
           return actual === filter || (c.status || "").toLowerCase() === filter || normalizedStatus.toLowerCase() === filter;
         }
-        if (col === "Campus" || col === "Gender" || col === "Community" || col === "State") {
+        if (col === "Campus" || col === "Gender" || col === "Community" || col === "State" || col === "Admission Quota") {
           return actual === filter;
         }
         return actual.includes(filter);
@@ -2987,6 +3296,24 @@ export default function ContactDirectoryModule({
                             <option value="INTERESTED">⚡ Interested</option>
                             <option value="ADMITTED">🎓 Admitted</option>
                             <option value="NOT_INTERESTED">🚫 Not Interested</option>
+                          </select>
+                        </td>
+                      );
+                    }
+                    if (col === "Admission Quota") {
+                      return (
+                        <td key={`filter_${col}`} className={`p-2 border-b border-slate-200 dark:border-white/10 ${getColumnWidthClass(col)}`}>
+                          <select
+                            value={filterVal || "ALL"}
+                            onChange={(e) =>
+                              setColumnFilters({ ...columnFilters, [col]: e.target.value })
+                            }
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[14px] font-medium text-slate-800 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none cursor-pointer shadow-2xs min-h-[36px]"
+                          >
+                            <option value="ALL">All Quotas</option>
+                            <option value="COUNSELLING">🏛️ Counselling</option>
+                            <option value="MANAGEMENT">🏢 Management</option>
+                            <option value="UNSELECTED">⏳ Not Decided</option>
                           </select>
                         </td>
                       );
@@ -4854,6 +5181,7 @@ export default function ContactDirectoryModule({
                     "State",
                     "City",
                     "User Registration Date",
+                    "Admission Quota",
                     "Lead Stage",
                   ])
                 }

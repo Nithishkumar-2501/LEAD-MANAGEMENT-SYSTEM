@@ -59,7 +59,6 @@ import {
   Paperclip,
   AlertTriangle,
   FileCheck,
-  PhoneOff,
 } from "lucide-react";
 import { Lead, Application, LeadStatus, AppStage, VSB_DEPARTMENTS_COURSES, CallRecording, TimelineActivity, StudentDocument } from "@/types/crm";
 import { predictStudentConversion, calculateTneaCutoff } from "@/lib/ai/leadScoringEngine";
@@ -67,12 +66,11 @@ import { parseMarksheetDocument } from "@/lib/ai/marksheetOcrEngine";
 import { analyzeCallTranscript } from "@/lib/ai/callSentimentEngine";
 import {
   saveStudentToFirebase,
-  saveApplicationToFirebase,
   uploadStudentDocumentToFirebase,
   fetchStudentDocumentsFromFirebase,
   deleteStudentDocumentFromFirebase,
 } from "@/lib/firebaseSync";
-import { validateLeadPhoneNumber, formatPhoneWith91, extractRaw10Digits } from "@/lib/phoneValidation";
+import { validateLeadPhoneNumber, formatPhoneWith91 } from "@/lib/phoneValidation";
 import { mobileSafeFetch } from "@/lib/mobileFetch";
 import { redirectToDialPad, getCleanTelUri } from "@/lib/callDialer";
 import { getStudentLeadState } from "@/lib/studentLeadState";
@@ -87,9 +85,17 @@ import {
   getDefaultAdmissionSmsText,
   formatSmsNumber,
 } from "@/lib/smsSender";
+
+export function getEffectiveCutoff(tneaCutoff?: number, marks12th?: number, cutoff?: number): number {
+  if (typeof tneaCutoff === "number" && !isNaN(tneaCutoff) && tneaCutoff > 0) return tneaCutoff;
+  if (typeof cutoff === "number" && !isNaN(cutoff) && cutoff > 0) return cutoff;
+  if (typeof marks12th === "number" && !isNaN(marks12th) && marks12th > 0) {
+    if (marks12th <= 200) return marks12th;
+    return Math.round((marks12th / 600) * 200 * 10) / 10;
+  }
+  return 0;
+}
 import InPortalCommunicationModals from "@/components/InPortalCommunicationModals";
-import { getTeacherDisplayName } from "@/lib/teacherAssignment";
-import { sanitizeLeadFields } from "@/lib/csvParser";
 
 interface ApplicantDetailModalProps {
   applicant: (Lead & { application: Application }) | null;
@@ -161,24 +167,6 @@ const getStageKeyForLead = (lead: (Lead & { application?: Application | null }) 
   return "VERIFIED";
 };
 
-export function getEffectiveCutoff(
-  leadCutoff?: number,
-  marks12th?: number,
-  fallbackCutoff?: number
-): number | undefined {
-  if (leadCutoff !== undefined && leadCutoff !== null && leadCutoff > 0) {
-    return Math.min(200, Math.max(0, leadCutoff));
-  }
-  if (fallbackCutoff !== undefined && fallbackCutoff !== null && fallbackCutoff > 0) {
-    return Math.min(200, Math.max(0, fallbackCutoff));
-  }
-  if (marks12th && marks12th > 0) {
-    const raw = Number((marks12th * 2).toFixed(2));
-    return Math.min(200, Math.max(0, raw));
-  }
-  return undefined;
-}
-
 export default function ApplicantDetailModal({
   applicant,
   currentUserRole,
@@ -189,70 +177,8 @@ export default function ApplicantDetailModal({
   existingLeads = [],
 }: ApplicantDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [backupFormData, setBackupFormData] = useState<(Lead & { application: Application }) | null>(null);
-
-  const getInitialFormData = (appLead: (Lead & { application: Application }) | null) => {
-    if (!appLead) return null;
-    const sanitized = sanitizeLeadFields(appLead);
-    const effective = getEffectiveCutoff(
-      sanitized.tneaCutoff,
-      sanitized.application?.marks12th,
-      (sanitized as any).cutoff
-    );
-    const resolvedPhone = sanitized.phone && sanitized.phone.trim() ? sanitized.phone : "+91-6380270912";
-    const resolvedSource = sanitized.source && sanitized.source.trim() ? sanitized.source : "Organic";
-    if ((sanitized.tneaCutoff === undefined || sanitized.tneaCutoff === null || sanitized.tneaCutoff === 0) && effective !== undefined) {
-      return { ...sanitized, phone: resolvedPhone, source: resolvedSource, tneaCutoff: effective };
-    }
-    return { ...sanitized, phone: resolvedPhone, source: resolvedSource };
-  };
-
-  const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(() =>
-    getInitialFormData(applicant)
-  );
-
-  const handleOpenEditModal = () => {
-    if (formData) {
-      setBackupFormData(JSON.parse(JSON.stringify(formData)));
-    }
-    setIsEditing(true);
-  };
-
-  const handleCancelEdit = () => {
-    if (backupFormData) {
-      setFormData(backupFormData);
-      setBackupFormData(null);
-    }
-    setIsEditing(false);
-  };
-
-  // Sync snapshot whenever edit mode is opened
-  useEffect(() => {
-    if (isEditing && formData && !backupFormData) {
-      setBackupFormData(JSON.parse(JSON.stringify(formData)));
-    }
-  }, [isEditing, formData, backupFormData]);
-
-  // Handle Escape key to cancel and discard unsaved edits
-  useEffect(() => {
-    if (!isEditing) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        handleCancelEdit();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isEditing, backupFormData]);
+  const [formData, setFormData] = useState<(Lead & { application: Application }) | null>(applicant);
   const [currentStageKey, setCurrentStageKey] = useState<string>(() => getStageKeyForLead(applicant));
-
-  const effectiveCutoff = useMemo(() => {
-    return getEffectiveCutoff(
-      formData?.tneaCutoff,
-      formData?.application?.marks12th,
-      (formData as any)?.cutoff
-    );
-  }, [formData?.tneaCutoff, formData?.application?.marks12th, (formData as any)?.cutoff]);
 
   // Dynamic course options and active selection for degree course interest
   const detailCourseOptions = useMemo(() => {
@@ -291,7 +217,7 @@ export default function ApplicantDetailModal({
 
   useEffect(() => {
     if (applicant) {
-      setFormData(getInitialFormData(applicant));
+      setFormData(applicant);
       setCurrentStageKey(getStageKeyForLead(applicant));
     }
   }, [applicant]);
@@ -340,55 +266,55 @@ export default function ApplicantDetailModal({
     required: boolean;
     accept: string;
   }[] = [
-    {
-      type: "MARKSHEET_12TH",
-      title: "12th Higher Secondary Marksheet (HSC)",
-      description: "Evaluates Maths, Physics & Chemistry scores for Anna University TNEA Cutoff (out of 200).",
-      badge: "AI OCR Cutoff Auto-Calculation",
-      required: true,
-      accept: ".pdf,image/*",
-    },
-    {
-      type: "MARKSHEET_10TH",
-      title: "10th Secondary School Leaving Certificate (SSLC)",
-      description: "Verified proof for Date of Birth, secondary education record and basic eligibility.",
-      badge: "DOB & Secondary Proof",
-      required: true,
-      accept: ".pdf,image/*",
-    },
-    {
-      type: "TRANSFER_CERTIFICATE",
-      title: "Transfer Certificate (TC)",
-      description: "Original transfer certificate from previous institution or school board.",
-      badge: "Mandatory at Admission",
-      required: true,
-      accept: ".pdf,image/*",
-    },
-    {
-      type: "COMMUNITY_CERTIFICATE",
-      title: "Community Certificate",
-      description: "Sub-caste certificate from Revenue Department for BC / BCM / MBC / SC / SCA / ST reservations.",
-      badge: "Govt Quota & Scholarship",
-      required: false,
-      accept: ".pdf,image/*",
-    },
-    {
-      type: "ID_PROOF",
-      title: "Aadhaar Card / Government Photo ID",
-      description: "Front & back scan of Aadhaar card or government-issued national identity card.",
-      badge: "Identity Verification",
-      required: true,
-      accept: ".pdf,image/*",
-    },
-    {
-      type: "STUDENT_PHOTO",
-      title: "Passport Size Photograph",
-      description: "Recent formal color photograph with white background for College ID and Anna University Portal.",
-      badge: "College ID Card Photo",
-      required: false,
-      accept: "image/*",
-    },
-  ];
+      {
+        type: "MARKSHEET_12TH",
+        title: "12th Higher Secondary Marksheet (HSC)",
+        description: "Evaluates Maths, Physics & Chemistry scores for Anna University TNEA Cutoff (out of 200).",
+        badge: "AI OCR Cutoff Auto-Calculation",
+        required: true,
+        accept: ".pdf,image/*",
+      },
+      {
+        type: "MARKSHEET_10TH",
+        title: "10th Secondary School Leaving Certificate (SSLC)",
+        description: "Verified proof for Date of Birth, secondary education record and basic eligibility.",
+        badge: "DOB & Secondary Proof",
+        required: true,
+        accept: ".pdf,image/*",
+      },
+      {
+        type: "TRANSFER_CERTIFICATE",
+        title: "Transfer Certificate (TC)",
+        description: "Original transfer certificate from previous institution or school board.",
+        badge: "Mandatory at Admission",
+        required: true,
+        accept: ".pdf,image/*",
+      },
+      {
+        type: "COMMUNITY_CERTIFICATE",
+        title: "Community Certificate",
+        description: "Sub-caste certificate from Revenue Department for BC / BCM / MBC / SC / SCA / ST reservations.",
+        badge: "Govt Quota & Scholarship",
+        required: false,
+        accept: ".pdf,image/*",
+      },
+      {
+        type: "ID_PROOF",
+        title: "Aadhaar Card / Government Photo ID",
+        description: "Front & back scan of Aadhaar card or government-issued national identity card.",
+        badge: "Identity Verification",
+        required: true,
+        accept: ".pdf,image/*",
+      },
+      {
+        type: "STUDENT_PHOTO",
+        title: "Passport Size Photograph",
+        description: "Recent formal color photograph with white background for College ID and Anna University Portal.",
+        badge: "College ID Card Photo",
+        required: false,
+        accept: "image/*",
+      },
+    ];
 
   const handleDocumentFileUpload = async (
     docType: "MARKSHEET_10TH" | "MARKSHEET_12TH" | "TRANSFER_CERTIFICATE" | "COMMUNITY_CERTIFICATE" | "ID_PROOF" | "STUDENT_PHOTO",
@@ -512,45 +438,24 @@ export default function ApplicantDetailModal({
     document.body.removeChild(a);
   };
 
-  // Real-time Dynamic Date & Time helper (No hardcoded mock dates)
-  const formatLiveDateTime = (isoOrDate?: string | Date) => {
-    const dateObj = isoOrDate ? new Date(isoOrDate) : new Date();
-    const validDate = isNaN(dateObj.getTime()) ? new Date() : dateObj;
-    const formattedDate = validDate.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-    const formattedTime = validDate.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-    return {
-      fullTimestamp: `${formattedDate} ${formattedTime}`,
-      rawDate: validDate.toISOString().split("T")[0],
-      time: formattedTime,
-    };
-  };
-
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [notesList, setNotesList] = useState<
     { id: string; text: string; date: string; author: string }[]
-  >(() => [
+  >([
     {
       id: "1",
       text: "Student inquired about B.Tech AI & DS fee structure and TNEA cutoffs.",
-      date: formatLiveDateTime(applicant?.createdAt).fullTimestamp,
-      author: applicant?.assignedTo ? getTeacherDisplayName(applicant.assignedTo) : "Admissions Team",
+      date: "25 Aug 2026 06:30 PM",
+      author: "Dr Dhanabal M",
     },
   ]);
 
   const [timelineFilterAction, setTimelineFilterAction] = useState("ALL");
   const [timelineFilterDate, setTimelineFilterDate] = useState("");
 
-  // Dynamic & Persistent Timeline Activities (Stored in SQLite Database + Firebase + LocalStorage)
+  // Dynamic & Persistent Timeline Activities
   const [timelineActivities, setTimelineActivities] = useState<TimelineActivity[]>(() => {
     if (!applicant) return [];
     try {
@@ -559,41 +464,34 @@ export default function ApplicantDetailModal({
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {}
+    } catch (e) { }
 
-    const regTime = formatLiveDateTime(applicant.createdAt);
-    const defaultActivities: TimelineActivity[] = [
+    return [
+      {
+        id: `act_${applicant.id}_2`,
+        leadId: applicant.id,
+        type: "REASSIGNED",
+        title: "Lead Re-assigned via Automation",
+        timestamp: "25 Aug 2026 06:29 PM",
+        rawDate: "2026-08-25",
+        description: `Lead re-assigned to ${applicant.assignedTo || "Dr Dhanabal M Assistant Professor MECH"} via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.`,
+        authorName: "System Automation",
+      },
       {
         id: `act_${applicant.id}_1`,
         leadId: applicant.id,
         type: "REGISTERED",
         title: "Candidate Registration",
-        timestamp: regTime.fullTimestamp,
-        rawDate: regTime.rawDate,
+        timestamp: "25 Aug 2026 06:25 PM",
+        rawDate: "2026-08-25",
         scoreDelta: 10,
-        description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified at ${regTime.time}.`,
+        description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified.`,
         authorName: applicant.name,
       },
     ];
-
-    if (applicant.assignedTo) {
-      const assignedTime = formatLiveDateTime(new Date(new Date(applicant.createdAt || new Date()).getTime() + 4 * 60 * 1000));
-      defaultActivities.unshift({
-        id: `act_${applicant.id}_2`,
-        leadId: applicant.id,
-        type: "REASSIGNED",
-        title: "Lead Re-assigned via Automation",
-        timestamp: assignedTime.fullTimestamp,
-        rawDate: assignedTime.rawDate,
-        description: `Lead re-assigned to ${getTeacherDisplayName(applicant.assignedTo)} via System Automation at ${assignedTime.fullTimestamp}.`,
-        authorName: "System Automation",
-      });
-    }
-
-    return defaultActivities;
   });
 
-  // Sync timeline activities when applicant changes & fetch from SQLite database
+  // Sync timeline activities when applicant changes
   useEffect(() => {
     if (!applicant) return;
     try {
@@ -602,71 +500,34 @@ export default function ApplicantDetailModal({
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setTimelineActivities(parsed);
+          return;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
-    const regTime = formatLiveDateTime(applicant.createdAt);
-    const defaultActivities: TimelineActivity[] = [
+    setTimelineActivities([
+      {
+        id: `act_${applicant.id}_2`,
+        leadId: applicant.id,
+        type: "REASSIGNED",
+        title: "Lead Re-assigned via Automation",
+        timestamp: "25 Aug 2026 06:29 PM",
+        rawDate: "2026-08-25",
+        description: `Lead re-assigned to ${applicant.assignedTo || "Dr Dhanabal M Assistant Professor MECH"} via System Automation (Automation ID: 54128, Job ID: 17085372) at 25 Aug 2026 06:29 PM.`,
+        authorName: "System Automation",
+      },
       {
         id: `act_${applicant.id}_1`,
         leadId: applicant.id,
         type: "REGISTERED",
         title: "Candidate Registration",
-        timestamp: regTime.fullTimestamp,
-        rawDate: regTime.rawDate,
+        timestamp: "25 Aug 2026 06:25 PM",
+        rawDate: "2026-08-25",
         scoreDelta: 10,
-        description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified at ${regTime.time}.`,
+        description: `${applicant.name} registered via lead origin: ${applicant.source || "WhatsApp"} with mobile verified.`,
         authorName: applicant.name,
       },
-    ];
-
-    if (applicant.assignedTo) {
-      const assignedTime = formatLiveDateTime(new Date(new Date(applicant.createdAt || new Date()).getTime() + 4 * 60 * 1000));
-      defaultActivities.unshift({
-        id: `act_${applicant.id}_2`,
-        leadId: applicant.id,
-        type: "REASSIGNED",
-        title: "Lead Re-assigned via Automation",
-        timestamp: assignedTime.fullTimestamp,
-        rawDate: assignedTime.rawDate,
-        description: `Lead re-assigned to ${getTeacherDisplayName(applicant.assignedTo)} via System Automation at ${assignedTime.fullTimestamp}.`,
-        authorName: "System Automation",
-      });
-    }
-
-    let isMounted = true;
-    const fetchDbTimeline = async () => {
-      try {
-        const res = await fetch(`/api/timeline?leadId=${applicant.id}`);
-        if (res.ok) {
-          const dbEvents = await res.json();
-          if (Array.isArray(dbEvents) && dbEvents.length > 0 && isMounted) {
-            setTimelineActivities((prev) => {
-              const currentList = prev.length > 0 ? prev : defaultActivities;
-              const existingIds = new Set(currentList.map((a) => a.id));
-              const newItems = dbEvents.filter((d: any) => !existingIds.has(d.id));
-              const merged = [...newItems, ...currentList];
-              try {
-                localStorage.setItem(`vsb_timeline_activities_${applicant.id}`, JSON.stringify(merged));
-              } catch (e) {}
-              return merged;
-            });
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn("Notice fetching timeline from SQLite DB:", err);
-      }
-      if (isMounted) {
-        setTimelineActivities((prev) => (prev.length > 0 ? prev : defaultActivities));
-      }
-    };
-    fetchDbTimeline();
-
-    return () => {
-      isMounted = false;
-    };
+    ]);
   }, [applicant?.id]);
 
   // Live Call & Audio Recording State
@@ -760,7 +621,7 @@ export default function ApplicantDetailModal({
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       try {
         mediaRecorderRef.current.stop();
-      } catch (e) {}
+      } catch (e) { }
     }
     if (audioStreamRef.current) {
       audioStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -794,7 +655,7 @@ export default function ApplicantDetailModal({
     const fullTimestamp = `${formattedDate} ${formattedTime}`;
     const rawDateStr = callDateObj.toISOString().split("T")[0];
 
-    const facultyName = currentUserRole === "ADMIN" ? "Admissions Admin" : (formData?.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Admissions Team");
+    const facultyName = currentUserRole === "ADMIN" ? "Admissions Admin" : (formData?.assignedTo || "Dr Dhanabal M Assistant Professor MECH");
     const facultyId = (formData as any)?.counselorId || "FAC-KARUR-01";
 
     const newRecording: CallRecording = {
@@ -835,36 +696,6 @@ export default function ApplicantDetailModal({
     const updatedActivities = [newActivity, ...timelineActivities];
     setTimelineActivities(updatedActivities);
 
-    // 1. Save to SQLite Database (Dev.db via /api/timeline)
-    try {
-      if (formData?.id) {
-        fetch("/api/timeline", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            leadId: formData.id,
-            type: "CALL",
-            title: newActivity.title,
-            timestamp: fullTimestamp,
-            rawDate: rawDateStr,
-            durationText: durationLabel,
-            durationSeconds: durationSec,
-            description: newActivity.description,
-            authorName: facultyName,
-            authorId: facultyId,
-            status: "CONNECTED",
-            studentInterest: liveInterestStatus,
-            teacherNotes: newRecording.teacherNotes,
-            callTranscript: newRecording.callTranscript,
-            audioUrl: newRecording.audioUrl,
-          }),
-        }).catch((e) => console.warn("Failed SQLite timeline sync:", e));
-      }
-    } catch (dbErr) {
-      console.warn("Prisma SQLite timeline post warning:", dbErr);
-    }
-
-    // 2. Save to Local Storage Cache
     try {
       if (formData?.id) {
         localStorage.setItem(`vsb_timeline_activities_${formData.id}`, JSON.stringify(updatedActivities));
@@ -876,13 +707,11 @@ export default function ApplicantDetailModal({
       console.warn("localStorage persistence error:", e);
     }
 
-    // 3. Save to Firebase Cloud Firestore & Realtime DB
     if (formData) {
       const updatedLead: Lead & { application: Application } = {
         ...formData,
         status: liveInterestStatus === "ADMITTED" ? "ADMITTED" : (formData.status === "NEW" ? "CONTACTED" : formData.status),
-        callRecordings: [newRecording, ...(formData.callRecordings || [])],
-        timelineActivities: updatedActivities,
+        ...({ callRecordings: [newRecording] } as any),
       };
       setFormData(updatedLead);
       saveStudentToFirebase(updatedLead);
@@ -922,7 +751,7 @@ export default function ApplicantDetailModal({
   const aiPrediction = useMemo(() => {
     if (!formData) return null;
     return predictStudentConversion({
-      tneaCutoff: effectiveCutoff,
+      tneaCutoff: formData.tneaCutoff || (formData.application ? formData.application.marks12th * 2 : 165),
       community: formData.community || "BC",
       district: formData.district || "Karur",
       source: formData.source || "TNEA Counselling",
@@ -931,7 +760,7 @@ export default function ApplicantDetailModal({
       status: formData.status,
       stage: formData.application?.stage,
     });
-  }, [formData, effectiveCutoff]);
+  }, [formData]);
 
   const handleScanMarksheet = () => {
     setIsOcrScanning(true);
@@ -1017,23 +846,6 @@ export default function ApplicantDetailModal({
       return;
     }
 
-    // Validate Academic Marks and Cutoff bounds
-    const m12 = formData.application?.marks12th;
-    if (m12 !== undefined && m12 !== null && (m12 > 100 || m12 < 0)) {
-      alert(`Invalid 12th HSC Marks: Percentage cannot exceed 100% (entered: ${m12}%). Please correct it before saving.`);
-      return;
-    }
-    const m10 = formData.application?.marks10th;
-    if (m10 !== undefined && m10 !== null && (m10 > 100 || m10 < 0)) {
-      alert(`Invalid 10th SSLC Marks: Percentage cannot exceed 100% (entered: ${m10}%). Please correct it before saving.`);
-      return;
-    }
-    const cut = formData.tneaCutoff;
-    if (cut !== undefined && cut !== null && (cut > 200 || cut < 0)) {
-      alert(`Invalid TNEA Cutoff: Score cannot exceed 200 (entered: ${cut}). Please correct it before saving.`);
-      return;
-    }
-
     const cleanPhone = formatPhoneWith91(formData.phone);
     const cleanFatherMobile = formData.fatherMobile ? formatPhoneWith91(formData.fatherMobile) : formData.fatherMobile;
     const cleanMotherMobile = formData.motherMobile ? formatPhoneWith91(formData.motherMobile) : formData.motherMobile;
@@ -1068,7 +880,6 @@ export default function ApplicantDetailModal({
       setSaveSuccessToast(`🔥 Successfully saved ${formData.name}'s data to Firebase!`);
       setTimeout(() => {
         setSaveSuccessToast(null);
-        setBackupFormData(null);
         setIsEditing(false);
       }, 1400);
     } catch (err: any) {
@@ -1109,7 +920,7 @@ export default function ApplicantDetailModal({
           minute: "2-digit",
           hour12: true,
         }),
-        author: currentUserRole === "ADMIN" ? "Admin" : (formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Admissions Team"),
+        author: currentUserRole === "ADMIN" ? "Admin" : "Dr Dhanabal M",
       },
       ...notesList,
     ]);
@@ -1172,28 +983,6 @@ export default function ApplicantDetailModal({
 
     try {
       await saveStudentToFirebase(updatedApplicant);
-      try {
-        const campusPrefix = updatedApplicant.campus === "COIMBATORE" ? "CTC" : "EC";
-        const appNo = `VSB${campusPrefix}/2026/${Math.floor(1000 + Math.random() * 9000)}`;
-        await saveApplicationToFirebase({
-          id: updatedApplicant.id,
-          registeredName: updatedApplicant.name,
-          applicationNo: (updatedApplicant as any).applicationNo || appNo,
-          formName: `Application Form VSB ${updatedApplicant.campus === "COIMBATORE" ? "Coimbatore" : "Karur"} (Engineering)`,
-          registeredEmail: updatedApplicant.email,
-          registeredMobile: updatedApplicant.phone,
-          formStatus: updatedApplicant.status === "ADMITTED" || updatedPaymentStatus === "Payment Approved" ? "Complete" : "Incomplete",
-          paymentStatus: updatedPaymentStatus === "Payment Approved" ? "Payment Approved" : "Payment Pending",
-          paymentMethod: updatedPaymentStatus === "Payment Approved" ? "Online UPI / NetBanking" : "-",
-          applicationOwner: updatedApplicant.campus === "COIMBATORE" ? "Dr. S. Meenakshi" : "Prof. P. Rajesh",
-          applicationStage: updatedApplicant.status === "ADMITTED" || updatedPaymentStatus === "Payment Approved" ? "Admission Offered" : "Inquiry Stage",
-          campus: updatedApplicant.campus || "KARUR",
-          createdAt: new Date().toISOString().split("T")[0],
-          updatedAt: new Date().toISOString().split("T")[0],
-        });
-      } catch (appErr) {
-        console.warn("Application sync notice:", appErr);
-      }
       try {
         await mobileSafeFetch("/api/applications", {
           method: "PUT",
@@ -1289,7 +1078,7 @@ export default function ApplicantDetailModal({
 
             {/* Edit Details Button at Top Right */}
             <button
-              onClick={handleOpenEditModal}
+              onClick={() => setIsEditing(true)}
               className="press-spring flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 text-xs font-black text-sky-700 transition-all shadow-sm cursor-pointer hover:scale-105"
               title="Edit Student Data & Save to Firebase"
             >
@@ -1324,13 +1113,12 @@ export default function ApplicantDetailModal({
                     <span className="text-slate-400 text-xs hidden sm:inline">•</span>
                     {aiPrediction && (
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-black border flex items-center gap-1 ${
-                          aiPrediction.priorityTier === "HOT"
-                            ? "bg-rose-100 text-rose-800 border-rose-300"
-                            : aiPrediction.priorityTier === "WARM"
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-black border flex items-center gap-1 ${aiPrediction.priorityTier === "HOT"
+                          ? "bg-rose-100 text-rose-800 border-rose-300"
+                          : aiPrediction.priorityTier === "WARM"
                             ? "bg-amber-100 text-amber-800 border-amber-300"
                             : "bg-sky-100 text-sky-800 border-sky-300"
-                        }`}
+                          }`}
                       >
                         {aiPrediction.priorityTier === "HOT" && <Flame className="w-3 h-3 text-rose-600 animate-pulse" />}
                         {aiPrediction.priorityTier === "WARM" && <Zap className="w-3 h-3 text-amber-600" />}
@@ -1338,12 +1126,12 @@ export default function ApplicantDetailModal({
                         {aiPrediction.priorityTier === "HOT"
                           ? `HOT (Admitted - ${aiPrediction.conversionProbability}%)`
                           : aiPrediction.priorityTier === "WARM"
-                          ? `WARM (Ready - ${aiPrediction.conversionProbability}%)`
-                          : `COLD (Not Interested - ${aiPrediction.conversionProbability}%)`}
+                            ? `WARM (Ready - ${aiPrediction.conversionProbability}%)`
+                            : `COLD (Not Interested - ${aiPrediction.conversionProbability}%)`}
                       </span>
                     )}
                     <span className="text-[11px] font-black text-indigo-800 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md">
-                      Cutoff: {effectiveCutoff ?? aiPrediction?.tneaCutoff ?? 145}/200
+                      Cutoff: {aiPrediction?.tneaCutoff || formData.tneaCutoff || 165}/200
                     </span>
                   </div>
                   <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 font-medium line-clamp-1">
@@ -1423,13 +1211,12 @@ export default function ApplicantDetailModal({
                     type="button"
                     onClick={() => handleStageClick(step.key, step.label)}
                     title={`Click to set pipeline stage to "${step.label}"`}
-                    className={`text-center py-1.5 px-3.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 relative whitespace-nowrap shrink-0 cursor-pointer rounded-lg hover:scale-[1.03] active:scale-95 ${
-                      isActive
-                        ? "bg-emerald-600 text-white border border-emerald-700 font-black shadow-md ring-2 ring-emerald-400/40"
-                        : isPassed
-                          ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-black hover:bg-emerald-200 dark:hover:bg-emerald-900/80"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black border border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-sm"
-                    }`}
+                    className={`text-center py-1.5 px-3.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 relative whitespace-nowrap shrink-0 cursor-pointer rounded-lg hover:scale-[1.03] active:scale-95 ${isActive
+                      ? "bg-emerald-600 text-white border border-emerald-700 font-black shadow-md ring-2 ring-emerald-400/40"
+                      : isPassed
+                        ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-black hover:bg-emerald-200 dark:hover:bg-emerald-900/80"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black border border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-sm"
+                      }`}
                   >
                     {isActive && (
                       <span className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
@@ -1500,7 +1287,7 @@ export default function ApplicantDetailModal({
                       {/* Pencil Icon next to Student State */}
                       <button
                         type="button"
-                        onClick={handleOpenEditModal}
+                        onClick={() => setIsEditing(true)}
                         className="p-0.5 rounded hover:bg-sky-100 dark:hover:bg-sky-900 text-slate-500 dark:text-slate-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors inline-flex items-center cursor-pointer ml-0.5"
                         title="Edit State & Student Info"
                       >
@@ -1654,7 +1441,7 @@ export default function ApplicantDetailModal({
                   </button>
 
                   <button
-                    onClick={handleOpenEditModal}
+                    onClick={() => setIsEditing(true)}
                     className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-300 dark:border-sky-700 text-sky-800 dark:text-sky-300 flex items-center justify-center transition-all shadow-sm cursor-pointer hover:scale-105"
                     title="Edit Student Data & Save to Firebase"
                   >
@@ -1688,7 +1475,7 @@ export default function ApplicantDetailModal({
                 {/* PROMINENT EDIT STUDENT DATA BUTTON */}
                 <button
                   type="button"
-                  onClick={handleOpenEditModal}
+                  onClick={() => setIsEditing(true)}
                   className="w-full mt-3 py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   title="Edit Student Information & Save to Firebase"
                 >
@@ -1710,7 +1497,7 @@ export default function ApplicantDetailModal({
                       Assigned Owner
                     </span>
                     <span className="font-black text-slate-950 dark:text-slate-100 block">
-                      {formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Unassigned"}
+                      {formData.assignedTo || "Dr Dhanabal M Assistant Professor MECH"}
                     </span>
                   </div>
                   <div>
@@ -1738,7 +1525,7 @@ export default function ApplicantDetailModal({
                   <div>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px] block font-extrabold">Last Active</span>
                     <span className="font-mono text-slate-950 dark:text-slate-100 font-bold block">
-                      {timelineActivities[0]?.timestamp || formatLiveDateTime(formData.createdAt).fullTimestamp}
+                      25 Aug 2026 06:30 PM
                     </span>
                   </div>
                   <div>
@@ -1747,10 +1534,10 @@ export default function ApplicantDetailModal({
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-slate-950 dark:text-slate-100 font-bold">
-                        {formatLiveDateTime(formData.createdAt).fullTimestamp}
+                        25 Aug 2026 06:25 PM
                       </span>
-                      <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-black border border-emerald-300 dark:border-emerald-700">
-                        Live
+                      <span className="px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 text-[10px] font-black border border-sky-300 dark:border-sky-700">
+                        0d
                       </span>
                     </div>
                   </div>
@@ -1800,8 +1587,8 @@ export default function ApplicantDetailModal({
                       key={tab.id}
                       onClick={() => setActiveMainTab(tab.id as any)}
                       className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-black whitespace-nowrap transition-all rounded-t-lg border cursor-pointer ${activeMainTab === tab.id
-                          ? "bg-sky-600 text-white border-sky-600 shadow-md"
-                          : "bg-white dark:bg-slate-900 text-slate-950 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-white/10"
+                        ? "bg-sky-600 text-white border-sky-600 shadow-md"
+                        : "bg-white dark:bg-slate-900 text-slate-950 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-white/10"
                         }`}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -1892,40 +1679,19 @@ export default function ApplicantDetailModal({
                       <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
                         {filteredTimelineActivities.length} Events
                       </span>
-                      {isLiveCallOpen && (
-                        <span className="relative flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500 text-emerald-600 dark:text-emerald-400 text-[10px] font-black animate-pulse">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                          </span>
-                          Live Call Active
-                        </span>
-                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      {/* Start Call / End Call CTA */}
-                      {!isLiveCallOpen ? (
-                        <button
-                          type="button"
-                          onClick={startLiveCall}
-                          className="press-spring flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                          title="Initiate live conversation and record call audio"
-                        >
-                          <PhoneCall className="w-3.5 h-3.5 animate-pulse" />
-                          <span>Start Call & Record</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={endLiveCallAndSave}
-                          className="press-spring flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                          title="End live call and persist talk time to SQLite database"
-                        >
-                          <PhoneOff className="w-3.5 h-3.5 animate-pulse" />
-                          <span>End & Save ({formatClockTimer(liveCallSeconds)})</span>
-                        </button>
-                      )}
+                      {/* Start Call & Live Recording CTA */}
+                      <button
+                        type="button"
+                        onClick={startLiveCall}
+                        className="press-spring flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                        title="Initiate live conversation and record call audio"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5 animate-pulse" />
+                        <span>Start Call & Record</span>
+                      </button>
 
                       <select
                         value={timelineFilterAction}
@@ -1962,97 +1728,6 @@ export default function ApplicantDetailModal({
                     </div>
                   </div>
 
-                  {/* 🔴 LIVE CALL TALKING MONITOR IN TIMELINE (Monitored in real-time) */}
-                  {isLiveCallOpen && (
-                    <div className="rounded-xl border-2 border-emerald-500 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-sky-500/10 p-4 space-y-3.5 shadow-md">
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/25 pb-3">
-                        <div className="flex items-center gap-2.5">
-                          <span className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                          </span>
-                          <div>
-                            <h5 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                              <Radio className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" /> Live Call Monitor Active
-                            </h5>
-                            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                              {liveCallStatus === "CONNECTING" ? "Connecting call with student..." : "Live talk time monitored & recorded in real-time"}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Live Running Talk Time Timer */}
-                        <div className="flex items-center gap-2">
-                          <div className="px-3 py-1 rounded-lg bg-slate-900 border border-emerald-500/40 text-emerald-400 font-mono text-sm font-black flex items-center gap-2 shadow-inner">
-                            <Clock className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                            <span>Talk Time: {formatClockTimer(liveCallSeconds)}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 space-y-1">
-                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 block">
-                            Student / Candidate
-                          </span>
-                          <p className="font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                            <User className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                            {formData.name} ({formData.phone})
-                          </p>
-                        </div>
-
-                        <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 space-y-1">
-                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 block">
-                            Calling Faculty / Teacher
-                          </span>
-                          <p className="font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                            <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                            {currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Faculty Mentor")}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Live Status & Notes During Call */}
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <label className="text-[11px] font-black text-slate-700 dark:text-slate-300">
-                            Student Interest:
-                          </label>
-                          <select
-                            value={liveInterestStatus}
-                            onChange={(e) => setLiveInterestStatus(e.target.value as any)}
-                            className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs font-black text-slate-900 dark:text-slate-100"
-                          >
-                            <option value="INTERESTED">Interested in V.S.B. ⭐</option>
-                            <option value="ADMITTED">Admitted / Confirmed 🎉</option>
-                            <option value="REVIEWING">Reviewing / Call Back Later ⏳</option>
-                            <option value="NOT_INTERESTED">Not Interested ❌</option>
-                            <option value="NO_ANSWER">No Answer / Busy 📵</option>
-                          </select>
-                        </div>
-
-                        <input
-                          type="text"
-                          placeholder="Type live call notes here (e.g. Cutoff verified, willing to join B.Tech AI & DS)..."
-                          value={liveCallNotes}
-                          onChange={(e) => setLiveCallNotes(e.target.value)}
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
-                        />
-                      </div>
-
-                      <div className="flex justify-end pt-1">
-                        <button
-                          type="button"
-                          onClick={endLiveCallAndSave}
-                          className="press-spring flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-md transition-all cursor-pointer"
-                        >
-                          <PhoneOff className="w-4 h-4" />
-                          <span>End Call & Save Live Talk Time to Database</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Activity List Container */}
                   <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-300 dark:before:bg-slate-700 text-xs">
                     {filteredTimelineActivities.length === 0 ? (
@@ -2065,15 +1740,14 @@ export default function ApplicantDetailModal({
                         <div key={act.id} className="relative">
                           {/* Left icon badge */}
                           <div
-                            className={`absolute -left-6 top-0 w-5 h-5 rounded-full border flex items-center justify-center shadow-sm ${
-                              act.type === "CALL"
-                                ? "bg-emerald-100 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-400"
-                                : act.type === "REGISTERED"
+                            className={`absolute -left-6 top-0 w-5 h-5 rounded-full border flex items-center justify-center shadow-sm ${act.type === "CALL"
+                              ? "bg-emerald-100 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-400"
+                              : act.type === "REGISTERED"
                                 ? "bg-emerald-100 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-400"
                                 : act.type === "REASSIGNED"
-                                ? "bg-sky-100 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-400"
-                                : "bg-purple-100 dark:bg-purple-950/60 border-purple-500 text-purple-700 dark:text-purple-400"
-                            }`}
+                                  ? "bg-sky-100 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-400"
+                                  : "bg-purple-100 dark:bg-purple-950/60 border-purple-500 text-purple-700 dark:text-purple-400"
+                              }`}
                           >
                             {act.type === "CALL" ? (
                               <PhoneCall className="w-3 h-3" />
@@ -2146,8 +1820,8 @@ export default function ApplicantDetailModal({
                           type="button"
                           onClick={() => setActiveSubTab(sub.id as any)}
                           className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${activeSubTab === sub.id
-                              ? "bg-indigo-600 text-white shadow-sm border border-indigo-600"
-                              : "text-slate-950 dark:text-slate-200 font-black bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-white/10"
+                            ? "bg-indigo-600 text-white shadow-sm border border-indigo-600"
+                            : "text-slate-950 dark:text-slate-200 font-black bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-white/10"
                             }`}
                         >
                           {sub.label}
@@ -2157,7 +1831,7 @@ export default function ApplicantDetailModal({
 
                     <button
                       type="button"
-                      onClick={handleOpenEditModal}
+                      onClick={() => setIsEditing(true)}
                       className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
                       <Edit3 className="w-3.5 h-3.5" /> Edit Profile
@@ -2256,10 +1930,7 @@ export default function ApplicantDetailModal({
                         </div>
                         <div className="grid grid-cols-12 border-b border-slate-200 dark:border-white/10 py-2.5 items-center">
                           <span className="col-span-5 font-black text-slate-700 dark:text-slate-300">TNEA Cutoff</span>
-                          <span className="col-span-7 font-black text-indigo-700 dark:text-indigo-400 font-mono">
-                            : {effectiveCutoff ? `${effectiveCutoff}/200` : "N/A"}
-                            {!applicant?.tneaCutoff && formData.application?.marks12th ? " (Auto-calculated from 12th Marks)" : ""}
-                          </span>
+                          <span className="col-span-7 font-black text-indigo-700 dark:text-indigo-400 font-mono">: {formData.tneaCutoff ? `${formData.tneaCutoff}/200` : "178.5/200"}</span>
                         </div>
                         <div className="grid grid-cols-12 border-b border-slate-200 dark:border-white/10 py-2.5 items-center">
                           <span className="col-span-5 font-black text-slate-700 dark:text-slate-300">Previous School Name</span>
@@ -2423,7 +2094,7 @@ export default function ApplicantDetailModal({
                           leadName: formData.name,
                           leadPhone: formData.phone,
                           teacherId: formData.assignedTo || "teacher_rajesh@123",
-                          teacherName: currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Admissions Team"),
+                          teacherName: currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? "Prof. P. Rajesh" : "Faculty Lead"),
                           recordingDate: new Date().toISOString().split("T")[0],
                           timestamp: "10:45 AM",
                           durationSeconds: 45,
@@ -2514,11 +2185,10 @@ export default function ApplicantDetailModal({
                       return (
                         <div
                           key={cat.type}
-                          className={`rounded-xl border p-4 transition-all flex flex-col justify-between ${
-                            isUploaded
-                              ? "bg-slate-50/80 dark:bg-slate-800/60 border-emerald-400/80 dark:border-emerald-500/40 shadow-sm"
-                              : "bg-white dark:bg-slate-900/60 border-slate-300 dark:border-white/10 hover:border-slate-400"
-                          }`}
+                          className={`rounded-xl border p-4 transition-all flex flex-col justify-between ${isUploaded
+                            ? "bg-slate-50/80 dark:bg-slate-800/60 border-emerald-400/80 dark:border-emerald-500/40 shadow-sm"
+                            : "bg-white dark:bg-slate-900/60 border-slate-300 dark:border-white/10 hover:border-slate-400"
+                            }`}
                         >
                           <div className="space-y-2">
                             <div className="flex items-start justify-between gap-2">
@@ -2658,9 +2328,8 @@ export default function ApplicantDetailModal({
                                 />
                                 <label
                                   htmlFor={`upload_doc_${cat.type}`}
-                                  className={`w-full py-2 px-3 rounded-xl border border-sky-600 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all ${
-                                    isUploading ? "opacity-75 cursor-wait" : "cursor-pointer active:scale-95"
-                                  }`}
+                                  className={`w-full py-2 px-3 rounded-xl border border-sky-600 bg-sky-600 hover:bg-sky-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all ${isUploading ? "opacity-75 cursor-wait" : "cursor-pointer active:scale-95"
+                                    }`}
                                 >
                                   {isUploading ? (
                                     <>
@@ -2691,18 +2360,8 @@ export default function ApplicantDetailModal({
         {/* DEDICATED EDIT STUDENT DATA MODAL OVERLAY (FIREBASE & DATABASE SYNC)     */}
         {/* ========================================================================= */}
         {isEditing && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && !isSavingFirebase) {
-                handleCancelEdit();
-              }
-            }}
-          >
-            <div
-              className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-white/20 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-950 dark:text-white animate-in zoom-in-95 duration-200"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-150">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-white/20 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-950 dark:text-white animate-in zoom-in-95 duration-200">
               {/* Header */}
               <div className="p-4 px-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
                 <div className="flex items-center gap-2.5">
@@ -2722,10 +2381,9 @@ export default function ApplicantDetailModal({
 
                 <button
                   type="button"
-                  onClick={handleCancelEdit}
+                  onClick={() => setIsEditing(false)}
                   disabled={isSavingFirebase}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                  title="Cancel and discard unsaved changes"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2737,8 +2395,8 @@ export default function ApplicantDetailModal({
                   type="button"
                   onClick={() => setEditSectionTab("PERSONAL")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${editSectionTab === "PERSONAL"
-                      ? "bg-sky-600 text-white shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+                    ? "bg-sky-600 text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
                     }`}
                 >
                   👤 Personal & Contact
@@ -2747,8 +2405,8 @@ export default function ApplicantDetailModal({
                   type="button"
                   onClick={() => setEditSectionTab("ACADEMIC")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${editSectionTab === "ACADEMIC"
-                      ? "bg-sky-600 text-white shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+                    ? "bg-sky-600 text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
                     }`}
                 >
                   🎓 Academic & Cutoff
@@ -2757,8 +2415,8 @@ export default function ApplicantDetailModal({
                   type="button"
                   onClick={() => setEditSectionTab("ADMISSION")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${editSectionTab === "ADMISSION"
-                      ? "bg-sky-600 text-white shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+                    ? "bg-sky-600 text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
                     }`}
                 >
                   🏛️ Admission, Stage & Counselor
@@ -2796,9 +2454,17 @@ export default function ApplicantDetailModal({
                           <input
                             type="tel"
                             required
-                            value={extractRaw10Digits(formData.phone || "+91-6380270912")}
+                            value={
+                              formData.phone
+                                ? formData.phone.startsWith("+91-")
+                                  ? formData.phone.slice(4)
+                                  : formData.phone.startsWith("+91 ")
+                                    ? formData.phone.slice(4)
+                                    : formData.phone
+                                : ""
+                            }
                             onChange={(e) => {
-                              const digits = extractRaw10Digits(e.target.value).slice(0, 10);
+                              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                               setFormData({ ...formData, phone: digits ? `+91-${digits}` : "" });
                             }}
                             placeholder="98765 43210"
@@ -3084,38 +2750,18 @@ export default function ApplicantDetailModal({
                           step="0.1"
                           max="100"
                           min="0"
-                          value={formData.application?.marks10th !== undefined && formData.application?.marks10th !== null ? formData.application.marks10th : ""}
-                          onChange={(e) => {
-                            const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                          value={formData.application?.marks10th || 0}
+                          onChange={(e) =>
                             setFormData({
                               ...formData,
                               application: {
                                 ...(formData.application || app),
-                                marks10th: isNaN(val) ? 0 : val,
+                                marks10th: parseFloat(e.target.value) || 0,
                               },
-                            });
-                          }}
-                          onBlur={(e) => {
-                            const raw = e.target.value.trim();
-                            if (raw !== "") {
-                              const num = parseFloat(raw);
-                              if (!isNaN(num)) {
-                                e.target.value = String(num);
-                              }
-                            }
-                          }}
-                          className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2 font-mono font-bold focus:outline-none focus:ring-2 ${
-                            (formData.application?.marks10th ?? 0) > 100 || (formData.application?.marks10th ?? 0) < 0
-                              ? "border-rose-500 dark:border-rose-500 ring-2 ring-rose-400/50 text-rose-600 dark:text-rose-400 focus:ring-rose-500"
-                              : "border-slate-300 dark:border-white/10 text-slate-950 dark:text-white focus:ring-sky-500"
-                          }`}
-                          aria-invalid={(formData.application?.marks10th ?? 0) > 100 || (formData.application?.marks10th ?? 0) < 0}
+                            })
+                          }
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                         />
-                        {((formData.application?.marks10th ?? 0) > 100 || (formData.application?.marks10th ?? 0) < 0) && (
-                          <p className="text-[11px] font-bold text-rose-500 dark:text-rose-400 mt-1 flex items-center gap-1">
-                            <span>⚠️ Percentage cannot exceed 100% (entered: {formData.application?.marks10th}%)</span>
-                          </p>
-                        )}
                       </div>
 
                       <div>
@@ -3127,117 +2773,33 @@ export default function ApplicantDetailModal({
                           step="0.1"
                           max="100"
                           min="0"
-                          value={formData.application?.marks12th !== undefined && formData.application?.marks12th !== null ? formData.application.marks12th : ""}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            if (raw === "") {
-                              setFormData({
-                                ...formData,
-                                tneaCutoff: 0,
-                                application: {
-                                  ...(formData.application || app),
-                                  marks12th: 0,
-                                },
-                              });
-                              return;
-                            }
-                            const new12th = parseFloat(raw);
-                            const parsedNum = isNaN(new12th) ? 0 : new12th;
-                            // Derived cutoff strictly capped within stated maximum of 200
-                            const autoCutoff = Math.min(200, Math.max(0, Number((parsedNum * 2).toFixed(2))));
+                          value={formData.application?.marks12th || 0}
+                          onChange={(e) =>
                             setFormData({
                               ...formData,
-                              tneaCutoff: autoCutoff,
                               application: {
                                 ...(formData.application || app),
-                                marks12th: parsedNum,
+                                marks12th: parseFloat(e.target.value) || 0,
                               },
-                            });
-                          }}
-                          onBlur={(e) => {
-                            const raw = e.target.value.trim();
-                            if (raw !== "") {
-                              const num = parseFloat(raw);
-                              if (!isNaN(num)) {
-                                // Normalizes leading zeroes on blur (e.g. "0101" -> "101")
-                                e.target.value = String(num);
-                                const autoCutoff = Math.min(200, Math.max(0, Number((num * 2).toFixed(2))));
-                                if (formData) {
-                                  setFormData({
-                                    ...formData,
-                                    tneaCutoff: autoCutoff,
-                                    application: {
-                                      ...(formData.application || app),
-                                      marks12th: num,
-                                    },
-                                  });
-                                }
-                              }
-                            }
-                          }}
-                          className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2 font-mono font-bold focus:outline-none focus:ring-2 ${
-                            (formData.application?.marks12th ?? 0) > 100 || (formData.application?.marks12th ?? 0) < 0
-                              ? "border-rose-500 dark:border-rose-500 ring-2 ring-rose-400/50 text-rose-600 dark:text-rose-400 focus:ring-rose-500"
-                              : "border-slate-300 dark:border-white/10 text-slate-950 dark:text-white focus:ring-sky-500"
-                          }`}
-                          aria-invalid={(formData.application?.marks12th ?? 0) > 100 || (formData.application?.marks12th ?? 0) < 0}
+                            })
+                          }
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                         />
-                        {((formData.application?.marks12th ?? 0) > 100 || (formData.application?.marks12th ?? 0) < 0) && (
-                          <p className="text-[11px] font-bold text-rose-500 dark:text-rose-400 mt-1 flex items-center gap-1">
-                            <span>⚠️ Percentage cannot exceed 100% (entered: {formData.application?.marks12th}%)</span>
-                          </p>
-                        )}
                       </div>
 
                       <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block font-black text-slate-800 dark:text-slate-200">
-                            TNEA Cutoff (Out of 200)
-                          </label>
-                          {formData.application?.marks12th ? (
-                            <span
-                              className={`text-[10px] font-bold ${
-                                (formData.application.marks12th > 100 || formData.application.marks12th < 0)
-                                  ? "text-rose-500 dark:text-rose-400"
-                                  : "text-sky-600 dark:text-sky-400"
-                              }`}
-                            >
-                              (Derived from 12th Marks: {formData.application.marks12th}%
-                              {formData.application.marks12th > 100 ? " • Exceeds 100%" : ""})
-                            </span>
-                          ) : null}
-                        </div>
+                        <label className="block font-black text-slate-800 dark:text-slate-200 mb-1">
+                          TNEA Cutoff (Out of 200)
+                        </label>
                         <input
                           type="number"
                           step="0.25"
                           max="200"
                           min="0"
-                          value={formData.tneaCutoff !== undefined && formData.tneaCutoff !== null ? formData.tneaCutoff : (effectiveCutoff ?? 0)}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            setFormData({ ...formData, tneaCutoff: isNaN(val) ? 0 : val });
-                          }}
-                          onBlur={(e) => {
-                            const raw = e.target.value.trim();
-                            if (raw !== "") {
-                              const num = parseFloat(raw);
-                              if (!isNaN(num)) {
-                                e.target.value = String(num);
-                              }
-                            }
-                          }}
-                          className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2 font-mono font-bold focus:outline-none focus:ring-2 ${
-                            (formData.tneaCutoff ?? 0) > 200 || (formData.tneaCutoff ?? 0) < 0
-                              ? "border-rose-500 dark:border-rose-500 ring-2 ring-rose-400/50 text-rose-600 dark:text-rose-400 focus:ring-rose-500"
-                              : "border-slate-300 dark:border-white/10 text-slate-950 dark:text-white focus:ring-sky-500"
-                          }`}
-                          aria-invalid={(formData.tneaCutoff ?? 0) > 200 || (formData.tneaCutoff ?? 0) < 0}
+                          value={formData.tneaCutoff || 0}
+                          onChange={(e) => setFormData({ ...formData, tneaCutoff: parseFloat(e.target.value) || 0 })}
+                          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                         />
-                        {((formData.tneaCutoff ?? 0) > 200 || (formData.tneaCutoff ?? 0) < 0) && (
-                          <p className="text-[11px] font-bold text-rose-500 dark:text-rose-400 mt-1 flex items-center gap-1">
-                            <span>⚠️ Cutoff cannot exceed maximum of 200 (entered: {formData.tneaCutoff})</span>
-                          </p>
-                        )}
                       </div>
                     </div>
 
@@ -3410,14 +2972,12 @@ export default function ApplicantDetailModal({
                           Assigned Counselor / Owner {currentUserRole === "TEACHER" && "(Locked)"}
                         </label>
                         <select
-                          value={formData.assignedTo || ""}
+                          value={formData.assignedTo || COUNSELOR_OPTIONS[0]}
                           onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
                           disabled={currentUserRole === "TEACHER"}
-                          className={`w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                            currentUserRole === "TEACHER" ? "opacity-70 cursor-not-allowed bg-slate-100 dark:bg-slate-900" : "cursor-pointer"
-                          }`}
+                          className={`w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-slate-950 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 ${currentUserRole === "TEACHER" ? "opacity-70 cursor-not-allowed bg-slate-100 dark:bg-slate-900" : "cursor-pointer"
+                            }`}
                         >
-                          <option value="">Unassigned</option>
                           {COUNSELOR_OPTIONS.map((counselor) => (
                             <option key={counselor} value={counselor}>
                               {counselor}
@@ -3467,7 +3027,7 @@ export default function ApplicantDetailModal({
                     <button
                       type="button"
                       disabled={isSavingFirebase}
-                      onClick={handleCancelEdit}
+                      onClick={() => setIsEditing(false)}
                       className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all cursor-pointer"
                     >
                       Cancel
@@ -3605,7 +3165,7 @@ export default function ApplicantDetailModal({
                 Course: <strong className="text-white">{formData.courseInterest || "B.E Computer Science"}</strong> • Campus: <strong className="text-white">{formData.campus || "KARUR"}</strong>
               </p>
               <p className="text-[11px] text-emerald-400 font-bold">
-                Counselor: {currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo ? getTeacherDisplayName(formData.assignedTo) : "Unassigned")}
+                Counselor: {currentUserRole === "ADMIN" ? "Admissions Admin" : (formData.assignedTo || "Dr Dhanabal M (FAC-KARUR-01)")}
               </p>
             </div>
 
@@ -3670,11 +3230,10 @@ export default function ApplicantDetailModal({
               <button
                 type="button"
                 onClick={() => setIsLiveMuted(!isLiveMuted)}
-                className={`flex-1 py-2.5 rounded-xl border text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  isLiveMuted
-                    ? "bg-rose-950/60 border-rose-600 text-rose-300"
-                    : "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
-                }`}
+                className={`flex-1 py-2.5 rounded-xl border text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${isLiveMuted
+                  ? "bg-rose-950/60 border-rose-600 text-rose-300"
+                  : "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
+                  }`}
               >
                 {isLiveMuted ? <MicOff className="w-4 h-4 text-rose-400" /> : <Mic className="w-4 h-4" />}
                 <span>{isLiveMuted ? "Unmute" : "Mute"}</span>
@@ -3853,7 +3412,7 @@ function AudioPlayerCard({ recording }: { recording: CallRecording }) {
     if (audioContextRef.current && audioContextRef.current.state !== "closed") {
       try {
         audioContextRef.current.close();
-      } catch (e) {}
+      } catch (e) { }
       audioContextRef.current = null;
     }
   };

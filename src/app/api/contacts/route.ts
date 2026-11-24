@@ -200,6 +200,10 @@ export async function PUT(request: Request) {
       district,
       state,
       address,
+      admissionQuota,
+      appliedCounselling,
+      counsellingCategory,
+      counsellingAppNo,
     } = body;
 
     if (!id) {
@@ -262,6 +266,10 @@ export async function PUT(request: Request) {
           marks12th: 0,
           paymentStatus: "PENDING",
         },
+        admissionQuota,
+        appliedCounselling,
+        counsellingCategory,
+        counsellingAppNo,
       });
     }
   } catch (error) {

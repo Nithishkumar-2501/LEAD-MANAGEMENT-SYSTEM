@@ -110,6 +110,7 @@ export interface Lead {
   assignedTo?: string;
   appliedCounselling?: boolean;
   counsellingAppNo?: string;
+  admissionQuota?: "COUNSELLING" | "MANAGEMENT" | null;
   tneaCutoff?: number;
   counsellingCategory?: string;
   generalRank?: number;
