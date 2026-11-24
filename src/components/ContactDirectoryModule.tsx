@@ -1588,6 +1588,14 @@ export default function ContactDirectoryModule({
                   onChange={(e) => {
                     e.stopPropagation();
                     const val = e.target.value;
+                    if (val === "REDIRECT_TNEA") {
+                      window.open("https://www.tneaonline.org/", "_blank", "noopener,noreferrer");
+                      if (onTriggerToast) {
+                        onTriggerToast("🌐 Redirecting to official TNEA Online portal (tneaonline.org)...");
+                      }
+                      e.target.value = "TNEA";
+                      return;
+                    }
                     if (val === "APPLY_COUNSELLING" || val === "Apply for Counselling") {
                       setTneaModalContact(contact);
                       e.target.value = "TNEA";
@@ -1609,10 +1617,13 @@ export default function ContactDirectoryModule({
                   <option value="TNEA" className="bg-slate-900 text-teal-300 font-bold">
                     🏛️ TNEA Quota
                   </option>
-                  <option value="APPLY_COUNSELLING" className="bg-slate-900 text-emerald-300 font-bold">
-                    🎓 Open Apply & Counselling Hub ⚡
+                  <option value="REDIRECT_TNEA" className="bg-slate-900 text-emerald-300 font-bold">
+                    🎓 Open tneaonline.org ↗
                   </option>
-                  <option value="OPEN_DTE" className="bg-slate-900 text-sky-300 font-bold">
+                  <option value="APPLY_COUNSELLING" className="bg-slate-900 text-sky-300 font-bold">
+                    📝 Counselling App & Cutoff Hub ⚡
+                  </option>
+                  <option value="OPEN_DTE" className="bg-slate-900 text-teal-200 font-bold">
                     🌐 DoTE Official Portal (Active) ↗
                   </option>
                 </select>
@@ -1621,20 +1632,25 @@ export default function ContactDirectoryModule({
                 </div>
               </div>
 
-              {/* Direct 1-Click Action Button: Opens the Counselling & Application Hub Modal without 403 Forbidden */}
-              <button
-                type="button"
+              {/* Direct 1-Click Action Button: Redirects to https://www.tneaonline.org in Chrome/Brave */}
+              <a
+                href="https://www.tneaonline.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                referrerPolicy="no-referrer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setTneaModalContact(contact);
+                  if (onTriggerToast) {
+                    onTriggerToast("🌐 Redirecting to official TNEA Online portal (tneaonline.org)...");
+                  }
                 }}
                 className="press-spring inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-2xs hover:shadow transition-all shrink-0 cursor-pointer"
-                title="TNEA Counselling & Application Hub (View/Register Application & Official Portals)"
+                title="Apply for Counselling (Redirects to https://www.tneaonline.org in Chrome/Brave)"
               >
                 <GraduationCap className="w-3.5 h-3.5 text-teal-100" />
                 <span>Apply</span>
-                <Sparkles className="w-3 h-3 text-teal-200" />
-              </button>
+                <ExternalLink className="w-3 h-3 text-teal-200" />
+              </a>
             </div>
 
             {contact.counsellingAppNo && (
